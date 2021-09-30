@@ -24,9 +24,25 @@ struct Token {
 // the global variableof the current token
 Token *token;
 
+// inputted program
+char *user_input;
+
 // for error report.
 // it's arguments is same as printf. 
-void error (char *fmt, ...) {
+void error_at (char *loc, char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+
+  int pos = loc - user_input;
+  fprintf(stderr, "%s\n", user_input);
+  fprintf(stderr, "%*s", pos, " "); // output space in number of pos
+  fprintf(stderr, "^ ");
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
+
+void error(char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   vfprintf(stderr, fmt, ap);
@@ -47,7 +63,7 @@ bool consume(char op) {
 // of token exceed one character
 void expect(char op) {
   if (token->kind != TK_RESERVED || token->str[0] != op)
-    error("is not '%c'", op);
+    error_at(token->str, "is not '%c'", op);
   token = token->next;
 }
 
@@ -55,7 +71,7 @@ void expect(char op) {
 // character or report an error.
 int expect_number() {
   if (token->kind != TK_NUM)
-    error("is not number");
+    error_at(token->str, "is not number");
   int val = token->val;
   token = token->next;
   return val;
@@ -98,7 +114,7 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    error("couldn't tokenize");
+    error_at(p, "couldn't tokenize");
   }
 
   new_token(TK_EOF, cur, p);
@@ -112,7 +128,8 @@ int main(int argc, char **argv) {
   }
 
   // tokenize
-  token = tokenize(argv[1]);
+  user_input = argv[1];
+  token = tokenize(user_input);
 
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
