@@ -97,7 +97,7 @@ func expect(op byte) {
 // character or report an error.
 func expectNumber() int {
 	if token.Kind != TK_NUM {
-		errorAt(curIdx, "is not integer")
+		errorAt(curIdx, "is not an integer")
 	}
 	val := token.Val
 	token = token.Next
@@ -125,10 +125,11 @@ func tokenize() *Token {
 	head.Next = nil
 	cur := &head
 
-	fmt.Print("#")
+	// for printToken
+	headTok = &head
 
 	for curIdx < len(userInput) {
-		// skip space
+		// skip space(s)
 		if userInput[curIdx] == ' ' {
 			curIdx++
 			continue
@@ -136,25 +137,21 @@ func tokenize() *Token {
 
 		if userInput[curIdx] == '+' || userInput[curIdx] == '-' {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]))
-			fmt.Printf(" '%s' ", cur.Str)
 			curIdx++
 			continue
 		}
 
 		if isDigit(userInput[curIdx]) {
-			var sVal string = string(userInput[curIdx])
-			curIdx++
+			var sVal string
 			for ; curIdx < len(userInput) && isDigit(userInput[curIdx]); curIdx++ {
 				sVal += string(userInput[curIdx])
 			}
 			cur = newToken(TK_NUM, cur, sVal)
-			fmt.Printf(" '%s' ", cur.Str)
 			v, err := strconv.Atoi(sVal)
 			if err != nil {
 				panic(err)
 			}
 			cur.Val = v
-			curIdx++
 			continue
 		}
 
@@ -162,41 +159,68 @@ func tokenize() *Token {
 	}
 
 	newToken(TK_EOF, cur, "")
-	fmt.Println()
 	return head.Next
 }
 
-func compile(arg string, w io.Writer) {
+var headTok *Token
+
+//
+func printTokens() {
+	fmt.Print("#")
+	tok := headTok.Next
+	for tok.Next != nil {
+		fmt.Printf(" '%s' ", tok.Str)
+		tok = tok.Next
+	}
+	fmt.Println()
+}
+
+func compile(arg string, w io.Writer) error {
 	// tokenize
+	curIdx = 0
 	userInput = arg
 	token = tokenize()
 
+	printTokens()
 	// output the former of the assembly
-	fmt.Fprintln(w, ".intel_syntax noprefix")
-	fmt.Fprintln(w, ".global main")
-	fmt.Fprintln(w, "main:")
+	if _, err := fmt.Fprintln(w, ".intel_syntax noprefix\n.globl main\nmain:"); err != nil {
+		return err
+	}
 
 	// check the beginning of expression is interger,
 	// and output the first 'mov' command.
-	fmt.Fprintf(w, "	mov rax, %d\n", expectNumber())
+	if _, err := fmt.Fprintf(w, "	mov rax, %d\n", expectNumber()); err != nil {
+		return err
+	}
 
 	// '+ <NUM>' or '- <NUM>'
 	for !atEof() {
 		if consume('+') {
-			fmt.Fprintf(w, "	add rax, %d\n", expectNumber())
+			if _, err := fmt.Fprintf(w, "	add rax, %d\n", expectNumber()); err != nil {
+				return err
+			}
 			continue
 		}
 
 		expect('-')
-		fmt.Fprintf(w, "	sub rax, %d\n", expectNumber())
+		if _, err := fmt.Fprintf(w, "	sub rax, %d\n", expectNumber()); err != nil {
+			return err
+		}
 	}
 
-	fmt.Fprintln(w, "	ret")
+	if _, err := fmt.Fprintln(w, "	ret"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func main() {
 	if len(os.Args) != 2 {
 		log.Fatal("invalid number of arguments")
 	}
-	compile(os.Args[1], os.Stdout)
+
+	if err := compile(os.Args[1], os.Stdout); err != nil {
+		log.Fatal(err)
+	}
 }

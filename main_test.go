@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -22,45 +22,67 @@ var cases = map[string]testcase{
 		expected: 42,
 		input:    "42",
 	},
+	"3": {
+		expected: 41,
+		input:    " 12 + 34 - 5 ",
+	},
 }
 
-func TestE2E(t *testing.T) {
+func TestCompile(t *testing.T) {
+	var asmName string = "temporary"
+
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			err := os.Remove("tmp.s")
+			err := os.Remove(asmName + ".s")
 			if err != nil && !os.IsNotExist(err) {
 				t.Fatal(err)
 			}
-			tmps, err := os.OpenFile("tmp.s", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+			tmps, err := os.Create(asmName + ".s")
 			if err != nil {
 				t.Fatal(err)
 			}
-			compile(c.input, tmps)
+			defer func() {
+				if err := tmps.Close(); err != nil {
+					t.Fatal(err)
+				}
+			}()
 
-			cc, err := exec.Command("cc", "-o", "tmp", "tmp.s").Output()
+			if err := compile(c.input, tmps); err != nil {
+				t.Fatal(err)
+			}
+
+			_, err = exec.Command("gcc", "-o", asmName, asmName+".s").Output()
 			if err != nil {
 				t.Fatal(err)
 			}
-			fmt.Println("cc:", string(cc))
-
-			// tmpファイルができていなかったら落とす
-			if _, err := os.Stat("tmp"); err != nil {
+			// オブジェクトファイルができていなかったら落とす
+			if _, err := os.Stat(asmName); err != nil {
 				t.Fatal(err)
 			}
 
-			tmp, err := exec.Command("./tmp").Output()
+			_, err = exec.Command("./" + asmName).Output()
+			if err != nil {
+				if ee, ok := err.(*exec.ExitError); !ok {
+					t.Fatal(err)
+				} else {
+					// the return value of temporary.s is saved in exit status code,
+					actual := ee.ProcessState.ExitCode()
+					if c.expected != actual {
+						t.Fatalf("%d expected, but got %d", c.expected, actual)
+					}
+					t.Logf("%s => %d", c.input, actual)
+					return
+				}
+			}
+
+			ans, err := exec.Command("sh", "-c", "echo $?").Output()
 			if err != nil {
 				t.Fatal(err)
 			}
-			fmt.Println("tmp:", string(tmp))
 
-			ans, err := exec.Command("echo", "$?").Output()
-			if err != nil {
-				t.Fatal(err)
-			}
-			fmt.Println("actual:", string(ans))
-
-			actual, err := strconv.Atoi(string(ans))
+			// the return value of temporary.s is saved in exit status code,
+			// the below will be used only when the return value is 0.
+			actual, err := strconv.Atoi(strings.Trim(string(ans), "\n"))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -68,6 +90,7 @@ func TestE2E(t *testing.T) {
 			if c.expected != actual {
 				t.Fatalf("%d expected, but got %d", c.expected, actual)
 			}
+			t.Logf("%s => %d", c.input, actual)
 		})
 	}
 }
