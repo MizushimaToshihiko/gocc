@@ -5,7 +5,9 @@ import (
 	"io"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
+	"strings"
 )
 
 // set TokenKind with enum
@@ -22,6 +24,7 @@ type Token struct {
 	Next *Token    // next
 	Val  int       // if 'kind' is TK_NUM, it's integer
 	Str  string    // token string
+	Len  int       // length of token
 }
 
 // current token
@@ -34,31 +37,20 @@ var curIdx int
 // for error report
 // it's arguments are same as printf
 func errorAt(errIdx int, formt string, a ...interface{}) {
-	if _, err := fmt.Fprintf(os.Stderr, "%s\n", userInput); err != nil {
-		panic(err)
-	}
-	if _, err := fmt.Fprintf(os.Stderr, "%*s", errIdx, " "); err != nil { // output space
-		panic(err)
-	}
-
-	if _, err := fmt.Fprint(os.Stderr, "^ "); err != nil {
-		panic(err)
-	}
-
-	if _, err := fmt.Fprintf(os.Stderr, formt, a...); err != nil {
-		panic(err)
-	}
-
-	if _, err := fmt.Fprint(os.Stderr, "\n"); err != nil {
-		panic(err)
-	}
+	fmt.Fprintf(os.Stderr, "%s\n", userInput)
+	fmt.Fprintf(os.Stderr, "%*s", errIdx, " ")
+	fmt.Fprint(os.Stderr, "^ ")
+	fmt.Fprintf(os.Stderr, formt, a...)
+	fmt.Fprint(os.Stderr, "\n")
 	os.Exit(1)
 }
 
 // if the next token is expected symbol, the read position
 // of token exceed one character, and returns true.
-func consume(op byte) bool {
-	if token.Kind != TK_RESERVED || token.Str[0] != op {
+func consume(op string) bool {
+	if token.Kind != TK_RESERVED ||
+		len(op) != token.Len ||
+		token.Str != op {
 		return false
 	}
 	token = token.Next
@@ -67,8 +59,10 @@ func consume(op byte) bool {
 
 // if the next token is expected symbol, the read position
 // of token exceed one character
-func expect(op byte) {
-	if token.Kind != TK_RESERVED || token.Str[0] != op {
+func expect(op string) {
+	if token.Kind != TK_RESERVED ||
+		len(op) != token.Len ||
+		token.Str != op {
 		errorAt(curIdx, "is not '%s'", string(op))
 	}
 	token = token.Next
@@ -90,10 +84,16 @@ func atEof() bool {
 }
 
 // make new token and append to the end of cur.
-func newToken(kind TokenKind, cur *Token, str string) *Token {
-	tok := &Token{Kind: kind, Str: str}
+func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
+	tok := &Token{Kind: kind, Str: str, Len: len}
 	cur.Next = tok
 	return tok
+}
+
+func startsWith(pp, qq string) bool {
+	p := []byte(pp)
+	q := []byte(qq)
+	return reflect.DeepEqual(p[:len(q)], q)
 }
 
 func isDigit(op byte) bool {
@@ -116,13 +116,18 @@ func tokenize() *Token {
 			continue
 		}
 
-		if userInput[curIdx] == '+' ||
-			userInput[curIdx] == '-' ||
-			userInput[curIdx] == '*' ||
-			userInput[curIdx] == '/' ||
-			userInput[curIdx] == '(' ||
-			userInput[curIdx] == ')' {
-			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]))
+		// multi-letter punctuator
+		if startsWith(userInput[curIdx:], "==") ||
+			startsWith(userInput[curIdx:], "!=") ||
+			startsWith(userInput[curIdx:], "<=") ||
+			startsWith(userInput[curIdx:], ">=") {
+			cur = newToken(TK_RESERVED, cur, userInput[curIdx:curIdx+2], 2)
+			curIdx += 2
+			continue
+		}
+
+		if strings.Contains("+-()*/<>=", string(userInput[curIdx])) {
+			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue
 		}
@@ -132,7 +137,7 @@ func tokenize() *Token {
 			for ; curIdx < len(userInput) && isDigit(userInput[curIdx]); curIdx++ {
 				sVal += string(userInput[curIdx])
 			}
-			cur = newToken(TK_NUM, cur, sVal)
+			cur = newToken(TK_NUM, cur, sVal, len(sVal))
 			v, err := strconv.Atoi(sVal)
 			if err != nil {
 				panic(err)
@@ -144,7 +149,7 @@ func tokenize() *Token {
 		errorAt(curIdx, "couldn't tokenize")
 	}
 
-	newToken(TK_EOF, cur, "")
+	newToken(TK_EOF, cur, "", 0)
 	return head.Next
 }
 
@@ -163,6 +168,10 @@ func printTokens() {
 	fmt.Println()
 }
 
+//
+// parser
+//
+
 // the types of AST node
 type NodeKind int
 
@@ -171,6 +180,10 @@ const (
 	ND_SUB                 // -
 	ND_MUL                 // *
 	ND_DIV                 // /
+	ND_EQ                  // ==
+	ND_NE                  // !=
+	ND_LT                  // <
+	ND_LE                  // <=
 	ND_NUM                 // integer
 )
 
@@ -197,14 +210,53 @@ func newNodeNum(val int) *Node {
 	}
 }
 
-// expr = mul ("+" mul | "-" mul)*
+// expr       = equality
 func expr() *Node {
+	return equality()
+}
+
+// equality   = relational ("==" relational | "!=" relational)*
+func equality() *Node {
+	node := relational()
+
+	for {
+		if consume("==") {
+			node = newNode(ND_EQ, node, relational())
+		} else if consume("!=") {
+			node = newNode(ND_NE, node, relational())
+		} else {
+			return node
+		}
+	}
+}
+
+// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+func relational() *Node {
+	node := add()
+
+	for {
+		if consume("<") {
+			node = newNode(ND_LT, node, add())
+		} else if consume("<=") {
+			node = newNode(ND_LE, node, add())
+		} else if consume(">") {
+			node = newNode(ND_LT, add(), node)
+		} else if consume(">=") {
+			node = newNode(ND_LE, add(), node)
+		} else {
+			return node
+		}
+	}
+}
+
+// add        = mul ("+" mul | "-" mul)*
+func add() *Node {
 	node := mul()
 
 	for {
-		if consume('+') {
+		if consume("+") {
 			node = newNode(ND_ADD, node, mul())
-		} else if consume('-') {
+		} else if consume("-") {
 			node = newNode(ND_SUB, node, mul())
 		} else {
 			return node
@@ -217,9 +269,9 @@ func mul() *Node {
 	node := unary()
 
 	for {
-		if consume('*') {
+		if consume("*") {
 			node = newNode(ND_MUL, node, unary())
-		} else if consume('/') {
+		} else if consume("/") {
 			node = newNode(ND_DIV, node, unary())
 		} else {
 			return node
@@ -227,13 +279,14 @@ func mul() *Node {
 	}
 }
 
-// unary   = ("+" | "-")? primary
+// unary   = ("+" | "-")? unary
+//         | primary
 func unary() *Node {
-	if consume('+') {
-		return primary()
+	if consume("+") {
+		return unary()
 	}
-	if consume('-') {
-		return newNode(ND_SUB, newNodeNum(0), primary())
+	if consume("-") {
+		return newNode(ND_SUB, newNodeNum(0), unary())
 	}
 	return primary()
 }
@@ -242,9 +295,9 @@ func unary() *Node {
 func primary() *Node {
 	// if the next token is '(', the program must be
 	// "(" expr ")"
-	if consume('(') {
+	if consume("(") {
 		node := expr()
-		expect(')')
+		expect(")")
 		return node
 	}
 
@@ -252,6 +305,9 @@ func primary() *Node {
 	return newNodeNum(expectNumber())
 }
 
+//
+// code generator
+//
 func gen(node *Node, w io.Writer) (err error) {
 	if node.Kind == ND_NUM {
 		_, err = fmt.Fprintf(w, "	push %d\n", node.Val)
@@ -267,41 +323,38 @@ func gen(node *Node, w io.Writer) (err error) {
 		return
 	}
 
-	_, err = fmt.Fprintln(w, "	pop rdi")
-	if err != nil {
-		return
-	}
-	_, err = fmt.Fprintln(w, "	pop rax")
-	if err != nil {
-		return
-	}
+	fmt.Fprintln(w, "	pop rdi")
+	fmt.Fprintln(w, "	pop rax")
 
 	switch node.Kind {
 	case ND_ADD:
-		if _, err = fmt.Fprintln(w, "	add rax, rdi"); err != nil {
-			return
-		}
+		fmt.Fprintln(w, "	add rax, rdi")
 	case ND_SUB:
-		if _, err = fmt.Fprintln(w, "sub rax, rdi"); err != nil {
-			return
-		}
+		fmt.Fprintln(w, "	sub rax, rdi")
 	case ND_MUL:
-		if _, err = fmt.Fprintln(w, "imul rax, rdi"); err != nil {
-			return
-		}
+		fmt.Fprintln(w, "	imul rax, rdi")
 	case ND_DIV:
-		if _, err = fmt.Fprintln(w, "cqo"); err != nil {
-			return
-		}
-		if _, err = fmt.Fprintln(w, "idiv rdi"); err != nil {
-			return
-		}
+		fmt.Fprintln(w, "	cqo")
+		fmt.Fprintln(w, "	idiv rdi")
+	case ND_EQ:
+		fmt.Fprintln(w, "	cmp rax, rdi")
+		fmt.Fprintln(w, "	sete al")
+		fmt.Fprintln(w, "	movzb rax, al")
+	case ND_NE:
+		fmt.Fprintln(w, "	cmp rax, rdi")
+		fmt.Fprintln(w, "	setne al")
+		fmt.Fprintln(w, "	movzb rax, al")
+	case ND_LT:
+		fmt.Fprintln(w, "	cmp rax, rdi")
+		fmt.Fprintln(w, "	setl al")
+		fmt.Fprintln(w, "	movzb rax, al")
+	case ND_LE:
+		fmt.Fprintln(w, "	cmp rax, rdi")
+		fmt.Fprintln(w, "	setle al")
+		fmt.Fprintln(w, "	movzb rax, al")
 	}
 
-	if _, err = fmt.Fprintln(w, "push rax"); err != nil {
-		return
-	}
-
+	fmt.Fprintln(w, "	push rax")
 	return
 }
 
@@ -314,9 +367,7 @@ func compile(arg string, w io.Writer) error {
 
 	printTokens()
 	// output the former 3 lines of the assembly
-	if _, err := fmt.Fprintln(w, ".intel_syntax noprefix\n.globl main\nmain:"); err != nil {
-		return err
-	}
+	fmt.Fprintln(w, ".intel_syntax noprefix\n.globl main\nmain:")
 
 	// make the asm code, down on the AST
 	if err := gen(node, w); err != nil {
@@ -325,13 +376,8 @@ func compile(arg string, w io.Writer) error {
 
 	// the value of the expression should remain on the top of 'stack',
 	// so load this value into rax.
-	if _, err := fmt.Fprintln(w, "	pop rax"); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintln(w, "	ret"); err != nil {
-		return err
-	}
-
+	fmt.Fprintln(w, "	pop rax")
+	fmt.Fprintln(w, "	ret")
 	return nil
 }
 

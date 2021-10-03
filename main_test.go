@@ -14,42 +14,31 @@ type testcase struct {
 }
 
 var cases = map[string]testcase{
-	"1": {
-		expected: 0,
-		input:    "0",
-	},
-	"2": {
-		expected: 42,
-		input:    "42",
-	},
-	"3": {
-		expected: 41,
-		input:    " 12 + 34 - 5 ",
-	},
-	"4": {
-		expected: 47,
-		input:    "5+6*7",
-	},
-	"5": {
-		expected: 15,
-		input:    "5*(9-6)",
-	},
-	"6": {
-		expected: 4,
-		input:    "(3+5)/2",
-	},
-	"7": {
-		expected: 8,
-		input:    "5--3",
-	},
-	"8": {
-		expected: 1,
-		input:    "9-(3+5)",
-	},
-	"9": {
-		expected: 10,
-		input:    "-10+20",
-	},
+	"1":  {0, "0"},
+	"2":  {42, "42"},
+	"3":  {41, " 12 + 34 - 5 "},
+	"4":  {47, "5+6*7"},
+	"5":  {15, "5*(9-6)"},
+	"6":  {4, "(3+5)/2"},
+	"7":  {10, "-10+20"},
+	"8":  {10, "- -10"},
+	"9":  {10, "- - +10"},
+	"10": {0, "0==1"},
+	"11": {1, "42==42"},
+	"12": {1, "0!=1"},
+	"13": {0, "42!=42"},
+	"14": {1, "0<1"},
+	"15": {0, "1<1"},
+	"16": {0, "2<1"},
+	"17": {1, "0<=1"},
+	"18": {1, "1<=1"},
+	"19": {0, "2<=1"},
+	"20": {1, "1>0"},
+	"21": {0, "1>1"},
+	"22": {0, "1>2"},
+	"23": {1, "1>=0"},
+	"24": {1, "1>=1"},
+	"25": {0, "1>=2"},
 }
 
 func TestCompile(t *testing.T) {
@@ -99,13 +88,13 @@ func TestCompile(t *testing.T) {
 				}
 			}
 
+			// the return value of temporary.s is saved in exit status code,
+			// so the below will be used only when the return value is 0.
 			ans, err := exec.Command("sh", "-c", "echo $?").Output()
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			// the return value of temporary.s is saved in exit status code,
-			// so the below will be used only when the return value is 0.
 			actual, err := strconv.Atoi(strings.Trim(string(ans), "\n"))
 			if err != nil {
 				t.Fatal(err)
