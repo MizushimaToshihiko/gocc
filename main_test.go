@@ -26,6 +26,30 @@ var cases = map[string]testcase{
 		expected: 41,
 		input:    " 12 + 34 - 5 ",
 	},
+	"4": {
+		expected: 47,
+		input:    "5+6*7",
+	},
+	"5": {
+		expected: 15,
+		input:    "5*(9-6)",
+	},
+	"6": {
+		expected: 4,
+		input:    "(3+5)/2",
+	},
+	"7": {
+		expected: 8,
+		input:    "5--3",
+	},
+	"8": {
+		expected: 1,
+		input:    "9-(3+5)",
+	},
+	"9": {
+		expected: 10,
+		input:    "-10+20",
+	},
 }
 
 func TestCompile(t *testing.T) {
@@ -65,7 +89,7 @@ func TestCompile(t *testing.T) {
 				if ee, ok := err.(*exec.ExitError); !ok {
 					t.Fatal(err)
 				} else {
-					// the return value of temporary.s is saved in exit status code,
+					// the return value of temporary.s is saved in exit status code
 					actual := ee.ProcessState.ExitCode()
 					if c.expected != actual {
 						t.Fatalf("%d expected, but got %d", c.expected, actual)
@@ -81,7 +105,7 @@ func TestCompile(t *testing.T) {
 			}
 
 			// the return value of temporary.s is saved in exit status code,
-			// the below will be used only when the return value is 0.
+			// so the below will be used only when the return value is 0.
 			actual, err := strconv.Atoi(strings.Trim(string(ans), "\n"))
 			if err != nil {
 				t.Fatal(err)

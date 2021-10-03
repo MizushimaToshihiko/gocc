@@ -27,25 +27,6 @@ type Token struct {
 // current token
 var token *Token
 
-// // the types of AST node
-// type NodeKind int
-
-// const (
-// 	ND_ADD NodeKind = iota // +
-// 	ND_SUB                 // -
-// 	ND_MUL                 // *
-// 	ND_DIV                 // /
-// 	ND_NUM                 // integer
-// )
-
-// // define AST node
-// type Node struct {
-// 	Kind NodeKind // type of node
-// 	Lhs  *Node    // left
-// 	Rhs  *Node    // right
-// 	Val  int      // it would be used when kind is 'ND_NUM'
-// }
-
 // inputted program
 var userInput string
 var curIdx int
@@ -135,7 +116,12 @@ func tokenize() *Token {
 			continue
 		}
 
-		if userInput[curIdx] == '+' || userInput[curIdx] == '-' {
+		if userInput[curIdx] == '+' ||
+			userInput[curIdx] == '-' ||
+			userInput[curIdx] == '*' ||
+			userInput[curIdx] == '/' ||
+			userInput[curIdx] == '(' ||
+			userInput[curIdx] == ')' {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]))
 			curIdx++
 			continue
@@ -162,11 +148,13 @@ func tokenize() *Token {
 	return head.Next
 }
 
+// for printTokens function, the pointer of the head token
+// stored in 'headTok'.
 var headTok *Token
 
 //
 func printTokens() {
-	fmt.Print("#")
+	fmt.Print("# Tokens: ")
 	tok := headTok.Next
 	for tok.Next != nil {
 		fmt.Printf(" '%s' ", tok.Str)
@@ -175,39 +163,171 @@ func printTokens() {
 	fmt.Println()
 }
 
+// the types of AST node
+type NodeKind int
+
+const (
+	ND_ADD NodeKind = iota // +
+	ND_SUB                 // -
+	ND_MUL                 // *
+	ND_DIV                 // /
+	ND_NUM                 // integer
+)
+
+// define AST node
+type Node struct {
+	Kind NodeKind // type of node
+	Lhs  *Node    // left branch
+	Rhs  *Node    // right branch
+	Val  int      // it would be used when kind is 'ND_NUM'
+}
+
+func newNode(kind NodeKind, lhs *Node, rhs *Node) *Node {
+	return &Node{
+		Kind: kind,
+		Lhs:  lhs,
+		Rhs:  rhs,
+	}
+}
+
+func newNodeNum(val int) *Node {
+	return &Node{
+		Kind: ND_NUM,
+		Val:  val,
+	}
+}
+
+// expr = mul ("+" mul | "-" mul)*
+func expr() *Node {
+	node := mul()
+
+	for {
+		if consume('+') {
+			node = newNode(ND_ADD, node, mul())
+		} else if consume('-') {
+			node = newNode(ND_SUB, node, mul())
+		} else {
+			return node
+		}
+	}
+}
+
+// mul = unary ("*" unary | "/" unary)*
+func mul() *Node {
+	node := unary()
+
+	for {
+		if consume('*') {
+			node = newNode(ND_MUL, node, unary())
+		} else if consume('/') {
+			node = newNode(ND_DIV, node, unary())
+		} else {
+			return node
+		}
+	}
+}
+
+// unary   = ("+" | "-")? primary
+func unary() *Node {
+	if consume('+') {
+		return primary()
+	}
+	if consume('-') {
+		return newNode(ND_SUB, newNodeNum(0), primary())
+	}
+	return primary()
+}
+
+// primary = "(" expr ")" | num
+func primary() *Node {
+	// if the next token is '(', the program must be
+	// "(" expr ")"
+	if consume('(') {
+		node := expr()
+		expect(')')
+		return node
+	}
+
+	// or must be integer
+	return newNodeNum(expectNumber())
+}
+
+func gen(node *Node, w io.Writer) (err error) {
+	if node.Kind == ND_NUM {
+		_, err = fmt.Fprintf(w, "	push %d\n", node.Val)
+		return
+	}
+
+	err = gen(node.Lhs, w)
+	if err != nil {
+		return
+	}
+	err = gen(node.Rhs, w)
+	if err != nil {
+		return
+	}
+
+	_, err = fmt.Fprintln(w, "	pop rdi")
+	if err != nil {
+		return
+	}
+	_, err = fmt.Fprintln(w, "	pop rax")
+	if err != nil {
+		return
+	}
+
+	switch node.Kind {
+	case ND_ADD:
+		if _, err = fmt.Fprintln(w, "	add rax, rdi"); err != nil {
+			return
+		}
+	case ND_SUB:
+		if _, err = fmt.Fprintln(w, "sub rax, rdi"); err != nil {
+			return
+		}
+	case ND_MUL:
+		if _, err = fmt.Fprintln(w, "imul rax, rdi"); err != nil {
+			return
+		}
+	case ND_DIV:
+		if _, err = fmt.Fprintln(w, "cqo"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "idiv rdi"); err != nil {
+			return
+		}
+	}
+
+	if _, err = fmt.Fprintln(w, "push rax"); err != nil {
+		return
+	}
+
+	return
+}
+
 func compile(arg string, w io.Writer) error {
-	// tokenize
-	curIdx = 0
+	// tokenize and parse
+	curIdx = 0 // for test
 	userInput = arg
 	token = tokenize()
+	node := expr()
 
 	printTokens()
-	// output the former of the assembly
+	// output the former 3 lines of the assembly
 	if _, err := fmt.Fprintln(w, ".intel_syntax noprefix\n.globl main\nmain:"); err != nil {
 		return err
 	}
 
-	// check the beginning of expression is interger,
-	// and output the first 'mov' command.
-	if _, err := fmt.Fprintf(w, "	mov rax, %d\n", expectNumber()); err != nil {
+	// make the asm code, down on the AST
+	if err := gen(node, w); err != nil {
 		return err
 	}
 
-	// '+ <NUM>' or '- <NUM>'
-	for !atEof() {
-		if consume('+') {
-			if _, err := fmt.Fprintf(w, "	add rax, %d\n", expectNumber()); err != nil {
-				return err
-			}
-			continue
-		}
-
-		expect('-')
-		if _, err := fmt.Fprintf(w, "	sub rax, %d\n", expectNumber()); err != nil {
-			return err
-		}
+	// the value of the expression should remain on the top of 'stack',
+	// so load this value into rax.
+	if _, err := fmt.Fprintln(w, "	pop rax"); err != nil {
+		return err
 	}
-
 	if _, err := fmt.Fprintln(w, "	ret"); err != nil {
 		return err
 	}
