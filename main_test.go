@@ -55,7 +55,7 @@ func TestCompile(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			// オブジェクトファイルができていなかったら落とす
+			// 実行ファイルができていなかったら落とす
 			if _, err := os.Stat(asmName); err != nil {
 				t.Fatal(err)
 			}

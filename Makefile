@@ -10,8 +10,8 @@ SRCS=$(wildcard *.go)
 
 all: build test
 
-build:
-	$(GOBUILD) -o $(BINARY_NAME) -v
+build: main.go
+	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
 test: $(SRCS)
 	$(GOTEST) $^ -v -cover
