@@ -78,7 +78,7 @@ func TestCompile(t *testing.T) {
 				if ee, ok := err.(*exec.ExitError); !ok {
 					t.Fatal(err)
 				} else {
-					// the return value of temporary.s is saved in exit status code
+					// the return value of temporary.s is saved in exit status code normally
 					actual := ee.ProcessState.ExitCode()
 					if c.expected != actual {
 						t.Fatalf("%d expected, but got %d", c.expected, actual)
