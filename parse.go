@@ -45,7 +45,7 @@ func newNodeNum(val int) *Node {
 }
 
 // code is a slice to store prased nodes.
-var code []*Node
+var code [100]*Node
 
 // program = stmt*
 func program() {
@@ -154,7 +154,7 @@ func unary() *Node {
 	return primary()
 }
 
-// primary = "(" expr ")" | num
+// primary = num | ident | "(" expr ")"
 func primary() *Node {
 	// if the next token is '(', the program must be
 	// "(" expr ")"
