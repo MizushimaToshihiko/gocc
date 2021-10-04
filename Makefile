@@ -16,15 +16,15 @@ build: main.go
 test: $(SRCS)
 	$(GOTEST) $^ -v -cover
 
-clean:
+clean: 
 	$(GOCLEAN)
-	# rm -f 
+	rm -f temporary* profile
 
-format:
+fmt:
 	$(GOFMT) ./...
 
-coverage:
+coverage: $(SRCS)
 	$(GOTEST) $^ -coverprofile=profile
 	$(GOCMD) tool cover -html=profile
 
-.PHONY: test clean format
+.PHONY: test clean fmt coverage
