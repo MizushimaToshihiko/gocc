@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -12,22 +11,15 @@ func compile(arg string, w io.Writer) error {
 	curIdx = 0 // for test
 	userInput = arg
 	token = tokenize()
-	node := expr()
-
 	printTokens()
-	// output the former 3 lines of the assembly
-	fmt.Fprintln(w, ".intel_syntax noprefix\n.globl main\nmain:")
 
-	// make the asm code, down on the AST
-	if err := gen(node, w); err != nil {
-		return err
-	}
+	node := expr()
+	// walk in-order
+	walkInOrder(node)
+	// walk pre order
+	walkPreOrder(node)
 
-	// the value of the expression should remain on the top of 'stack',
-	// so load this value into rax.
-	fmt.Fprintln(w, "	pop rax")
-	fmt.Fprintln(w, "	ret")
-	return nil
+	return codeGen(w, node)
 }
 
 func main() {

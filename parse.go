@@ -1,173 +1,9 @@
 //
-// parser
+// AST parser
 //
 package main
 
-import (
-	"fmt"
-	"os"
-	"reflect"
-	"strconv"
-	"strings"
-)
-
-// set TokenKind with enum
-type TokenKind int
-
-const (
-	TK_RESERVED TokenKind = iota // symbol
-	TK_NUM                       // integer
-	TK_EOF                       // the end of tokens
-)
-
-type Token struct {
-	Kind TokenKind // type of token
-	Next *Token    // next
-	Val  int       // if 'kind' is TK_NUM, it's integer
-	Str  string    // token string
-	Len  int       // length of token
-}
-
-// current token
-var token *Token
-
-// inputted program
-var userInput string
-var curIdx int
-
-// for error report
-// it's arguments are same as printf
-func errorAt(errIdx int, formt string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, "%s\n", userInput)
-	fmt.Fprintf(os.Stderr, "%*s", errIdx, " ")
-	fmt.Fprint(os.Stderr, "^ ")
-	fmt.Fprintf(os.Stderr, formt, a...)
-	fmt.Fprint(os.Stderr, "\n")
-	os.Exit(1)
-}
-
-// if the next token is expected symbol, the read position
-// of token exceed one character, and returns true.
-func consume(op string) bool {
-	if token.Kind != TK_RESERVED ||
-		len(op) != token.Len ||
-		token.Str != op {
-		return false
-	}
-	token = token.Next
-	return true
-}
-
-// if the next token is expected symbol, the read position
-// of token exceed one character
-func expect(op string) {
-	if token.Kind != TK_RESERVED ||
-		len(op) != token.Len ||
-		token.Str != op {
-		errorAt(curIdx, "is not '%s'", string(op))
-	}
-	token = token.Next
-}
-
-// if next token is integer, the read position of token exceed one
-// character or report an error.
-func expectNumber() int {
-	if token.Kind != TK_NUM {
-		errorAt(curIdx, "is not an integer")
-	}
-	val := token.Val
-	token = token.Next
-	return val
-}
-
-func atEof() bool {
-	return token.Kind == TK_EOF
-}
-
-// make new token and append to the end of cur.
-func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
-	tok := &Token{Kind: kind, Str: str, Len: len}
-	cur.Next = tok
-	return tok
-}
-
-func startsWith(pp, qq string) bool {
-	p := []byte(pp)
-	q := []byte(qq)
-	return reflect.DeepEqual(p[:len(q)], q)
-}
-
-func isDigit(op byte) bool {
-	return '0' <= op && op <= '9'
-}
-
-// tokenize inputted string 'p', and return this.
-func tokenize() *Token {
-	var head Token
-	head.Next = nil
-	cur := &head
-
-	// for printToken
-	headTok = &head
-
-	for curIdx < len(userInput) {
-		// skip space(s)
-		if userInput[curIdx] == ' ' {
-			curIdx++
-			continue
-		}
-
-		// multi-letter punctuator
-		if startsWith(userInput[curIdx:], "==") ||
-			startsWith(userInput[curIdx:], "!=") ||
-			startsWith(userInput[curIdx:], "<=") ||
-			startsWith(userInput[curIdx:], ">=") {
-			cur = newToken(TK_RESERVED, cur, userInput[curIdx:curIdx+2], 2)
-			curIdx += 2
-			continue
-		}
-
-		if strings.Contains("+-()*/<>=", string(userInput[curIdx])) {
-			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
-			curIdx++
-			continue
-		}
-
-		if isDigit(userInput[curIdx]) {
-			var sVal string
-			for ; curIdx < len(userInput) && isDigit(userInput[curIdx]); curIdx++ {
-				sVal += string(userInput[curIdx])
-			}
-			cur = newToken(TK_NUM, cur, sVal, len(sVal))
-			v, err := strconv.Atoi(sVal)
-			if err != nil {
-				panic(err)
-			}
-			cur.Val = v
-			continue
-		}
-
-		errorAt(curIdx, "couldn't tokenize")
-	}
-
-	newToken(TK_EOF, cur, "", 0)
-	return head.Next
-}
-
-// for printTokens function, the pointer of the head token
-// stored in 'headTok'.
-var headTok *Token
-
-//
-func printTokens() {
-	fmt.Print("# Tokens: ")
-	tok := headTok.Next
-	for tok.Next != nil {
-		fmt.Printf(" '%s' ", tok.Str)
-		tok = tok.Next
-	}
-	fmt.Println()
-}
+import "fmt"
 
 // the types of AST node
 type NodeKind int
@@ -186,10 +22,10 @@ const (
 
 // define AST node
 type Node struct {
-	Kind NodeKind // type of node
-	Lhs  *Node    // left branch
-	Rhs  *Node    // right branch
-	Val  int      // it would be used when kind is 'ND_NUM'
+	Kind NodeKind // the type of node
+	Lhs  *Node    // the left branch
+	Rhs  *Node    // the right branch
+	Val  int      // it would be used when 'Kind' is 'ND_NUM'
 }
 
 func newNode(kind NodeKind, lhs *Node, rhs *Node) *Node {
@@ -298,6 +134,152 @@ func primary() *Node {
 		return node
 	}
 
-	// or must be integer
+	// otherwise, must be integer
 	return newNodeNum(expectNumber())
+}
+
+// walk AST in in-order
+func walkInOrder(node *Node) {
+	fmt.Print("# Nodes in-order: ")
+	inOrder(node)
+	fmt.Println()
+}
+
+func inOrder(node *Node) {
+	if node == nil {
+		return
+	}
+	inOrder(node.Lhs)
+	switch node.Kind {
+	case ND_NUM:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': %d: leaf ", "ND_NUM", node.Val)
+		} else {
+			fmt.Printf(" '%s': %d: ", "ND_NUM", node.Val)
+		}
+	case ND_ADD:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_ADD: +")
+		} else {
+			fmt.Printf(" '%s': ", "ND_ADD: +")
+		}
+	case ND_SUB:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_SUB: -")
+		} else {
+			fmt.Printf(" '%s': ", "ND_SUB: -")
+		}
+	case ND_MUL:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_MUL: *")
+		} else {
+			fmt.Printf(" '%s': ", "ND_MUL: *")
+		}
+	case ND_DIV:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_DIV: /")
+		} else {
+			fmt.Printf(" '%s': ", "ND_DIV: /")
+		}
+	case ND_EQ:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_EQ: ==")
+		} else {
+			fmt.Printf(" '%s': ", "ND_EQ: ==")
+		}
+	case ND_NE:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_NE: !=")
+		} else {
+			fmt.Printf(" '%s': ", "ND_NE: !=")
+		}
+	case ND_LT:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_LT: <")
+		} else {
+			fmt.Printf(" '%s': ", "ND_LT: <")
+		}
+	case ND_LE:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_LE: <=")
+		} else {
+			fmt.Printf(" '%s': ", "ND_LE: <=")
+		}
+	}
+	inOrder(node.Rhs)
+}
+
+// walk AST in pre-order
+func walkPreOrder(node *Node) {
+	fmt.Print("# Nodes pre-order: ")
+	preOrder(node)
+	fmt.Println()
+}
+
+func preOrder(node *Node) {
+	if node == nil {
+		return
+	}
+	switch node.Kind {
+	case ND_NUM:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': %d: leaf ", "ND_NUM", node.Val)
+		} else {
+			fmt.Printf(" '%s': %d: ", "ND_NUM", node.Val)
+		}
+	case ND_ADD:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_ADD: +")
+		} else {
+			fmt.Printf(" '%s': ", "ND_ADD: +")
+		}
+	case ND_SUB:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_SUB: -")
+		} else {
+			fmt.Printf(" '%s': ", "ND_SUB: -")
+		}
+	case ND_MUL:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_MUL: *")
+		} else {
+			fmt.Printf(" '%s': ", "ND_MUL: *")
+		}
+	case ND_DIV:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_DIV: /")
+		} else {
+			fmt.Printf(" '%s': ", "ND_DIV: /")
+		}
+	case ND_EQ:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_EQ: ==")
+		} else {
+			fmt.Printf(" '%s': ", "ND_EQ: ==")
+		}
+	case ND_NE:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_NE: !=")
+		} else {
+			fmt.Printf(" '%s': ", "ND_NE: !=")
+		}
+	case ND_LT:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_LT: <")
+		} else {
+			fmt.Printf(" '%s': ", "ND_LT: <")
+		}
+	case ND_LE:
+		if isLeaf(node) {
+			fmt.Printf(" '%s': leaf ", "ND_LE: <=")
+		} else {
+			fmt.Printf(" '%s': ", "ND_LE: <=")
+		}
+	}
+	preOrder(node.Lhs)
+	preOrder(node.Rhs)
+}
+
+func isLeaf(node *Node) bool {
+	return node.Lhs == nil && node.Rhs == nil
 }

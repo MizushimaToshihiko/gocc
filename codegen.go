@@ -8,52 +8,115 @@ import (
 	"io"
 )
 
-func gen(node *Node, w io.Writer) (err error) {
+func gen(w io.Writer, node *Node) (err error) {
 	if node.Kind == ND_NUM {
-		_, err = fmt.Fprintf(w, "	push %d\n", node.Val)
+		if _, err = fmt.Fprintf(w, "	push %d\n", node.Val); err != nil {
+			return
+		}
+	}
+
+	if err = gen(w, node.Lhs); err != nil {
+		return
+	}
+	if err = gen(w, node.Rhs); err != nil {
 		return
 	}
 
-	err = gen(node.Lhs, w)
-	if err != nil {
+	if _, err = fmt.Fprintln(w, "	pop rdi"); err != nil {
 		return
 	}
-	err = gen(node.Rhs, w)
-	if err != nil {
+	if _, err = fmt.Fprintln(w, "	pop rax"); err != nil {
 		return
 	}
-
-	fmt.Fprintln(w, "	pop rdi")
-	fmt.Fprintln(w, "	pop rax")
 
 	switch node.Kind {
 	case ND_ADD:
-		fmt.Fprintln(w, "	add rax, rdi")
+		if _, err = fmt.Fprintln(w, "	add rax, rdi"); err != nil {
+			return
+		}
 	case ND_SUB:
-		fmt.Fprintln(w, "	sub rax, rdi")
+		if _, err = fmt.Fprintln(w, "	sub rax, rdi"); err != nil {
+			return
+		}
 	case ND_MUL:
-		fmt.Fprintln(w, "	imul rax, rdi")
+		if _, err = fmt.Fprintln(w, "	imul rax, rdi"); err != nil {
+			return
+		}
 	case ND_DIV:
-		fmt.Fprintln(w, "	cqo")
-		fmt.Fprintln(w, "	idiv rdi")
+		if _, err = fmt.Fprintln(w, "	cqo"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "	idiv rdi"); err != nil {
+			return
+		}
 	case ND_EQ:
-		fmt.Fprintln(w, "	cmp rax, rdi")
-		fmt.Fprintln(w, "	sete al")
-		fmt.Fprintln(w, "	movzb rax, al")
+		if _, err = fmt.Fprintln(w, "	cmp rax, rdi"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "	sete al"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "	movzb rax, al"); err != nil {
+			return
+		}
 	case ND_NE:
-		fmt.Fprintln(w, "	cmp rax, rdi")
-		fmt.Fprintln(w, "	setne al")
-		fmt.Fprintln(w, "	movzb rax, al")
+		if _, err = fmt.Fprintln(w, "	cmp rax, rdi"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "	setne al"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "	movzb rax, al"); err != nil {
+			return
+		}
 	case ND_LT:
-		fmt.Fprintln(w, "	cmp rax, rdi")
-		fmt.Fprintln(w, "	setl al")
-		fmt.Fprintln(w, "	movzb rax, al")
+		if _, err = fmt.Fprintln(w, "	cmp rax, rdi"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "	setl al"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "	movzb rax, al"); err != nil {
+			return
+		}
 	case ND_LE:
-		fmt.Fprintln(w, "	cmp rax, rdi")
-		fmt.Fprintln(w, "	setle al")
-		fmt.Fprintln(w, "	movzb rax, al")
+		if _, err = fmt.Fprintln(w, "	cmp rax, rdi"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "	setle al"); err != nil {
+			return
+		}
+		if _, err = fmt.Fprintln(w, "	movzb rax, al"); err != nil {
+			return
+		}
 	}
 
-	fmt.Fprintln(w, "	push rax")
+	if _, err = fmt.Fprintln(w, "	push rax"); err != nil {
+		return
+	}
+
+	return
+}
+
+func codeGen(w io.Writer, node *Node) (err error) {
+	// output the former 3 lines of the assembly
+	if _, err = fmt.Fprintln(w, ".intel_syntax noprefix\n.globl main\nmain:"); err != nil {
+		return
+	}
+
+	// make the asm code, down on the AST
+	if err = gen(w, node); err != nil {
+		return
+	}
+
+	// the value of the expression should remain on the top of 'stack',
+	// so load this value into rax.
+	if _, err = fmt.Fprintln(w, "	pop rax"); err != nil {
+		return
+	}
+	if _, err = fmt.Fprintln(w, "	ret"); err != nil {
+		return
+	}
+
 	return
 }
