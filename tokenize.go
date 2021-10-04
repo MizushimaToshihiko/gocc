@@ -110,8 +110,8 @@ func tokenize() *Token {
 	head.Next = nil
 	cur := &head
 
-	// for printToken
-	headTok = &head
+	// // for printToken
+	// headTok = &head
 
 	for curIdx < len(userInput) {
 		// skip space(s)
@@ -158,22 +158,22 @@ func tokenize() *Token {
 	return head.Next
 }
 
-// for printTokens function, the pointer of the head token
-// stored in 'headTok'.
-var headTok *Token
+// // for printTokens function, the pointer of the head token
+// // stored in 'headTok'.
+// var headTok *Token
 
-//
-func printTokens() {
-	fmt.Print("# Tokens: ")
-	tok := headTok.Next
-	for tok.Next != nil {
-		fmt.Printf(" '%s' ", tok.Str)
-		tok = tok.Next
-	}
+// //
+// func printTokens() {
+// 	fmt.Print("# Tokens: ")
+// 	tok := headTok.Next
+// 	for tok.Next != nil {
+// 		fmt.Printf(" '%s' ", tok.Str)
+// 		tok = tok.Next
+// 	}
 
-	if tok.Kind == TK_EOF {
-		fmt.Print(" 'EOF' ")
-	}
+// 	if tok.Kind == TK_EOF {
+// 		fmt.Print(" 'EOF' ")
+// 	}
 
-	fmt.Println()
-}
+// 	fmt.Println()
+// }

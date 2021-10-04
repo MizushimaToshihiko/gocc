@@ -13,6 +13,7 @@ func gen(w io.Writer, node *Node) (err error) {
 		if _, err = fmt.Fprintf(w, "	push %d\n", node.Val); err != nil {
 			return
 		}
+		return
 	}
 
 	if err = gen(w, node.Lhs); err != nil {

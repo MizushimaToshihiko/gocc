@@ -3,8 +3,6 @@
 //
 package main
 
-import "fmt"
-
 // the types of AST node
 type NodeKind int
 
@@ -138,148 +136,148 @@ func primary() *Node {
 	return newNodeNum(expectNumber())
 }
 
-// walk AST in in-order
-func walkInOrder(node *Node) {
-	fmt.Print("# Nodes in-order: ")
-	inOrder(node)
-	fmt.Println()
-}
+// // walk AST in in-order
+// func walkInOrder(node *Node) {
+// 	fmt.Print("# Nodes in-order: ")
+// 	inOrder(node)
+// 	fmt.Println()
+// }
 
-func inOrder(node *Node) {
-	if node == nil {
-		return
-	}
-	inOrder(node.Lhs)
-	switch node.Kind {
-	case ND_NUM:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': %d: leaf ", "ND_NUM", node.Val)
-		} else {
-			fmt.Printf(" '%s': %d: ", "ND_NUM", node.Val)
-		}
-	case ND_ADD:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_ADD: +")
-		} else {
-			fmt.Printf(" '%s': ", "ND_ADD: +")
-		}
-	case ND_SUB:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_SUB: -")
-		} else {
-			fmt.Printf(" '%s': ", "ND_SUB: -")
-		}
-	case ND_MUL:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_MUL: *")
-		} else {
-			fmt.Printf(" '%s': ", "ND_MUL: *")
-		}
-	case ND_DIV:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_DIV: /")
-		} else {
-			fmt.Printf(" '%s': ", "ND_DIV: /")
-		}
-	case ND_EQ:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_EQ: ==")
-		} else {
-			fmt.Printf(" '%s': ", "ND_EQ: ==")
-		}
-	case ND_NE:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_NE: !=")
-		} else {
-			fmt.Printf(" '%s': ", "ND_NE: !=")
-		}
-	case ND_LT:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_LT: <")
-		} else {
-			fmt.Printf(" '%s': ", "ND_LT: <")
-		}
-	case ND_LE:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_LE: <=")
-		} else {
-			fmt.Printf(" '%s': ", "ND_LE: <=")
-		}
-	}
-	inOrder(node.Rhs)
-}
+// func inOrder(node *Node) {
+// 	if node == nil {
+// 		return
+// 	}
+// 	inOrder(node.Lhs)
+// 	switch node.Kind {
+// 	case ND_NUM:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': %d: leaf ", "ND_NUM", node.Val)
+// 		} else {
+// 			fmt.Printf(" '%s': %d: ", "ND_NUM", node.Val)
+// 		}
+// 	case ND_ADD:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_ADD: +")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_ADD: +")
+// 		}
+// 	case ND_SUB:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_SUB: -")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_SUB: -")
+// 		}
+// 	case ND_MUL:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_MUL: *")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_MUL: *")
+// 		}
+// 	case ND_DIV:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_DIV: /")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_DIV: /")
+// 		}
+// 	case ND_EQ:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_EQ: ==")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_EQ: ==")
+// 		}
+// 	case ND_NE:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_NE: !=")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_NE: !=")
+// 		}
+// 	case ND_LT:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_LT: <")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_LT: <")
+// 		}
+// 	case ND_LE:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_LE: <=")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_LE: <=")
+// 		}
+// 	}
+// 	inOrder(node.Rhs)
+// }
 
-// walk AST in pre-order
-func walkPreOrder(node *Node) {
-	fmt.Print("# Nodes pre-order: ")
-	preOrder(node)
-	fmt.Println()
-}
+// // walk AST in pre-order
+// func walkPreOrder(node *Node) {
+// 	fmt.Print("# Nodes pre-order: ")
+// 	preOrder(node)
+// 	fmt.Println()
+// }
 
-func preOrder(node *Node) {
-	if node == nil {
-		return
-	}
-	switch node.Kind {
-	case ND_NUM:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': %d: leaf ", "ND_NUM", node.Val)
-		} else {
-			fmt.Printf(" '%s': %d: ", "ND_NUM", node.Val)
-		}
-	case ND_ADD:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_ADD: +")
-		} else {
-			fmt.Printf(" '%s': ", "ND_ADD: +")
-		}
-	case ND_SUB:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_SUB: -")
-		} else {
-			fmt.Printf(" '%s': ", "ND_SUB: -")
-		}
-	case ND_MUL:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_MUL: *")
-		} else {
-			fmt.Printf(" '%s': ", "ND_MUL: *")
-		}
-	case ND_DIV:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_DIV: /")
-		} else {
-			fmt.Printf(" '%s': ", "ND_DIV: /")
-		}
-	case ND_EQ:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_EQ: ==")
-		} else {
-			fmt.Printf(" '%s': ", "ND_EQ: ==")
-		}
-	case ND_NE:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_NE: !=")
-		} else {
-			fmt.Printf(" '%s': ", "ND_NE: !=")
-		}
-	case ND_LT:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_LT: <")
-		} else {
-			fmt.Printf(" '%s': ", "ND_LT: <")
-		}
-	case ND_LE:
-		if isLeaf(node) {
-			fmt.Printf(" '%s': leaf ", "ND_LE: <=")
-		} else {
-			fmt.Printf(" '%s': ", "ND_LE: <=")
-		}
-	}
-	preOrder(node.Lhs)
-	preOrder(node.Rhs)
-}
+// func preOrder(node *Node) {
+// 	if node == nil {
+// 		return
+// 	}
+// 	switch node.Kind {
+// 	case ND_NUM:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': %d: leaf ", "ND_NUM", node.Val)
+// 		} else {
+// 			fmt.Printf(" '%s': %d: ", "ND_NUM", node.Val)
+// 		}
+// 	case ND_ADD:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_ADD: +")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_ADD: +")
+// 		}
+// 	case ND_SUB:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_SUB: -")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_SUB: -")
+// 		}
+// 	case ND_MUL:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_MUL: *")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_MUL: *")
+// 		}
+// 	case ND_DIV:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_DIV: /")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_DIV: /")
+// 		}
+// 	case ND_EQ:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_EQ: ==")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_EQ: ==")
+// 		}
+// 	case ND_NE:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_NE: !=")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_NE: !=")
+// 		}
+// 	case ND_LT:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_LT: <")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_LT: <")
+// 		}
+// 	case ND_LE:
+// 		if isLeaf(node) {
+// 			fmt.Printf(" '%s': leaf ", "ND_LE: <=")
+// 		} else {
+// 			fmt.Printf(" '%s': ", "ND_LE: <=")
+// 		}
+// 	}
+// 	preOrder(node.Lhs)
+// 	preOrder(node.Rhs)
+// }
 
-func isLeaf(node *Node) bool {
-	return node.Lhs == nil && node.Rhs == nil
-}
+// func isLeaf(node *Node) bool {
+// 	return node.Lhs == nil && node.Rhs == nil
+// }

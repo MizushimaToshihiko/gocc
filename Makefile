@@ -10,7 +10,7 @@ SRCS=$(wildcard *.go)
 
 all: build test
 
-build: main.go
+build: $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
 test: $(SRCS)
