@@ -7,23 +7,26 @@ package main
 type NodeKind int
 
 const (
-	ND_ADD NodeKind = iota // +
-	ND_SUB                 // -
-	ND_MUL                 // *
-	ND_DIV                 // /
-	ND_EQ                  // ==
-	ND_NE                  // !=
-	ND_LT                  // <
-	ND_LE                  // <=
-	ND_NUM                 // integer
+	ND_ADD    NodeKind = iota // +
+	ND_SUB                    // -
+	ND_MUL                    // *
+	ND_DIV                    // /
+	ND_EQ                     // ==
+	ND_NE                     // !=
+	ND_LT                     // <
+	ND_LE                     // <=
+	ND_ASSIGN                 // =
+	ND_LVAR                   // local variables
+	ND_NUM                    // integer
 )
 
 // define AST node
 type Node struct {
-	Kind NodeKind // the type of node
-	Lhs  *Node    // the left branch
-	Rhs  *Node    // the right branch
-	Val  int      // it would be used when 'Kind' is 'ND_NUM'
+	Kind   NodeKind // the type of node
+	Lhs    *Node    // the left branch
+	Rhs    *Node    // the right branch
+	Val    int      // it would be used when 'Kind' is 'ND_NUM'
+	Offset int      // it would be used when 'Kind' is 'ND_LVAR'
 }
 
 func newNode(kind NodeKind, lhs *Node, rhs *Node) *Node {
@@ -41,9 +44,38 @@ func newNodeNum(val int) *Node {
 	}
 }
 
+// code is a slice to store prased nodes.
+var code []*Node
+
+// program = stmt*
+func program() {
+	i := 0
+	for !atEof() {
+		code[i] = stmt()
+		i++
+	}
+	code[i] = nil
+}
+
+// stmt = expr ";"
+func stmt() *Node {
+	node := expr()
+	expect(";")
+	return node
+}
+
+// assign     = equality ("=" assign)?
+func assign() *Node {
+	node := equality()
+	if consume("=") {
+		node = newNode(ND_ASSIGN, node, assign())
+	}
+	return node
+}
+
 // expr       = equality
 func expr() *Node {
-	return equality()
+	return assign()
 }
 
 // equality   = relational ("==" relational | "!=" relational)*
@@ -130,6 +162,14 @@ func primary() *Node {
 		node := expr()
 		expect(")")
 		return node
+	}
+
+	tok := consumeIdent()
+	if tok != nil {
+		return &Node{
+			Kind:   ND_LVAR,
+			Offset: (int(tok.Str[0]-'a') + 1) * 8,
+		}
 	}
 
 	// otherwise, must be integer

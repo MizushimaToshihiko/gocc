@@ -17,6 +17,7 @@ type TokenKind int
 
 const (
 	TK_RESERVED TokenKind = iota // symbol
+	TK_IDENT                     // idenfier such as variables, function names
 	TK_NUM                       // integer
 	TK_EOF                       // the end of tokens
 )
@@ -59,6 +60,16 @@ func consume(op string) bool {
 	}
 	token = token.Next
 	return true
+}
+
+// consume the current token if it is an identifier
+func consumeIdent() *Token {
+	if token.Kind != TK_IDENT {
+		return nil
+	}
+	t := token
+	token = token.Next
+	return t
 }
 
 // if the next token is expected symbol, the read position
@@ -135,6 +146,11 @@ func tokenize() *Token {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue
+		}
+
+		if 'a' <= userInput[curIdx] && userInput[curIdx] <= 'z' {
+			cur = newToken(TK_IDENT, cur, string(userInput[curIdx]), 1)
+			curIdx++
 		}
 
 		if isDigit(userInput[curIdx]) {
