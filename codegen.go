@@ -29,6 +29,27 @@ func genLval(w io.Writer, node *Node) (err error) {
 }
 
 func gen(w io.Writer, node *Node) (err error) {
+	if node.Kind == ND_RETURN {
+		err = gen(w, node.Lhs)
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	pop rax")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	mov rsp, rbp")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	pop rbp")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	ret")
+		return
+	}
+
 	switch node.Kind {
 	case ND_NUM:
 		_, err = fmt.Fprintf(w, "	push %d\n", node.Val)

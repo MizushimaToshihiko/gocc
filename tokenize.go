@@ -6,6 +6,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -19,6 +20,7 @@ const (
 	TK_RESERVED TokenKind = iota // symbol
 	TK_IDENT                     // idenfier such as variables, function names
 	TK_NUM                       // integer
+	TK_RETURN                    // 'return' statement
 	TK_EOF                       // the end of tokens
 )
 
@@ -128,8 +130,7 @@ func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
 }
 
 func startsWith(pp, qq string) bool {
-	p := []byte(pp)
-	q := []byte(qq)
+	p, q := []byte(pp), []byte(qq)
 	return reflect.DeepEqual(p[:len(q)], q)
 }
 
@@ -162,10 +163,11 @@ func tokenize() *Token {
 		}
 
 		// multi-letter punctuator
-		if startsWith(userInput[curIdx:], "==") ||
-			startsWith(userInput[curIdx:], "!=") ||
-			startsWith(userInput[curIdx:], "<=") ||
-			startsWith(userInput[curIdx:], ">=") {
+		if curIdx+2 <= len(userInput) &&
+			(startsWith(userInput[curIdx:curIdx+2], "==") ||
+				startsWith(userInput[curIdx:curIdx+2], "!=") ||
+				startsWith(userInput[curIdx:curIdx+2], "<=") ||
+				startsWith(userInput[curIdx:curIdx+2], ">=")) {
 			cur = newToken(TK_RESERVED, cur, userInput[curIdx:curIdx+2], 2)
 			curIdx += 2
 			continue
@@ -178,15 +180,26 @@ func tokenize() *Token {
 			continue
 		}
 
+		// reserved words
+		if curIdx+6 <= len(userInput) &&
+			startsWith(userInput[curIdx:curIdx+6], "return") &&
+			!isAlNum(userInput[curIdx+6]) {
+			cur = newToken(TK_RETURN, cur, userInput[curIdx:curIdx+6], 6)
+			curIdx += 6
+			continue
+		}
+
+		// identifier
 		if isAlpha(userInput[curIdx]) {
 			ident := make([]byte, 0, 20)
-			for ; isAlNum(userInput[curIdx]); curIdx++ {
+			for ; curIdx < len(userInput) && isAlNum(userInput[curIdx]); curIdx++ {
 				ident = append(ident, userInput[curIdx])
 			}
 			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
 			continue
 		}
 
+		// number
 		if isDigit(userInput[curIdx]) {
 			var sVal string
 			for ; curIdx < len(userInput) && isDigit(userInput[curIdx]); curIdx++ {
@@ -216,13 +229,26 @@ var headTok *Token
 func printTokens() {
 	fmt.Print("# Tokens: ")
 	tok := headTok.Next
+	var kind string
 	for tok.Next != nil {
-		fmt.Printf(" '%s' ", tok.Str)
+		switch tok.Kind {
+		case TK_IDENT:
+			kind = "IDENT"
+		case TK_NUM:
+			kind = "NUM"
+		case TK_RESERVED:
+			kind = "RESERVED"
+		case TK_RETURN:
+			kind = "RETURN"
+		default:
+			log.Fatal("unknown token kind")
+		}
+		fmt.Printf(" %s:'%s' ", kind, tok.Str)
 		tok = tok.Next
 	}
 
 	if tok.Kind == TK_EOF {
-		fmt.Print(" 'EOF' ")
+		fmt.Print(" EOF ")
 	}
 
 	fmt.Println()

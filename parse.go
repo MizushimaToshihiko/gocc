@@ -3,6 +3,8 @@
 //
 package main
 
+import "os"
+
 // the types of AST node
 type NodeKind int
 
@@ -18,6 +20,7 @@ const (
 	ND_ASSIGN                 // =
 	ND_LVAR                   // local variables
 	ND_NUM                    // integer
+	ND_RETURN                 // 'return'
 )
 
 // define AST node
@@ -58,10 +61,25 @@ func program() {
 }
 
 // stmt = expr ";"
+//      | "return" expr ";"
 func stmt() *Node {
-	node := expr()
-	expect(";")
+	var node *Node
+
+	if consume("return") {
+		node = &Node{Kind: ND_RETURN, Lhs: expr()}
+	} else {
+		node = expr()
+	}
+
+	if !consume(";") {
+		errorAt(os.Stderr, curIdx, "is not '%s'", ";")
+	}
 	return node
+}
+
+// expr       = equality
+func expr() *Node {
+	return assign()
 }
 
 // assign     = equality ("=" assign)?
@@ -71,11 +89,6 @@ func assign() *Node {
 		node = newNode(ND_ASSIGN, node, assign())
 	}
 	return node
-}
-
-// expr       = equality
-func expr() *Node {
-	return assign()
 }
 
 // equality   = relational ("==" relational | "!=" relational)*
@@ -112,7 +125,7 @@ func relational() *Node {
 	}
 }
 
-// add        = mul ("+" mul | "-" mul)*
+// add = mul ("+" mul | "-" mul)*
 func add() *Node {
 	node := mul()
 
