@@ -54,6 +54,7 @@ var cases = map[string]testcase{
 	"32": {3, "return 3; return 5;"},
 
 	"33": {1, "1;"},
+	"34": {1, "a_=1; return a_;"},
 }
 
 func TestCompile(t *testing.T) {

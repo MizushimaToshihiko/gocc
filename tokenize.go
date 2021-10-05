@@ -6,7 +6,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -77,7 +76,8 @@ func errorAt(w io.Writer, errIdx int, formt string, a ...interface{}) {
 // if the next token is expected symbol, the read position
 // of token exceed one character, and returns true.
 func consume(op string) bool {
-	if token.Kind != TK_RESERVED ||
+	if (token.Kind != TK_RESERVED &&
+		token.Kind != TK_RETURN) ||
 		len(op) != token.Len ||
 		token.Str != op {
 		return false
@@ -139,7 +139,8 @@ func isDigit(op byte) bool {
 }
 
 func isAlpha(c byte) bool {
-	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
+		(c == '_')
 }
 
 func isAlNum(c byte) bool {
@@ -152,8 +153,8 @@ func tokenize() *Token {
 	head.Next = nil
 	cur := &head
 
-	// for printToken
-	headTok = &head
+	// // for printToken
+	// headTok = &head
 
 	for curIdx < len(userInput) {
 		// skip space(s)
@@ -221,35 +222,35 @@ func tokenize() *Token {
 	return head.Next
 }
 
-// for printTokens function, the pointer of the head token
-// stored in 'headTok'.
-var headTok *Token
+// // for printTokens function, the pointer of the head token
+// // stored in 'headTok'.
+// var headTok *Token
 
-//
-func printTokens() {
-	fmt.Print("# Tokens: ")
-	tok := headTok.Next
-	var kind string
-	for tok.Next != nil {
-		switch tok.Kind {
-		case TK_IDENT:
-			kind = "IDENT"
-		case TK_NUM:
-			kind = "NUM"
-		case TK_RESERVED:
-			kind = "RESERVED"
-		case TK_RETURN:
-			kind = "RETURN"
-		default:
-			log.Fatal("unknown token kind")
-		}
-		fmt.Printf(" %s:'%s' ", kind, tok.Str)
-		tok = tok.Next
-	}
+// //
+// func printTokens() {
+// 	fmt.Print("# Tokens: ")
+// 	tok := headTok.Next
+// 	var kind string
+// 	for tok.Next != nil {
+// 		switch tok.Kind {
+// 		case TK_IDENT:
+// 			kind = "IDENT"
+// 		case TK_NUM:
+// 			kind = "NUM"
+// 		case TK_RESERVED:
+// 			kind = "RESERVED"
+// 		case TK_RETURN:
+// 			kind = "RETURN"
+// 		default:
+// 			log.Fatal("unknown token kind")
+// 		}
+// 		fmt.Printf(" %s:'%s' ", kind, tok.Str)
+// 		tok = tok.Next
+// 	}
 
-	if tok.Kind == TK_EOF {
-		fmt.Print(" EOF ")
-	}
+// 	if tok.Kind == TK_EOF {
+// 		fmt.Print(" EOF ")
+// 	}
 
-	fmt.Println()
-}
+// 	fmt.Println()
+// }
