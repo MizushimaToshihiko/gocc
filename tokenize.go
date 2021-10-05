@@ -151,6 +151,7 @@ func tokenize() *Token {
 		if 'a' <= userInput[curIdx] && userInput[curIdx] <= 'z' {
 			cur = newToken(TK_IDENT, cur, string(userInput[curIdx]), 1)
 			curIdx++
+			continue
 		}
 
 		if isDigit(userInput[curIdx]) {
