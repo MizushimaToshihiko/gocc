@@ -33,6 +33,28 @@ type Token struct {
 // current token
 var token *Token
 
+// the type of local variables
+type LVar struct {
+	Next   *LVar
+	Name   string
+	Len    int
+	Offset int
+}
+
+// local variables
+var locals *LVar
+
+// search a local variable by name.
+// if it wasn't find, return nil.
+func findLVar(tok *Token) *LVar {
+	for lvar := locals; lvar != nil; lvar = lvar.Next {
+		if lvar.Len == tok.Len && startsWith(tok.Str, lvar.Name) {
+			return lvar
+		}
+	}
+	return nil
+}
+
 // inputted program
 var userInput string
 
@@ -115,6 +137,14 @@ func isDigit(op byte) bool {
 	return '0' <= op && op <= '9'
 }
 
+func isAlpha(c byte) bool {
+	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+}
+
+func isAlNum(c byte) bool {
+	return isAlpha(c) || ('0' <= c && c <= '9')
+}
+
 // tokenize inputted string 'p', and return this.
 func tokenize() *Token {
 	var head Token
@@ -148,9 +178,12 @@ func tokenize() *Token {
 			continue
 		}
 
-		if 'a' <= userInput[curIdx] && userInput[curIdx] <= 'z' {
-			cur = newToken(TK_IDENT, cur, string(userInput[curIdx]), 1)
-			curIdx++
+		if isAlpha(userInput[curIdx]) {
+			ident := make([]byte, 0, 20)
+			for ; isAlNum(userInput[curIdx]); curIdx++ {
+				ident = append(ident, userInput[curIdx])
+			}
+			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
 			continue
 		}
 

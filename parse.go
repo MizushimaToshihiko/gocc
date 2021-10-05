@@ -166,10 +166,25 @@ func primary() *Node {
 
 	tok := consumeIdent()
 	if tok != nil {
-		return &Node{
-			Kind:   ND_LVAR,
-			Offset: (int(tok.Str[0]-'a') + 1) * 8,
+		node := &Node{Kind: ND_LVAR}
+
+		lvar := findLVar(tok)
+		if lvar != nil {
+			node.Offset = lvar.Offset
+		} else {
+			lvar = &LVar{
+				Next:   locals,
+				Name:   tok.Str,
+				Len:    tok.Len,
+				Offset: 8,
+			}
+			if locals != nil {
+				lvar.Offset += locals.Offset
+			}
+			node.Offset = lvar.Offset
+			locals = lvar
 		}
+		return node
 	}
 
 	// otherwise, must be integer
