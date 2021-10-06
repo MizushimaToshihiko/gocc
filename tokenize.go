@@ -62,6 +62,13 @@ var userInput string
 // current index in 'userInput'
 var curIdx int
 
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
 // for error report
 // it's arguments are same as printf
 func errorAt(w io.Writer, errIdx int, formt string, a ...interface{}) {
@@ -129,9 +136,31 @@ func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
 	return tok
 }
 
+// startsWith compare 'pp' and 'qq' , pp is keyword
 func startsWith(pp, qq string) bool {
 	p, q := []byte(pp), []byte(qq)
 	return reflect.DeepEqual(p[:len(q)], q)
+}
+
+func startsWithReserved(p string) string {
+	// keyword
+	kw := []string{"return", "if", "then"}
+
+	for _, k := range kw {
+		if startsWith(k, p) && !isAlNum(p[min(len(k), len(p))]) {
+			return k
+		}
+	}
+
+	// Multi-letter punctuator
+	ops := []string{"==", "!=", "<=", ">="}
+
+	for _, op := range ops {
+		if startsWith(op, p) {
+			return op
+		}
+	}
+	return ""
 }
 
 func isDigit(op byte) bool {
@@ -163,16 +192,22 @@ func tokenize() *Token {
 			continue
 		}
 
-		// multi-letter punctuator
-		if curIdx+2 <= len(userInput) &&
-			(startsWith(userInput[curIdx:curIdx+2], "==") ||
-				startsWith(userInput[curIdx:curIdx+2], "!=") ||
-				startsWith(userInput[curIdx:curIdx+2], "<=") ||
-				startsWith(userInput[curIdx:curIdx+2], ">=")) {
-			cur = newToken(TK_RESERVED, cur, userInput[curIdx:curIdx+2], 2)
-			curIdx += 2
+		// keyword or multi-letter punctuator
+		kw := startsWithReserved(userInput[curIdx:])
+		if kw != "" {
+			cur = newToken(TK_RESERVED, cur, kw, len(kw))
+			curIdx += len(kw)
 			continue
 		}
+		// if curIdx+2 <= len(userInput) &&
+		// 	(startsWith(userInput[curIdx:curIdx+2], "==") ||
+		// 		startsWith(userInput[curIdx:curIdx+2], "!=") ||
+		// 		startsWith(userInput[curIdx:curIdx+2], "<=") ||
+		// 		startsWith(userInput[curIdx:curIdx+2], ">=")) {
+		// 	cur = newToken(TK_RESERV,ED, cur, userInput[curIdx:curIdx+2], 2)
+		// 	curIdx += 2
+		// 	continue
+		// }
 
 		// single-letter punctuator
 		if strings.Contains("+-()*/<>=;", string(userInput[curIdx])) {
@@ -181,14 +216,14 @@ func tokenize() *Token {
 			continue
 		}
 
-		// reserved words
-		if curIdx+6 <= len(userInput) &&
-			startsWith(userInput[curIdx:curIdx+6], "return") &&
-			!isAlNum(userInput[curIdx+6]) {
-			cur = newToken(TK_RETURN, cur, userInput[curIdx:curIdx+6], 6)
-			curIdx += 6
-			continue
-		}
+		// // reserved words
+		// if curIdx+6 <= len(userInput) &&
+		// 	startsWith(userInput[curIdx:curIdx+6], "return") &&
+		// 	!isAlNum(userInput[curIdx+6]) {
+		// 	cur = newToken(TK_RETURN, cur, userInput[curIdx:curIdx+6], 6)
+		// 	curIdx += 6
+		// 	continue
+		// }
 
 		// identifier
 		if isAlpha(userInput[curIdx]) {

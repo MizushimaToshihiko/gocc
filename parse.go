@@ -21,15 +21,24 @@ const (
 	ND_LVAR                   // local variables
 	ND_NUM                    // integer
 	ND_RETURN                 // 'return'
+	ND_IF                     // "if"
 )
 
 // define AST node
 type Node struct {
-	Kind   NodeKind // the type of node
-	Lhs    *Node    // the left branch
-	Rhs    *Node    // the right branch
-	Val    int      // it would be used when 'Kind' is 'ND_NUM'
-	Offset int      // it would be used when 'Kind' is 'ND_LVAR'
+	Kind NodeKind // the type of node
+
+	Lhs *Node // the left branch
+	Rhs *Node // the right branch
+
+	// "if" statement
+	Cond *Node
+	Then *Node
+	Els  *Node
+
+	Val    int // it would be used when 'Kind' is 'ND_NUM'
+	Offset int // it would be used when 'Kind' is 'ND_LVAR'
+
 }
 
 func newNode(kind NodeKind, lhs *Node, rhs *Node) *Node {
@@ -61,9 +70,16 @@ func program() {
 }
 
 // stmt = expr ";"
+//      | "if" "(" expr ")" stmt ("else" stmt)?
+//      | "while" "(" expr ")" stmt
+//      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "return" expr ";"
 func stmt() *Node {
 	var node *Node
+
+	if consume("if") {
+
+	}
 
 	if consume("return") {
 		node = &Node{Kind: ND_RETURN, Lhs: expr()}
