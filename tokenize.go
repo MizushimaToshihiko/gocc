@@ -16,10 +16,9 @@ import (
 type TokenKind int
 
 const (
-	TK_RESERVED TokenKind = iota // symbol
+	TK_RESERVED TokenKind = iota // Reserved words, and puncturators
 	TK_IDENT                     // idenfier such as variables, function names
 	TK_NUM                       // integer
-	TK_RETURN                    // 'return' statement
 	TK_EOF                       // the end of tokens
 )
 
@@ -83,8 +82,7 @@ func errorAt(w io.Writer, errIdx int, formt string, a ...interface{}) {
 // if the next token is expected symbol, the read position
 // of token exceed one character, and returns true.
 func consume(op string) bool {
-	if (token.Kind != TK_RESERVED &&
-		token.Kind != TK_RETURN) ||
+	if token.Kind != TK_RESERVED ||
 		len(op) != token.Len ||
 		token.Str != op {
 		return false
@@ -136,10 +134,10 @@ func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
 	return tok
 }
 
-// startsWith compare 'pp' and 'qq' , pp is keyword
+// startsWith compare 'pp' and 'qq' , qq is keyword
 func startsWith(pp, qq string) bool {
 	p, q := []byte(pp), []byte(qq)
-	return reflect.DeepEqual(p[:len(q)], q)
+	return len(p) >= len(q) && reflect.DeepEqual(p[:len(q)], q)
 }
 
 func startsWithReserved(p string) string {
@@ -147,7 +145,7 @@ func startsWithReserved(p string) string {
 	kw := []string{"return", "if", "then"}
 
 	for _, k := range kw {
-		if startsWith(k, p) && !isAlNum(p[min(len(k), len(p))]) {
+		if startsWith(p, k) && len(p) > len(k) && !isAlNum(p[len(k)]) {
 			return k
 		}
 	}
@@ -156,7 +154,7 @@ func startsWithReserved(p string) string {
 	ops := []string{"==", "!=", "<=", ">="}
 
 	for _, op := range ops {
-		if startsWith(op, p) {
+		if startsWith(p, op) {
 			return op
 		}
 	}
@@ -182,8 +180,8 @@ func tokenize() *Token {
 	head.Next = nil
 	cur := &head
 
-	// // for printToken
-	// headTok = &head
+	// for printToken
+	headTok = &head
 
 	for curIdx < len(userInput) {
 		// skip space(s)
@@ -257,35 +255,34 @@ func tokenize() *Token {
 	return head.Next
 }
 
-// // for printTokens function, the pointer of the head token
-// // stored in 'headTok'.
-// var headTok *Token
+// for printTokens function, the pointer of the head token
+// stored in 'headTok'.
+var headTok *Token
 
-// //
-// func printTokens() {
-// 	fmt.Print("# Tokens: ")
-// 	tok := headTok.Next
-// 	var kind string
-// 	for tok.Next != nil {
-// 		switch tok.Kind {
-// 		case TK_IDENT:
-// 			kind = "IDENT"
-// 		case TK_NUM:
-// 			kind = "NUM"
-// 		case TK_RESERVED:
-// 			kind = "RESERVED"
-// 		case TK_RETURN:
-// 			kind = "RETURN"
-// 		default:
-// 			log.Fatal("unknown token kind")
-// 		}
-// 		fmt.Printf(" %s:'%s' ", kind, tok.Str)
-// 		tok = tok.Next
-// 	}
+//
+func printTokens() {
+	fmt.Print("# Tokens: ")
+	tok := headTok.Next
+	// var kind string
+	for tok.Next != nil {
+		// switch tok.Kind {
+		// case TK_IDENT:
+		// 	kind = "IDENT"
+		// case TK_NUM:
+		// 	kind = "NUM"
+		// case TK_RESERVED:
+		// 	kind = "RESERVED"
+		// default:
+		// 	log.Fatal("unknown token kind")
+		// }
+		// fmt.Printf(" %s:'%s' ", kind, tok.Str)
+		fmt.Printf(" '%s' ", tok.Str)
+		tok = tok.Next
+	}
 
-// 	if tok.Kind == TK_EOF {
-// 		fmt.Print(" EOF ")
-// 	}
+	if tok.Kind == TK_EOF {
+		fmt.Print(" EOF ")
+	}
 
-// 	fmt.Println()
-// }
+	fmt.Println()
+}

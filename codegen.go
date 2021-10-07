@@ -9,6 +9,8 @@ import (
 	"io"
 )
 
+var labelNo int
+
 func genLval(w io.Writer, node *Node) (err error) {
 	if node.Kind != ND_LVAR {
 		err = errors.New("the left value is not a variable")
@@ -93,6 +95,50 @@ func gen(w io.Writer, node *Node) (err error) {
 		}
 		_, err = fmt.Fprintln(w, "	push rdi")
 		return
+
+	case ND_IF:
+		err = gen(w, node.Cond)
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	pop rax")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	cmp rax, 0")
+		if err != nil {
+			return
+		}
+
+		labelNo++
+		_, err = fmt.Fprintf(w, "	je .Lend%03d\n", labelNo)
+		if err != nil {
+			return
+		}
+		err = gen(w, node.Then)
+		if err != nil {
+			return
+		}
+
+		if node.Els != nil {
+			_, err = fmt.Fprintf(w, " jmp .Lend%03d\n", labelNo)
+			if err != nil {
+				return
+			}
+			_, err = fmt.Fprintf(w, ".Lelse%03d\n", labelNo)
+			if err != nil {
+				return
+			}
+			err = gen(w, node.Els)
+			if err != nil {
+				return
+			}
+		}
+
+		_, err = fmt.Fprintf(w, ".Lend%03d\n", labelNo)
+		if err != nil {
+			return
+		}
 	}
 
 	err = gen(w, node.Lhs)

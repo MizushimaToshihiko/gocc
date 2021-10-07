@@ -55,6 +55,11 @@ var cases = map[string]testcase{
 
 	"33": {1, "1;"},
 	"34": {1, "a_=1; return a_;"},
+
+	"35": {3, "if (0) return 2; return 3;"},
+	"36": {3, "if (1-1) return 2; return 3;"},
+	"37": {2, "if (1) return 2; return 3;"},
+	"38": {2, "if (2-1) return 2; return 3;"},
 }
 
 func TestCompile(t *testing.T) {
@@ -121,5 +126,27 @@ func TestCompile(t *testing.T) {
 			}
 			t.Logf("%s => %d", c.input, actual)
 		})
+	}
+}
+
+func TestStartWith(t *testing.T) {
+	kw := "return"
+	in := "return return;"
+
+	acb := startsWith(in, kw)
+	if !acb {
+		t.Fatal("actual is not expected")
+	}
+	t.Log("startsWith OK")
+
+	ac := startsWithReserved(in)
+	if startsWith(in, kw) && len(in) > len(kw) && !isAlNum(in[len(kw)]) {
+		t.Log("true")
+	} else {
+		t.Log("false")
+	}
+
+	if ac != kw {
+		t.Fatalf("%s expected, but got %s", kw, ac)
 	}
 }

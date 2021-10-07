@@ -3,7 +3,9 @@
 //
 package main
 
-import "os"
+import (
+	"os"
+)
 
 // the types of AST node
 type NodeKind int
@@ -78,7 +80,20 @@ func stmt() *Node {
 	var node *Node
 
 	if consume("if") {
+		node = &Node{Kind: ND_IF}
+		expect("(")
+		node.Cond = expr()
+		expect(")")
+		node.Then = stmt()
 
+		if consume("else") {
+			node.Els = stmt()
+		}
+
+		if !consume(";") {
+			errorAt(os.Stderr, curIdx, "is not '%s'", ";")
+		}
+		return node
 	}
 
 	if consume("return") {

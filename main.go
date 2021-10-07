@@ -11,15 +11,19 @@ func compile(arg string, w io.Writer) error {
 	curIdx = 0 // for test
 	userInput = arg
 	token = tokenize()
-	// printTokens()
+	printTokens()
 
 	// the parsed result is in 'code'
 	program()
 
 	// // walk in-order
-	// walkInOrder(node)
+	// for _, n := range code {
+	// 	walkInOrder(n)
+	// }
 	// // walk pre order
-	// walkPreOrder(node)
+	// for _, n := range code {
+	// 	walkPreOrder(n)
+	// }
 
 	return codeGen(w)
 }
