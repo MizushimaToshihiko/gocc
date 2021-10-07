@@ -31,26 +31,6 @@ func genLval(w io.Writer, node *Node) (err error) {
 }
 
 func gen(w io.Writer, node *Node) (err error) {
-	if node.Kind == ND_RETURN {
-		err = gen(w, node.Lhs)
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	pop rax")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	mov rsp, rbp")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	pop rbp")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	ret")
-		return
-	}
 
 	switch node.Kind {
 	case ND_NUM:
@@ -96,6 +76,26 @@ func gen(w io.Writer, node *Node) (err error) {
 		_, err = fmt.Fprintln(w, "	push rdi")
 		return
 
+	case ND_RETURN:
+		err = gen(w, node.Lhs)
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	pop rax")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	mov rsp, rbp")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	pop rbp")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	ret")
+		return
+
 	case ND_IF:
 		err = gen(w, node.Cond)
 		if err != nil {
@@ -111,10 +111,18 @@ func gen(w io.Writer, node *Node) (err error) {
 		}
 
 		labelNo++
-		_, err = fmt.Fprintf(w, "	je .Lend%03d\n", labelNo)
-		if err != nil {
-			return
+		if node.Els != nil {
+			_, err = fmt.Fprintf(w, "	je .Lelse%03d\n", labelNo)
+			if err != nil {
+				return
+			}
+		} else {
+			_, err = fmt.Fprintf(w, "	je .Lend%03d\n", labelNo)
+			if err != nil {
+				return
+			}
 		}
+
 		err = gen(w, node.Then)
 		if err != nil {
 			return
@@ -125,7 +133,7 @@ func gen(w io.Writer, node *Node) (err error) {
 			if err != nil {
 				return
 			}
-			_, err = fmt.Fprintf(w, ".Lelse%03d\n", labelNo)
+			_, err = fmt.Fprintf(w, ".Lelse%03d:\n", labelNo)
 			if err != nil {
 				return
 			}
@@ -135,7 +143,7 @@ func gen(w io.Writer, node *Node) (err error) {
 			}
 		}
 
-		_, err = fmt.Fprintf(w, ".Lend%03d\n", labelNo)
+		_, err = fmt.Fprintf(w, ".Lend%03d:\n", labelNo)
 		if err != nil {
 			return
 		}
@@ -197,6 +205,7 @@ func gen(w io.Writer, node *Node) (err error) {
 		if err != nil {
 			return
 		}
+
 	case ND_NE:
 		_, err = fmt.Fprintln(w, "	cmp rax, rdi")
 		if err != nil {

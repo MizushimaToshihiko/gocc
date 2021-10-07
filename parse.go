@@ -3,10 +3,6 @@
 //
 package main
 
-import (
-	"os"
-)
-
 // the types of AST node
 type NodeKind int
 
@@ -79,7 +75,10 @@ func program() {
 func stmt() *Node {
 	var node *Node
 
-	if consume("if") {
+	if consume("return") {
+		node = &Node{Kind: ND_RETURN, Lhs: expr()}
+		expect(";")
+	} else if consume("if") {
 		node = &Node{Kind: ND_IF}
 		expect("(")
 		node.Cond = expr()
@@ -90,21 +89,11 @@ func stmt() *Node {
 			node.Els = stmt()
 		}
 
-		if !consume(";") {
-			errorAt(os.Stderr, curIdx, "is not '%s'", ";")
-		}
-		return node
-	}
-
-	if consume("return") {
-		node = &Node{Kind: ND_RETURN, Lhs: expr()}
 	} else {
 		node = expr()
+		expect(";")
 	}
 
-	if !consume(";") {
-		errorAt(os.Stderr, curIdx, "is not '%s'", ";")
-	}
 	return node
 }
 
