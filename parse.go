@@ -79,8 +79,8 @@ func stmt() *Node {
 		node = &Node{Kind: ND_RETURN, Lhs: expr()}
 		expect(";")
 	} else if consume("if") {
-		node = &Node{Kind: ND_IF}
 		expect("(")
+		node = &Node{Kind: ND_IF}
 		node.Cond = expr()
 		expect(")")
 		node.Then = stmt()

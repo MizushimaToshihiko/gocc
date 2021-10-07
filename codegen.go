@@ -144,9 +144,7 @@ func gen(w io.Writer, node *Node) (err error) {
 		}
 
 		_, err = fmt.Fprintf(w, ".Lend%03d:\n", labelNo)
-		if err != nil {
-			return
-		}
+		return
 	}
 
 	err = gen(w, node.Lhs)

@@ -61,12 +61,12 @@ var userInput string
 // current index in 'userInput'
 var curIdx int
 
-func min(x, y int) int {
-	if x < y {
-		return x
-	}
-	return y
-}
+// func min(x, y int) int {
+// 	if x < y {
+// 		return x
+// 	}
+// 	return y
+// }
 
 // for error report
 // it's arguments are same as printf
@@ -180,8 +180,8 @@ func tokenize() *Token {
 	head.Next = nil
 	cur := &head
 
-	// for printToken
-	headTok = &head
+	// // for printToken
+	// headTok = &head
 
 	for curIdx < len(userInput) {
 		// skip space(s)
@@ -197,15 +197,6 @@ func tokenize() *Token {
 			curIdx += len(kw)
 			continue
 		}
-		// if curIdx+2 <= len(userInput) &&
-		// 	(startsWith(userInput[curIdx:curIdx+2], "==") ||
-		// 		startsWith(userInput[curIdx:curIdx+2], "!=") ||
-		// 		startsWith(userInput[curIdx:curIdx+2], "<=") ||
-		// 		startsWith(userInput[curIdx:curIdx+2], ">=")) {
-		// 	cur = newToken(TK_RESERV,ED, cur, userInput[curIdx:curIdx+2], 2)
-		// 	curIdx += 2
-		// 	continue
-		// }
 
 		// single-letter punctuator
 		if strings.Contains("+-()*/<>=;", string(userInput[curIdx])) {
@@ -213,15 +204,6 @@ func tokenize() *Token {
 			curIdx++
 			continue
 		}
-
-		// // reserved words
-		// if curIdx+6 <= len(userInput) &&
-		// 	startsWith(userInput[curIdx:curIdx+6], "return") &&
-		// 	!isAlNum(userInput[curIdx+6]) {
-		// 	cur = newToken(TK_RETURN, cur, userInput[curIdx:curIdx+6], 6)
-		// 	curIdx += 6
-		// 	continue
-		// }
 
 		// identifier
 		if isAlpha(userInput[curIdx]) {
@@ -255,34 +237,33 @@ func tokenize() *Token {
 	return head.Next
 }
 
-// for printTokens function, the pointer of the head token
-// stored in 'headTok'.
-var headTok *Token
+// // for printTokens function, the pointer of the head token
+// // stored in 'headTok'.
+// var headTok *Token
 
-//
-func printTokens() {
-	fmt.Print("# Tokens: ")
-	tok := headTok.Next
-	// var kind string
-	for tok.Next != nil {
-		// switch tok.Kind {
-		// case TK_IDENT:
-		// 	kind = "IDENT"
-		// case TK_NUM:
-		// 	kind = "NUM"
-		// case TK_RESERVED:
-		// 	kind = "RESERVED"
-		// default:
-		// 	log.Fatal("unknown token kind")
-		// }
-		// fmt.Printf(" %s:'%s' ", kind, tok.Str)
-		fmt.Printf(" '%s' ", tok.Str)
-		tok = tok.Next
-	}
+// func printTokens() {
+// 	fmt.Print("# Tokens: ")
+// 	tok := headTok.Next
+// 	// var kind string
+// 	for tok.Next != nil {
+// 		// switch tok.Kind {
+// 		// case TK_IDENT:
+// 		// 	kind = "IDENT"
+// 		// case TK_NUM:
+// 		// 	kind = "NUM"
+// 		// case TK_RESERVED:
+// 		// 	kind = "RESERVED"
+// 		// default:
+// 		// 	log.Fatal("unknown token kind")
+// 		// }
+// 		// fmt.Printf(" %s:'%s' ", kind, tok.Str)
+// 		fmt.Printf(" '%s' ", tok.Str)
+// 		tok = tok.Next
+// 	}
 
-	if tok.Kind == TK_EOF {
-		fmt.Print(" EOF ")
-	}
+// 	if tok.Kind == TK_EOF {
+// 		fmt.Print(" EOF ")
+// 	}
 
-	fmt.Println()
-}
+// 	fmt.Println()
+// }
