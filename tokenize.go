@@ -101,8 +101,8 @@ func consumeIdent() *Token {
 	return t
 }
 
-// if the next token is expected symbol, the read position
-// of token exceed one character
+// if the next token is an expected symbol, the read position
+// of token exceed one token.
 func expect(op string) {
 	if token.Kind != TK_RESERVED ||
 		len(op) != token.Len ||
@@ -142,7 +142,7 @@ func startsWith(pp, qq string) bool {
 
 func startsWithReserved(p string) string {
 	// keyword
-	kw := []string{"return", "if", "then", "else", "while"}
+	kw := []string{"return", "if", "then", "else", "while", "for"}
 
 	for _, k := range kw {
 		if startsWith(p, k) && len(p) > len(k) && !isAlNum(p[len(k)]) {

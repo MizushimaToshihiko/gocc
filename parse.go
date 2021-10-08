@@ -21,6 +21,7 @@ const (
 	ND_RETURN                 // 'return'
 	ND_IF                     // "if"
 	ND_WHILE                  // "while"
+	ND_FOR                    // "for"
 )
 
 // define AST node
@@ -30,10 +31,12 @@ type Node struct {
 	Lhs *Node // the left branch
 	Rhs *Node // the right branch
 
-	// "if" or "while" statement
+	// "if" or "while" of "for" statement
 	Cond *Node
 	Then *Node
 	Els  *Node
+	Init *Node
+	Inc  *Node
 
 	Val    int // it would be used when 'Kind' is 'ND_NUM'
 	Offset int // it would be used when 'Kind' is 'ND_LVAR'
@@ -80,6 +83,25 @@ func stmt() *Node {
 
 		node = &Node{Kind: ND_RETURN, Lhs: expr()}
 		expect(";")
+
+	} else if consume("for") {
+
+		expect("(")
+		node = &Node{Kind: ND_FOR}
+
+		if !consume(";") {
+			node.Init = expr()
+			expect(";")
+		}
+		if !consume(";") {
+			node.Cond = expr()
+			expect(";")
+		}
+		if !consume(")") {
+			node.Inc = expr()
+			expect(")")
+		}
+		node.Then = stmt()
 
 	} else if consume("while") {
 
