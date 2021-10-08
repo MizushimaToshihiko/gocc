@@ -22,11 +22,13 @@ const (
 	ND_IF                     // "if"
 	ND_WHILE                  // "while"
 	ND_FOR                    // "for"
+	ND_BLOCK                  // {...}
 )
 
 // define AST node
 type Node struct {
 	Kind NodeKind // the type of node
+	Next *Node    // the next node
 
 	Lhs *Node // the left branch
 	Rhs *Node // the right branch
@@ -37,6 +39,9 @@ type Node struct {
 	Els  *Node
 	Init *Node
 	Inc  *Node
+
+	// block
+	Body *Node
 
 	Val    int // it would be used when 'Kind' is 'ND_NUM'
 	Offset int // it would be used when 'Kind' is 'ND_LVAR'
@@ -72,6 +77,7 @@ func program() {
 }
 
 // stmt = expr ";"
+//      | "{" stmt* "}"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -122,6 +128,19 @@ func stmt() *Node {
 		if consume("else") {
 			node.Els = stmt()
 		}
+
+	} else if consume("{") {
+
+		head := Node{}
+		cur := &head
+
+		for !consume("}") {
+			cur.Next = stmt()
+			cur = cur.Next
+		}
+
+		node = &Node{Kind: ND_BLOCK}
+		node.Body = head.Next
 
 	} else {
 		node = expr()

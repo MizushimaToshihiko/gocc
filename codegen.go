@@ -178,6 +178,7 @@ func gen(w io.Writer, node *Node) (err error) {
 		}
 		_, err = fmt.Fprintf(w, ".Lend%03d:\n", labelNo)
 		return
+
 	case ND_FOR:
 		if node.Init != nil {
 			err = gen(w, node.Init)
@@ -225,6 +226,15 @@ func gen(w io.Writer, node *Node) (err error) {
 			return
 		}
 		_, err = fmt.Fprintf(w, ".Lend%03d:\n", labelNo)
+		return
+
+	case ND_BLOCK:
+		for n := node.Body; n != nil; n = n.Next {
+			err = gen(w, n)
+			if err != nil {
+				return
+			}
+		}
 		return
 	}
 

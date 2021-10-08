@@ -64,6 +64,9 @@ var cases = map[string]testcase{
 	"39 while statement": {10, "i=0; while(i<10) i=i+1; return i;"},
 	"40 for statement":   {55, "i=0; j=0; for (i=0; i<=10; i=i+1) j=i+j; return j;"},
 	"41 for statement":   {3, "for (;;) return 3; return 5;"},
+
+	"42 block statement": {4, "{4;{ 5; } return 4;}"},
+	"43 block statement": {66, "i=0;j=0; while(i<12) {j=i+j; i=i+1;} return j;"},
 }
 
 func TestCompile(t *testing.T) {
