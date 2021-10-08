@@ -44,22 +44,24 @@ var cases = map[string]testcase{
 	"25": {1, "return 1>=1;"},
 	"26": {0, "return 1>=2;"},
 
-	"27": {3, "a=3; return  a;"},
-	"28": {8, "a=3; z=5; return a+z;"},
+	"27 single-letter variables": {3, "a=3; return  a;"},
+	"28 single-letter variables": {8, "a=3; z=5; return a+z;"},
 
-	"29": {3, "foo=3; return foo;"},
-	"30": {8, "foo123=3; bar=5; return foo123+bar;"},
+	"29 multi-letter variables": {3, "foo=3; return foo;"},
+	"30 multi-letter variables": {8, "foo123=3; bar=5; return foo123+bar;"},
 
-	"31": {8, "foo123=3; returnbar=5; return foo123+returnbar;"},
-	"32": {3, "return 3; return 5;"},
+	"31 multi-letter variables": {8, "foo123=3; returnbar=5; return foo123+returnbar;"},
+	"32 multi-letter variables": {3, "return 3; return 5;"},
 
 	"33": {1, "1;"},
 	"34": {1, "a_=1; return a_;"},
 
-	"35": {3, "if (0) return 2; return 3;"},
-	"36": {3, "if (1-1) return 2; return 3;"},
-	"37": {2, "if (1) return 2; return 3;"},
-	"38": {2, "if (2-1) return 2; return 3;"},
+	"35 if statement": {3, "if (0) return 2; return 3;"},
+	"36 if statement": {3, "if (1-1) return 2; return 3;"},
+	"37 if statement": {2, "if (1) return 2; return 3;"},
+	"38 if statement": {2, "if (2-1) return 2; return 3;"},
+
+	"39 while statement": {10, "i=0; while(i<10) i=i+1; return i;"},
 }
 
 func TestCompile(t *testing.T) {
@@ -129,24 +131,24 @@ func TestCompile(t *testing.T) {
 	}
 }
 
-func TestStartWith(t *testing.T) {
-	kw := "return"
-	in := "return return;"
+// func TestStartWith(t *testing.T) {
+// 	kw := "return"
+// 	in := "return return;"
 
-	acb := startsWith(in, kw)
-	if !acb {
-		t.Fatal("actual is not expected")
-	}
-	t.Log("startsWith OK")
+// 	acb := startsWith(in, kw)
+// 	if !acb {
+// 		t.Fatal("actual is not expected")
+// 	}
+// 	t.Log("startsWith OK")
 
-	ac := startsWithReserved(in)
-	if startsWith(in, kw) && len(in) > len(kw) && !isAlNum(in[len(kw)]) {
-		t.Log("true")
-	} else {
-		t.Log("false")
-	}
+// 	ac := startsWithReserved(in)
+// 	if startsWith(in, kw) && len(in) > len(kw) && !isAlNum(in[len(kw)]) {
+// 		t.Log("true")
+// 	} else {
+// 		t.Log("false")
+// 	}
 
-	if ac != kw {
-		t.Fatalf("%s expected, but got %s", kw, ac)
-	}
-}
+// 	if ac != kw {
+// 		t.Fatalf("%s expected, but got %s", kw, ac)
+// 	}
+// }

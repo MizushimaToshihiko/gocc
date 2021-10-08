@@ -145,6 +145,39 @@ func gen(w io.Writer, node *Node) (err error) {
 
 		_, err = fmt.Fprintf(w, ".Lend%03d:\n", labelNo)
 		return
+
+	case ND_WHILE:
+		labelNo++
+		_, err = fmt.Fprintf(w, ".Lbegin%03d:\n", labelNo)
+		if err != nil {
+			return
+		}
+		err = gen(w, node.Cond)
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	pop rax")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	cmp rax, 0")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintf(w, "	je .Lend%03d\n", labelNo)
+		if err != nil {
+			return
+		}
+		err = gen(w, node.Then)
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintf(w, "	jmp .Lbegin%03d\n", labelNo)
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintf(w, ".Lend%03d:\n", labelNo)
+		return
 	}
 
 	err = gen(w, node.Lhs)

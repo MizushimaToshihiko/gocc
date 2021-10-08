@@ -142,7 +142,7 @@ func startsWith(pp, qq string) bool {
 
 func startsWithReserved(p string) string {
 	// keyword
-	kw := []string{"return", "if", "then", "else"}
+	kw := []string{"return", "if", "then", "else", "while"}
 
 	for _, k := range kw {
 		if startsWith(p, k) && len(p) > len(k) && !isAlNum(p[len(k)]) {
