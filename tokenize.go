@@ -236,34 +236,3 @@ func tokenize() *Token {
 	newToken(TK_EOF, cur, "", 0)
 	return head.Next
 }
-
-// // for printTokens function, the pointer of the head token
-// // stored in 'headTok'.
-// var headTok *Token
-
-// func printTokens() {
-// 	fmt.Print("# Tokens: ")
-// 	tok := headTok.Next
-// 	// var kind string
-// 	for tok.Next != nil {
-// 		// switch tok.Kind {
-// 		// case TK_IDENT:
-// 		// 	kind = "IDENT"
-// 		// case TK_NUM:
-// 		// 	kind = "NUM"
-// 		// case TK_RESERVED:
-// 		// 	kind = "RESERVED"
-// 		// default:
-// 		// 	log.Fatal("unknown token kind")
-// 		// }
-// 		// fmt.Printf(" %s:'%s' ", kind, tok.Str)
-// 		fmt.Printf(" '%s' ", tok.Str)
-// 		tok = tok.Next
-// 	}
-
-// 	if tok.Kind == TK_EOF {
-// 		fmt.Print(" EOF ")
-// 	}
-
-// 	fmt.Println()
-// }

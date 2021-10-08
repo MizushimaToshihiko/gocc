@@ -76,26 +76,6 @@ func gen(w io.Writer, node *Node) (err error) {
 		_, err = fmt.Fprintln(w, "	push rdi")
 		return
 
-	case ND_RETURN:
-		err = gen(w, node.Lhs)
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	pop rax")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	mov rsp, rbp")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	pop rbp")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	ret")
-		return
-
 	case ND_IF:
 		err = gen(w, node.Cond)
 		if err != nil {
@@ -235,6 +215,34 @@ func gen(w io.Writer, node *Node) (err error) {
 				return
 			}
 		}
+		return
+
+	case ND_FUNCCALL:
+		_, err = fmt.Fprintf(w, "	call %s\n", node.FuncName)
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	push rax")
+		return
+
+	case ND_RETURN:
+		err = gen(w, node.Lhs)
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	pop rax")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	mov rsp, rbp")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	pop rbp")
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintln(w, "	ret")
 		return
 	}
 

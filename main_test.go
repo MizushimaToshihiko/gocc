@@ -67,7 +67,13 @@ var cases = map[string]testcase{
 
 	"42 block statement": {4, "{4;{ 5; } return 4;}"},
 	"43 block statement": {66, "i=0;j=0; while(i<12) {j=i+j; i=i+1;} return j;"},
+
+	"44 function call": {3, "return ret3();"},
+	"45 function call": {5, "return ret5();"},
 }
+
+var funcs string = `int ret3() { return 3;}
+int ret5() { return 5;}`
 
 func TestCompile(t *testing.T) {
 	var asmName string = "temporary"
@@ -92,11 +98,37 @@ func TestCompile(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			_, err = exec.Command("gcc", "-o", asmName, asmName+".s").Output()
+			// make 'funcs' file
+			f, err := os.Create("funcs")
+			if err != nil {
+				return
+			}
+			defer func() {
+				if err = os.Remove(f.Name()); err != nil {
+					t.Fatal(err)
+				}
+			}()
+
+			// write 'funcs' to file
+			if _, err = f.WriteString(funcs); err != nil {
+				t.Fatal(err)
+			}
+			if err = f.Sync(); err != nil {
+				t.Fatal(err)
+			}
+
+			// make a object file from 'funcs'
+			_, err = exec.Command("gcc", "-xc", "-c", "-o", asmName+"2.o", f.Name()).Output()
 			if err != nil {
 				t.Fatal(err)
 			}
-			// 実行ファイルができていなかったら落とす
+
+			// make a execution file with static-link to 'f'
+			_, err = exec.Command("gcc", "-static", "-o", asmName, asmName+".s", asmName+"2.o").Output()
+			if err != nil {
+				t.Fatal(err)
+			}
+			// quit this test sequence, if the execution file wasn't made
 			if _, err := os.Stat(asmName); err != nil {
 				t.Fatal(err)
 			}
@@ -109,7 +141,7 @@ func TestCompile(t *testing.T) {
 					// the return value of temporary.s is saved in exit status code normally
 					actual := ee.ProcessState.ExitCode()
 					if c.expected != actual {
-						t.Fatalf("%d expected, but got %d", c.expected, actual)
+						t.Fatalf("\n%s\n%d expected, but got %d", c.input, c.expected, actual)
 					}
 					t.Logf("%s => %d", c.input, actual)
 					return

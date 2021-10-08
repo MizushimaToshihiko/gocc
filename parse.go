@@ -7,22 +7,23 @@ package main
 type NodeKind int
 
 const (
-	ND_ADD    NodeKind = iota // +
-	ND_SUB                    // -
-	ND_MUL                    // *
-	ND_DIV                    // /
-	ND_EQ                     // ==
-	ND_NE                     // !=
-	ND_LT                     // <
-	ND_LE                     // <=
-	ND_ASSIGN                 // =
-	ND_LVAR                   // local variables
-	ND_NUM                    // integer
-	ND_RETURN                 // 'return'
-	ND_IF                     // "if"
-	ND_WHILE                  // "while"
-	ND_FOR                    // "for"
-	ND_BLOCK                  // {...}
+	ND_ADD      NodeKind = iota // +
+	ND_SUB                      // -
+	ND_MUL                      // *
+	ND_DIV                      // /
+	ND_EQ                       // ==
+	ND_NE                       // !=
+	ND_LT                       // <
+	ND_LE                       // <=
+	ND_ASSIGN                   // =
+	ND_LVAR                     // local variables
+	ND_NUM                      // integer
+	ND_RETURN                   // 'return'
+	ND_IF                       // "if"
+	ND_WHILE                    // "while"
+	ND_FOR                      // "for"
+	ND_BLOCK                    // {...}
+	ND_FUNCCALL                 // function call
 )
 
 // define AST node
@@ -42,6 +43,9 @@ type Node struct {
 
 	// block
 	Body *Node
+
+	// for function call
+	FuncName string
 
 	Val    int // it would be used when 'Kind' is 'ND_NUM'
 	Offset int // it would be used when 'Kind' is 'ND_LVAR'
@@ -240,7 +244,9 @@ func unary() *Node {
 	return primary()
 }
 
-// primary = num | ident | "(" expr ")"
+// primary = num
+//         | ident ("(" ")" )?
+//         | "(" expr ")"
 func primary() *Node {
 	// if the next token is '(', the program must be
 	// "(" expr ")"
@@ -252,6 +258,14 @@ func primary() *Node {
 
 	tok := consumeIdent()
 	if tok != nil {
+		if consume("(") { // function call
+			expect(")")
+			node := &Node{Kind: ND_FUNCCALL}
+			node.FuncName = tok.Str
+			return node
+		}
+
+		// local variables
 		node := &Node{Kind: ND_LVAR}
 
 		lvar := findLVar(tok)
@@ -271,154 +285,9 @@ func primary() *Node {
 			locals = lvar
 		}
 		return node
+
 	}
 
 	// otherwise, must be integer
 	return newNodeNum(expectNumber())
 }
-
-// // walk AST in in-order
-// func walkInOrder(node *Node) {
-// 	fmt.Print("# Nodes in-order: ")
-// 	inOrder(node)
-// 	fmt.Println()
-// }
-
-// func inOrder(node *Node) {
-// 	if node == nil {
-// 		return
-// 	}
-// 	inOrder(node.Lhs)
-// 	switch node.Kind {
-// 	case ND_NUM:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': %d: leaf ", "ND_NUM", node.Val)
-// 		} else {
-// 			fmt.Printf(" '%s': %d: ", "ND_NUM", node.Val)
-// 		}
-// 	case ND_ADD:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_ADD: +")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_ADD: +")
-// 		}
-// 	case ND_SUB:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_SUB: -")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_SUB: -")
-// 		}
-// 	case ND_MUL:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_MUL: *")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_MUL: *")
-// 		}
-// 	case ND_DIV:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_DIV: /")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_DIV: /")
-// 		}
-// 	case ND_EQ:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_EQ: ==")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_EQ: ==")
-// 		}
-// 	case ND_NE:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_NE: !=")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_NE: !=")
-// 		}
-// 	case ND_LT:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_LT: <")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_LT: <")
-// 		}
-// 	case ND_LE:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_LE: <=")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_LE: <=")
-// 		}
-// 	}
-// 	inOrder(node.Rhs)
-// }
-
-// // walk AST in pre-order
-// func walkPreOrder(node *Node) {
-// 	fmt.Print("# Nodes pre-order: ")
-// 	preOrder(node)
-// 	fmt.Println()
-// }
-
-// func preOrder(node *Node) {
-// 	if node == nil {
-// 		return
-// 	}
-// 	switch node.Kind {
-// 	case ND_NUM:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': %d: leaf ", "ND_NUM", node.Val)
-// 		} else {
-// 			fmt.Printf(" '%s': %d: ", "ND_NUM", node.Val)
-// 		}
-// 	case ND_ADD:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_ADD: +")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_ADD: +")
-// 		}
-// 	case ND_SUB:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_SUB: -")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_SUB: -")
-// 		}
-// 	case ND_MUL:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_MUL: *")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_MUL: *")
-// 		}
-// 	case ND_DIV:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_DIV: /")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_DIV: /")
-// 		}
-// 	case ND_EQ:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_EQ: ==")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_EQ: ==")
-// 		}
-// 	case ND_NE:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_NE: !=")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_NE: !=")
-// 		}
-// 	case ND_LT:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_LT: <")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_LT: <")
-// 		}
-// 	case ND_LE:
-// 		if isLeaf(node) {
-// 			fmt.Printf(" '%s': leaf ", "ND_LE: <=")
-// 		} else {
-// 			fmt.Printf(" '%s': ", "ND_LE: <=")
-// 		}
-// 	}
-// 	preOrder(node.Lhs)
-// 	preOrder(node.Rhs)
-// }
-
-// func isLeaf(node *Node) bool {
-// 	return node.Lhs == nil && node.Rhs == nil
-// }
