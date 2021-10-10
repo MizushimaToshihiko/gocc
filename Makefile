@@ -14,7 +14,7 @@ build: $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
 test: $(SRCS)
-	$(GOTEST) $^ -v -cover
+	$(GOTEST) $^ -cover #-v 
 
 clean: 
 	$(GOCLEAN)

@@ -201,7 +201,7 @@ func gen(w io.Writer, node *Node) (err error) {
 				return
 			}
 		}
-		_, err = fmt.Fprintf(w, "jmp .Lbegin%03d\n", labelNo)
+		_, err = fmt.Fprintf(w, "	jmp .Lbegin%03d\n", labelNo)
 		if err != nil {
 			return
 		}
@@ -234,15 +234,7 @@ func gen(w io.Writer, node *Node) (err error) {
 		if err != nil {
 			return
 		}
-		_, err = fmt.Fprintln(w, "	mov rsp, rbp")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	pop rbp")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	ret")
+		_, err = fmt.Fprintln(w, "	jmp .Lreturn")
 		return
 	}
 
@@ -375,7 +367,10 @@ func codeGen(w io.Writer) (err error) {
 			break
 		}
 
-		gen(w, c)
+		err = gen(w, c)
+		if err != nil {
+			return
+		}
 
 		// the one value shuld remain in stack,
 		// so pop to keep the stack from overflowing.
@@ -388,6 +383,10 @@ func codeGen(w io.Writer) (err error) {
 	// epilogue
 	// the result of the expression is in 'rax',
 	// and it is the return value
+	_, err = fmt.Fprintln(w, ".Lreturn:")
+	if err != nil {
+		return
+	}
 	_, err = fmt.Fprintln(w, "	mov rsp, rbp")
 	if err != nil {
 		return

@@ -25,7 +25,8 @@
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"golang.Go",
-		"tomoki1207.pdf"
+		"tomoki1207.pdf",
+		"ms-vscode.cpptools-extension-pack"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

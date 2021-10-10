@@ -15,7 +15,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
         vim \
         man \
         manpages-dev \
-        strace
+        strace \
+        gdb
 
 FROM mcr.microsoft.com/vscode/devcontainers/go:1.17
 
