@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-// struct errWriter is for error handling
+// struct errWriter is for the error handling
 // it's based on:
 // https://jxck.hatenablog.com/entry/golang-error-handling-lesson-by-rob-pike
 type errWriter struct {
@@ -26,67 +26,49 @@ func (e *errWriter) Fprintf(w io.Writer, format string, a ...interface{}) {
 var labelNo int
 var argReg = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 
-func genLval(w io.Writer, node *Node) (err error) {
-	e := &errWriter{}
+func (e *errWriter) genLval(w io.Writer, node *Node) {
+	if e.err != nil {
+		return
+	}
 
 	if node.Kind != ND_LVAR {
-		err = errors.New("the left value is not a variable")
+		e.err = errors.New("the left value is not a variable")
 		return
 	}
 
 	e.Fprintf(w, "	mov rax, rbp\n")
 	e.Fprintf(w, "	sub rax, %d\n", node.Offset)
 	e.Fprintf(w, "	push rax\n")
-
-	if e.err != nil {
-		return e.err
-	}
-	return nil
 }
 
-func gen(w io.Writer, node *Node) (err error) {
-	e := &errWriter{}
+func (e *errWriter) gen(w io.Writer, node *Node) {
+	if e.err != nil {
+		return
+	}
 
 	switch node.Kind {
 	case ND_NUM:
 		e.Fprintf(w, "	push %d\n", node.Val)
-		err = e.err
 		return
 	case ND_LVAR:
-		err = genLval(w, node)
-		if err != nil {
-			return
-		}
+		e.genLval(w, node)
+
 		e.Fprintf(w, "	pop rax\n")
 		e.Fprintf(w, "	mov rax, [rax]\n")
 		e.Fprintf(w, "	push rax\n")
-		err = e.err
 		return
 	case ND_ASSIGN:
-		err = genLval(w, node.Lhs)
-		if err != nil {
-			return
-		}
-		err = gen(w, node.Rhs)
-		if err != nil {
-			return
-		}
+		e.genLval(w, node.Lhs)
+		e.gen(w, node.Rhs)
 
 		e.Fprintf(w, "	pop rdi\n")
 		e.Fprintf(w, "	pop rax\n")
 		e.Fprintf(w, "	mov [rax], rdi\n")
-		if err != nil {
-			return
-		}
 		e.Fprintf(w, "	push rdi\n")
-		err = e.err
 		return
 
 	case ND_IF:
-		err = gen(w, node.Cond)
-		if err != nil {
-			return
-		}
+		e.gen(w, node.Cond)
 		e.Fprintf(w, "	pop rax\n")
 		e.Fprintf(w, "	cmp rax, 0\n")
 
@@ -97,98 +79,65 @@ func gen(w io.Writer, node *Node) (err error) {
 			e.Fprintf(w, "	je .Lend%03d\n", labelNo)
 		}
 
-		err = gen(w, node.Then)
-		if err != nil {
-			return
-		}
+		e.gen(w, node.Then)
 
 		if node.Els != nil {
 			e.Fprintf(w, " jmp .Lend%03d\n", labelNo)
 			e.Fprintf(w, ".Lelse%03d:\n", labelNo)
-			err = gen(w, node.Els)
-			if err != nil {
-				return
-			}
+			e.gen(w, node.Els)
 		}
 
 		e.Fprintf(w, ".Lend%03d:\n", labelNo)
-		err = e.err
 		return
 
 	case ND_WHILE:
 		labelNo++
 		e.Fprintf(w, ".Lbegin%03d:\n", labelNo)
-		err = gen(w, node.Cond)
-		if err != nil {
-			return
-		}
+		e.gen(w, node.Cond)
 		e.Fprintf(w, "	pop rax\n")
 		e.Fprintf(w, "	cmp rax, 0\n")
 		e.Fprintf(w, "	je .Lend%03d\n", labelNo)
 
-		err = gen(w, node.Then)
-		if err != nil {
-			return
-		}
+		e.gen(w, node.Then)
 
 		e.Fprintf(w, "	jmp .Lbegin%03d\n", labelNo)
 		e.Fprintf(w, ".Lend%03d:\n", labelNo)
-		err = e.err
 		return
 
 	case ND_FOR:
 		if node.Init != nil {
-			err = gen(w, node.Init)
-			if err != nil {
-				return
-			}
+			e.gen(w, node.Init)
 		}
 
 		labelNo++
 		e.Fprintf(w, ".Lbegin%03d:\n", labelNo)
 
 		if node.Cond != nil {
-			err = gen(w, node.Cond)
-			if err != nil {
-				return
-			}
+			e.gen(w, node.Cond)
 			e.Fprintf(w, "	pop rax\n")
 			e.Fprintf(w, "	cmp rax, 0\n")
 			e.Fprintf(w, "	je .Lend%03d\n", labelNo)
 		}
 
-		err = gen(w, node.Then)
-		if err != nil {
-			return
-		}
+		e.gen(w, node.Then)
 
 		if node.Inc != nil {
-			err = gen(w, node.Inc)
-			if err != nil {
-				return
-			}
+			e.gen(w, node.Inc)
 		}
 		e.Fprintf(w, "	jmp .Lbegin%03d\n", labelNo)
 		e.Fprintf(w, ".Lend%03d:\n", labelNo)
-		err = e.err
 		return
 
 	case ND_BLOCK:
 		for n := node.Body; n != nil; n = n.Next {
-			err = gen(w, n)
-			if err != nil {
-				return
-			}
+			e.gen(w, n)
 		}
 		return
 
 	case ND_FUNCCALL:
 		numArgs := 0
 		for arg := node.Args; arg != nil; arg = arg.Next {
-			err = gen(w, arg)
-			if err != nil {
-				return
-			}
+			e.gen(w, arg)
 			numArgs++
 		}
 
@@ -198,28 +147,17 @@ func gen(w io.Writer, node *Node) (err error) {
 
 		e.Fprintf(w, "	call %s\n", node.FuncName)
 		e.Fprintf(w, "	push rax\n")
-		err = e.err
 		return
 
 	case ND_RETURN:
-		err = gen(w, node.Lhs)
-		if err != nil {
-			return
-		}
+		e.gen(w, node.Lhs)
 		e.Fprintf(w, "	pop rax\n")
 		e.Fprintf(w, "	jmp .Lreturn\n")
-		err = e.err
 		return
 	}
 
-	err = gen(w, node.Lhs)
-	if err != nil {
-		return
-	}
-	err = gen(w, node.Rhs)
-	if err != nil {
-		return
-	}
+	e.gen(w, node.Lhs)
+	e.gen(w, node.Rhs)
 
 	e.Fprintf(w, "	pop rdi\n")
 	e.Fprintf(w, "	pop rax\n")
@@ -253,8 +191,6 @@ func gen(w io.Writer, node *Node) (err error) {
 	}
 
 	e.Fprintf(w, "	push rax\n")
-	err = e.err
-	return
 }
 
 func codeGen(w io.Writer) (err error) {
@@ -273,10 +209,7 @@ func codeGen(w io.Writer) (err error) {
 			break
 		}
 
-		err = gen(w, c)
-		if err != nil {
-			return
-		}
+		e.gen(w, c)
 
 		// the one value shuld remain in stack,
 		// so pop to keep the stack from overflowing.
