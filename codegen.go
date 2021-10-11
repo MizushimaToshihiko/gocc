@@ -9,47 +9,58 @@ import (
 	"io"
 )
 
+// struct errWriter is for error handling
+// it's based on:
+// https://jxck.hatenablog.com/entry/golang-error-handling-lesson-by-rob-pike
+type errWriter struct {
+	err error
+}
+
+func (e *errWriter) Fprintf(w io.Writer, format string, a ...interface{}) {
+	if e.err != nil {
+		return
+	}
+	_, e.err = fmt.Fprintf(w, format, a...)
+}
+
 var labelNo int
+var argReg = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 
 func genLval(w io.Writer, node *Node) (err error) {
+	e := &errWriter{}
+
 	if node.Kind != ND_LVAR {
 		err = errors.New("the left value is not a variable")
 		return
 	}
 
-	if _, err = fmt.Fprintln(w, "	mov rax, rbp"); err != nil {
-		return
-	}
-	if _, err = fmt.Fprintf(w, "	sub rax, %d\n", node.Offset); err != nil {
-		return
-	}
-	if _, err = fmt.Fprintln(w, "	push rax"); err != nil {
-		return
-	}
+	e.Fprintf(w, "	mov rax, rbp\n")
+	e.Fprintf(w, "	sub rax, %d\n", node.Offset)
+	e.Fprintf(w, "	push rax\n")
 
+	if e.err != nil {
+		return e.err
+	}
 	return nil
 }
 
 func gen(w io.Writer, node *Node) (err error) {
+	e := &errWriter{}
 
 	switch node.Kind {
 	case ND_NUM:
-		_, err = fmt.Fprintf(w, "	push %d\n", node.Val)
+		e.Fprintf(w, "	push %d\n", node.Val)
+		err = e.err
 		return
 	case ND_LVAR:
 		err = genLval(w, node)
 		if err != nil {
 			return
 		}
-		_, err = fmt.Fprintln(w, "	pop rax")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	mov rax, [rax]")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	push rax")
+		e.Fprintf(w, "	pop rax\n")
+		e.Fprintf(w, "	mov rax, [rax]\n")
+		e.Fprintf(w, "	push rax\n")
+		err = e.err
 		return
 	case ND_ASSIGN:
 		err = genLval(w, node.Lhs)
@@ -61,19 +72,14 @@ func gen(w io.Writer, node *Node) (err error) {
 			return
 		}
 
-		_, err = fmt.Fprintln(w, "	pop rdi")
+		e.Fprintf(w, "	pop rdi\n")
+		e.Fprintf(w, "	pop rax\n")
+		e.Fprintf(w, "	mov [rax], rdi\n")
 		if err != nil {
 			return
 		}
-		_, err = fmt.Fprintln(w, "	pop rax")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	mov [rax], rdi")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	push rdi")
+		e.Fprintf(w, "	push rdi\n")
+		err = e.err
 		return
 
 	case ND_IF:
@@ -81,26 +87,14 @@ func gen(w io.Writer, node *Node) (err error) {
 		if err != nil {
 			return
 		}
-		_, err = fmt.Fprintln(w, "	pop rax")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	cmp rax, 0")
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, "	pop rax\n")
+		e.Fprintf(w, "	cmp rax, 0\n")
 
 		labelNo++
 		if node.Els != nil {
-			_, err = fmt.Fprintf(w, "	je .Lelse%03d\n", labelNo)
-			if err != nil {
-				return
-			}
+			e.Fprintf(w, "	je .Lelse%03d\n", labelNo)
 		} else {
-			_, err = fmt.Fprintf(w, "	je .Lend%03d\n", labelNo)
-			if err != nil {
-				return
-			}
+			e.Fprintf(w, "	je .Lend%03d\n", labelNo)
 		}
 
 		err = gen(w, node.Then)
@@ -109,54 +103,37 @@ func gen(w io.Writer, node *Node) (err error) {
 		}
 
 		if node.Els != nil {
-			_, err = fmt.Fprintf(w, " jmp .Lend%03d\n", labelNo)
-			if err != nil {
-				return
-			}
-			_, err = fmt.Fprintf(w, ".Lelse%03d:\n", labelNo)
-			if err != nil {
-				return
-			}
+			e.Fprintf(w, " jmp .Lend%03d\n", labelNo)
+			e.Fprintf(w, ".Lelse%03d:\n", labelNo)
 			err = gen(w, node.Els)
 			if err != nil {
 				return
 			}
 		}
 
-		_, err = fmt.Fprintf(w, ".Lend%03d:\n", labelNo)
+		e.Fprintf(w, ".Lend%03d:\n", labelNo)
+		err = e.err
 		return
 
 	case ND_WHILE:
 		labelNo++
-		_, err = fmt.Fprintf(w, ".Lbegin%03d:\n", labelNo)
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, ".Lbegin%03d:\n", labelNo)
 		err = gen(w, node.Cond)
 		if err != nil {
 			return
 		}
-		_, err = fmt.Fprintln(w, "	pop rax")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	cmp rax, 0")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, "	je .Lend%03d\n", labelNo)
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, "	pop rax\n")
+		e.Fprintf(w, "	cmp rax, 0\n")
+		e.Fprintf(w, "	je .Lend%03d\n", labelNo)
+
 		err = gen(w, node.Then)
 		if err != nil {
 			return
 		}
-		_, err = fmt.Fprintf(w, "	jmp .Lbegin%03d\n", labelNo)
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, ".Lend%03d:\n", labelNo)
+
+		e.Fprintf(w, "	jmp .Lbegin%03d\n", labelNo)
+		e.Fprintf(w, ".Lend%03d:\n", labelNo)
+		err = e.err
 		return
 
 	case ND_FOR:
@@ -166,28 +143,18 @@ func gen(w io.Writer, node *Node) (err error) {
 				return
 			}
 		}
+
 		labelNo++
-		_, err = fmt.Fprintf(w, ".Lbegin%03d:\n", labelNo)
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, ".Lbegin%03d:\n", labelNo)
+
 		if node.Cond != nil {
 			err = gen(w, node.Cond)
 			if err != nil {
 				return
 			}
-		}
-		_, err = fmt.Fprintln(w, "	pop rax")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	cmp rax, 0")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, "	je .Lend%03d\n", labelNo)
-		if err != nil {
-			return
+			e.Fprintf(w, "	pop rax\n")
+			e.Fprintf(w, "	cmp rax, 0\n")
+			e.Fprintf(w, "	je .Lend%03d\n", labelNo)
 		}
 
 		err = gen(w, node.Then)
@@ -201,11 +168,9 @@ func gen(w io.Writer, node *Node) (err error) {
 				return
 			}
 		}
-		_, err = fmt.Fprintf(w, "	jmp .Lbegin%03d\n", labelNo)
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, ".Lend%03d:\n", labelNo)
+		e.Fprintf(w, "	jmp .Lbegin%03d\n", labelNo)
+		e.Fprintf(w, ".Lend%03d:\n", labelNo)
+		err = e.err
 		return
 
 	case ND_BLOCK:
@@ -218,11 +183,22 @@ func gen(w io.Writer, node *Node) (err error) {
 		return
 
 	case ND_FUNCCALL:
-		_, err = fmt.Fprintf(w, "	call %s\n", node.FuncName)
-		if err != nil {
-			return
+		numArgs := 0
+		for arg := node.Args; arg != nil; arg = arg.Next {
+			err = gen(w, arg)
+			if err != nil {
+				return
+			}
+			numArgs++
 		}
-		_, err = fmt.Fprintln(w, "	push rax")
+
+		for i := numArgs - 1; i >= 0; i-- {
+			e.Fprintf(w, "pop %s\n", argReg[i])
+		}
+
+		e.Fprintf(w, "	call %s\n", node.FuncName)
+		e.Fprintf(w, "	push rax\n")
+		err = e.err
 		return
 
 	case ND_RETURN:
@@ -230,11 +206,9 @@ func gen(w io.Writer, node *Node) (err error) {
 		if err != nil {
 			return
 		}
-		_, err = fmt.Fprintln(w, "	pop rax")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	jmp .Lreturn")
+		e.Fprintf(w, "	pop rax\n")
+		e.Fprintf(w, "	jmp .Lreturn\n")
+		err = e.err
 		return
 	}
 
@@ -247,120 +221,52 @@ func gen(w io.Writer, node *Node) (err error) {
 		return
 	}
 
-	_, err = fmt.Fprintln(w, "	pop rdi")
-	if err != nil {
-		return
-	}
-	_, err = fmt.Fprintln(w, "	pop rax")
-	if err != nil {
-		return
-	}
+	e.Fprintf(w, "	pop rdi\n")
+	e.Fprintf(w, "	pop rax\n")
 
 	switch node.Kind {
 	case ND_ADD:
-		_, err = fmt.Fprintln(w, "	add rax, rdi")
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, "	add rax, rdi\n")
 	case ND_SUB:
-		_, err = fmt.Fprintln(w, "	sub rax, rdi")
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, "	sub rax, rdi\n")
 	case ND_MUL:
-		_, err = fmt.Fprintln(w, "	imul rax, rdi")
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, "	imul rax, rdi\n")
 	case ND_DIV:
-		_, err = fmt.Fprintln(w, "	cqo")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	idiv rdi")
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, "	cqo\n")
+		e.Fprintf(w, "	idiv rdi\n")
 	case ND_EQ:
-		_, err = fmt.Fprintln(w, "	cmp rax, rdi")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	sete al")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	movzb rax, al")
-		if err != nil {
-			return
-		}
-
+		e.Fprintf(w, "	cmp rax, rdi\n")
+		e.Fprintf(w, "	sete al\n")
+		e.Fprintf(w, "	movzb rax, al\n")
 	case ND_NE:
-		_, err = fmt.Fprintln(w, "	cmp rax, rdi")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	setne al")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	movzb rax, al")
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, "	cmp rax, rdi\n")
+		e.Fprintf(w, "	setne al\n")
+		e.Fprintf(w, "	movzb rax, al\n")
 	case ND_LT:
-		_, err = fmt.Fprintln(w, "	cmp rax, rdi")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	setl al")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	movzb rax, al")
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, "	cmp rax, rdi\n")
+		e.Fprintf(w, "	setl al\n")
+		e.Fprintf(w, "	movzb rax, al\n")
 	case ND_LE:
-		_, err = fmt.Fprintln(w, "	cmp rax, rdi")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	setle al")
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintln(w, "	movzb rax, al")
-		if err != nil {
-			return
-		}
+		e.Fprintf(w, "	cmp rax, rdi\n")
+		e.Fprintf(w, "	setle al\n")
+		e.Fprintf(w, "	movzb rax, al\n")
 	}
 
-	_, err = fmt.Fprintln(w, "	push rax")
+	e.Fprintf(w, "	push rax\n")
+	err = e.err
 	return
 }
 
 func codeGen(w io.Writer) (err error) {
+	e := &errWriter{}
 	// output the former 3 lines of the assembly
-	_, err = fmt.Fprintln(w, ".intel_syntax noprefix\n.globl main\nmain:")
-	if err != nil {
-		return err
-	}
+	e.Fprintf(w, ".intel_syntax noprefix\n.globl main\nmain:\n")
 
 	// prologue
 	// secure an area for 26 variables
-	_, err = fmt.Fprintln(w, "	push rbp")
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintln(w, "	mov rbp, rsp")
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintln(w, "	sub rsp, 208")
-	if err != nil {
-		return err
-	}
+	e.Fprintf(w, "	push rbp\n")
+	e.Fprintf(w, "	mov rbp, rsp\n")
+	e.Fprintf(w, "	sub rsp, 208\n")
 
 	for _, c := range code {
 		if c == nil {
@@ -374,27 +280,16 @@ func codeGen(w io.Writer) (err error) {
 
 		// the one value shuld remain in stack,
 		// so pop to keep the stack from overflowing.
-		_, err = fmt.Fprintln(w, "	pop rax")
-		if err != nil {
-			return err
-		}
+		e.Fprintf(w, "	pop rax\n")
 	}
 
 	// epilogue
 	// the result of the expression is in 'rax',
 	// and it is the return value
-	_, err = fmt.Fprintln(w, ".Lreturn:")
-	if err != nil {
-		return
-	}
-	_, err = fmt.Fprintln(w, "	mov rsp, rbp")
-	if err != nil {
-		return
-	}
-	_, err = fmt.Fprintln(w, "	pop rbp")
-	if err != nil {
-		return
-	}
-	_, err = fmt.Fprintln(w, "	ret")
+	e.Fprintf(w, ".Lreturn:\n")
+	e.Fprintf(w, "	mov rsp, rbp\n")
+	e.Fprintf(w, "	pop rbp\n")
+	e.Fprintf(w, "	ret\n")
+	err = e.err
 	return
 }

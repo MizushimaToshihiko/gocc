@@ -46,6 +46,7 @@ type Node struct {
 
 	// for function call
 	FuncName string
+	Args     *Node
 
 	Val    int // it would be used when 'Kind' is 'ND_NUM'
 	Offset int // it would be used when 'Kind' is 'ND_LVAR'
@@ -244,8 +245,24 @@ func unary() *Node {
 	return primary()
 }
 
+// func-args = "(" (assign("," assign)*)? ")"
+func funcArgs() *Node {
+	if consume(")") {
+		return nil
+	}
+
+	head := assign()
+	cur := head
+	for consume(",") {
+		cur.Next = assign()
+		cur = cur.Next
+	}
+	expect(")")
+	return head
+}
+
 // primary = num
-//         | ident ("(" ")" )?
+//         | ident func-args?
 //         | "(" expr ")"
 func primary() *Node {
 	// if the next token is '(', the program must be
@@ -259,9 +276,9 @@ func primary() *Node {
 	tok := consumeIdent()
 	if tok != nil {
 		if consume("(") { // function call
-			expect(")")
 			node := &Node{Kind: ND_FUNCCALL}
 			node.FuncName = tok.Str
+			node.Args = funcArgs()
 			return node
 		}
 
