@@ -16,6 +16,7 @@ type errWriter struct {
 	err error
 }
 
+// Almost all error is from 'fmt.Fprintf'
 func (e *errWriter) Fprintf(w io.Writer, format string, a ...interface{}) {
 	if e.err != nil {
 		return
@@ -145,7 +146,19 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 			e.Fprintf(w, "pop %s\n", argReg[i])
 		}
 
+		labelNo++
+		e.Fprintf(w, "	mov rax, rsp\n")            // move rsp to rax
+		e.Fprintf(w, "	and rax, 15\n")             // calculate rax & 15, when rax == 16, rax is 0b10000, and 15(0b1110) & 0b10000, ZF become 0.
+		e.Fprintf(w, "	jnz .Lcall%03d\n", labelNo) // if ZF is 0, jamp to Lcall???.
+		e.Fprintf(w, "	mov rax, 0\n")              // remove rax
 		e.Fprintf(w, "	call %s\n", node.FuncName)
+		e.Fprintf(w, "	jmp .Lend%03d\n", labelNo)
+		e.Fprintf(w, ".Lcall%03d:\n", labelNo)
+		e.Fprintf(w, "	sub rsp, 8\n")
+		e.Fprintf(w, "	mov rax, 0\n")
+		e.Fprintf(w, "	call %s\n", node.FuncName)
+		e.Fprintf(w, "	add rsp, 8\n")
+		e.Fprintf(w, ".Lend%03d:\n", labelNo)
 		e.Fprintf(w, "	push rax\n")
 		return
 
@@ -193,7 +206,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	e.Fprintf(w, "	push rax\n")
 }
 
-func codeGen(w io.Writer) (err error) {
+func codeGen(w io.Writer) error {
 	e := &errWriter{}
 	// output the former 3 lines of the assembly
 	e.Fprintf(w, ".intel_syntax noprefix\n.globl main\nmain:\n")
@@ -223,6 +236,5 @@ func codeGen(w io.Writer) (err error) {
 	e.Fprintf(w, "	mov rsp, rbp\n")
 	e.Fprintf(w, "	pop rbp\n")
 	e.Fprintf(w, "	ret\n")
-	err = e.err
-	return
+	return e.err
 }
