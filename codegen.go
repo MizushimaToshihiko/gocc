@@ -19,7 +19,7 @@ type errWriter struct {
 // Almost all error is from 'fmt.Fprintf'
 func (e *errWriter) Fprintf(w io.Writer, format string, a ...interface{}) {
 	if e.err != nil {
-		return
+		return // do nothing
 	}
 	_, e.err = fmt.Fprintf(w, format, a...)
 }
@@ -29,7 +29,7 @@ var argReg = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 
 func (e *errWriter) genLval(w io.Writer, node *Node) {
 	if e.err != nil {
-		return
+		return // do nothing
 	}
 
 	if node.Kind != ND_LVAR {
@@ -44,7 +44,7 @@ func (e *errWriter) genLval(w io.Writer, node *Node) {
 
 func (e *errWriter) gen(w io.Writer, node *Node) {
 	if e.err != nil {
-		return
+		return // do nothing
 	}
 
 	switch node.Kind {
@@ -154,7 +154,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		e.Fprintf(w, "	call %s\n", node.FuncName)
 		e.Fprintf(w, "	jmp .Lend%03d\n", labelNo)
 		e.Fprintf(w, ".Lcall%03d:\n", labelNo)
-		e.Fprintf(w, "	sub rsp, 8\n")
+		e.Fprintf(w, "	sub rsp, 8\n") // rspは8の倍数なので16の倍数にするために8を引く
 		e.Fprintf(w, "	mov rax, 0\n")
 		e.Fprintf(w, "	call %s\n", node.FuncName)
 		e.Fprintf(w, "	add rsp, 8\n")
