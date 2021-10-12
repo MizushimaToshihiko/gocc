@@ -3,6 +3,8 @@
 //
 package main
 
+import "os"
+
 // the types of AST node
 type NodeKind int
 
@@ -24,12 +26,15 @@ const (
 	ND_FOR                      // "for"
 	ND_BLOCK                    // {...}
 	ND_FUNCCALL                 // function call
+	ND_ADDR                     // unary &
+	ND_DEREF                    // unary *
 )
 
 // define AST node
 type Node struct {
 	Kind NodeKind // the type of node
 	Next *Node    // the next node
+	Tok  *Token   // current token
 
 	Lhs *Node // the left branch
 	Rhs *Node // the right branch
@@ -53,18 +58,20 @@ type Node struct {
 
 }
 
-func newNode(kind NodeKind, lhs *Node, rhs *Node) *Node {
+func newNode(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
 	return &Node{
 		Kind: kind,
 		Lhs:  lhs,
 		Rhs:  rhs,
+		Tok:  tok,
 	}
 }
 
-func newNodeNum(val int) *Node {
+func newNodeNum(val int, tok *Token) *Node {
 	return &Node{
 		Kind: ND_NUM,
 		Val:  val,
+		Tok:  tok,
 	}
 }
 
@@ -90,31 +97,31 @@ func program() {
 func stmt() *Node {
 	var node *Node
 
-	if consume("return") {
+	if consume("return") != nil {
 
 		node = &Node{Kind: ND_RETURN, Lhs: expr()}
 		expect(";")
 
-	} else if consume("for") {
+	} else if consume("for") != nil {
 
 		expect("(")
 		node = &Node{Kind: ND_FOR}
 
-		if !consume(";") {
+		if consume(";") == nil {
 			node.Init = expr()
 			expect(";")
 		}
-		if !consume(";") {
+		if consume(";") == nil {
 			node.Cond = expr()
 			expect(";")
 		}
-		if !consume(")") {
+		if consume(")") == nil {
 			node.Inc = expr()
 			expect(")")
 		}
 		node.Then = stmt()
 
-	} else if consume("while") {
+	} else if consume("while") != nil {
 
 		expect("(")
 		node = &Node{Kind: ND_WHILE}
@@ -122,7 +129,7 @@ func stmt() *Node {
 		expect(")")
 		node.Then = stmt()
 
-	} else if consume("if") {
+	} else if consume("if") != nil {
 
 		expect("(")
 		node = &Node{Kind: ND_IF}
@@ -130,16 +137,16 @@ func stmt() *Node {
 		expect(")")
 		node.Then = stmt()
 
-		if consume("else") {
+		if consume("else") != nil {
 			node.Els = stmt()
 		}
 
-	} else if consume("{") {
+	} else if consume("{") != nil {
 
 		head := Node{}
 		cur := &head
 
-		for !consume("}") {
+		for consume("}") == nil {
 			cur.Next = stmt()
 			cur = cur.Next
 		}
@@ -163,8 +170,8 @@ func expr() *Node {
 // assign     = equality ("=" assign)?
 func assign() *Node {
 	node := equality()
-	if consume("=") {
-		node = newNode(ND_ASSIGN, node, assign())
+	if t := consume("="); t != nil {
+		node = newNode(ND_ASSIGN, node, assign(), t)
 	}
 	return node
 }
@@ -174,10 +181,10 @@ func equality() *Node {
 	node := relational()
 
 	for {
-		if consume("==") {
-			node = newNode(ND_EQ, node, relational())
-		} else if consume("!=") {
-			node = newNode(ND_NE, node, relational())
+		if t := consume("=="); t != nil {
+			node = newNode(ND_EQ, node, relational(), t)
+		} else if consume("!=") != nil {
+			node = newNode(ND_NE, node, relational(), t)
 		} else {
 			return node
 		}
@@ -189,14 +196,14 @@ func relational() *Node {
 	node := add()
 
 	for {
-		if consume("<") {
-			node = newNode(ND_LT, node, add())
-		} else if consume("<=") {
-			node = newNode(ND_LE, node, add())
-		} else if consume(">") {
-			node = newNode(ND_LT, add(), node)
-		} else if consume(">=") {
-			node = newNode(ND_LE, add(), node)
+		if t := consume("<"); t != nil {
+			node = newNode(ND_LT, node, add(), t)
+		} else if t := consume("<="); t != nil {
+			node = newNode(ND_LE, node, add(), t)
+		} else if t := consume(">"); t != nil {
+			node = newNode(ND_LT, add(), node, t)
+		} else if t := consume(">="); t != nil {
+			node = newNode(ND_LE, add(), node, t)
 		} else {
 			return node
 		}
@@ -208,10 +215,10 @@ func add() *Node {
 	node := mul()
 
 	for {
-		if consume("+") {
-			node = newNode(ND_ADD, node, mul())
-		} else if consume("-") {
-			node = newNode(ND_SUB, node, mul())
+		if t := consume("+"); t != nil {
+			node = newNode(ND_ADD, node, mul(), t)
+		} else if t := consume("-"); t != nil {
+			node = newNode(ND_SUB, node, mul(), t)
 		} else {
 			return node
 		}
@@ -223,37 +230,43 @@ func mul() *Node {
 	node := unary()
 
 	for {
-		if consume("*") {
-			node = newNode(ND_MUL, node, unary())
-		} else if consume("/") {
-			node = newNode(ND_DIV, node, unary())
+		if t := consume("*"); t != nil {
+			node = newNode(ND_MUL, node, unary(), t)
+		} else if consume("/") != nil {
+			node = newNode(ND_DIV, node, unary(), t)
 		} else {
 			return node
 		}
 	}
 }
 
-// unary   = ("+" | "-")? unary
-//         | primary
+//unary = ("+" | "-" | "*" | "&")? unary
+//      | primary
 func unary() *Node {
-	if consume("+") {
+	if t := consume("+"); t != nil {
 		return unary()
 	}
-	if consume("-") {
-		return newNode(ND_SUB, newNodeNum(0), unary())
+	if t := consume("-"); t != nil {
+		return newNode(ND_SUB, newNodeNum(0, t), unary(), t)
+	}
+	if t := consume("*"); t != nil {
+		return newNode(ND_ADDR, unary(), nil, t)
+	}
+	if t := consume("&"); t != nil {
+		return newNode(ND_DEREF, unary(), nil, t)
 	}
 	return primary()
 }
 
 // func-args = "(" (assign("," assign)*)? ")"
 func funcArgs() *Node {
-	if consume(")") {
+	if consume(")") != nil {
 		return nil
 	}
 
 	head := assign()
 	cur := head
-	for consume(",") {
+	for consume(",") != nil {
 		cur.Next = assign()
 		cur = cur.Next
 	}
@@ -267,7 +280,7 @@ func funcArgs() *Node {
 func primary() *Node {
 	// if the next token is '(', the program must be
 	// "(" expr ")"
-	if consume("(") {
+	if t := consume("("); t != nil {
 		node := expr()
 		expect(")")
 		return node
@@ -275,7 +288,7 @@ func primary() *Node {
 
 	tok := consumeIdent()
 	if tok != nil {
-		if consume("(") { // function call
+		if t := consume("("); t != nil { // function call
 			node := &Node{Kind: ND_FUNCCALL}
 			node.FuncName = tok.Str
 			node.Args = funcArgs()
@@ -306,5 +319,9 @@ func primary() *Node {
 	}
 
 	// otherwise, must be integer
-	return newNodeNum(expectNumber())
+	tok = token
+	if tok.Kind != TK_NUM {
+		errorTok(os.Stderr, tok, "expected number")
+	}
+	return newNodeNum(expectNumber(), tok)
 }

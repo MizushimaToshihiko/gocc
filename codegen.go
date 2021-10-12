@@ -58,6 +58,18 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		e.Fprintf(w, "	mov rax, [rax]\n")
 		e.Fprintf(w, "	push rax\n")
 		return
+
+	case ND_ADDR:
+		e.genLval(w, node.Lhs)
+		return
+
+	case ND_DEREF:
+		e.gen(w, node.Lhs)
+		e.Fprintf(w, "	pop rax\n")
+		e.Fprintf(w, "	mov rax, [rax]\n")
+		e.Fprintf(w, "	push rax\n")
+		return
+
 	case ND_ASSIGN:
 		e.genLval(w, node.Lhs)
 		e.gen(w, node.Rhs)

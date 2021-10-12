@@ -79,16 +79,26 @@ func errorAt(w io.Writer, errIdx int, formt string, a ...interface{}) {
 	os.Exit(1)
 }
 
+func errorTok(w io.Writer, tok *Token, formt string, a ...interface{}) {
+	if tok != nil {
+		errorAt(w, curIdx, formt, a...)
+	}
+	fmt.Fprintf(w, formt, a...)
+	fmt.Fprintf(w, "\n")
+	os.Exit(1)
+}
+
 // if the next token is expected symbol, the read position
 // of token exceed one character, and returns true.
-func consume(op string) bool {
+func consume(op string) *Token {
 	if token.Kind != TK_RESERVED ||
 		len(op) != token.Len ||
 		token.Str != op {
-		return false
+		return nil
 	}
+	t := token
 	token = token.Next
-	return true
+	return t
 }
 
 // consume the current token if it is an identifier
@@ -199,7 +209,7 @@ func tokenize() *Token {
 		}
 
 		// single-letter punctuator
-		if strings.Contains("+-()*/<>=;{},", string(userInput[curIdx])) {
+		if strings.Contains("+-()*/<>=;{},*&", string(userInput[curIdx])) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue

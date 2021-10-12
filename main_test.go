@@ -76,6 +76,14 @@ var cases = map[string]testcase{
 	"47 function call": {2, "return sub(5,3);"},
 	"48 function call": {21, "return add6(1,2,3,4,5,6);"},
 	"49 function call": {55, "a=11; return fib(11);"},
+
+	"50 unary*&": {3, "main() { x=3; return *&x; }"},
+	"51 unary*&": {3, "main() { x=3; y=&x; z=&y; return **z; }"},
+	"52 unary*&": {5, "main() { x=3; y=5; return *(&x+8); }"},
+	"53 unary*&": {3, "main() { x=3; y=5; return *(&y-8); }"},
+	"54 unary*&": {5, "main() { x=3; y=&x; *y=5; return x; }"},
+	"55 unary*&": {7, "main() { x=3; y=5; *(&x+8)=7; return y; }"},
+	"56 unary*&": {7, "main() { x=3; y=5; *(&y-8)=7; return x; }"},
 }
 
 var funcs string = `int ret3() { return 3;}
