@@ -11,10 +11,20 @@ func compile(arg string, w io.Writer) error {
 	curIdx = 0 // for test
 	userInput = arg
 	token = tokenize()
-	// printTokens()
+	printTokens()
 
-	// the parsed result is in 'code'
-	program()
+	// the parsed result is in 'prog'
+	var prog *Function = program()
+
+	// assign offsets to local variables.
+	for fn := prog; fn != nil; fn = fn.Next {
+		offset := 0
+		for lvar := prog.Locals; lvar != nil; lvar = lvar.Next {
+			offset += 8
+			lvar.Offset = offset
+		}
+		fn.StackSz = offset
+	}
 
 	// // walk in-order
 	// for _, n := range code {
@@ -25,7 +35,7 @@ func compile(arg string, w io.Writer) error {
 	// 	walkPreOrder(n)
 	// }
 
-	return codeGen(w)
+	return codeGen(w, prog)
 }
 
 func main() {

@@ -1,35 +1,37 @@
 package main
 
-// // for printTokens function, the pointer of the head token
-// // stored in 'headTok'.
-// var headTok *Token
+import "fmt"
 
-// func printTokens() {
-// 	fmt.Print("# Tokens: ")
-// 	tok := headTok.Next
-// 	// var kind string
-// 	for tok.Next != nil {
-// 		// switch tok.Kind {
-// 		// case TK_IDENT:
-// 		// 	kind = "IDENT"
-// 		// case TK_NUM:
-// 		// 	kind = "NUM"
-// 		// case TK_RESERVED:
-// 		// 	kind = "RESERVED"
-// 		// default:
-// 		// 	log.Fatal("unknown token kind")
-// 		// }
-// 		// fmt.Printf(" %s:'%s' ", kind, tok.Str)
-// 		fmt.Printf(" '%s' ", tok.Str)
-// 		tok = tok.Next
-// 	}
+// for printTokens function, the pointer of the head token
+// stored in 'headTok'.
+var headTok *Token
 
-// 	if tok.Kind == TK_EOF {
-// 		fmt.Print(" EOF ")
-// 	}
+func printTokens() {
+	fmt.Print("# Tokens: ")
+	tok := headTok.Next
+	// var kind string
+	for tok.Next != nil {
+		// switch tok.Kind {
+		// case TK_IDENT:
+		// 	kind = "IDENT"
+		// case TK_NUM:
+		// 	kind = "NUM"
+		// case TK_RESERVED:
+		// 	kind = "RESERVED"
+		// default:
+		// 	log.Fatal("unknown token kind")
+		// }
+		// fmt.Printf(" %s:'%s' ", kind, tok.Str)
+		fmt.Printf(" '%s' ", tok.Str)
+		tok = tok.Next
+	}
 
-// 	fmt.Println()
-// }
+	if tok.Kind == TK_EOF {
+		fmt.Print(" EOF ")
+	}
+
+	fmt.Println()
+}
 
 // // walk AST in in-order
 // func walkInOrder(node *Node) {

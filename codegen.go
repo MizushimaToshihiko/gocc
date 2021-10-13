@@ -26,6 +26,7 @@ func (e *errWriter) Fprintf(w io.Writer, format string, a ...interface{}) {
 
 var labelNo int
 var argReg = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
+var funcName string
 
 func (e *errWriter) genLval(w io.Writer, node *Node) {
 	if e.err != nil {
@@ -37,8 +38,7 @@ func (e *errWriter) genLval(w io.Writer, node *Node) {
 		return
 	}
 
-	e.Fprintf(w, "	mov rax, rbp\n")
-	e.Fprintf(w, "	sub rax, %d\n", node.Offset)
+	e.Fprintf(w, "	lea rax, [rbp-%d]\n", node.Var.Offset)
 	e.Fprintf(w, "	push rax\n")
 }
 
@@ -53,7 +53,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		return
 	case ND_LVAR:
 		e.genLval(w, node)
-
+		// load
 		e.Fprintf(w, "	pop rax\n")
 		e.Fprintf(w, "	mov rax, [rax]\n")
 		e.Fprintf(w, "	push rax\n")
@@ -73,7 +73,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	case ND_ASSIGN:
 		e.genLval(w, node.Lhs)
 		e.gen(w, node.Rhs)
-
+		// store
 		e.Fprintf(w, "	pop rdi\n")
 		e.Fprintf(w, "	pop rax\n")
 		e.Fprintf(w, "	mov [rax], rdi\n")
@@ -177,7 +177,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	case ND_RETURN:
 		e.gen(w, node.Lhs)
 		e.Fprintf(w, "	pop rax\n")
-		e.Fprintf(w, "	jmp .Lreturn\n")
+		e.Fprintf(w, "	jmp .Lreturn.%s\n", funcName)
 		return
 	}
 
@@ -218,35 +218,34 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	e.Fprintf(w, "	push rax\n")
 }
 
-func codeGen(w io.Writer) error {
+func codeGen(w io.Writer, prog *Function) error {
 	e := &errWriter{}
 	// output the former 3 lines of the assembly
-	e.Fprintf(w, ".intel_syntax noprefix\n.globl main\nmain:\n")
+	e.Fprintf(w, ".intel_syntax noprefix\n")
 
-	// prologue
-	// secure an area for 26 variables
-	e.Fprintf(w, "	push rbp\n")
-	e.Fprintf(w, "	mov rbp, rsp\n")
-	e.Fprintf(w, "	sub rsp, 208\n")
+	for fn := prog; fn != nil; fn = fn.Next {
+		e.Fprintf(w, ".global %s\n", fn.Name)
+		e.Fprintf(w, "%s:\n", fn.Name)
+		funcName = fn.Name
 
-	for _, c := range code {
-		if c == nil {
-			break
+		// prologue
+		// secure an area for the stack size of 'fn'
+		e.Fprintf(w, "	push rbp\n")
+		e.Fprintf(w, "	mov rbp, rsp\n")
+		e.Fprintf(w, "	sub rsp, %d\n", fn.StackSz)
+
+		// emit code
+		for node := fn.Node; node != nil; node = node.Next {
+			e.gen(w, node)
 		}
-
-		e.gen(w, c)
-
-		// the one value shuld remain in stack,
-		// so pop to keep the stack from overflowing.
-		e.Fprintf(w, "	pop rax\n")
+		// epilogue
+		// the result of the expression is in 'rax',
+		// and it is the return value
+		e.Fprintf(w, ".Lreturn.%s:\n", funcName)
+		e.Fprintf(w, "	mov rsp, rbp\n")
+		e.Fprintf(w, "	pop rbp\n")
+		e.Fprintf(w, "	ret\n")
 	}
 
-	// epilogue
-	// the result of the expression is in 'rax',
-	// and it is the return value
-	e.Fprintf(w, ".Lreturn:\n")
-	e.Fprintf(w, "	mov rsp, rbp\n")
-	e.Fprintf(w, "	pop rbp\n")
-	e.Fprintf(w, "	ret\n")
 	return e.err
 }

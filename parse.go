@@ -53,9 +53,8 @@ type Node struct {
 	FuncName string
 	Args     *Node
 
-	Val    int // it would be used when 'Kind' is 'ND_NUM'
-	Offset int // it would be used when 'Kind' is 'ND_LVAR'
-
+	Val int   // it would be used when 'Kind' is 'ND_NUM'
+	Var *LVar // it would be used when 'Kind' is 'ND_LVAR'
 }
 
 func newNode(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
@@ -75,17 +74,82 @@ func newNodeNum(val int, tok *Token) *Node {
 	}
 }
 
-// code is a slice to store prased nodes.
-var code [100]*Node
+// the type of local variables
+type LVar struct {
+	Next   *LVar  // the next variable or nil
+	Name   string // the name of the variable
+	Len    int    // the length of 'Name'
+	Offset int    // the offset from RBP
+}
 
-// program = stmt*
-func program() {
-	i := 0
-	for !atEof() {
-		code[i] = stmt()
-		i++
+// local variables
+var locals *LVar
+
+// search a local variable by name.
+// if it wasn't find, return nil.
+func findLVar(tok *Token) *LVar {
+	for lvar := locals; lvar != nil; lvar = lvar.Next {
+		if lvar.Len == tok.Len && startsWith(tok.Str, lvar.Name) {
+			return lvar
+		}
 	}
-	code[i] = nil
+	return nil
+}
+
+func pushVar(name string) *LVar {
+	lvar := &LVar{
+		Next: locals,
+		Name: name,
+	}
+	locals = lvar
+	return lvar
+}
+
+type Function struct {
+	Next    *Function
+	Name    string
+	Node    *Node
+	Locals  *LVar
+	StackSz int
+}
+
+// code is a slice to store prased nodes.
+// var code [100]*Node
+
+// program = function*
+func program() *Function {
+	cur := &Function{}
+	head := cur
+
+	for !atEof() {
+		cur.Next = function()
+		cur = cur.Next
+	}
+	return head.Next
+}
+
+// function = ident "(" ")" "{" stmt* "}"
+func function() *Function {
+	locals = nil
+
+	name := expectIdent()
+	expect("(")
+	expect(")")
+	expect("{")
+
+	cur := &Node{}
+	head := cur
+
+	for t := consume("}"); t == nil; {
+		cur.Next = stmt()
+		cur = cur.Next
+	}
+
+	return &Function{
+		Name:   name,
+		Node:   head.Next,
+		Locals: locals,
+	}
 }
 
 // stmt = expr ";"
@@ -101,6 +165,26 @@ func stmt() *Node {
 
 		node = &Node{Kind: ND_RETURN, Lhs: expr()}
 		expect(";")
+
+	} else if consume("if") != nil {
+
+		expect("(")
+		node = &Node{Kind: ND_IF}
+		node.Cond = expr()
+		expect(")")
+		node.Then = stmt()
+
+		if consume("else") != nil {
+			node.Els = stmt()
+		}
+
+	} else if consume("while") != nil {
+
+		expect("(")
+		node = &Node{Kind: ND_WHILE}
+		node.Cond = expr()
+		expect(")")
+		node.Then = stmt()
 
 	} else if consume("for") != nil {
 
@@ -120,26 +204,6 @@ func stmt() *Node {
 			expect(")")
 		}
 		node.Then = stmt()
-
-	} else if consume("while") != nil {
-
-		expect("(")
-		node = &Node{Kind: ND_WHILE}
-		node.Cond = expr()
-		expect(")")
-		node.Then = stmt()
-
-	} else if consume("if") != nil {
-
-		expect("(")
-		node = &Node{Kind: ND_IF}
-		node.Cond = expr()
-		expect(")")
-		node.Then = stmt()
-
-		if consume("else") != nil {
-			node.Els = stmt()
-		}
 
 	} else if consume("{") != nil {
 
@@ -162,7 +226,7 @@ func stmt() *Node {
 	return node
 }
 
-// expr       = equality
+// expr       = assign
 func expr() *Node {
 	return assign()
 }
@@ -296,32 +360,22 @@ func primary() *Node {
 		}
 
 		// local variables
-		node := &Node{Kind: ND_LVAR}
-
 		lvar := findLVar(tok)
 		if lvar != nil {
-			node.Offset = lvar.Offset
-		} else {
-			lvar = &LVar{
-				Next:   locals,
-				Name:   tok.Str,
-				Len:    tok.Len,
-				Offset: 8,
-			}
-			if locals != nil {
-				lvar.Offset += locals.Offset
-			}
-			node.Offset = lvar.Offset
-			locals = lvar
+			lvar = pushVar(tok.Str)
 		}
-		return node
 
+		return &Node{
+			Kind: ND_LVAR,
+			Var:  lvar,
+			Tok:  tok,
+		}
 	}
 
-	// otherwise, must be integer
 	tok = token
 	if tok.Kind != TK_NUM {
-		errorTok(os.Stderr, tok, "expected number")
+		errorTok(os.Stderr, tok, "unexpected expression")
 	}
+	// otherwise, must be integer
 	return newNodeNum(expectNumber(), tok)
 }

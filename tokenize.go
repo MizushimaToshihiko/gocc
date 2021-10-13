@@ -33,28 +33,6 @@ type Token struct {
 // current token
 var token *Token
 
-// the type of local variables
-type LVar struct {
-	Next   *LVar
-	Name   string
-	Len    int
-	Offset int
-}
-
-// local variables
-var locals *LVar
-
-// search a local variable by name.
-// if it wasn't find, return nil.
-func findLVar(tok *Token) *LVar {
-	for lvar := locals; lvar != nil; lvar = lvar.Next {
-		if lvar.Len == tok.Len && startsWith(tok.Str, lvar.Name) {
-			return lvar
-		}
-	}
-	return nil
-}
-
 // inputted program
 var userInput string
 
@@ -89,7 +67,7 @@ func errorTok(w io.Writer, tok *Token, formt string, a ...interface{}) {
 }
 
 // if the next token is expected symbol, the read position
-// of token exceed one character, and returns true.
+// of token exceed one character, and returns token.
 func consume(op string) *Token {
 	if token.Kind != TK_RESERVED ||
 		len(op) != token.Len ||
@@ -131,6 +109,14 @@ func expectNumber() int {
 	val := token.Val
 	token = token.Next
 	return val
+}
+
+func expectIdent() string {
+	if token.Kind != TK_IDENT {
+		errorAt(os.Stderr, curIdx, token.Str, "expect an identifier")
+	}
+	token = token.Next
+	return token.Str
 }
 
 func atEof() bool {
@@ -190,8 +176,8 @@ func tokenize() *Token {
 	head.Next = nil
 	cur := &head
 
-	// // for printToken
-	// headTok = &head
+	// for printToken
+	headTok = &head
 
 	for curIdx < len(userInput) {
 		// skip space(s)
@@ -240,7 +226,7 @@ func tokenize() *Token {
 			continue
 		}
 
-		errorAt(os.Stderr, curIdx, "couldn't tokenize")
+		errorAt(os.Stderr, curIdx, "invalid token")
 	}
 
 	newToken(TK_EOF, cur, "", 0)
