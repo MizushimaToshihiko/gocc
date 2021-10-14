@@ -3,7 +3,9 @@
 //
 package main
 
-import "os"
+import (
+	"os"
+)
 
 // the types of AST node
 type NodeKind int
@@ -76,20 +78,28 @@ func newNodeNum(val int, tok *Token) *Node {
 
 // the type of local variables
 type LVar struct {
-	Next   *LVar  // the next variable or nil
 	Name   string // the name of the variable
-	Len    int    // the length of 'Name'
 	Offset int    // the offset from RBP
 }
 
+type VarList struct {
+	Next *VarList
+	Var  *LVar
+}
+
 // local variables
-var locals *LVar
+var locals *VarList
+
+func newLVarNode(lvar *LVar, tok *Token) *Node {
+	return &Node{Kind: ND_LVAR, Tok: tok, Var: lvar}
+}
 
 // search a local variable by name.
 // if it wasn't find, return nil.
 func findLVar(tok *Token) *LVar {
-	for lvar := locals; lvar != nil; lvar = lvar.Next {
-		if lvar.Len == tok.Len && startsWith(tok.Str, lvar.Name) {
+	for vl := locals; vl != nil; vl = vl.Next {
+		lvar := vl.Var
+		if len(lvar.Name) == tok.Len && tok.Str == lvar.Name {
 			return lvar
 		}
 	}
@@ -98,18 +108,21 @@ func findLVar(tok *Token) *LVar {
 
 func pushVar(name string) *LVar {
 	lvar := &LVar{
-		Next: locals,
 		Name: name,
 	}
-	locals = lvar
+
+	vl := &VarList{Var: lvar, Next: locals}
+	locals = vl
 	return lvar
 }
 
 type Function struct {
-	Next    *Function
-	Name    string
+	Next   *Function
+	Name   string
+	Params *VarList
+
 	Node    *Node
-	Locals  *LVar
+	Locals  *VarList
 	StackSz int
 }
 
@@ -118,6 +131,8 @@ type Function struct {
 
 // program = function*
 func program() *Function {
+	printCurTok()
+	printCurFunc()
 	cur := &Function{}
 	head := cur
 
@@ -128,13 +143,35 @@ func program() *Function {
 	return head.Next
 }
 
-// function = ident "(" ")" "{" stmt* "}"
+// params = ident ("," ident)*
+func readFuncParams() *VarList {
+	printCurTok()
+	printCurFunc()
+	if consume(")") != nil { // no argument
+		return nil
+	}
+
+	head := &VarList{Var: pushVar(expectIdent())}
+	cur := head
+
+	for consume(")") == nil {
+		expect(",")
+		cur.Next = &VarList{Var: pushVar(expectIdent())}
+		cur = cur.Next
+	}
+
+	return head
+}
+
+// function = ident "(" params? ")" "{" stmt* "}"
 func function() *Function {
+	printCurTok()
+	printCurFunc()
 	locals = nil
 
-	name := expectIdent()
+	fn := &Function{Name: expectIdent()}
 	expect("(")
-	expect(")")
+	fn.Params = readFuncParams()
 	expect("{")
 
 	cur := &Node{}
@@ -145,11 +182,9 @@ func function() *Function {
 		cur = cur.Next
 	}
 
-	return &Function{
-		Name:   name,
-		Node:   head.Next,
-		Locals: locals,
-	}
+	fn.Node = head.Next
+	fn.Locals = locals
+	return fn
 }
 
 // stmt = expr ";"
@@ -159,17 +194,19 @@ func function() *Function {
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "return" expr ";"
 func stmt() *Node {
+	printCurTok()
+	printCurFunc()
 	var node *Node
 
-	if consume("return") != nil {
+	if t := consume("return"); t != nil {
 
-		node = &Node{Kind: ND_RETURN, Lhs: expr()}
+		node = &Node{Kind: ND_RETURN, Lhs: expr(), Tok: t}
 		expect(";")
 
-	} else if consume("if") != nil {
+	} else if t := consume("if"); t != nil {
 
+		node = &Node{Kind: ND_IF, Tok: t}
 		expect("(")
-		node = &Node{Kind: ND_IF}
 		node.Cond = expr()
 		expect(")")
 		node.Then = stmt()
@@ -178,18 +215,18 @@ func stmt() *Node {
 			node.Els = stmt()
 		}
 
-	} else if consume("while") != nil {
+	} else if t := consume("while"); t != nil {
 
+		node = &Node{Kind: ND_WHILE, Tok: t}
 		expect("(")
-		node = &Node{Kind: ND_WHILE}
 		node.Cond = expr()
 		expect(")")
 		node.Then = stmt()
 
-	} else if consume("for") != nil {
+	} else if t := consume("for"); t != nil {
 
+		node = &Node{Kind: ND_FOR, Tok: t}
 		expect("(")
-		node = &Node{Kind: ND_FOR}
 
 		if consume(";") == nil {
 			node.Init = expr()
@@ -205,7 +242,7 @@ func stmt() *Node {
 		}
 		node.Then = stmt()
 
-	} else if consume("{") != nil {
+	} else if t := consume("{"); t != nil {
 
 		head := Node{}
 		cur := &head
@@ -215,7 +252,7 @@ func stmt() *Node {
 			cur = cur.Next
 		}
 
-		node = &Node{Kind: ND_BLOCK}
+		node = &Node{Kind: ND_BLOCK, Tok: t}
 		node.Body = head.Next
 
 	} else {
@@ -228,11 +265,15 @@ func stmt() *Node {
 
 // expr       = assign
 func expr() *Node {
+	printCurTok()
+	printCurFunc()
 	return assign()
 }
 
 // assign     = equality ("=" assign)?
 func assign() *Node {
+	printCurTok()
+	printCurFunc()
 	node := equality()
 	if t := consume("="); t != nil {
 		node = newNode(ND_ASSIGN, node, assign(), t)
@@ -242,6 +283,8 @@ func assign() *Node {
 
 // equality   = relational ("==" relational | "!=" relational)*
 func equality() *Node {
+	printCurTok()
+	printCurFunc()
 	node := relational()
 
 	for {
@@ -257,6 +300,8 @@ func equality() *Node {
 
 // relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 func relational() *Node {
+	printCurTok()
+	printCurFunc()
 	node := add()
 
 	for {
@@ -276,6 +321,8 @@ func relational() *Node {
 
 // add = mul ("+" mul | "-" mul)*
 func add() *Node {
+	printCurTok()
+	printCurFunc()
 	node := mul()
 
 	for {
@@ -291,6 +338,8 @@ func add() *Node {
 
 // mul = unary ("*" unary | "/" unary)*
 func mul() *Node {
+	printCurTok()
+	printCurFunc()
 	node := unary()
 
 	for {
@@ -307,6 +356,8 @@ func mul() *Node {
 //unary = ("+" | "-" | "*" | "&")? unary
 //      | primary
 func unary() *Node {
+	printCurTok()
+	printCurFunc()
 	if t := consume("+"); t != nil {
 		return unary()
 	}
@@ -324,6 +375,8 @@ func unary() *Node {
 
 // func-args = "(" (assign("," assign)*)? ")"
 func funcArgs() *Node {
+	printCurTok()
+	printCurFunc()
 	if consume(")") != nil {
 		return nil
 	}
@@ -342,6 +395,8 @@ func funcArgs() *Node {
 //         | ident func-args?
 //         | "(" expr ")"
 func primary() *Node {
+	printCurTok()
+	printCurFunc()
 	// if the next token is '(', the program must be
 	// "(" expr ")"
 	if t := consume("("); t != nil {
@@ -350,8 +405,7 @@ func primary() *Node {
 		return node
 	}
 
-	tok := consumeIdent()
-	if tok != nil {
+	if tok := consumeIdent(); tok != nil {
 		if t := consume("("); t != nil { // function call
 			node := &Node{Kind: ND_FUNCCALL}
 			node.FuncName = tok.Str
@@ -365,16 +419,12 @@ func primary() *Node {
 			lvar = pushVar(tok.Str)
 		}
 
-		return &Node{
-			Kind: ND_LVAR,
-			Var:  lvar,
-			Tok:  tok,
-		}
+		return newLVarNode(lvar, tok)
 	}
 
-	tok = token
+	tok := token
 	if tok.Kind != TK_NUM {
-		errorTok(os.Stderr, tok, "unexpected expression")
+		errorTok(os.Stderr, tok, "it's not a number")
 	}
 	// otherwise, must be integer
 	return newNodeNum(expectNumber(), tok)

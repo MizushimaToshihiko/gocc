@@ -69,6 +69,7 @@ func errorTok(w io.Writer, tok *Token, formt string, a ...interface{}) {
 // if the next token is expected symbol, the read position
 // of token exceed one character, and returns token.
 func consume(op string) *Token {
+	// defer printCurTok()
 	if token.Kind != TK_RESERVED ||
 		len(op) != token.Len ||
 		token.Str != op {
@@ -81,6 +82,7 @@ func consume(op string) *Token {
 
 // consume the current token if it is an identifier
 func consumeIdent() *Token {
+	// defer printCurTok()
 	if token.Kind != TK_IDENT {
 		return nil
 	}
@@ -92,6 +94,7 @@ func consumeIdent() *Token {
 // if the next token is an expected symbol, the read position
 // of token exceed one token.
 func expect(op string) {
+	// defer printCurTok()
 	if token.Kind != TK_RESERVED ||
 		len(op) != token.Len ||
 		token.Str != op {
@@ -103,6 +106,7 @@ func expect(op string) {
 // if next token is integer, the read position of token exceed one
 // character or report an error.
 func expectNumber() int {
+	// defer printCurTok()
 	if token.Kind != TK_NUM {
 		errorAt(os.Stderr, curIdx, "is not a number")
 	}
@@ -112,11 +116,13 @@ func expectNumber() int {
 }
 
 func expectIdent() string {
+	// defer printCurTok()
 	if token.Kind != TK_IDENT {
 		errorAt(os.Stderr, curIdx, token.Str, "expect an identifier")
 	}
+	s := token.Str
 	token = token.Next
-	return token.Str
+	return s
 }
 
 func atEof() bool {
@@ -195,7 +201,7 @@ func tokenize() *Token {
 		}
 
 		// single-letter punctuator
-		if strings.Contains("+-()*/<>=;{},*&", string(userInput[curIdx])) {
+		if strings.Contains("+-()*/<>=;{},&", string(userInput[curIdx])) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue

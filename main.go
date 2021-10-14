@@ -19,9 +19,9 @@ func compile(arg string, w io.Writer) error {
 	// assign offsets to local variables.
 	for fn := prog; fn != nil; fn = fn.Next {
 		offset := 0
-		for lvar := prog.Locals; lvar != nil; lvar = lvar.Next {
+		for vl := fn.Locals; vl != nil; vl = vl.Next {
 			offset += 8
-			lvar.Offset = offset
+			vl.Var.Offset = offset
 		}
 		fn.StackSz = offset
 	}

@@ -234,6 +234,14 @@ func codeGen(w io.Writer, prog *Function) error {
 		e.Fprintf(w, "	mov rbp, rsp\n")
 		e.Fprintf(w, "	sub rsp, %d\n", fn.StackSz)
 
+		// push arguments to the stack
+		i := 0
+		for vl := fn.Params; vl != nil; vl = vl.Next {
+			lvar := vl.Var
+			e.Fprintf(w, "	mov [rbp-%d], %s\n", lvar.Offset, argReg[i])
+			i++
+		}
+
 		// emit code
 		for node := fn.Node; node != nil; node = node.Next {
 			e.gen(w, node)

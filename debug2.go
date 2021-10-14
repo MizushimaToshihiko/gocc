@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"runtime"
+)
 
 // for printTokens function, the pointer of the head token
 // stored in 'headTok'.
@@ -9,20 +13,20 @@ var headTok *Token
 func printTokens() {
 	fmt.Print("# Tokens: ")
 	tok := headTok.Next
-	// var kind string
+	var kind string
 	for tok.Next != nil {
-		// switch tok.Kind {
-		// case TK_IDENT:
-		// 	kind = "IDENT"
-		// case TK_NUM:
-		// 	kind = "NUM"
-		// case TK_RESERVED:
-		// 	kind = "RESERVED"
-		// default:
-		// 	log.Fatal("unknown token kind")
-		// }
-		// fmt.Printf(" %s:'%s' ", kind, tok.Str)
-		fmt.Printf(" '%s' ", tok.Str)
+		switch tok.Kind {
+		case TK_IDENT:
+			kind = "IDENT"
+		case TK_NUM:
+			kind = "NUM"
+		case TK_RESERVED:
+			kind = "RESERVED"
+		default:
+			log.Fatal("unknown token kind")
+		}
+		fmt.Printf(" %s:'%s' ", kind, tok.Str)
+		// fmt.Printf(" '%s' ", tok.Str)
 		tok = tok.Next
 	}
 
@@ -31,6 +35,20 @@ func printTokens() {
 	}
 
 	fmt.Println()
+}
+
+// func printCurTokInit() {
+// 	fmt.Print("# Current Token: ")
+// }
+
+func printCurTok() {
+	fmt.Printf(" %d:'%s' \n", token.Kind, token.Str)
+}
+
+func printCurFunc() {
+	pc, _, line, _ := runtime.Caller(1)
+	fn := runtime.FuncForPC(pc)
+	fmt.Printf(" %s %d\n", fn.Name(), line)
 }
 
 // // walk AST in in-order
