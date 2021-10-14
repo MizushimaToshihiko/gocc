@@ -28,18 +28,44 @@ var labelNo int
 var argReg = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 var funcName string
 
-func (e *errWriter) genLval(w io.Writer, node *Node) {
+func (e *errWriter) genAddr(w io.Writer, node *Node) {
+	fmt.Printf("%#v\n", node)
 	if e.err != nil {
 		return // do nothing
 	}
 
-	if node.Kind != ND_LVAR {
-		e.err = errors.New("the left value is not a variable")
+	switch node.Kind {
+	case ND_LVAR:
+		e.Fprintf(w, "	lea rax, [rbp-%d]\n", node.Var.Offset)
+		e.Fprintf(w, "	push rax\n")
+		return
+	case ND_DEREF:
+		e.gen(w, node.Lhs)
 		return
 	}
 
-	e.Fprintf(w, "	lea rax, [rbp-%d]\n", node.Var.Offset)
+	e.err = errors.New("the left value is not a variable")
+}
+
+func (e *errWriter) load(w io.Writer) {
+	if e.err != nil {
+		return // do nothing
+	}
+
+	e.Fprintf(w, "	pop rax\n")
+	e.Fprintf(w, "	mov rax, [rax]\n")
 	e.Fprintf(w, "	push rax\n")
+}
+
+func (e *errWriter) store(w io.Writer) {
+	if e.err != nil {
+		return // do nothing
+	}
+
+	e.Fprintf(w, "	pop rdi\n")
+	e.Fprintf(w, "	pop rax\n")
+	e.Fprintf(w, "	mov [rax], rdi\n")
+	e.Fprintf(w, "	push rdi\n")
 }
 
 func (e *errWriter) gen(w io.Writer, node *Node) {
@@ -52,32 +78,26 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		e.Fprintf(w, "	push %d\n", node.Val)
 		return
 	case ND_LVAR:
-		e.genLval(w, node)
+		e.genAddr(w, node)
 		// load
-		e.Fprintf(w, "	pop rax\n")
-		e.Fprintf(w, "	mov rax, [rax]\n")
-		e.Fprintf(w, "	push rax\n")
+		e.load(w)
 		return
 
 	case ND_ADDR:
-		e.genLval(w, node.Lhs)
+		e.genAddr(w, node.Lhs)
 		return
 
 	case ND_DEREF:
 		e.gen(w, node.Lhs)
-		e.Fprintf(w, "	pop rax\n")
-		e.Fprintf(w, "	mov rax, [rax]\n")
-		e.Fprintf(w, "	push rax\n")
+		// load
+		e.load(w)
 		return
 
 	case ND_ASSIGN:
-		e.genLval(w, node.Lhs)
+		e.genAddr(w, node.Lhs)
 		e.gen(w, node.Rhs)
 		// store
-		e.Fprintf(w, "	pop rdi\n")
-		e.Fprintf(w, "	pop rax\n")
-		e.Fprintf(w, "	mov [rax], rdi\n")
-		e.Fprintf(w, "	push rdi\n")
+		e.store(w)
 		return
 
 	case ND_IF:

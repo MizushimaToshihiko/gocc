@@ -11,7 +11,7 @@ func compile(arg string, w io.Writer) error {
 	curIdx = 0 // for test
 	userInput = arg
 	token = tokenize()
-	printTokens()
+	// printTokens()
 
 	// the parsed result is in 'prog'
 	var prog *Function = program()

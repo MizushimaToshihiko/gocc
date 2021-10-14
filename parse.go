@@ -131,8 +131,8 @@ type Function struct {
 
 // program = function*
 func program() *Function {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	cur := &Function{}
 	head := cur
 
@@ -145,8 +145,8 @@ func program() *Function {
 
 // params = ident ("," ident)*
 func readFuncParams() *VarList {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	if consume(")") != nil { // no argument
 		return nil
 	}
@@ -165,8 +165,8 @@ func readFuncParams() *VarList {
 
 // function = ident "(" params? ")" "{" stmt* "}"
 func function() *Function {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	locals = nil
 
 	fn := &Function{Name: expectIdent()}
@@ -177,7 +177,10 @@ func function() *Function {
 	cur := &Node{}
 	head := cur
 
-	for t := consume("}"); t == nil; {
+	for {
+		if t := consume("}"); t != nil {
+			break
+		}
 		cur.Next = stmt()
 		cur = cur.Next
 	}
@@ -194,8 +197,8 @@ func function() *Function {
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "return" expr ";"
 func stmt() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	var node *Node
 
 	if t := consume("return"); t != nil {
@@ -247,7 +250,10 @@ func stmt() *Node {
 		head := Node{}
 		cur := &head
 
-		for consume("}") == nil {
+		for {
+			if consume("}") != nil {
+				break
+			}
 			cur.Next = stmt()
 			cur = cur.Next
 		}
@@ -265,15 +271,15 @@ func stmt() *Node {
 
 // expr       = assign
 func expr() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	return assign()
 }
 
 // assign     = equality ("=" assign)?
 func assign() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	node := equality()
 	if t := consume("="); t != nil {
 		node = newNode(ND_ASSIGN, node, assign(), t)
@@ -283,8 +289,8 @@ func assign() *Node {
 
 // equality   = relational ("==" relational | "!=" relational)*
 func equality() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	node := relational()
 
 	for {
@@ -300,8 +306,8 @@ func equality() *Node {
 
 // relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 func relational() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	node := add()
 
 	for {
@@ -321,8 +327,8 @@ func relational() *Node {
 
 // add = mul ("+" mul | "-" mul)*
 func add() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	node := mul()
 
 	for {
@@ -338,8 +344,8 @@ func add() *Node {
 
 // mul = unary ("*" unary | "/" unary)*
 func mul() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	node := unary()
 
 	for {
@@ -356,8 +362,8 @@ func mul() *Node {
 //unary = ("+" | "-" | "*" | "&")? unary
 //      | primary
 func unary() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	if t := consume("+"); t != nil {
 		return unary()
 	}
@@ -375,8 +381,8 @@ func unary() *Node {
 
 // func-args = "(" (assign("," assign)*)? ")"
 func funcArgs() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	if consume(")") != nil {
 		return nil
 	}
@@ -395,8 +401,8 @@ func funcArgs() *Node {
 //         | ident func-args?
 //         | "(" expr ")"
 func primary() *Node {
-	printCurTok()
-	printCurFunc()
+	// printCurTok()
+	// printCurFunc()
 	// if the next token is '(', the program must be
 	// "(" expr ")"
 	if t := consume("("); t != nil {
