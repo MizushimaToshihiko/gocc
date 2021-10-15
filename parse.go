@@ -11,25 +11,25 @@ import (
 type NodeKind int
 
 const (
-	ND_ADD      NodeKind = iota // +
-	ND_SUB                      // -
-	ND_MUL                      // *
-	ND_DIV                      // /
-	ND_EQ                       // ==
-	ND_NE                       // !=
-	ND_LT                       // <
-	ND_LE                       // <=
-	ND_ASSIGN                   // =
-	ND_LVAR                     // local variables
-	ND_NUM                      // integer
-	ND_RETURN                   // 'return'
-	ND_IF                       // "if"
-	ND_WHILE                    // "while"
-	ND_FOR                      // "for"
-	ND_BLOCK                    // {...}
-	ND_FUNCCALL                 // function call
-	ND_ADDR                     // unary &
-	ND_DEREF                    // unary *
+	ND_ADD      NodeKind = iota // 0: +
+	ND_SUB                      // 1: -
+	ND_MUL                      // 2: *
+	ND_DIV                      // 3: /
+	ND_EQ                       // 4: ==
+	ND_NE                       // 5: !=
+	ND_LT                       // 6: <
+	ND_LE                       // 7: <=
+	ND_ASSIGN                   // 8: =
+	ND_LVAR                     // 9: local variables
+	ND_NUM                      // 10: integer
+	ND_RETURN                   // 11: 'return'
+	ND_IF                       // 12: "if"
+	ND_WHILE                    // 13: "while"
+	ND_FOR                      // 14: "for"
+	ND_BLOCK                    // 15: {...}
+	ND_FUNCCALL                 // 16: function call
+	ND_ADDR                     // 17: unary &
+	ND_DEREF                    // 18: unary *
 )
 
 // define AST node
@@ -154,7 +154,10 @@ func readFuncParams() *VarList {
 	head := &VarList{Var: pushVar(expectIdent())}
 	cur := head
 
-	for consume(")") == nil {
+	for {
+		if consume(")") != nil {
+			break
+		}
 		expect(",")
 		cur.Next = &VarList{Var: pushVar(expectIdent())}
 		cur = cur.Next
@@ -284,6 +287,7 @@ func assign() *Node {
 	if t := consume("="); t != nil {
 		node = newNode(ND_ASSIGN, node, assign(), t)
 	}
+
 	return node
 }
 
@@ -389,7 +393,10 @@ func funcArgs() *Node {
 
 	head := assign()
 	cur := head
-	for consume(",") != nil {
+	for {
+		if consume(",") == nil {
+			break
+		}
 		cur.Next = assign()
 		cur = cur.Next
 	}

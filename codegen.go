@@ -29,7 +29,9 @@ var argReg = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 var funcName string
 
 func (e *errWriter) genAddr(w io.Writer, node *Node) {
-	fmt.Printf("%#v\n", node)
+	// fmt.Printf("%#v\n", node)
+	// fmt.Println(node.Var == nil)
+	// fmt.Println("node.Tok.Str", node.Tok.Str)
 	if e.err != nil {
 		return // do nothing
 	}
@@ -161,12 +163,6 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		e.Fprintf(w, ".Lend%03d:\n", labelNo)
 		return
 
-	case ND_BLOCK:
-		for n := node.Body; n != nil; n = n.Next {
-			e.gen(w, n)
-		}
-		return
-
 	case ND_FUNCCALL:
 		numArgs := 0
 		for arg := node.Args; arg != nil; arg = arg.Next {
@@ -192,6 +188,12 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		e.Fprintf(w, "	add rsp, 8\n")
 		e.Fprintf(w, ".Lend%03d:\n", labelNo)
 		e.Fprintf(w, "	push rax\n")
+		return
+
+	case ND_BLOCK:
+		for n := node.Body; n != nil; n = n.Next {
+			e.gen(w, n)
+		}
 		return
 
 	case ND_RETURN:
