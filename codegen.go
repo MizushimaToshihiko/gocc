@@ -29,9 +29,6 @@ var argReg = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 var funcName string
 
 func (e *errWriter) genAddr(w io.Writer, node *Node) {
-	// fmt.Printf("%#v\n", node)
-	// fmt.Println(node.Var == nil)
-	// fmt.Println("node.Tok.Str", node.Tok.Str)
 	if e.err != nil {
 		return // do nothing
 	}
@@ -78,6 +75,10 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	switch node.Kind {
 	case ND_NUM:
 		e.Fprintf(w, "	push %d\n", node.Val)
+		return
+	case ND_EXPR_STMT:
+		e.gen(w, node.Lhs)
+		e.Fprintf(w, "	add rsp, 8\n")
 		return
 	case ND_LVAR:
 		e.genAddr(w, node)

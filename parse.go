@@ -11,25 +11,26 @@ import (
 type NodeKind int
 
 const (
-	ND_ADD      NodeKind = iota // 0: +
-	ND_SUB                      // 1: -
-	ND_MUL                      // 2: *
-	ND_DIV                      // 3: /
-	ND_EQ                       // 4: ==
-	ND_NE                       // 5: !=
-	ND_LT                       // 6: <
-	ND_LE                       // 7: <=
-	ND_ASSIGN                   // 8: =
-	ND_LVAR                     // 9: local variables
-	ND_NUM                      // 10: integer
-	ND_RETURN                   // 11: 'return'
-	ND_IF                       // 12: "if"
-	ND_WHILE                    // 13: "while"
-	ND_FOR                      // 14: "for"
-	ND_BLOCK                    // 15: {...}
-	ND_FUNCCALL                 // 16: function call
-	ND_ADDR                     // 17: unary &
-	ND_DEREF                    // 18: unary *
+	ND_ADD       NodeKind = iota // 0: +
+	ND_SUB                       // 1: -
+	ND_MUL                       // 2: *
+	ND_DIV                       // 3: /
+	ND_EQ                        // 4: ==
+	ND_NE                        // 5: !=
+	ND_LT                        // 6: <
+	ND_LE                        // 7: <=
+	ND_ASSIGN                    // 8: =
+	ND_LVAR                      // 9: local variables
+	ND_NUM                       // 10: integer
+	ND_RETURN                    // 11: 'return'
+	ND_IF                        // 12: "if"
+	ND_WHILE                     // 13: "while"
+	ND_FOR                       // 14: "for"
+	ND_BLOCK                     // 15: {...}
+	ND_FUNCCALL                  // 16: function call
+	ND_ADDR                      // 17: unary &
+	ND_DEREF                     // 18: unary *
+	ND_EXPR_STMT                 // 19: expression statement
 )
 
 // define AST node
@@ -90,7 +91,7 @@ type VarList struct {
 // local variables
 var locals *VarList
 
-func newLVarNode(lvar *LVar, tok *Token) *Node {
+func newVar(lvar *LVar, tok *Token) *Node {
 	return &Node{Kind: ND_LVAR, Tok: tok, Var: lvar}
 }
 
@@ -193,6 +194,11 @@ func function() *Function {
 	return fn
 }
 
+func readExprStmt() *Node {
+	tok := token
+	return &Node{Kind: ND_EXPR_STMT, Lhs: expr(), Tok: tok}
+}
+
 // stmt = expr ";"
 //      | "{" stmt* "}"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
@@ -235,7 +241,7 @@ func stmt() *Node {
 		expect("(")
 
 		if consume(";") == nil {
-			node.Init = expr()
+			node.Init = readExprStmt()
 			expect(";")
 		}
 		if consume(";") == nil {
@@ -243,7 +249,7 @@ func stmt() *Node {
 			expect(";")
 		}
 		if consume(")") == nil {
-			node.Inc = expr()
+			node.Inc = readExprStmt()
 			expect(")")
 		}
 		node.Then = stmt()
@@ -265,7 +271,7 @@ func stmt() *Node {
 		node.Body = head.Next
 
 	} else {
-		node = expr()
+		node = readExprStmt()
 		expect(";")
 	}
 
@@ -410,6 +416,7 @@ func funcArgs() *Node {
 func primary() *Node {
 	// printCurTok()
 	// printCurFunc()
+
 	// if the next token is '(', the program must be
 	// "(" expr ")"
 	if t := consume("("); t != nil {
@@ -420,7 +427,7 @@ func primary() *Node {
 
 	if tok := consumeIdent(); tok != nil {
 		if t := consume("("); t != nil { // function call
-			node := &Node{Kind: ND_FUNCCALL}
+			node := &Node{Kind: ND_FUNCCALL, Tok: tok}
 			node.FuncName = tok.Str
 			node.Args = funcArgs()
 			return node
@@ -428,11 +435,10 @@ func primary() *Node {
 
 		// local variables
 		lvar := findLVar(tok)
-		if lvar != nil {
+		if lvar == nil {
 			lvar = pushVar(tok.Str)
 		}
-
-		return newLVarNode(lvar, tok)
+		return newVar(lvar, tok)
 	}
 
 	tok := token

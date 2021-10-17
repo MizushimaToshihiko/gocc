@@ -25,7 +25,7 @@ func printTokens() {
 		default:
 			log.Fatal("unknown token kind")
 		}
-		fmt.Printf(" %s:'%s' ", kind, tok.Str)
+		fmt.Printf(" %s:'%s':%d ", kind, tok.Str, tok.Len)
 		// fmt.Printf(" '%s' ", tok.Str)
 		tok = tok.Next
 	}

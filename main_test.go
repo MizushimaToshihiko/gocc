@@ -195,6 +195,26 @@ func TestCompile(t *testing.T) {
 	}
 }
 
+// func TestFindLVar(t *testing.T) {
+// 	cases := map[string]struct {
+// 		lvar *LVar
+// 		tok  *Token
+// 	}{
+// 		"case 1": {
+// 			&LVar{Name: "x"},
+// 			&Token{Str: "x", Len: 1},
+// 		},
+// 	}
+
+// 	for name, c := range cases {
+// 		t.Run(name, func(t *testing.T) {
+// 			locals = &VarList{Var: c.lvar, Next: nil}
+// 			lv := findLVar(c.tok)
+// 			fmt.Printf("%#v\n", lv)
+// 		})
+// 	}
+// }
+
 // func TestStartWith(t *testing.T) {
 // 	kw := "return"
 // 	in := "return return;"
