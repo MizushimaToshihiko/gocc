@@ -125,8 +125,8 @@ func TestCompile(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			// make 'funcs' file
-			f, err := os.Create("funcs")
+			// make 'funcs_file' file
+			f, err := os.Create("funcs_file")
 			if err != nil {
 				return
 			}
@@ -136,7 +136,7 @@ func TestCompile(t *testing.T) {
 				}
 			}()
 
-			// write 'funcs' to file
+			// write 'funcs' to 'funcs_file'
 			if _, err = f.WriteString(funcs); err != nil {
 				t.Fatal(err)
 			}
