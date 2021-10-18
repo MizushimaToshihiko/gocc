@@ -43,6 +43,7 @@ func (e *errWriter) genAddr(w io.Writer, node *Node) {
 		return
 	}
 
+	fmt.Printf("%d:'%s'\n", node.Kind, node.Tok.Str)
 	e.err = errors.New("the left value is not a variable")
 }
 

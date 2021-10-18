@@ -380,10 +380,10 @@ func unary() *Node {
 	if t := consume("-"); t != nil {
 		return newNode(ND_SUB, newNodeNum(0, t), unary(), t)
 	}
-	if t := consume("*"); t != nil {
+	if t := consume("&"); t != nil {
 		return newNode(ND_ADDR, unary(), nil, t)
 	}
-	if t := consume("&"); t != nil {
+	if t := consume("*"); t != nil {
 		return newNode(ND_DEREF, unary(), nil, t)
 	}
 	return primary()
