@@ -31,12 +31,14 @@ const (
 	ND_ADDR                      // 17: unary &
 	ND_DEREF                     // 18: unary *
 	ND_EXPR_STMT                 // 19: expression statement
+	ND_NULL                      // 20: empty statement
 )
 
 // define AST node
 type Node struct {
 	Kind NodeKind // the type of node
 	Next *Node    // the next node
+	Ty   *Type    // the data type
 	Tok  *Token   // current token
 
 	Lhs *Node // the left branch
@@ -77,9 +79,14 @@ func newNodeNum(val int, tok *Token) *Node {
 	}
 }
 
+func newUnary(kind NodeKind, expr *Node, tok *Token) *Node {
+	return &Node{Kind: kind, Tok: tok, Lhs: expr}
+}
+
 // the type of local variables
 type LVar struct {
 	Name   string // the name of the variable
+	Ty     *Type  // the data type
 	Offset int    // the offset from RBP
 }
 
@@ -107,9 +114,10 @@ func findLVar(tok *Token) *LVar {
 	return nil
 }
 
-func pushVar(name string) *LVar {
+func pushVar(name string, ty *Type) *LVar {
 	lvar := &LVar{
 		Name: name,
+		Ty:   ty,
 	}
 
 	vl := &VarList{Var: lvar, Next: locals}
@@ -144,7 +152,25 @@ func program() *Function {
 	return head.Next
 }
 
-// params = ident ("," ident)*
+// basetype = "int" "*"*
+func basetype() *Type {
+	expect("int")
+	ty := intType()
+	for consume("*") != nil {
+		ty = pointerTo(ty)
+	}
+	return ty
+}
+
+// param = basetype ident
+func readFuncParam() *VarList {
+	vl := &VarList{}
+	ty := basetype() // 'baseType' function will be booted first.
+	vl.Var = pushVar(expectIdent(), ty)
+	return vl
+}
+
+// params = param ("," param)*
 func readFuncParams() *VarList {
 	// printCurTok()
 	// printCurFunc()
@@ -152,7 +178,7 @@ func readFuncParams() *VarList {
 		return nil
 	}
 
-	head := &VarList{Var: pushVar(expectIdent())}
+	head := readFuncParam()
 	cur := head
 
 	for {
@@ -160,19 +186,20 @@ func readFuncParams() *VarList {
 			break
 		}
 		expect(",")
-		cur.Next = &VarList{Var: pushVar(expectIdent())}
+		cur.Next = readFuncParam()
 		cur = cur.Next
 	}
 
 	return head
 }
 
-// function = ident "(" params? ")" "{" stmt* "}"
+// function = basetype ident "(" params? ")" "{" stmt* "}"
 func function() *Function {
 	// printCurTok()
 	// printCurFunc()
 	locals = nil
 
+	basetype()
 	fn := &Function{Name: expectIdent()}
 	expect("(")
 	fn.Params = readFuncParams()
@@ -194,17 +221,36 @@ func function() *Function {
 	return fn
 }
 
+// declaration = basetype ident ("=" expr) ";"
+func declaration() *Node {
+	tok := token
+	ty := basetype()
+	lvar := pushVar(expectIdent(), ty)
+
+	if consume(";") != nil {
+		return &Node{Kind: ND_NULL, Tok: tok}
+	}
+
+	expect("=")
+	lhs := newVar(lvar, tok)
+	rhs := expr()
+	expect(";")
+	node := newNode(ND_ASSIGN, lhs, rhs, tok)
+	return newUnary(ND_EXPR_STMT, node, tok)
+}
+
 func readExprStmt() *Node {
 	tok := token
 	return &Node{Kind: ND_EXPR_STMT, Lhs: expr(), Tok: tok}
 }
 
-// stmt = expr ";"
-//      | "{" stmt* "}"
+// stmt = "return" expr ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
-//      | "return" expr ";"
+//      | "{" stmt* "}"
+//      | declaration
+//      | expr ";"
 func stmt() *Node {
 	// printCurTok()
 	// printCurFunc()
@@ -271,6 +317,11 @@ func stmt() *Node {
 		node.Body = head.Next
 
 	} else {
+
+		if tok := peek("int"); tok != nil {
+			return declaration()
+		}
+
 		node = readExprStmt()
 		expect(";")
 	}
@@ -369,8 +420,10 @@ func mul() *Node {
 	}
 }
 
-//unary = ("+" | "-" | "*" | "&")? unary
-//      | primary
+//unary = "+"? primary
+//      | "-"? primary
+//      | "*" unary
+//      | "&" unary
 func unary() *Node {
 	// printCurTok()
 	// printCurFunc()
@@ -381,10 +434,10 @@ func unary() *Node {
 		return newNode(ND_SUB, newNodeNum(0, t), unary(), t)
 	}
 	if t := consume("&"); t != nil {
-		return newNode(ND_ADDR, unary(), nil, t)
+		return newUnary(ND_ADDR, unary(), t)
 	}
 	if t := consume("*"); t != nil {
-		return newNode(ND_DEREF, unary(), nil, t)
+		return newUnary(ND_DEREF, unary(), t)
 	}
 	return primary()
 }
@@ -427,16 +480,18 @@ func primary() *Node {
 
 	if tok := consumeIdent(); tok != nil {
 		if t := consume("("); t != nil { // function call
-			node := &Node{Kind: ND_FUNCCALL, Tok: tok}
-			node.FuncName = tok.Str
-			node.Args = funcArgs()
-			return node
+			return &Node{
+				Kind:     ND_FUNCCALL,
+				Tok:      tok,
+				FuncName: tok.Str,
+				Args:     funcArgs(),
+			}
 		}
 
 		// local variables
 		lvar := findLVar(tok)
 		if lvar == nil {
-			lvar = pushVar(tok.Str)
+			errorTok(os.Stderr, tok, "undefined variable")
 		}
 		return newVar(lvar, tok)
 	}

@@ -74,6 +74,8 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	}
 
 	switch node.Kind {
+	case ND_NULL:
+		return
 	case ND_NUM:
 		e.Fprintf(w, "	push %d\n", node.Val)
 		return
@@ -213,8 +215,14 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 
 	switch node.Kind {
 	case ND_ADD:
+		if node.Ty.Kind == TY_PTR {
+			e.Fprintf(w, "	imul rdi, 8\n")
+		}
 		e.Fprintf(w, "	add rax, rdi\n")
 	case ND_SUB:
+		if node.Ty.Kind == TY_PTR {
+			e.Fprintf(w, "	imul rdi, 8\n")
+		}
 		e.Fprintf(w, "	sub rax, rdi\n")
 	case ND_MUL:
 		e.Fprintf(w, "	imul rax, rdi\n")

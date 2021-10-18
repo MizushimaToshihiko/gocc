@@ -66,13 +66,21 @@ func errorTok(w io.Writer, tok *Token, formt string, a ...interface{}) {
 	os.Exit(1)
 }
 
-// if the next token is expected symbol, the read position
-// of token exceed one character, and returns token.
-func consume(op string) *Token {
-	// defer printCurTok()
+// peek function returns the token, when the current token matches 's'.
+func peek(s string) *Token {
 	if token.Kind != TK_RESERVED ||
-		len(op) != token.Len ||
-		token.Str != op {
+		len(s) != token.Len ||
+		token.Str != s {
+		return nil
+	}
+	return token
+}
+
+// if the next token is expected symbol, the read position
+// of token exceed one character, and returns token(pointer).
+func consume(s string) *Token {
+	// defer printCurTok()
+	if peek(s) == nil {
 		return nil
 	}
 	t := token
@@ -93,12 +101,10 @@ func consumeIdent() *Token {
 
 // if the next token is an expected symbol, the read position
 // of token exceed one token.
-func expect(op string) {
+func expect(s string) {
 	// defer printCurTok()
-	if token.Kind != TK_RESERVED ||
-		len(op) != token.Len ||
-		token.Str != op {
-		errorAt(os.Stderr, curIdx, "is not '%s'", string(op))
+	if peek(s) == nil {
+		errorAt(os.Stderr, curIdx, "is not '%s'", string(s))
 	}
 	token = token.Next
 }
@@ -118,7 +124,9 @@ func expectNumber() int {
 func expectIdent() string {
 	// defer printCurTok()
 	if token.Kind != TK_IDENT {
-		errorAt(os.Stderr, curIdx, token.Str, "expect an identifier")
+		fmt.Println(userInput)
+		fmt.Printf("token %d:'%s'\n", token.Kind, token.Str)
+		panic("expect an identifier")
 	}
 	s := token.Str
 	token = token.Next
@@ -143,8 +151,9 @@ func startsWith(pp, qq string) bool {
 }
 
 func startsWithReserved(p string) string {
-	// keyword
-	kw := []string{"return", "if", "then", "else", "while", "for"}
+	// reserved words
+	kw := []string{"return", "if", "then", "else", "while", "for",
+		"int"}
 
 	for _, k := range kw {
 		if startsWith(p, k) && len(p) > len(k) && !isAlNum(p[len(k)]) {
@@ -168,7 +177,8 @@ func isDigit(op byte) bool {
 }
 
 func isAlpha(c byte) bool {
-	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
+	return ('a' <= c && c <= 'z') ||
+		('A' <= c && c <= 'Z') ||
 		(c == '_')
 }
 
@@ -208,6 +218,7 @@ func tokenize() *Token {
 		}
 
 		// identifier
+		// if 'userInput[cutIdx]' is alphabets, it makes a token of TK_IDENT type.
 		if isAlpha(userInput[curIdx]) {
 			ident := make([]byte, 0, 20)
 			for ; curIdx < len(userInput) && isAlNum(userInput[curIdx]); curIdx++ {

@@ -15,6 +15,8 @@ func compile(arg string, w io.Writer) error {
 
 	// the parsed result is in 'prog'
 	var prog *Function = program()
+	// add 'Type' to AST
+	addType(prog)
 
 	// assign offsets to local variables.
 	for fn := prog; fn != nil; fn = fn.Next {
