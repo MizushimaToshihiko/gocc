@@ -186,7 +186,7 @@ func isAlNum(c byte) bool {
 	return isAlpha(c) || ('0' <= c && c <= '9')
 }
 
-// tokenize inputted string 'p', and return this.
+// tokenize inputted string 'userInput', and return new tokens.
 func tokenize() *Token {
 	var head Token
 	head.Next = nil
