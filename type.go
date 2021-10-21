@@ -2,8 +2,7 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"errors"
 )
 
 type TypeKind int
@@ -26,58 +25,53 @@ func pointerTo(base *Type) *Type {
 	return &Type{Kind: TY_PTR, Base: base}
 }
 
-func visit(node *Node) {
+func (e *errWriter) visit(node *Node) {
+	// printCalledFunc()
+
+	if e.err != nil {
+		return
+	}
+
 	if node == nil {
 		return
 	}
 
-	visit(node.Lhs)
-	visit(node.Rhs)
-	visit(node.Cond)
-	visit(node.Then)
-	visit(node.Els)
-	visit(node.Init)
-	visit(node.Inc)
+	e.visit(node.Lhs)
+	e.visit(node.Rhs)
+	e.visit(node.Cond)
+	e.visit(node.Then)
+	e.visit(node.Els)
+	e.visit(node.Init)
+	e.visit(node.Inc)
 
 	for n := node.Body; n != nil; n = n.Next {
-		visit(n)
+		e.visit(n)
 	}
 	for n := node.Args; n != nil; n = n.Next {
-		visit(n)
+		e.visit(n)
 	}
 
 	switch node.Kind {
-	case ND_MUL:
-	case ND_DIV:
-	case ND_EQ:
-	case ND_NE:
-	case ND_LT:
-	case ND_LE:
-	case ND_FUNCCALL:
-	case ND_NUM:
+	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE, ND_FUNCCALL, ND_NUM:
 		node.Ty = intType()
 		return
 	case ND_LVAR:
 		node.Ty = node.Var.Ty
 		return
 	case ND_ADD:
-		fmt.Printf("%#v\n'%s'\n\n", node, node.Tok.Str)
-		fmt.Printf("Lhs: %#v\n'%s'\n\n", node.Lhs, node.Lhs.Tok.Str)
-		fmt.Printf("Rhs: %#v\n'%s'\n\n", node.Rhs, node.Rhs.Tok.Str)
-
 		if node.Rhs.Ty.Kind == TY_PTR {
 			tmp := node.Lhs
 			node.Lhs = node.Rhs
 			node.Rhs = tmp
 		}
 		if node.Rhs.Ty.Kind == TY_PTR {
-			errorTok(os.Stderr, node.Tok, "invalid pointer arithmetic operands")
+			e.err = errors.New("invalid pointer arithmetic operands")
 		}
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_SUB:
 		if node.Rhs.Ty.Kind == TY_PTR {
-			errorTok(os.Stderr, node.Tok, "invalid pointer arithmetic operands")
+			e.err = errors.New("invalid pointer arithmetic operands")
 		}
 		node.Ty = node.Lhs.Ty
 		return
@@ -89,17 +83,21 @@ func visit(node *Node) {
 		return
 	case ND_DEREF:
 		if node.Lhs.Ty.Kind != TY_PTR {
-			errorTok(os.Stderr, node.Tok, "invalid pointer dereference")
+			e.err = errors.New("invalid pointer dereference")
 		}
 		node.Ty = node.Lhs.Ty.Base
 		return
 	}
 }
 
-func addType(prog *Function) {
+func addType(prog *Function) error {
+	e := &errWriter{}
+
 	for fn := prog; fn != nil; fn = fn.Next {
 		for node := fn.Node; node != nil; node = node.Next {
-			visit(node)
+			e.visit(node)
 		}
 	}
+
+	return e.err
 }

@@ -41,10 +41,9 @@ func (e *errWriter) genAddr(w io.Writer, node *Node) {
 	case ND_DEREF:
 		e.gen(w, node.Lhs)
 		return
+	default:
+		e.err = errors.New("the left value is not a variable")
 	}
-
-	fmt.Printf("%d:'%s'\n", node.Kind, node.Tok.Str)
-	e.err = errors.New("the left value is not a variable")
 }
 
 func (e *errWriter) load(w io.Writer) {
@@ -89,6 +88,13 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		e.load(w)
 		return
 
+	case ND_ASSIGN:
+		e.genAddr(w, node.Lhs)
+		e.gen(w, node.Rhs)
+		// store
+		e.store(w)
+		return
+
 	case ND_ADDR:
 		e.genAddr(w, node.Lhs)
 		return
@@ -97,13 +103,6 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		e.gen(w, node.Lhs)
 		// load
 		e.load(w)
-		return
-
-	case ND_ASSIGN:
-		e.genAddr(w, node.Lhs)
-		e.gen(w, node.Rhs)
-		// store
-		e.store(w)
 		return
 
 	case ND_IF:

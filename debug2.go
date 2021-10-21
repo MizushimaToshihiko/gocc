@@ -45,7 +45,7 @@ func printCurTok() {
 	fmt.Printf(" %d:'%s' \n", token.Kind, token.Str)
 }
 
-func printCurFunc() {
+func printCalledFunc() {
 	pc, _, line, _ := runtime.Caller(1)
 	fn := runtime.FuncForPC(pc)
 	fmt.Printf(" %s %d\n", fn.Name(), line)
