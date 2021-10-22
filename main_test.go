@@ -89,6 +89,9 @@ var cases = map[string]testcase{
 	"61": {7, "int main() { int x=3; int y=5; *(&x+1)=7; return y; }"},
 	"62": {7, "int main() { int x=3; int y=5; *(&y-1)=7; return x; }"},
 	"63": {8, "int main() { int x=3; int y=5; return foo(&x, y); } int foo(int *x, int y) { return *x + y; }"},
+
+	"64": {4, "int main() {int a; return sizeof(a);}"},
+	"65": {8, "int main() {int *a; return sizeof(a);}"},
 }
 
 var funcs string = `int ret3() { return 3;}

@@ -32,6 +32,7 @@ const (
 	ND_DEREF                     // 18: unary *
 	ND_EXPR_STMT                 // 19: expression statement
 	ND_NULL                      // 20: empty statement
+	ND_SIZEOF                    // 21: "sizeof" operator
 )
 
 // define AST node
@@ -420,13 +421,17 @@ func mul() *Node {
 	}
 }
 
-//unary = "+"? primary
-//      | "-"? primary
-//      | "*" unary
-//      | "&" unary
+// unary = "sizeof" unary
+//       | "+"? primary
+//       | "-"? primary
+//       | "*" unary
+//       | "&" unary
 func unary() *Node {
 	// printCurTok()
 	// printCurFunc()
+	if t := consumeSizeof(); t != nil {
+		return newUnary(ND_SIZEOF, unary(), t)
+	}
 	if t := consume("+"); t != nil {
 		return unary()
 	}

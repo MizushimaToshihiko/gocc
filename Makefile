@@ -14,7 +14,7 @@ build: $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
 test: $(SRCS)
-	$(GOTEST) $^ -cover -v -count 1 -timeout 30s
+	$(GOTEST) $^ -cover -count 1 -timeout 30s # -v
 
 clean: 
 	$(GOCLEAN)

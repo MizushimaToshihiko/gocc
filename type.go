@@ -17,6 +17,16 @@ type Type struct {
 	Base *Type
 }
 
+func sizeOf(ty *Type) int {
+	if ty.Kind == TY_INT {
+		return 4
+	}
+	if ty.Kind == TY_PTR {
+		return 8
+	}
+	return sizeOf(ty.Base)
+}
+
 func intType() *Type {
 	return &Type{Kind: TY_INT}
 }
@@ -86,6 +96,12 @@ func (e *errWriter) visit(node *Node) {
 			e.err = errors.New("invalid pointer dereference")
 		}
 		node.Ty = node.Lhs.Ty.Base
+		return
+	case ND_SIZEOF:
+		node.Kind = ND_NUM
+		node.Ty = intType()
+		node.Val = sizeOf(node.Lhs.Ty)
+		node.Lhs = nil
 		return
 	}
 }

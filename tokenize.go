@@ -17,6 +17,7 @@ type TokenKind int
 
 const (
 	TK_RESERVED TokenKind = iota // Reserved words, and puncturators
+	TK_SIZEOF                    // 'sizeof' operator
 	TK_IDENT                     // idenfier such as variables, function names
 	TK_NUM                       // integer
 	TK_EOF                       // the end of tokens
@@ -76,8 +77,8 @@ func peek(s string) *Token {
 	return token
 }
 
-// if the next token is expected symbol, the read position
-// of token exceed one character, and returns token(pointer).
+// consume returns token(pointer), if the current token is expected
+//  symbol, the read position of token exceed one character.
 func consume(s string) *Token {
 	// defer printCurTok()
 	if peek(s) == nil {
@@ -88,10 +89,24 @@ func consume(s string) *Token {
 	return t
 }
 
-// consume the current token if it is an identifier
+// consumeIdent returns the current token if it is an identifier
 func consumeIdent() *Token {
 	// defer printCurTok()
 	if token.Kind != TK_IDENT {
+		return nil
+	}
+	t := token
+	token = token.Next
+	return t
+}
+
+// consumeSizeof returns the token(pointer) and proceed to the next token,
+//  if the current token is "sizeof".
+func consumeSizeof() *Token {
+
+	if token.Kind != TK_SIZEOF ||
+		token.Len != len("sizeof") ||
+		token.Str != "sizeof" {
 		return nil
 	}
 	t := token
@@ -199,6 +214,13 @@ func tokenize() *Token {
 		// skip space(s)
 		if userInput[curIdx] == ' ' {
 			curIdx++
+			continue
+		}
+
+		// 'sizeof' keyword
+		if startsWith(userInput[curIdx:], "sizeof") {
+			cur = newToken(TK_SIZEOF, cur, "sizeof", len("sizeof"))
+			curIdx += len("sizeof")
 			continue
 		}
 
