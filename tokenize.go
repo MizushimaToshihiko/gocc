@@ -27,6 +27,7 @@ type Token struct {
 	Kind TokenKind // type of token
 	Next *Token    // next
 	Val  int       // if 'kind' is TK_NUM, it's integer
+	Loc  int       // the location in 'userInput'
 	Str  string    // token string
 	Len  int       // length of token
 }
@@ -60,7 +61,7 @@ func errorAt(w io.Writer, errIdx int, formt string, a ...interface{}) {
 
 func errorTok(w io.Writer, tok *Token, formt string, a ...interface{}) {
 	if tok != nil {
-		errorAt(w, curIdx, formt, a...)
+		errorAt(w, tok.Loc, formt, a...)
 	}
 	fmt.Fprintf(w, formt, a...)
 	fmt.Fprintf(w, "\n")
@@ -119,7 +120,7 @@ func consumeSizeof() *Token {
 func expect(s string) {
 	// defer printCurTok()
 	if peek(s) == nil {
-		errorAt(os.Stderr, curIdx, "is not '%s'", string(s))
+		errorAt(os.Stderr, token.Loc, "is not '%s'", string(s))
 	}
 	token = token.Next
 }
@@ -129,7 +130,7 @@ func expect(s string) {
 func expectNumber() int {
 	// defer printCurTok()
 	if token.Kind != TK_NUM {
-		errorAt(os.Stderr, curIdx, "is not a number")
+		errorAt(os.Stderr, token.Loc, "is not a number")
 	}
 	val := token.Val
 	token = token.Next
@@ -141,7 +142,7 @@ func expectIdent() string {
 	if token.Kind != TK_IDENT {
 		fmt.Println(userInput)
 		fmt.Printf("token %d:'%s'\n", token.Kind, token.Str)
-		panic("expect an identifier")
+		errorTok(os.Stderr, token, "expect an identifier")
 	}
 	s := token.Str
 	token = token.Next
@@ -154,7 +155,7 @@ func atEof() bool {
 
 // make new token and append to the end of cur.
 func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
-	tok := &Token{Kind: kind, Str: str, Len: len}
+	tok := &Token{Kind: kind, Str: str, Len: len, Loc: curIdx}
 	cur.Next = tok
 	return tok
 }
@@ -265,7 +266,7 @@ func tokenize() *Token {
 			continue
 		}
 
-		errorAt(os.Stderr, curIdx, "invalid token")
+		errorAt(os.Stderr, token.Loc, "invalid token")
 	}
 
 	newToken(TK_EOF, cur, "", 0)

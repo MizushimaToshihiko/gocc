@@ -2,8 +2,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"os"
 )
 
 type TypeKind int
@@ -87,7 +87,7 @@ func (e *errWriter) visit(node *Node) {
 
 		if node.Rhs.Ty != nil {
 			if node.Rhs.Ty.PtrTo != nil {
-				e.err = errors.New("invalid pointer arithmetic operands")
+				errorTok(os.Stderr, node.Tok, "invalid pointer arithmetic operands")
 			}
 		}
 		node.Ty = node.Lhs.Ty
@@ -95,7 +95,7 @@ func (e *errWriter) visit(node *Node) {
 	case ND_SUB:
 		if node.Rhs.Ty != nil {
 			if node.Rhs.Ty.PtrTo != nil {
-				e.err = errors.New("invalid pointer arithmetic operands")
+				errorTok(os.Stderr, node.Tok, "invalid pointer arithmetic operands")
 			}
 		}
 		node.Ty = node.Lhs.Ty
@@ -117,7 +117,7 @@ func (e *errWriter) visit(node *Node) {
 			// fmt.Printf("node.Rhs: %#v\n'%s'\n\n", node.Rhs, node.Rhs.Tok.Str)
 			fmt.Printf("node.Lhs: %#v\n'%s'\n\n", node.Lhs, node.Lhs.Tok.Str)
 
-			e.err = errors.New("in func visit: invalid pointer dereference")
+			errorTok(os.Stderr, node.Tok, "invalid pointer arithmetic operands")
 		}
 		node.Ty = node.Lhs.Ty.PtrTo
 		return
