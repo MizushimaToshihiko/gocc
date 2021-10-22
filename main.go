@@ -25,7 +25,7 @@ func compile(arg string, w io.Writer) error {
 	for fn := prog; fn != nil; fn = fn.Next {
 		offset := 0
 		for vl := fn.Locals; vl != nil; vl = vl.Next {
-			offset += 8
+			offset += sizeOf(vl.Var.Ty)
 			vl.Var.Offset = offset
 		}
 		fn.StackSz = offset

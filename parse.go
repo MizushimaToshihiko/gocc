@@ -163,11 +163,22 @@ func basetype() *Type {
 	return ty
 }
 
+func readTypeSuffix(base *Type) *Type {
+	if consume("[") == nil {
+		return base
+	}
+	sz := expectNumber()
+	expect("]")
+	base = readTypeSuffix(base)
+	return arrayOf(base, uint16(sz))
+}
+
 // param = basetype ident
 func readFuncParam() *VarList {
-	vl := &VarList{}
 	ty := basetype() // 'baseType' function will be booted first.
-	vl.Var = pushVar(expectIdent(), ty)
+	name := expectIdent()
+	ty = readTypeSuffix(ty)
+	vl := &VarList{Var: pushVar(name, ty)}
 	return vl
 }
 
@@ -222,11 +233,13 @@ func function() *Function {
 	return fn
 }
 
-// declaration = basetype ident ("=" expr) ";"
+// declaration = basetype ident ("[" num "]")* ("=" expr) ";"
 func declaration() *Node {
 	tok := token
 	ty := basetype()
-	lvar := pushVar(expectIdent(), ty)
+	name := expectIdent()
+	ty = readTypeSuffix(ty)
+	lvar := pushVar(name, ty)
 
 	if consume(";") != nil {
 		return &Node{Kind: ND_NULL, Tok: tok}

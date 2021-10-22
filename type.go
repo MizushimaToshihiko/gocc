@@ -8,13 +8,23 @@ import (
 type TypeKind int
 
 const (
-	TY_INT TypeKind = iota // int
-	TY_PTR                 // pointer
+	TY_INT   TypeKind = iota // int
+	TY_PTR                   // pointer
+	TY_ARRAY                 // array type
 )
 
 type Type struct {
-	Kind TypeKind
-	Base *Type
+	Kind      TypeKind
+	PtrTo     *Type
+	ArraySize uint16
+}
+
+func arrayOf(base *Type, size uint16) *Type {
+	return &Type{
+		Kind:      TY_ARRAY,
+		PtrTo:     base,
+		ArraySize: size,
+	}
 }
 
 func sizeOf(ty *Type) int {
@@ -24,7 +34,7 @@ func sizeOf(ty *Type) int {
 	if ty.Kind == TY_PTR {
 		return 8
 	}
-	return sizeOf(ty.Base)
+	return sizeOf(ty.PtrTo) * int(ty.ArraySize)
 }
 
 func intType() *Type {
@@ -32,7 +42,7 @@ func intType() *Type {
 }
 
 func pointerTo(base *Type) *Type {
-	return &Type{Kind: TY_PTR, Base: base}
+	return &Type{Kind: TY_PTR, PtrTo: base}
 }
 
 func (e *errWriter) visit(node *Node) {
@@ -69,18 +79,18 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Var.Ty
 		return
 	case ND_ADD:
-		if node.Rhs.Ty.Kind == TY_PTR {
+		if node.Rhs.Ty.PtrTo != nil {
 			tmp := node.Lhs
 			node.Lhs = node.Rhs
 			node.Rhs = tmp
 		}
-		if node.Rhs.Ty.Kind == TY_PTR {
+		if node.Rhs.Ty.PtrTo != nil {
 			e.err = errors.New("invalid pointer arithmetic operands")
 		}
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_SUB:
-		if node.Rhs.Ty.Kind == TY_PTR {
+		if node.Rhs.Ty.PtrTo != nil {
 			e.err = errors.New("invalid pointer arithmetic operands")
 		}
 		node.Ty = node.Lhs.Ty
@@ -89,13 +99,17 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_ADDR:
-		node.Ty = pointerTo(node.Lhs.Ty)
+		if node.Lhs.Ty.Kind == TY_ARRAY {
+			node.Ty = pointerTo(node.Lhs.Ty.PtrTo)
+		} else {
+			node.Ty = pointerTo(node.Lhs.Ty)
+		}
 		return
 	case ND_DEREF:
-		if node.Lhs.Ty.Kind != TY_PTR {
+		if node.Lhs.Ty.PtrTo != nil {
 			e.err = errors.New("invalid pointer dereference")
 		}
-		node.Ty = node.Lhs.Ty.Base
+		node.Ty = node.Lhs.Ty.PtrTo
 		return
 	case ND_SIZEOF:
 		node.Kind = ND_NUM
