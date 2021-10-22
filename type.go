@@ -3,6 +3,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 )
 
 type TypeKind int
@@ -28,10 +29,7 @@ func arrayOf(base *Type, size uint16) *Type {
 }
 
 func sizeOf(ty *Type) int {
-	if ty.Kind == TY_INT {
-		return 4
-	}
-	if ty.Kind == TY_PTR {
+	if ty.Kind == TY_INT || ty.Kind == TY_PTR {
 		return 8
 	}
 	return sizeOf(ty.PtrTo) * int(ty.ArraySize)
@@ -79,19 +77,26 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Var.Ty
 		return
 	case ND_ADD:
-		if node.Rhs.Ty.PtrTo != nil {
-			tmp := node.Lhs
-			node.Lhs = node.Rhs
-			node.Rhs = tmp
+		if node.Rhs.Ty != nil {
+			if node.Rhs.Ty.PtrTo != nil {
+				tmp := node.Lhs
+				node.Lhs = node.Rhs
+				node.Rhs = tmp
+			}
 		}
-		if node.Rhs.Ty.PtrTo != nil {
-			e.err = errors.New("invalid pointer arithmetic operands")
+
+		if node.Rhs.Ty != nil {
+			if node.Rhs.Ty.PtrTo != nil {
+				e.err = errors.New("invalid pointer arithmetic operands")
+			}
 		}
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_SUB:
-		if node.Rhs.Ty.PtrTo != nil {
-			e.err = errors.New("invalid pointer arithmetic operands")
+		if node.Rhs.Ty != nil {
+			if node.Rhs.Ty.PtrTo != nil {
+				e.err = errors.New("invalid pointer arithmetic operands")
+			}
 		}
 		node.Ty = node.Lhs.Ty
 		return
@@ -107,7 +112,12 @@ func (e *errWriter) visit(node *Node) {
 		return
 	case ND_DEREF:
 		if node.Lhs.Ty.PtrTo != nil {
-			e.err = errors.New("invalid pointer dereference")
+
+			fmt.Printf("node: %#v\n'%s'\n\n", node, node.Tok.Str)
+			// fmt.Printf("node.Rhs: %#v\n'%s'\n\n", node.Rhs, node.Rhs.Tok.Str)
+			fmt.Printf("node.Lhs: %#v\n'%s'\n\n", node.Lhs, node.Lhs.Tok.Str)
+
+			e.err = errors.New("in func visit: invalid pointer dereference")
 		}
 		node.Ty = node.Lhs.Ty.PtrTo
 		return
