@@ -161,7 +161,7 @@ func TestCompile(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			// make a object file from 'funcs'
+			// make a object file from 'funcs_file'
 			_, err = exec.Command("gcc", "-xc", "-c", "-o", asmName+"2.o", f.Name()).Output()
 			if err != nil {
 				t.Fatal(err)
@@ -182,7 +182,8 @@ func TestCompile(t *testing.T) {
 				if ee, ok := err.(*exec.ExitError); !ok {
 					t.Fatal(err)
 				} else {
-					// the return value of temporary.s is saved in exit status code normally
+					// the return value of temporary.s is saved in exit status code normally,
+					// except for the return value is 0.
 					actual := ee.ProcessState.ExitCode()
 					if c.expected != actual {
 						t.Fatalf("\n%s\n%d expected, but got %d", c.input, c.expected, actual)
