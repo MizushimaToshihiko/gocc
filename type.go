@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 )
 
 type TypeKind int
@@ -87,7 +86,10 @@ func (e *errWriter) visit(node *Node) {
 
 		if node.Rhs.Ty != nil {
 			if node.Rhs.Ty.PtrTo != nil {
-				errorTok(os.Stderr, node.Tok, "invalid pointer arithmetic operands")
+				e.err = fmt.Errorf(
+					"e.visit(): err: \n%s",
+					errorTok(node.Tok, "invalid pointer arithmetic operands"),
+				)
 			}
 		}
 		node.Ty = node.Lhs.Ty
@@ -95,7 +97,10 @@ func (e *errWriter) visit(node *Node) {
 	case ND_SUB:
 		if node.Rhs.Ty != nil {
 			if node.Rhs.Ty.PtrTo != nil {
-				errorTok(os.Stderr, node.Tok, "invalid pointer arithmetic operands")
+				e.err = fmt.Errorf(
+					"e.visit(): err: \n%s",
+					errorTok(node.Tok, "invalid pointer arithmetic operands"),
+				)
 			}
 		}
 		node.Ty = node.Lhs.Ty
@@ -113,11 +118,14 @@ func (e *errWriter) visit(node *Node) {
 	case ND_DEREF:
 		if node.Lhs.Ty.PtrTo != nil {
 
-			fmt.Printf("node: %#v\n'%s'\n\n", node, node.Tok.Str)
+			// fmt.Printf("node: %#v\n'%s'\n\n", node, node.Tok.Str)
 			// fmt.Printf("node.Rhs: %#v\n'%s'\n\n", node.Rhs, node.Rhs.Tok.Str)
-			fmt.Printf("node.Lhs: %#v\n'%s'\n\n", node.Lhs, node.Lhs.Tok.Str)
+			// fmt.Printf("node.Lhs: %#v\n'%s'\n\n", node.Lhs, node.Lhs.Tok.Str)
 
-			errorTok(os.Stderr, node.Tok, "invalid pointer arithmetic operands")
+			e.err = fmt.Errorf(
+				"e.visit(): err: \n%s",
+				errorTok(node.Tok, "invalid pointer arithmetic operands"),
+			)
 		}
 		node.Ty = node.Lhs.Ty.PtrTo
 		return

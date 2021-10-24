@@ -10,13 +10,18 @@ func compile(arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
 	userInput = arg
-	token = tokenize()
+
+	var err error
+	token, err = tokenize()
+	if err != nil {
+		return err
+	}
 	// printTokens()
 
 	// the parsed result is in 'prog'
 	var prog *Function = program()
 	// add 'Type' to ASTs
-	err := addType(prog)
+	err = addType(prog)
 	if err != nil {
 		return err
 	}

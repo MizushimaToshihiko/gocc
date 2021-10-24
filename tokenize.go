@@ -5,8 +5,6 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -50,22 +48,23 @@ var curIdx int
 
 // for error report
 // it's arguments are same as printf
-func errorAt(w io.Writer, errIdx int, formt string, a ...interface{}) {
-	fmt.Fprintf(w, "%s\n", userInput)
-	fmt.Fprintf(w, "%*s", errIdx, " ")
-	fmt.Fprint(w, "^ ")
-	fmt.Fprintf(w, formt, a...)
-	fmt.Fprint(w, "\n")
-	os.Exit(1)
+func errorAt(errIdx int, formt string, a ...interface{}) string {
+	return fmt.Sprintf("%s\n", userInput) +
+		fmt.Sprintf("%*s", errIdx, " ") +
+		"^ " +
+		fmt.Sprintf(formt, a...) +
+		"\n"
 }
 
-func errorTok(w io.Writer, tok *Token, formt string, a ...interface{}) {
+func errorTok(tok *Token, formt string, a ...interface{}) string {
+	var errStr string
 	if tok != nil {
-		errorAt(w, tok.Loc, formt, a...)
+		errStr += errorAt(tok.Loc, formt, a...)
 	}
-	fmt.Fprintf(w, formt, a...)
-	fmt.Fprintf(w, "\n")
-	os.Exit(1)
+
+	return errStr +
+		fmt.Sprintf(formt, a...) +
+		"\n"
 }
 
 // peek function returns the token, when the current token matches 's'.
@@ -120,7 +119,7 @@ func consumeSizeof() *Token {
 func expect(s string) {
 	// defer printCurTok()
 	if peek(s) == nil {
-		errorAt(os.Stderr, token.Loc, "is not '%s'", string(s))
+		panic("\n" + errorAt(token.Loc, "is not '%s'", string(s)))
 	}
 	token = token.Next
 }
@@ -130,7 +129,7 @@ func expect(s string) {
 func expectNumber() int {
 	// defer printCurTok()
 	if token.Kind != TK_NUM {
-		errorAt(os.Stderr, token.Loc, "is not a number")
+		panic("\n" + errorAt(token.Loc, "is not a number"))
 	}
 	val := token.Val
 	token = token.Next
@@ -142,7 +141,7 @@ func expectIdent() string {
 	if token.Kind != TK_IDENT {
 		fmt.Println(userInput)
 		fmt.Printf("token %d:'%s'\n", token.Kind, token.Str)
-		errorTok(os.Stderr, token, "expect an identifier")
+		panic("\n" + errorTok(token, "expect an identifier"))
 	}
 	s := token.Str
 	token = token.Next
@@ -203,7 +202,7 @@ func isAlNum(c byte) bool {
 }
 
 // tokenize inputted string 'userInput', and return new tokens.
-func tokenize() *Token {
+func tokenize() (*Token, error) {
 	var head Token
 	head.Next = nil
 	cur := &head
@@ -266,9 +265,9 @@ func tokenize() *Token {
 			continue
 		}
 
-		errorAt(os.Stderr, token.Loc, "invalid token")
+		return nil, fmt.Errorf("tokenize(): err:\n%s", errorAt(token.Loc, "invalid token"))
 	}
 
 	newToken(TK_EOF, cur, "", 0)
-	return head.Next
+	return head.Next, nil
 }

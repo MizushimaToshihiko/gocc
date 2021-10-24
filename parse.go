@@ -3,10 +3,6 @@
 //
 package main
 
-import (
-	"os"
-)
-
 // the types of AST node
 type NodeKind int
 
@@ -509,14 +505,14 @@ func primary() *Node {
 		// local variables
 		lvar := findLVar(tok)
 		if lvar == nil {
-			errorTok(os.Stderr, tok, "undefined variable")
+			panic("\n" + errorTok(tok, "undefined variable"))
 		}
 		return newVar(lvar, tok)
 	}
 
 	tok := token
 	if tok.Kind != TK_NUM {
-		errorTok(os.Stderr, tok, "it's not a number")
+		panic("\n" + errorTok(tok, "it's not a number"))
 	}
 	// otherwise, must be integer
 	return newNodeNum(expectNumber(), tok)
