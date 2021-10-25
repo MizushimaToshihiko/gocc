@@ -116,7 +116,7 @@ func (e *errWriter) visit(node *Node) {
 		}
 		return
 	case ND_DEREF:
-		if node.Lhs.Ty.PtrTo != nil {
+		if node.Lhs.Ty.PtrTo == nil {
 
 			// fmt.Printf("node: %#v\n'%s'\n\n", node, node.Tok.Str)
 			// fmt.Printf("node.Rhs: %#v\n'%s'\n\n", node.Rhs, node.Rhs.Tok.Str)
@@ -124,7 +124,7 @@ func (e *errWriter) visit(node *Node) {
 
 			e.err = fmt.Errorf(
 				"e.visit(): err: \n%s",
-				errorTok(node.Tok, "invalid pointer arithmetic operands"),
+				errorTok(node.Tok, "invalid pointer dereference"),
 			)
 		}
 		node.Ty = node.Lhs.Ty.PtrTo

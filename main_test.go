@@ -93,20 +93,21 @@ var cases = map[string]testcase{
 	// "64": {8, "int main() {int a; return sizeof(a);}"},
 	// "65": {8, "int main() {int *a; return sizeof(a);}"},
 
-	// "66": {3, "int main() { int x[3]; *x=3; *(x+1)=4; *(x+2)=5; return *x; }"},
-	// "67": {4, "int main() { int x[3]; *x=3; *(x+1)=4; *(x+2)=5; return *(x+1); }"},
-	// "68": {5, "int main() { int x[3]; *x=3; *(x+1)=4; *(x+2)=5; return *(x+2); }"},
+	"66": {3, "int main() { int x[3]; *x=3; *(x+1)=4; *(x+2)=5; return *x; }"},
+	"67": {4, "int main() { int x[3]; *x=3; *(x+1)=4; *(x+2)=5; return *(x+1); }"},
+	"68": {5, "int main() { int x[3]; *x=3; *(x+1)=4; *(x+2)=5; return *(x+2); }"},
 
-	// "69": {0, "int main() { int x[2][3]; int *y=x; *y=0; return **x; }"},
-	// "70": {1, "int main() { int x[2][3]; int *y=x; *(y+1)=1; return *(*x+1); }"},
-	// "71": {2, "int main() { int x[2][3]; int *y=x; *(y+2)=2; return *(*x+2); }"},
-	// "72": {3, "int main() { int x[2][3]; int *y=x; *(y+3)=3; return **(x+1); }"},
-	// "73": {4, "int main() { int x[2][3]; int *y=x; *(y+4)=4; return *(*(x+1)+1); }"},
-	// "74": {5, "int main() { int x[2][3]; int *y=x; *(y+5)=5; return *(*(x+1)+2); }"},
-	// "75": {6, "int main() { int x[2][3]; int *y=x; *(y+6)=6; return **(x+2); }"},
+	"69": {0, "int main() { int x[2][3]; int *y=x; *y=0; return **x; }"},
+	"70": {1, "int main() { int x[2][3]; int *y=x; *(y+1)=1; return *(*x+1); }"},
+	"71": {2, "int main() { int x[2][3]; int *y=x; *(y+2)=2; return *(*x+2); }"},
+	"72": {3, "int main() { int x[2][3]; int *y=x; *(y+3)=3; return **(x+1); }"},
+	"73": {4, "int main() { int x[2][3]; int *y=x; *(y+4)=4; return *(*(x+1)+1); }"},
+	"74": {5, "int main() { int x[2][3]; int *y=x; *(y+5)=5; return *(*(x+1)+2); }"},
+	"75": {6, "int main() { int x[2][3]; int *y=x; *(y+6)=6; return **(x+2); }"},
 	// "error 1": {0, "return a;"},
 	// "error 2": {0, "int return a;"},
-	"error 3": {0, "int main(){ return 1}"},
+	// "error 3": {0, "int main(){ return 1}"},
+	// "error 4": {0, "int main() {int return a;"},
 }
 
 var funcs string = `int ret3() { return 3;}
