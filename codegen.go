@@ -4,7 +4,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 )
@@ -42,8 +41,21 @@ func (e *errWriter) genAddr(w io.Writer, node *Node) {
 		e.gen(w, node.Lhs)
 		return
 	default:
-		e.err = errors.New("the left value is not a variable")
+		e.err = fmt.Errorf(
+			"e.genLval(): err:\n%s",
+			errorTok(node.Tok, "the left value is not a variable"),
+		)
 	}
+}
+
+func (e *errWriter) genLval(w io.Writer, node *Node) {
+	if node.Ty.Kind == TY_ARRAY {
+		e.err = fmt.Errorf(
+			"e.genLval(): err:\n%s",
+			errorTok(node.Tok, "the left value is not a variable"),
+		)
+	}
+	e.genAddr(w, node)
 }
 
 func (e *errWriter) load(w io.Writer) {
@@ -84,12 +96,13 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		return
 	case ND_LVAR:
 		e.genAddr(w, node)
-		// load
-		e.load(w)
+		if node.Ty.Kind != TY_ARRAY {
+			e.load(w)
+		}
 		return
 
 	case ND_ASSIGN:
-		e.genAddr(w, node.Lhs)
+		e.genLval(w, node.Lhs)
 		e.gen(w, node.Rhs)
 		// store
 		e.store(w)
@@ -101,8 +114,9 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 
 	case ND_DEREF:
 		e.gen(w, node.Lhs)
-		// load
-		e.load(w)
+		if node.Ty.Kind != TY_ARRAY {
+			e.load(w)
+		}
 		return
 
 	case ND_IF:
@@ -214,13 +228,13 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 
 	switch node.Kind {
 	case ND_ADD:
-		if node.Ty.Kind == TY_PTR {
-			e.Fprintf(w, "	imul rdi, 8\n")
+		if node.Ty.PtrTo != nil {
+			e.Fprintf(w, "	imul rdi, %d\n", sizeOf(node.Ty.PtrTo))
 		}
 		e.Fprintf(w, "	add rax, rdi\n")
 	case ND_SUB:
-		if node.Ty.Kind == TY_PTR {
-			e.Fprintf(w, "	imul rdi, 8\n")
+		if node.Ty.PtrTo != nil {
+			e.Fprintf(w, "	imul rdi, %d\n", sizeOf(node.Ty.PtrTo))
 		}
 		e.Fprintf(w, "	sub rax, rdi\n")
 	case ND_MUL:

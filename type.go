@@ -76,33 +76,31 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Var.Ty
 		return
 	case ND_ADD:
-		if node.Rhs.Ty != nil {
-			if node.Rhs.Ty.PtrTo != nil {
-				tmp := node.Lhs
-				node.Lhs = node.Rhs
-				node.Rhs = tmp
-			}
+
+		if node.Rhs.Ty.PtrTo != nil {
+			tmp := node.Lhs
+			node.Lhs = node.Rhs
+			node.Rhs = tmp
 		}
 
-		if node.Rhs.Ty != nil {
-			if node.Rhs.Ty.PtrTo != nil {
-				e.err = fmt.Errorf(
-					"e.visit(): err: \n%s",
-					errorTok(node.Tok, "invalid pointer arithmetic operands"),
-				)
-			}
+		if node.Rhs.Ty.PtrTo != nil {
+			e.err = fmt.Errorf(
+				"e.visit(): err: \n%s",
+				errorTok(node.Tok, "invalid pointer arithmetic operands"),
+			)
 		}
+
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_SUB:
-		if node.Rhs.Ty != nil {
-			if node.Rhs.Ty.PtrTo != nil {
-				e.err = fmt.Errorf(
-					"e.visit(): err: \n%s",
-					errorTok(node.Tok, "invalid pointer arithmetic operands"),
-				)
-			}
+
+		if node.Rhs.Ty.PtrTo != nil {
+			e.err = fmt.Errorf(
+				"e.visit(): err: \n%s",
+				errorTok(node.Tok, "invalid pointer arithmetic operands"),
+			)
 		}
+
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_ASSIGN:
