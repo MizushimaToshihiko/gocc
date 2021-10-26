@@ -33,9 +33,13 @@ func (e *errWriter) genAddr(w io.Writer, node *Node) {
 	}
 
 	switch node.Kind {
-	case ND_LVAR:
-		e.Fprintf(w, "	lea rax, [rbp-%d]\n", node.Var.Offset)
-		e.Fprintf(w, "	push rax\n")
+	case ND_VAR:
+		if node.Var.IsLocal {
+			e.Fprintf(w, "	lea rax, [rbp-%d]\n", node.Var.Offset)
+			e.Fprintf(w, "	push rax\n")
+		} else {
+			e.Fprintf(w, "push offset %s\n", node.Var.Name)
+		}
 		return
 	case ND_DEREF:
 		e.gen(w, node.Lhs)
@@ -94,7 +98,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		e.gen(w, node.Lhs)
 		e.Fprintf(w, "	add rsp, 8\n")
 		return
-	case ND_LVAR:
+	case ND_VAR:
 		e.genAddr(w, node)
 		if node.Ty.Kind != TY_ARRAY {
 			e.load(w)
@@ -263,12 +267,19 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	e.Fprintf(w, "	push rax\n")
 }
 
-func codeGen(w io.Writer, prog *Function) error {
-	e := &errWriter{}
-	// output the former 3 lines of the assembly
-	e.Fprintf(w, ".intel_syntax noprefix\n")
+func (e *errWriter) emitData(w io.Writer, prog *Program) {
+	e.Fprintf(w, ".data\n")
 
-	for fn := prog; fn != nil; fn = fn.Next {
+	for vl := prog.Globals; vl != nil; vl = vl.Next {
+		e.Fprintf(w, "%s:\n", vl.Var.Name)
+		e.Fprintf(w, "	.zero %d\n", sizeOf(vl.Var.Ty))
+	}
+}
+
+func (e *errWriter) emitText(w io.Writer, prog *Program) {
+	e.Fprintf(w, ".text\n")
+
+	for fn := prog.Fns; fn != nil; fn = fn.Next {
 		e.Fprintf(w, ".global %s\n", fn.Name)
 		e.Fprintf(w, "%s:\n", fn.Name)
 		funcName = fn.Name
@@ -299,6 +310,14 @@ func codeGen(w io.Writer, prog *Function) error {
 		e.Fprintf(w, "	pop rbp\n")
 		e.Fprintf(w, "	ret\n")
 	}
+}
+
+func codeGen(w io.Writer, prog *Program) error {
+	e := &errWriter{}
+	// output the former 3 lines of the assembly
+	e.Fprintf(w, ".intel_syntax noprefix\n")
+	e.emitData(w, prog)
+	e.emitText(w, prog)
 
 	return e.err
 }

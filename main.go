@@ -19,7 +19,7 @@ func compile(arg string, w io.Writer) error {
 	// printTokens()
 
 	// the parsed result is in 'prog'
-	var prog *Function = program()
+	prog := program()
 	// add 'Type' to ASTs
 	err = addType(prog)
 	if err != nil {
@@ -27,7 +27,7 @@ func compile(arg string, w io.Writer) error {
 	}
 
 	// assign offsets to local variables.
-	for fn := prog; fn != nil; fn = fn.Next {
+	for fn := prog.Fns; fn != nil; fn = fn.Next {
 		offset := 0
 		for vl := fn.Locals; vl != nil; vl = vl.Next {
 			offset += sizeOf(vl.Var.Ty)

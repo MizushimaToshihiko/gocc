@@ -16,7 +16,7 @@ const (
 	ND_LT                        // 6: <
 	ND_LE                        // 7: <=
 	ND_ASSIGN                    // 8: =
-	ND_LVAR                      // 9: local variables
+	ND_VAR                       // 9: local or global variables
 	ND_NUM                       // 10: integer
 	ND_RETURN                    // 11: 'return'
 	ND_IF                        // 12: "if"
@@ -55,8 +55,8 @@ type Node struct {
 	FuncName string
 	Args     *Node
 
-	Val int   // it would be used when 'Kind' is 'ND_NUM'
-	Var *LVar // it would be used when 'Kind' is 'ND_LVAR'
+	Val int  // it would be used when 'Kind' is 'ND_NUM'
+	Var *Var // it would be used when 'Kind' is 'ND_LVAR'
 }
 
 func newNode(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
@@ -81,44 +81,62 @@ func newUnary(kind NodeKind, expr *Node, tok *Token) *Node {
 }
 
 // the type of local variables
-type LVar struct {
-	Name   string // the name of the variable
-	Ty     *Type  // the data type
-	Offset int    // the offset from RBP
+type Var struct {
+	Name    string // the name of the variable
+	Ty      *Type  // the data type
+	IsLocal bool   // local or global
+
+	Offset int // the offset from RBP
 }
 
 type VarList struct {
 	Next *VarList
-	Var  *LVar
+	Var  *Var
 }
 
 // local variables
 var locals *VarList
+var globals *VarList
 
-func newVar(lvar *LVar, tok *Token) *Node {
-	return &Node{Kind: ND_LVAR, Tok: tok, Var: lvar}
+func newVar(lvar *Var, tok *Token) *Node {
+	return &Node{Kind: ND_VAR, Tok: tok, Var: lvar}
 }
 
 // search a local variable by name.
 // if it wasn't find, return nil.
-func findLVar(tok *Token) *LVar {
+func findLVar(tok *Token) *Var {
 	for vl := locals; vl != nil; vl = vl.Next {
 		lvar := vl.Var
 		if len(lvar.Name) == tok.Len && tok.Str == lvar.Name {
 			return lvar
 		}
 	}
+
+	for vl := globals; vl != nil; vl = vl.Next {
+		if vl.Var.Name == tok.Str {
+			return vl.Var
+		}
+	}
 	return nil
 }
 
-func pushVar(name string, ty *Type) *LVar {
-	lvar := &LVar{
-		Name: name,
-		Ty:   ty,
+func pushVar(name string, ty *Type, isLocal bool) *Var {
+	lvar := &Var{
+		Name:    name,
+		Ty:      ty,
+		IsLocal: isLocal,
 	}
 
-	vl := &VarList{Var: lvar, Next: locals}
-	locals = vl
+	vl := &VarList{Var: lvar}
+
+	if isLocal {
+		vl.Next = locals
+		locals = vl
+	} else {
+		vl.Next = globals
+		globals = vl
+	}
+
 	return lvar
 }
 
@@ -132,21 +150,41 @@ type Function struct {
 	StackSz int
 }
 
-// code is a slice to store prased nodes.
-// var code [100]*Node
+type Program struct {
+	Globals *VarList
+	Fns     *Function
+}
 
-// program = function*
-func program() *Function {
+func isFunction() bool {
+	tok := token
+	basetype()
+	t1 := consumeIdent()
+	t2 := consume("(")
+	isFunc := (t1 != nil) && (t2 != nil)
+	token = tok
+
+	return isFunc
+}
+
+// program = (global-var | function*)
+func program() *Program {
 	// printCurTok()
 	// printCurFunc()
 	cur := &Function{}
 	head := cur
+	globals = nil
 
 	for !atEof() {
-		cur.Next = function()
-		cur = cur.Next
+		if isFunction() {
+			cur.Next = function()
+			cur = cur.Next
+		} else {
+			globalVar()
+		}
 	}
-	return head.Next
+
+	prog := &Program{Globals: globals, Fns: head.Next}
+	return prog
 }
 
 // basetype = "int" "*"*
@@ -174,7 +212,7 @@ func readFuncParam() *VarList {
 	ty := basetype() // 'baseType' function will be booted first.
 	name := expectIdent()
 	ty = readTypeSuffix(ty)
-	vl := &VarList{Var: pushVar(name, ty)}
+	vl := &VarList{Var: pushVar(name, ty, true)}
 	return vl
 }
 
@@ -229,13 +267,22 @@ func function() *Function {
 	return fn
 }
 
+// global-var = basetype ident ("[" num "]")* ";"
+func globalVar() {
+	ty := basetype()
+	name := expectIdent()
+	ty = readTypeSuffix(ty)
+	expect(";")
+	pushVar(name, ty, false)
+}
+
 // declaration = basetype ident ("[" num "]")* ("=" expr) ";"
 func declaration() *Node {
 	tok := token
 	ty := basetype()
 	name := expectIdent()
 	ty = readTypeSuffix(ty)
-	lvar := pushVar(name, ty)
+	lvar := pushVar(name, ty, true)
 
 	if consume(";") != nil {
 		return &Node{Kind: ND_NULL, Tok: tok}

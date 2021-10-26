@@ -72,7 +72,7 @@ func (e *errWriter) visit(node *Node) {
 	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE, ND_FUNCCALL, ND_NUM:
 		node.Ty = intType()
 		return
-	case ND_LVAR:
+	case ND_VAR:
 		node.Ty = node.Var.Ty
 		return
 	case ND_ADD:
@@ -136,10 +136,10 @@ func (e *errWriter) visit(node *Node) {
 	}
 }
 
-func addType(prog *Function) error {
+func addType(prog *Program) error {
 	e := &errWriter{}
 
-	for fn := prog; fn != nil; fn = fn.Next {
+	for fn := prog.Fns; fn != nil; fn = fn.Next {
 		for node := fn.Node; node != nil; node = node.Next {
 			e.visit(node)
 		}

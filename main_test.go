@@ -118,6 +118,16 @@ var cases = map[string]testcase{
 	"85": {4, "int main() { int x[2][3]; int *y=x; y[4]=4; return x[1][1]; }"},
 	"86": {5, "int main() { int x[2][3]; int *y=x; y[5]=5; return x[1][2]; }"},
 	"87": {6, "int main() { int x[2][3]; int *y=x; y[6]=6; return x[2][0]; }"},
+
+	"88": {0, "int x; int main() { return x; }"},
+	"89": {3, "int x; int main() { x=3; return x; }"},
+	"90": {0, "int x[4]; int main() { x[0]=0; x[1]=1; x[2]=2; x[3]=3; return x[0]; }"},
+	"91": {1, "int x[4]; int main() { x[0]=0; x[1]=1; x[2]=2; x[3]=3; return x[1]; }"},
+	"92": {2, "int x[4]; int main() { x[0]=0; x[1]=1; x[2]=2; x[3]=3; return x[2]; }"},
+	"93": {3, "int x[4]; int main() { x[0]=0; x[1]=1; x[2]=2; x[3]=3; return x[3]; }"},
+
+	"94": {8, "int x; int main() { return sizeof(x); }"},
+	"95": {32, "int x[4]; int main() { return sizeof(x); }"},
 	// "error 1": {0, "return a;"},
 	// "error 2": {0, "int return a;"},
 	// "error 3": {0, "int main(){ return 1}"},
