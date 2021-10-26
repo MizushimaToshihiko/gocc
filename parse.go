@@ -201,7 +201,6 @@ func basetype() *Type {
 		ty = pointerTo(ty)
 	}
 	return ty
-
 }
 
 func readTypeSuffix(base *Type) *Type {

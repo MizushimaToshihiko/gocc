@@ -40,7 +40,7 @@ func (e *errWriter) genAddr(w io.Writer, node *Node) {
 			e.Fprintf(w, "	lea rax, [rbp-%d]\n", node.Var.Offset)
 			e.Fprintf(w, "	push rax\n")
 		} else {
-			e.Fprintf(w, "push offset %s\n", node.Var.Name)
+			e.Fprintf(w, "	push offset %s\n", node.Var.Name)
 		}
 		return
 	case ND_DEREF:
@@ -70,13 +70,11 @@ func (e *errWriter) load(w io.Writer, ty *Type) {
 	}
 
 	e.Fprintf(w, "	pop rax\n")
-
 	if sizeOf(ty) == 1 {
-		e.Fprintf(w, "	movsx ecx, byte ptr [rax]\n")
+		e.Fprintf(w, "	movsx rax, byte ptr [rax]\n")
 	} else {
 		e.Fprintf(w, "	mov rax, [rax]\n")
 	}
-
 	e.Fprintf(w, "	push rax\n")
 }
 
@@ -206,7 +204,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		}
 
 		for i := numArgs - 1; i >= 0; i-- {
-			e.Fprintf(w, "pop %s\n", argReg8[i])
+			e.Fprintf(w, "	pop %s\n", argReg8[i])
 		}
 
 		labelNo++
@@ -281,6 +279,15 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	e.Fprintf(w, "	push rax\n")
 }
 
+func (e *errWriter) emitData(w io.Writer, prog *Program) {
+	e.Fprintf(w, ".data\n")
+
+	for vl := prog.Globals; vl != nil; vl = vl.Next {
+		e.Fprintf(w, "%s:\n", vl.Var.Name)
+		e.Fprintf(w, "	.zero %d\n", sizeOf(vl.Var.Ty))
+	}
+}
+
 func (e *errWriter) loadArg(w io.Writer, lvar *Var, idx int) {
 	sz := sizeOf(lvar.Ty)
 	if sz == 1 {
@@ -290,15 +297,6 @@ func (e *errWriter) loadArg(w io.Writer, lvar *Var, idx int) {
 			e.err = errors.New("invalid size")
 		}
 		e.Fprintf(w, "	mov [rbp-%d], %s\n", lvar.Offset, argReg8[idx])
-	}
-}
-
-func (e *errWriter) emitData(w io.Writer, prog *Program) {
-	e.Fprintf(w, ".data\n")
-
-	for vl := prog.Globals; vl != nil; vl = vl.Next {
-		e.Fprintf(w, "%s:\n", vl.Var.Name)
-		e.Fprintf(w, "	.zero %d\n", sizeOf(vl.Var.Ty))
 	}
 }
 

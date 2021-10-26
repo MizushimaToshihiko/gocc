@@ -210,7 +210,7 @@ func TestCompile(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			_, err = exec.Command("./" + asmName).Output()
+			b, err := exec.Command("./" + asmName).Output()
 			if err != nil {
 				if ee, ok := err.(*exec.ExitError); !ok {
 					t.Fatal(err)
@@ -219,7 +219,7 @@ func TestCompile(t *testing.T) {
 					// except for the return value is 0.
 					actual := ee.ProcessState.ExitCode()
 					if c.expected != actual {
-						t.Fatalf("\n%s\n%d expected, but got %d", c.input, c.expected, actual)
+						t.Fatalf("\noutput: %s\n%s\n%d expected, but got %d", string(b), c.input, c.expected, actual)
 					}
 					t.Logf("%s => %d", c.input, actual)
 					return
