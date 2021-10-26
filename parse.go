@@ -430,11 +430,9 @@ func mul() *Node {
 	}
 }
 
-// unary = "sizeof" unary
-//       | "+"? primary
-//       | "-"? primary
-//       | "*" unary
-//       | "&" unary
+// unary = ("+" | "-" | "*" | "&")? unary
+//       | "sizeof" unary
+//       | postfix
 func unary() *Node {
 	// printCurTok()
 	// printCurFunc()
@@ -453,7 +451,24 @@ func unary() *Node {
 	if t := consume("*"); t != nil {
 		return newUnary(ND_DEREF, unary(), t)
 	}
-	return primary()
+	return postfix()
+}
+
+// postfix = primary ("[" expr "]")*
+func postfix() *Node {
+	node := primary()
+
+	for {
+		tok := consume("[")
+		if tok == nil {
+			break
+		}
+		// x[y] is short for *(x+y)
+		exp := newNode(ND_ADD, node, expr(), tok)
+		expect("]")
+		node = newUnary(ND_DEREF, exp, tok)
+	}
+	return node
 }
 
 // func-args = "(" (assign("," assign)*)? ")"

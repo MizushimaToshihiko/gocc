@@ -139,8 +139,6 @@ func expectNumber() int {
 func expectIdent() string {
 	// defer printCurTok()
 	if token.Kind != TK_IDENT {
-		fmt.Println(userInput)
-		fmt.Printf("token %d:'%s'\n", token.Kind, token.Str)
 		panic("\n" + errorTok(token, "expect an identifier"))
 	}
 	s := token.Str
@@ -207,8 +205,8 @@ func tokenize() (*Token, error) {
 	head.Next = nil
 	cur := &head
 
-	// for printToken
-	headTok = &head
+	// // for printToken
+	// headTok = &head
 
 	for curIdx < len(userInput) {
 		// skip space(s)
