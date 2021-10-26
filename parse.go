@@ -187,14 +187,21 @@ func program() *Program {
 	return prog
 }
 
-// basetype = "int" "*"*
+// basetype = ("int" | "char") "*"*
 func basetype() *Type {
-	expect("int")
-	ty := intType()
+	var ty *Type
+	if consume("char") != nil {
+		ty = charType()
+	} else {
+		expect("int")
+		ty = intType()
+	}
+
 	for consume("*") != nil {
 		ty = pointerTo(ty)
 	}
 	return ty
+
 }
 
 func readTypeSuffix(base *Type) *Type {
@@ -301,6 +308,10 @@ func readExprStmt() *Node {
 	return &Node{Kind: ND_EXPR_STMT, Lhs: expr(), Tok: tok}
 }
 
+func isTypename() bool {
+	return peek("char") != nil || peek("int") != nil
+}
+
 // stmt = "return" expr ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "while" "(" expr ")" stmt
@@ -375,7 +386,7 @@ func stmt() *Node {
 
 	} else {
 
-		if tok := peek("int"); tok != nil {
+		if isTypename() {
 			return declaration()
 		}
 

@@ -4,6 +4,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 )
@@ -24,7 +25,8 @@ func (e *errWriter) Fprintf(w io.Writer, format string, a ...interface{}) {
 }
 
 var labelNo int
-var argReg = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
+var argReg1 = []string{"dil", "sil", "dl", "cl", "r8b", "r9b"}
+var argReg8 = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 var funcName string
 
 func (e *errWriter) genAddr(w io.Writer, node *Node) {
@@ -62,24 +64,36 @@ func (e *errWriter) genLval(w io.Writer, node *Node) {
 	e.genAddr(w, node)
 }
 
-func (e *errWriter) load(w io.Writer) {
+func (e *errWriter) load(w io.Writer, ty *Type) {
 	if e.err != nil {
 		return // do nothing
 	}
 
 	e.Fprintf(w, "	pop rax\n")
-	e.Fprintf(w, "	mov rax, [rax]\n")
+
+	if sizeOf(ty) == 1 {
+		e.Fprintf(w, "	movsx ecx, byte ptr [rax]\n")
+	} else {
+		e.Fprintf(w, "	mov rax, [rax]\n")
+	}
+
 	e.Fprintf(w, "	push rax\n")
 }
 
-func (e *errWriter) store(w io.Writer) {
+func (e *errWriter) store(w io.Writer, ty *Type) {
 	if e.err != nil {
 		return // do nothing
 	}
 
 	e.Fprintf(w, "	pop rdi\n")
 	e.Fprintf(w, "	pop rax\n")
-	e.Fprintf(w, "	mov [rax], rdi\n")
+
+	if sizeOf(ty) == 1 {
+		e.Fprintf(w, "	mov [rax], dil\n")
+	} else {
+		e.Fprintf(w, "	mov [rax], rdi\n")
+	}
+
 	e.Fprintf(w, "	push rdi\n")
 }
 
@@ -101,7 +115,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	case ND_VAR:
 		e.genAddr(w, node)
 		if node.Ty.Kind != TY_ARRAY {
-			e.load(w)
+			e.load(w, node.Ty)
 		}
 		return
 
@@ -109,7 +123,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		e.genLval(w, node.Lhs)
 		e.gen(w, node.Rhs)
 		// store
-		e.store(w)
+		e.store(w, node.Ty)
 		return
 
 	case ND_ADDR:
@@ -119,7 +133,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	case ND_DEREF:
 		e.gen(w, node.Lhs)
 		if node.Ty.Kind != TY_ARRAY {
-			e.load(w)
+			e.load(w, node.Ty)
 		}
 		return
 
@@ -192,7 +206,7 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 		}
 
 		for i := numArgs - 1; i >= 0; i-- {
-			e.Fprintf(w, "pop %s\n", argReg[i])
+			e.Fprintf(w, "pop %s\n", argReg8[i])
 		}
 
 		labelNo++
@@ -267,6 +281,18 @@ func (e *errWriter) gen(w io.Writer, node *Node) {
 	e.Fprintf(w, "	push rax\n")
 }
 
+func (e *errWriter) loadArg(w io.Writer, lvar *Var, idx int) {
+	sz := sizeOf(lvar.Ty)
+	if sz == 1 {
+		e.Fprintf(w, "	mov [rbp-%d], %s\n", lvar.Offset, argReg1[idx])
+	} else {
+		if sz != 8 {
+			e.err = errors.New("invalid size")
+		}
+		e.Fprintf(w, "	mov [rbp-%d], %s\n", lvar.Offset, argReg8[idx])
+	}
+}
+
 func (e *errWriter) emitData(w io.Writer, prog *Program) {
 	e.Fprintf(w, ".data\n")
 
@@ -293,8 +319,7 @@ func (e *errWriter) emitText(w io.Writer, prog *Program) {
 		// push arguments to the stack
 		i := 0
 		for vl := fn.Params; vl != nil; vl = vl.Next {
-			lvar := vl.Var
-			e.Fprintf(w, "	mov [rbp-%d], %s\n", lvar.Offset, argReg[i])
+			e.loadArg(w, vl.Var, i)
 			i++
 		}
 

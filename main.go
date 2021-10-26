@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+func alignTo(n, align int) int {
+	return (n + align - 1) & ^(align - 1)
+}
+
 func compile(arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
@@ -33,7 +37,7 @@ func compile(arg string, w io.Writer) error {
 			offset += sizeOf(vl.Var.Ty)
 			vl.Var.Offset = offset
 		}
-		fn.StackSz = offset
+		fn.StackSz = alignTo(offset, 8)
 	}
 
 	// // walk in-order

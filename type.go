@@ -11,12 +11,29 @@ const (
 	TY_INT   TypeKind = iota // int
 	TY_PTR                   // pointer
 	TY_ARRAY                 // array type
+	TY_CHAR                  // char type
 )
 
 type Type struct {
 	Kind      TypeKind
 	PtrTo     *Type
 	ArraySize uint16
+}
+
+func newType(kind TypeKind) *Type {
+	return &Type{Kind: kind}
+}
+
+func charType() *Type {
+	return newType(TY_CHAR)
+}
+
+func intType() *Type {
+	return newType(TY_INT)
+}
+
+func pointerTo(base *Type) *Type {
+	return &Type{Kind: TY_PTR, PtrTo: base}
 }
 
 func arrayOf(base *Type, size uint16) *Type {
@@ -28,18 +45,17 @@ func arrayOf(base *Type, size uint16) *Type {
 }
 
 func sizeOf(ty *Type) int {
-	if ty.Kind == TY_INT || ty.Kind == TY_PTR {
+	switch ty.Kind {
+	case TY_CHAR:
+		return 1
+	case TY_INT, TY_PTR:
 		return 8
+	default:
+		if ty.Kind != TY_ARRAY {
+			panic("invalid type")
+		}
+		return sizeOf(ty.PtrTo) * int(ty.ArraySize)
 	}
-	return sizeOf(ty.PtrTo) * int(ty.ArraySize)
-}
-
-func intType() *Type {
-	return &Type{Kind: TY_INT}
-}
-
-func pointerTo(base *Type) *Type {
-	return &Type{Kind: TY_PTR, PtrTo: base}
 }
 
 func (e *errWriter) visit(node *Node) {
