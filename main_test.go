@@ -136,6 +136,12 @@ var cases = map[string]testcase{
 	"99":  {1, "int main() { char x; return sizeof(x); }"},
 	"100": {10, "int main() { char x[10]; return sizeof(x); }"},
 	"101": {1, "int main() { return sub_char(7, 3, 3); } int sub_char(char a, char b, char c) { return a-b-c; }"},
+
+	"102": {97, "int main() { return \"abc\"[0]; }"},
+	"103": {98, "int main() { return \"abc\"[1]; }"},
+	"104": {99, "int main() { return \"abc\"[2]; }"},
+	"105": {0, "int main() { return \"abc\"[3]; }"},
+	"106": {4, "int main() { return sizeof(\"abc\"); }"},
 	// "error 1": {0, "return a;"},
 	// "error 2": {0, "int return a;"},
 	// "error 3": {0, "int main(){ return 1}"},

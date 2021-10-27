@@ -3,6 +3,8 @@
 //
 package main
 
+import "fmt"
+
 // the types of AST node
 type NodeKind int
 
@@ -90,7 +92,7 @@ type Var struct {
 	Offset int // the offset from RBP
 
 	// global vaiables
-	Contents string
+	Contents []byte
 	ContLen  int
 }
 
@@ -143,6 +145,15 @@ func pushVar(name string, ty *Type, isLocal bool) *Var {
 	}
 
 	return lvar
+}
+
+// for newLabel function
+var cnt int
+
+func newLabel() string {
+	res := fmt.Sprintf(".L.date.%d", cnt)
+	cnt++
+	return res
 }
 
 type Function struct {
@@ -554,9 +565,10 @@ func funcArgs() *Node {
 	return head
 }
 
-// primary = num
-//         | ident func-args?
+// primary = ident func-args?
 //         | "(" expr ")"
+//         | num
+//         | str
 func primary() *Node {
 	// printCurTok()
 	// printCurFunc()
@@ -588,6 +600,16 @@ func primary() *Node {
 	}
 
 	tok := token
+	if tok.Kind == TK_STR {
+		token = token.Next
+
+		ty := arrayOf(charType(), uint16(tok.ContLen))
+		var_ := pushVar(newLabel(), ty, false)
+		var_.Contents = tok.Contents
+		var_.ContLen = tok.ContLen
+		return newVar(var_, tok)
+	}
+
 	if tok.Kind != TK_NUM {
 		panic("\n" + errorTok(tok, "it's not a number"))
 	}

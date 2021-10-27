@@ -30,7 +30,7 @@ type Token struct {
 	Str  string    // token string
 	Len  int       // length of token
 
-	Contents string // string literal contents including terminating '\0'
+	Contents []byte // string literal contents including terminating '\0'
 	ContLen  int    // string literal length
 }
 
@@ -69,6 +69,14 @@ func errorTok(tok *Token, formt string, a ...interface{}) string {
 	return errStr +
 		fmt.Sprintf(formt, a...) +
 		"\n"
+}
+
+// strNdUp function returns the []byte terminates with '\0'
+func strNdUp(b []byte, len int) []byte {
+	res := make([]byte, len)
+	copy(res, b)
+	res = append(res, 0)
+	return res
 }
 
 // peek function returns the token, when the current token matches 's'.
@@ -209,7 +217,7 @@ func tokenize() (*Token, error) {
 	head.Next = nil
 	cur := &head
 
-	// // for printToken
+	// for printToken
 	// headTok = &head
 
 	for curIdx < len(userInput) {
@@ -235,7 +243,7 @@ func tokenize() (*Token, error) {
 		}
 
 		// single-letter punctuator
-		if strings.Contains("+-()*/<>=;{},&[]\"", string(userInput[curIdx])) {
+		if strings.Contains("+-()*/<>=;{},&[]", string(userInput[curIdx])) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue
@@ -249,6 +257,28 @@ func tokenize() (*Token, error) {
 				ident = append(ident, userInput[curIdx])
 			}
 			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
+			continue
+		}
+
+		// string literal
+		if userInput[curIdx] == '"' {
+			curIdx++
+
+			b := make([]byte, 0, 20)
+			for ; curIdx < len(userInput) && userInput[curIdx] != '"'; curIdx++ {
+				b = append(b, userInput[curIdx])
+			}
+			if curIdx == len(userInput) {
+				return nil, fmt.Errorf(
+					"tokenize(): err:\n%s",
+					errorAt(curIdx, "unclosed string literal"),
+				)
+			}
+			curIdx++
+
+			cur = newToken(TK_STR, cur, string(b), len(b))
+			cur.Contents = strNdUp(b, len(b))
+			cur.ContLen = len(b) + 1
 			continue
 		}
 
@@ -267,7 +297,10 @@ func tokenize() (*Token, error) {
 			continue
 		}
 
-		return nil, fmt.Errorf("tokenize(): err:\n%s", errorAt(token.Loc, "invalid token"))
+		return nil, fmt.Errorf(
+			"tokenize(): err:\n%s",
+			errorAt(token.Loc, "invalid token"),
+		)
 	}
 
 	newToken(TK_EOF, cur, "", 0)

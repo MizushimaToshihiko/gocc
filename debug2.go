@@ -1,7 +1,7 @@
 package main
 
-// // for printTokens function, the pointer of the head token
-// // stored in 'headTok'.
+// for printTokens function, the pointer of the head token
+// stored in 'headTok'.
 // var headTok *Token
 
 // func printTokens() {
@@ -16,6 +16,10 @@ package main
 // 			kind = "NUM"
 // 		case TK_RESERVED:
 // 			kind = "RESERVED"
+// 		case TK_SIZEOF:
+// 			kind = "SIZEOF"
+// 		case TK_STR:
+// 			kind = "STR"
 // 		default:
 // 			log.Fatal("unknown token kind")
 // 		}
@@ -31,9 +35,9 @@ package main
 // 	fmt.Println()
 // }
 
-// // func printCurTokInit() {
-// // 	fmt.Print("# Current Token: ")
-// // }
+// func printCurTokInit() {
+// 	fmt.Print("# Current Token: ")
+// }
 
 // func printCurTok() {
 // 	fmt.Printf(" %d:'%s' \n", token.Kind, token.Str)

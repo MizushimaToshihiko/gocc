@@ -286,7 +286,7 @@ func (c *codeWriter) emitData(prog *Program) {
 	for vl := prog.Globals; vl != nil; vl = vl.Next {
 		c.Fprintf("%s:\n", vl.Var.Name)
 
-		if vl.Var.Contents == "" {
+		if vl.Var.Contents == nil {
 			c.Fprintf("	.zero %d\n", sizeOf(vl.Var.Ty))
 			continue
 		}
