@@ -5,6 +5,13 @@ import (
 	"fmt"
 )
 
+// struct errWriter is for the error handling
+// it's based on:
+// https://jxck.hatenablog.com/entry/golang-error-handling-lesson-by-rob-pike
+type errWriter struct {
+	err error
+}
+
 type TypeKind int
 
 const (

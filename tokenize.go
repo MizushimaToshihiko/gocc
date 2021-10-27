@@ -17,6 +17,7 @@ const (
 	TK_RESERVED TokenKind = iota // Reserved words, and puncturators
 	TK_SIZEOF                    // 'sizeof' operator
 	TK_IDENT                     // idenfier such as variables, function names
+	TK_STR                       // string literals
 	TK_NUM                       // integer
 	TK_EOF                       // the end of tokens
 )
@@ -28,6 +29,9 @@ type Token struct {
 	Loc  int       // the location in 'userInput'
 	Str  string    // token string
 	Len  int       // length of token
+
+	Contents string // string literal contents including terminating '\0'
+	ContLen  int    // string literal length
 }
 
 // current token
@@ -231,7 +235,7 @@ func tokenize() (*Token, error) {
 		}
 
 		// single-letter punctuator
-		if strings.Contains("+-()*/<>=;{},&[]", string(userInput[curIdx])) {
+		if strings.Contains("+-()*/<>=;{},&[]\"", string(userInput[curIdx])) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue

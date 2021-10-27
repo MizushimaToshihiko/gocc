@@ -86,7 +86,12 @@ type Var struct {
 	Ty      *Type  // the data type
 	IsLocal bool   // local or global
 
+	// local variables
 	Offset int // the offset from RBP
+
+	// global vaiables
+	Contents string
+	ContLen  int
 }
 
 type VarList struct {
