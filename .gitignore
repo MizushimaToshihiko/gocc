@@ -1,5 +1,6 @@
 bin/*
-temporary*
+temp*
+in.c
 9cc
 profile
 funcs

@@ -53,8 +53,34 @@ var curIdx int
 // for error report
 // it's arguments are same as printf
 func errorAt(errIdx int, formt string, a ...interface{}) string {
-	return fmt.Sprintf("%s\n", userInput) +
-		fmt.Sprintf("%*s", errIdx, " ") +
+	// get the start and end of the line 'errIdx' exists
+	line := errIdx
+	for 0 < line && userInput[line-1] != '\n' {
+		line--
+	}
+
+	end := errIdx
+	for userInput[end] != '\n' {
+		end++
+	}
+
+	// Find out what line the found line is in the whole.
+	lineNum := 1
+	for i := 0; i < line; i++ {
+		if userInput[i] == '\n' {
+			lineNum++
+		}
+	}
+
+	// Show found lines along with file name and line number.
+	res := fmt.Sprintf("%s:%d: ", filename, lineNum)
+	indent := len(res)
+	res += fmt.Sprintf("%.*s\n", end-line, userInput[line:end])
+
+	// Point the error location with "^" and display the error message.
+	pos := errIdx - line + indent
+
+	return res + fmt.Sprintf("%*s", pos, " ") +
 		"^ " +
 		fmt.Sprintf(formt, a...) +
 		"\n"
@@ -197,6 +223,10 @@ func startsWithReserved(p string) string {
 	return ""
 }
 
+func isSpace(op byte) bool {
+	return strings.Contains("\t\n\v\f\r ", string(op))
+}
+
 func isDigit(op byte) bool {
 	return '0' <= op && op <= '9'
 }
@@ -222,7 +252,7 @@ func tokenize() (*Token, error) {
 
 	for curIdx < len(userInput) {
 		// skip space(s)
-		if userInput[curIdx] == ' ' {
+		if isSpace(userInput[curIdx]) {
 			curIdx++
 			continue
 		}

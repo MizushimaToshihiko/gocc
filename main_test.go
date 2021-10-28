@@ -146,6 +146,8 @@ var cases = map[string]testcase{
 	// "error 2": {0, "int return a;"},
 	// "error 3": {0, "int main(){ return 1}"},
 	// "error 4": {0, "int main() {int return a;"},
+	// "error 5": {0, "int main() { x = y + + 5;}"},
+	// "error 6": {0, "int main() { int x; int y; y = 1; x = y + + 5;}"},
 }
 
 var funcs string = `int ret3() { return 3;}
@@ -159,25 +161,42 @@ int add6(int a, int b, int c, int d, int e, int f) {
 `
 
 func TestCompile(t *testing.T) {
-	var asmName string = "temporary"
+	var asmName string = "temp"
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			err := os.Remove(asmName + ".s")
-			if err != nil && !os.IsNotExist(err) {
-				t.Fatal(err)
-			}
-			tmps, err := os.Create(asmName + ".s")
+			// make a asm file
+			asm, err := os.Create(asmName + ".s")
 			if err != nil {
 				t.Fatal(err)
 			}
 			defer func() {
-				if err := tmps.Close(); err != nil {
+				if err := os.Remove(asm.Name()); err != nil {
 					t.Fatal(err)
 				}
 			}()
 
-			if err := compile(c.input, tmps); err != nil {
+			// make a input file
+			in, err := os.Create("in.c")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() {
+				if err := os.Remove(in.Name()); err != nil {
+					t.Fatal(err)
+				}
+			}()
+
+			// write 'c.input' to 'in' file
+			if _, err = in.WriteString(c.input); err != nil {
+				t.Fatal(err)
+			}
+			if err = in.Sync(); err != nil {
+				t.Fatal(err)
+			}
+
+			// start the test
+			if err := compile(in.Name(), asm); err != nil {
 				t.Fatal(err)
 			}
 
@@ -207,16 +226,16 @@ func TestCompile(t *testing.T) {
 			}
 
 			// make a execution file with static-link to 'f'
-			_, err = exec.Command("gcc", "-static", "-g", "-o", asmName, asmName+".s", asmName+"2.o").Output()
+			b, err := exec.Command("gcc", "-static", "-g", "-o", asmName, asm.Name(), asmName+"2.o").Output()
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("\noutput: %s\n%v", string(b), err)
 			}
 			// quit this test sequence, if the execution file wasn't made
-			if _, err := os.Stat(asmName); err != nil {
+			if _, err := os.Stat(asm.Name()); err != nil {
 				t.Fatal(err)
 			}
 
-			b, err := exec.Command("./" + asmName).Output()
+			b, err = exec.Command("./" + asmName).Output()
 			if err != nil {
 				if ee, ok := err.(*exec.ExitError); !ok {
 					t.Fatal(err)
@@ -251,6 +270,31 @@ func TestCompile(t *testing.T) {
 		})
 	}
 }
+
+// func TestIsSpace(t *testing.T) {
+// 	cases := map[string]struct {
+// 		in   byte
+// 		want bool
+// 	}{
+// 		"1": {'\t', true},
+// 		"2": {'\n', true},
+// 		"3": {'\v', true},
+// 		"4": {'\f', true},
+// 		"5": {'\r', true},
+// 		"6": {' ', true},
+// 		"7": {'a', false},
+// 		"8": {'"', false},
+// 	}
+
+// 	for name, c := range cases {
+// 		t.Run(name, func(t *testing.T) {
+// 			act := isSpace(c.in)
+// 			if act != c.want {
+// 				t.Fatalf("%t expected, but got %t", c.want, act)
+// 			}
+// 		})
+// 	}
+// }
 
 // func TestFindLVar(t *testing.T) {
 // 	cases := map[string]struct {

@@ -611,7 +611,7 @@ func primary() *Node {
 	}
 
 	if tok.Kind != TK_NUM {
-		panic("\n" + errorTok(tok, "it's not a number"))
+		panic("\n" + errorTok(tok, "expected expression"))
 	}
 	// otherwise, must be integer
 	return newNodeNum(expectNumber(), tok)

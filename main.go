@@ -6,6 +6,30 @@ import (
 	"os"
 )
 
+var filename string
+
+func readFile(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return "", err
+	}
+	if len(b) == 0 || b[len(b)-1] != '\n' {
+		b = append(b, '\n')
+	}
+	// b = append(b, 0)
+	return string(b), nil
+}
+
 func alignTo(n, align int) int {
 	return (n + align - 1) & ^(align - 1)
 }
@@ -13,9 +37,13 @@ func alignTo(n, align int) int {
 func compile(arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
-	userInput = arg
-
 	var err error
+	userInput, err = readFile(arg)
+	if err != nil {
+		return err
+	}
+	filename = arg
+
 	token, err = tokenize()
 	if err != nil {
 		return err

@@ -14,11 +14,11 @@ build: $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
 test: $(SRCS)
-	$(GOTEST) $^ -cover -count 1 -timeout 40s # -v
+	$(GOTEST) $^ -cover -count 1 -timeout 60s # -v
 
 clean: 
 	$(GOCLEAN)
-	rm -f temporary* profile
+	rm -f temp* in*.c profile
 
 fmt:
 	$(GOFMT) ./...
