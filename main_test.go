@@ -142,12 +142,17 @@ var cases = map[string]testcase{
 	"104": {99, "int main() { return \"abc\"[2]; }"},
 	"105": {0, "int main() { return \"abc\"[3]; }"},
 	"106": {4, "int main() { return sizeof(\"abc\"); }"},
+
+	"107": {2, "int main() { /* return 1; */ return 2;}"},
+	"108": {2, `int main() { // return 1;
+		return 2;}`},
 	// "error 1": {0, "return a;"},
 	// "error 2": {0, "int return a;"},
 	// "error 3": {0, "int main(){ return 1}"},
 	// "error 4": {0, "int main() {int return a;"},
 	// "error 5": {0, "int main() { x = y + + 5;}"},
 	// "error 6": {0, "int main() { int x; int y; y = 1; x = y + + 5;}"},
+	// "error 7": {0, "int main() { /* return 2;} "},
 }
 
 var funcs string = `int ret3() { return 3;}

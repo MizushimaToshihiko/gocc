@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -34,9 +35,19 @@ func alignTo(n, align int) int {
 	return (n + align - 1) & ^(align - 1)
 }
 
+func exists(name string) bool {
+	_, err := os.Stat(name)
+	return !os.IsNotExist(err)
+}
+
 func compile(arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
+
+	if !exists(arg) {
+		return fmt.Errorf("compile(): err: %s: %v", arg, os.ErrNotExist)
+	}
+
 	var err error
 	userInput, err = readFile(arg)
 	if err != nil {

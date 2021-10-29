@@ -251,9 +251,31 @@ func tokenize() (*Token, error) {
 	// headTok = &head
 
 	for curIdx < len(userInput) {
+
 		// skip space(s)
 		if isSpace(userInput[curIdx]) {
 			curIdx++
+			continue
+		}
+
+		// skip line comment
+		if startsWith(userInput[curIdx:], "//") {
+			curIdx += 2
+			for ; curIdx < len(userInput) && userInput[curIdx] != '\n'; curIdx++ {
+			}
+			continue
+		}
+
+		// skip block comment
+		if startsWith(userInput[curIdx:], "/*") {
+			idx := strings.Index(userInput[curIdx:], "*/")
+			if idx == -1 {
+				return nil, fmt.Errorf(
+					"tokenize(): err:\n%s",
+					errorAt(curIdx, "unclosed block comment"),
+				)
+			}
+			curIdx += idx + 2
 			continue
 		}
 
@@ -327,9 +349,10 @@ func tokenize() (*Token, error) {
 			continue
 		}
 
+		fmt.Printf("%#v\n", token)
 		return nil, fmt.Errorf(
 			"tokenize(): err:\n%s",
-			errorAt(token.Loc, "invalid token"),
+			errorAt(curIdx, "invalid token"),
 		)
 	}
 
