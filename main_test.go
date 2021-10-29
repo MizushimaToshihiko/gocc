@@ -163,9 +163,34 @@ int add6(int a, int b, int c, int d, int e, int f) {
 func TestCompile(t *testing.T) {
 	var asmName string = "temp"
 
+	// make 'funcs_file' file
+	f, err := os.Create("funcs_file")
+	if err != nil {
+		return
+	}
+	defer func() {
+		if err = os.Remove(f.Name()); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	// write 'funcs' to 'funcs_file'
+	if _, err = f.WriteString(funcs); err != nil {
+		t.Fatal(err)
+	}
+	if err = f.Sync(); err != nil {
+		t.Fatal(err)
+	}
+
+	// make a object file from 'funcs_file'
+	_, err = exec.Command("gcc", "-xc", "-c", "-o", asmName+"2.o", f.Name()).Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			// make a asm file
+			// make a asm file to write asm codes.
 			asm, err := os.Create(asmName + ".s")
 			if err != nil {
 				t.Fatal(err)
@@ -197,31 +222,6 @@ func TestCompile(t *testing.T) {
 
 			// start the test
 			if err := compile(in.Name(), asm); err != nil {
-				t.Fatal(err)
-			}
-
-			// make 'funcs_file' file
-			f, err := os.Create("funcs_file")
-			if err != nil {
-				return
-			}
-			defer func() {
-				if err = os.Remove(f.Name()); err != nil {
-					t.Fatal(err)
-				}
-			}()
-
-			// write 'funcs' to 'funcs_file'
-			if _, err = f.WriteString(funcs); err != nil {
-				t.Fatal(err)
-			}
-			if err = f.Sync(); err != nil {
-				t.Fatal(err)
-			}
-
-			// make a object file from 'funcs_file'
-			_, err = exec.Command("gcc", "-xc", "-c", "-o", asmName+"2.o", f.Name()).Output()
-			if err != nil {
 				t.Fatal(err)
 			}
 
