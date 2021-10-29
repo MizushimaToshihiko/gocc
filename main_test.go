@@ -165,6 +165,14 @@ int add6(int a, int b, int c, int d, int e, int f) {
 }
 `
 
+// 【テストをCで書き直す】
+// 'funcs'と各テストケースを一つのCファイルにして、それをcompile関数に渡す
+// それで出来たasmをgccに渡して実行ファイルにする
+// 以下を止める
+// ・funcs_file作成
+// ・1回1回テストケース毎にCファイルを作る => 一回だけ
+//
+
 func TestCompile(t *testing.T) {
 	var asmName string = "testdata/temp"
 
