@@ -161,12 +161,12 @@ int add6(int a, int b, int c, int d, int e, int f) {
 `
 
 func TestCompile(t *testing.T) {
-	var asmName string = "temp"
+	var asmName string = "testdata/temp"
 
 	// make 'funcs_file' file
-	f, err := os.Create("funcs_file")
+	f, err := os.Create("testdata/funcs_file")
 	if err != nil {
-		return
+		t.Fatal(err)
 	}
 	defer func() {
 		if err = os.Remove(f.Name()); err != nil {
@@ -187,6 +187,11 @@ func TestCompile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if err := os.Remove(asmName + "2.o"); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -202,7 +207,7 @@ func TestCompile(t *testing.T) {
 			}()
 
 			// make a input file
-			in, err := os.Create("in.c")
+			in, err := os.Create("testdata/in.c")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -226,7 +231,8 @@ func TestCompile(t *testing.T) {
 			}
 
 			// make a execution file with static-link to 'f'
-			b, err := exec.Command("gcc", "-static", "-g", "-o", asmName, asm.Name(), asmName+"2.o").Output()
+			b, err := exec.Command("gcc", "-static", "-g", "-o",
+				asmName, asm.Name(), asmName+"2.o").Output()
 			if err != nil {
 				t.Fatalf("\noutput: %s\n%v", string(b), err)
 			}

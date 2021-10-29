@@ -1,6 +1,4 @@
 bin/*
-temp*
-in.c
-9cc
+testdata/*
 profile
 funcs
