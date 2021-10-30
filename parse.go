@@ -29,8 +29,9 @@ const (
 	ND_ADDR                      // 17: unary &
 	ND_DEREF                     // 18: unary *
 	ND_EXPR_STMT                 // 19: expression statement
-	ND_NULL                      // 20: empty statement
-	ND_SIZEOF                    // 21: "sizeof" operator
+	ND_STMT_EXPR                 // 20: statement expression
+	ND_NULL                      // 21: empty statement
+	ND_SIZEOF                    // 22: "sizeof" operator
 )
 
 // define AST node
@@ -50,7 +51,7 @@ type Node struct {
 	Init *Node
 	Inc  *Node
 
-	// block
+	// block or statement expression
 	Body *Node
 
 	// for function call
@@ -544,6 +545,34 @@ func postfix() *Node {
 	return node
 }
 
+// stmt-expr = "(" "{" stmt stmt* "}" ")"
+//
+// statement expression is a GNU extension.
+func stmtExpr(tok *Token) *Node {
+	node := &Node{
+		Kind: ND_STMT_EXPR,
+		Tok:  tok,
+		Body: stmt(),
+	}
+	cur := node.Body
+
+	for {
+		if consume("}") != nil {
+			break
+		}
+		cur.Next = stmt()
+		cur = cur.Next
+	}
+	expect(")")
+
+	if cur.Kind != ND_EXPR_STMT {
+		panic("\n" +
+			errorTok(cur.Tok, "stmt expr returning void is not supported"))
+	}
+	*cur = *cur.Lhs
+	return node
+}
+
 // func-args = "(" (assign("," assign)*)? ")"
 func funcArgs() *Node {
 	// printCurTok()
@@ -565,7 +594,8 @@ func funcArgs() *Node {
 	return head
 }
 
-// primary = ident func-args?
+// primary = "(" "{" stmt-expr-tail
+//         | ident func-args?
 //         | "(" expr ")"
 //         | num
 //         | str
@@ -576,6 +606,10 @@ func primary() *Node {
 	// if the next token is '(', the program must be
 	// "(" expr ")"
 	if t := consume("("); t != nil {
+		if consume("{") != nil {
+			return stmtExpr(t)
+		}
+
 		node := expr()
 		expect(")")
 		return node

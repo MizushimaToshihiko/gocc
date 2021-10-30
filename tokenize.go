@@ -43,13 +43,6 @@ var userInput string
 // current index in 'userInput'
 var curIdx int
 
-// func min(x, y int) int {
-// 	if x < y {
-// 		return x
-// 	}
-// 	return y
-// }
-
 // for error report
 // it's arguments are same as printf
 func errorAt(errIdx int, formt string, a ...interface{}) string {
@@ -241,6 +234,65 @@ func isAlNum(c byte) bool {
 	return isAlpha(c) || ('0' <= c && c <= '9')
 }
 
+func getEscapeChar(c byte) byte {
+	switch c {
+	case 'a':
+		return '\a'
+	case 'b':
+		return '\b'
+	case 't':
+		return '\t'
+	case 'n':
+		return '\n'
+	case 'v':
+		return '\v'
+	case 'f':
+		return '\f'
+	case 'r':
+		return '\r'
+	case 'e':
+		return 27
+	case '0':
+		return 0
+	default:
+		return c
+	}
+}
+
+func readStringLiteral(cur *Token, str string) (*Token, error) {
+	p := 1
+
+	buf := make([]byte, 0, 1024)
+	for ; p < len(str) && str[p] != '"'; p++ {
+		if str[p] == 0 {
+			return nil, fmt.Errorf(
+				"tokenize(): err:\n%s",
+				errorAt(curIdx+p, "unclosed string literal"),
+			)
+		}
+
+		if str[p] == '\\' {
+			p++
+			buf = append(buf, getEscapeChar(str[p]))
+			p++
+		} else {
+			buf = append(buf, str[p])
+			p++
+		}
+	}
+	if p == len(str) {
+		return nil, fmt.Errorf(
+			"tokenize(): err:\n%s",
+			errorAt(curIdx+p, "unclosed string literal"),
+		)
+	}
+
+	tok := newToken(TK_STR, cur, string(buf), len(buf))
+	tok.Contents = strNdUp(buf, len(buf))
+	tok.ContLen = len(buf) + 1
+	return tok, nil
+}
+
 // tokenize inputted string 'userInput', and return new tokens.
 func tokenize() (*Token, error) {
 	var head Token
@@ -314,23 +366,12 @@ func tokenize() (*Token, error) {
 
 		// string literal
 		if userInput[curIdx] == '"' {
-			curIdx++
-
-			b := make([]byte, 0, 20)
-			for ; curIdx < len(userInput) && userInput[curIdx] != '"'; curIdx++ {
-				b = append(b, userInput[curIdx])
+			var err error
+			cur, err = readStringLiteral(cur, userInput[curIdx:])
+			if err != nil {
+				return nil, err
 			}
-			if curIdx == len(userInput) {
-				return nil, fmt.Errorf(
-					"tokenize(): err:\n%s",
-					errorAt(curIdx, "unclosed string literal"),
-				)
-			}
-			curIdx++
-
-			cur = newToken(TK_STR, cur, string(b), len(b))
-			cur.Contents = strNdUp(b, len(b))
-			cur.ContLen = len(b) + 1
+			curIdx += cur.Len
 			continue
 		}
 

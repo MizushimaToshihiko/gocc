@@ -224,7 +224,7 @@ func (c *codeWriter) gen(node *Node) {
 		c.Fprintf("	push rax\n")
 		return
 
-	case ND_BLOCK:
+	case ND_BLOCK, ND_STMT_EXPR:
 		for n := node.Body; n != nil; n = n.Next {
 			c.gen(n)
 		}
