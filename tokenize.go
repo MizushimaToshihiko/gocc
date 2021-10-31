@@ -53,7 +53,7 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 	}
 
 	end := errIdx
-	for userInput[end] != '\n' {
+	for end < len(userInput) && userInput[end] != '\n' {
 		end++
 	}
 
@@ -274,10 +274,8 @@ func readStringLiteral(cur *Token, str string) (*Token, error) {
 		if str[p] == '\\' {
 			p++
 			buf = append(buf, getEscapeChar(str[p]))
-			p++
 		} else {
 			buf = append(buf, str[p])
-			p++
 		}
 	}
 	if p == len(str) {
@@ -287,7 +285,7 @@ func readStringLiteral(cur *Token, str string) (*Token, error) {
 		)
 	}
 
-	tok := newToken(TK_STR, cur, string(buf), len(buf))
+	tok := newToken(TK_STR, cur, string(buf), len(buf)+1)
 	tok.Contents = strNdUp(buf, len(buf))
 	tok.ContLen = len(buf) + 1
 	return tok, nil
@@ -372,6 +370,7 @@ func tokenize() (*Token, error) {
 				return nil, err
 			}
 			curIdx += cur.Len
+			// fmt.Printf("cur:\n%#v\n", cur)
 			continue
 		}
 
@@ -390,7 +389,6 @@ func tokenize() (*Token, error) {
 			continue
 		}
 
-		fmt.Printf("%#v\n", token)
 		return nil, fmt.Errorf(
 			"tokenize(): err:\n%s",
 			errorAt(curIdx, "invalid token"),
