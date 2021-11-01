@@ -16,14 +16,6 @@ import (
 // "error 6": {0, "int main() { int x; int y; y = 1; x = y + + 5;}"},
 // "error 7": {0, "int main() { /* return 2;} "},
 
-// 【テストをCで書き直す】
-// 'funcs'と各テストケースを一つのCファイルにして、それをcompile関数に渡す
-// それで出来たasmをgccに渡して実行ファイルにする
-// 以下を止める
-// ・funcs_file作成
-// ・1回1回テストケース毎にCファイルを作る => 一回だけ
-//
-
 func TestCompile(t *testing.T) {
 
 	asm, err := os.Create("testdata/asm.s")
@@ -172,6 +164,7 @@ func TestSkipLineComment(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			userInput = []rune(c.in)
+			curIdx = 0
 			_, err := tokenize()
 			if err != nil {
 				t.Fatal(err)
@@ -179,26 +172,25 @@ func TestSkipLineComment(t *testing.T) {
 
 			printTokens()
 			fmt.Printf("%#v\n", headTok.Next)
+			if headTok.Next.Kind != TK_EOF {
+				t.Fatal("failed tokenize comments")
+			}
 		})
 	}
 }
 
-// \"を認識しない原因　<= string型の変数に入れた時点で\の部分が消えてしまうから？
-// <= 'userInput'に入れるときに[]runeで入れる?
-var case1in string
-
 func TestReadStringLiteral(t *testing.T) {
 	cases := map[string]struct {
 		in   string
-		want string
+		want []rune
 	}{
 		"case 1": {
-			in:   "\"\\j\"[0]",
-			want: "\"\\j\"[0]",
+			in:   `"\"\\j\"[0]"`,
+			want: append([]rune("\"\\j\"[0]"), 0),
 		},
 		"case 2": {
-			in:   "\"\"",
-			want: "\"\"",
+			in:   `"\"\""`,
+			want: append([]rune("\"\""), 0),
 		},
 	}
 
@@ -206,16 +198,15 @@ func TestReadStringLiteral(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tok := &Token{}
 			userInput = []rune(c.in)
-			fmt.Println("userInput", userInput)
+			curIdx = 1
 			var err error
 			tok, err = readStringLiteral(tok)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			fmt.Printf("%#v\n", tok)
-			if !reflect.DeepEqual(tok.Contents, []rune(c.want)) {
-				t.Fatalf("%s expected, but got %s", c.want, string(tok.Contents))
+			if !reflect.DeepEqual(tok.Contents, c.want) {
+				t.Fatalf("%s expected, but got %s", string(c.want), string(tok.Contents))
 			}
 		})
 	}

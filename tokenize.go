@@ -259,11 +259,9 @@ func getEscapeChar(c rune) rune {
 
 func readStringLiteral(cur *Token) (*Token, error) {
 	p := 0
-	fmt.Println("userInput[curIdx:]:", userInput[curIdx:])
 
 	buf := make([]rune, 0, 1024)
-	for curIdx < len(userInput) {
-		fmt.Println("userInput[curIdx]:", userInput[curIdx])
+	for ; curIdx < len(userInput); curIdx++ {
 		if userInput[curIdx] == 0 {
 			return nil, fmt.Errorf(
 				"tokenize(): err:\n%s",
@@ -277,16 +275,15 @@ func readStringLiteral(cur *Token) (*Token, error) {
 		if userInput[curIdx] == '\\' {
 			curIdx++
 			buf = append(buf, getEscapeChar(userInput[curIdx]))
-			curIdx++
 		} else {
 			buf = append(buf, userInput[curIdx])
-			curIdx++
 		}
 	}
 
 	tok := newToken(TK_STR, cur, string(buf), len(buf))
 	tok.Contents = strNdUp(buf, len(buf))
 	tok.ContLen = len(buf)
+	curIdx++
 	return tok, nil
 }
 
@@ -299,9 +296,8 @@ func tokenize() (*Token, error) {
 	// for printToken
 	headTok = &head
 
-	for curIdx < len(userInput) {
+	for curIdx < len(userInput) && userInput[curIdx] != 0 {
 
-		fmt.Printf("userInput[%d]: %s\n", curIdx, string(userInput[curIdx]))
 		// skip space(s)
 		if isSpace(userInput[curIdx]) {
 			curIdx++
@@ -370,7 +366,6 @@ func tokenize() (*Token, error) {
 			if err != nil {
 				return nil, err
 			}
-			curIdx += cur.Len + 2
 			continue
 		}
 

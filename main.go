@@ -34,6 +34,7 @@ func readFile(path string) ([]rune, error) {
 		}
 		ret = append(ret, ru)
 	}
+	ret = append(ret, 0)
 	return ret, nil
 }
 
@@ -60,7 +61,6 @@ func compile(arg string, w io.Writer) error {
 		return err
 	}
 	filename = arg
-	fmt.Println("file:\n", userInput)
 
 	token, err = tokenize()
 	if err != nil {
