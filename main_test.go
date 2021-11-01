@@ -121,7 +121,7 @@ func TestStartsWithReserved(t *testing.T) {
 			t.Log("startsWith OK")
 
 			ac := startsWithReserved(c.in)
-			if startsWith(c.in, c.kw) && len(c.in) >= len(c.kw) && !isAlNum(c.in[len(c.kw)]) {
+			if startsWith(c.in, c.kw) && len(c.in) >= len(c.kw) && !isAlNum(rune(c.in[len(c.kw)])) {
 				t.Log("true, ac: ", ac)
 			} else {
 				t.Log("false, ac: ", ac)
@@ -171,7 +171,7 @@ func TestSkipLineComment(t *testing.T) {
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			userInput = []byte(c.in)
+			userInput = []rune(c.in)
 			_, err := tokenize()
 			if err != nil {
 				t.Fatal(err)
@@ -184,16 +184,18 @@ func TestSkipLineComment(t *testing.T) {
 }
 
 // \"を認識しない原因　<= string型の変数に入れた時点で\の部分が消えてしまうから？
-// <= 'userInput'に入れるときに[]byteで入れる?
+// <= 'userInput'に入れるときに[]runeで入れる?
+var case1in string
+
 func TestReadStringLiteral(t *testing.T) {
 	cases := map[string]struct {
 		in   string
 		want string
 	}{
-		// "case 1": {
-		// 	in:   "\"\\j\"[0]",
-		// 	want: "\"\\j\"[0]",
-		// },
+		"case 1": {
+			in:   "\"\\j\"[0]",
+			want: "\"\\j\"[0]",
+		},
 		"case 2": {
 			in:   "\"\"",
 			want: "\"\"",
@@ -203,7 +205,7 @@ func TestReadStringLiteral(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			tok := &Token{}
-			userInput = []byte(c.in)
+			userInput = []rune(c.in)
 			fmt.Println("userInput", userInput)
 			var err error
 			tok, err = readStringLiteral(tok)
@@ -212,7 +214,7 @@ func TestReadStringLiteral(t *testing.T) {
 			}
 
 			fmt.Printf("%#v\n", tok)
-			if !reflect.DeepEqual(tok.Contents, []byte(c.want)) {
+			if !reflect.DeepEqual(tok.Contents, []rune(c.want)) {
 				t.Fatalf("%s expected, but got %s", c.want, string(tok.Contents))
 			}
 		})

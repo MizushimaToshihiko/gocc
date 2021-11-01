@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -9,7 +10,7 @@ import (
 
 var filename string
 
-func readFile(path string) ([]byte, error) {
+func readFile(path string) ([]rune, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -20,15 +21,20 @@ func readFile(path string) ([]byte, error) {
 		}
 	}()
 
-	b, err := io.ReadAll(f)
-	if err != nil {
-		return nil, err
+	br := bufio.NewReader(f)
+
+	ret := make([]rune, 0, 1064)
+	for {
+		ru, sz, err := br.ReadRune()
+		if sz == 0 || err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, ru)
 	}
-	if len(b) == 0 || b[len(b)-1] != '\n' {
-		b = append(b, '\n')
-	}
-	// b = append(b, 0)
-	return b, nil
+	return ret, nil
 }
 
 func alignTo(n, align int) int {
@@ -54,6 +60,7 @@ func compile(arg string, w io.Writer) error {
 		return err
 	}
 	filename = arg
+	fmt.Println("file:\n", userInput)
 
 	token, err = tokenize()
 	if err != nil {

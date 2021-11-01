@@ -29,7 +29,7 @@ type Token struct {
 	Str  string    // token string
 	Len  int       // length of token
 
-	Contents []byte // string literal contents including terminating '\0'
+	Contents []rune // string literal contents including terminating '\0'
 	ContLen  int    // string literal length
 }
 
@@ -37,7 +37,7 @@ type Token struct {
 var token *Token
 
 // inputted program
-var userInput []byte
+var userInput []rune
 
 // current index in 'userInput'
 var curIdx int
@@ -67,7 +67,7 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 	// Show found lines along with file name and line number.
 	res := fmt.Sprintf("%s:%d: ", filename, lineNum)
 	indent := len(res)
-	res += fmt.Sprintf("%.*s\n", end-line, userInput[line:end])
+	res += fmt.Sprintf("%.*s\n", end-line, string(userInput[line:end]))
 
 	// Point the error location with "^" and display the error message.
 	pos := errIdx - line + indent
@@ -89,9 +89,9 @@ func errorTok(tok *Token, formt string, a ...interface{}) string {
 		"\n"
 }
 
-// strNdUp function returns the []byte terminates with '\0'
-func strNdUp(b []byte, len int) []byte {
-	res := make([]byte, len)
+// strNdUp function returns the []rune terminates with '\0'
+func strNdUp(b []rune, len int) []rune {
+	res := make([]rune, len)
 	copy(res, b)
 	res = append(res, 0)
 	return res
@@ -198,7 +198,7 @@ func startsWithReserved(p string) string {
 		"int", "char"}
 
 	for _, k := range kw {
-		if startsWith(p, k) && len(p) >= len(k) && !isAlNum(p[len(k)]) {
+		if startsWith(p, k) && len(p) >= len(k) && !isAlNum(rune(p[len(k)])) {
 			return k
 		}
 	}
@@ -214,25 +214,25 @@ func startsWithReserved(p string) string {
 	return ""
 }
 
-func isSpace(op byte) bool {
+func isSpace(op rune) bool {
 	return strings.Contains("\t\n\v\f\r ", string(op))
 }
 
-func isDigit(op byte) bool {
+func isDigit(op rune) bool {
 	return '0' <= op && op <= '9'
 }
 
-func isAlpha(c byte) bool {
+func isAlpha(c rune) bool {
 	return ('a' <= c && c <= 'z') ||
 		('A' <= c && c <= 'Z') ||
 		(c == '_')
 }
 
-func isAlNum(c byte) bool {
+func isAlNum(c rune) bool {
 	return isAlpha(c) || ('0' <= c && c <= '9')
 }
 
-func getEscapeChar(c byte) byte {
+func getEscapeChar(c rune) rune {
 	switch c {
 	case 'a':
 		return '\a'
@@ -261,7 +261,7 @@ func readStringLiteral(cur *Token) (*Token, error) {
 	p := 0
 	fmt.Println("userInput[curIdx:]:", userInput[curIdx:])
 
-	buf := make([]byte, 0, 1024)
+	buf := make([]rune, 0, 1024)
 	for curIdx < len(userInput) {
 		fmt.Println("userInput[curIdx]:", userInput[curIdx])
 		if userInput[curIdx] == 0 {
@@ -279,7 +279,7 @@ func readStringLiteral(cur *Token) (*Token, error) {
 			buf = append(buf, getEscapeChar(userInput[curIdx]))
 			curIdx++
 		} else {
-			buf = append(buf, byte(userInput[curIdx]))
+			buf = append(buf, userInput[curIdx])
 			curIdx++
 		}
 	}
@@ -354,7 +354,7 @@ func tokenize() (*Token, error) {
 		// identifier
 		// if 'userInput[cutIdx]' is alphabets, it makes a token of TK_IDENT type.
 		if isAlpha(userInput[curIdx]) {
-			ident := make([]byte, 0, 20)
+			ident := make([]rune, 0, 20)
 			for ; curIdx < len(userInput) && isAlNum(userInput[curIdx]); curIdx++ {
 				ident = append(ident, userInput[curIdx])
 			}

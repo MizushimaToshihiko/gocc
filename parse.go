@@ -93,7 +93,7 @@ type Var struct {
 	Offset int // the offset from RBP
 
 	// global vaiables
-	Contents []byte
+	Contents []rune
 	ContLen  int
 }
 
