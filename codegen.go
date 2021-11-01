@@ -9,9 +9,6 @@ import (
 	"io"
 )
 
-// struct errWriter is for the error handling
-// it's based on:
-// https://jxck.hatenablog.com/entry/golang-error-handling-lesson-by-rob-pike
 type codeWriter struct {
 	w   io.Writer
 	err error

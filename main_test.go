@@ -44,30 +44,30 @@ func TestCompile(t *testing.T) {
 	}
 }
 
-// func TestIsSpace(t *testing.T) {
-// 	cases := map[string]struct {
-// 		in   byte
-// 		want bool
-// 	}{
-// 		"1": {'\t', true},
-// 		"2": {'\n', true},
-// 		"3": {'\v', true},
-// 		"4": {'\f', true},
-// 		"5": {'\r', true},
-// 		"6": {' ', true},
-// 		"7": {'a', false},
-// 		"8": {'"', false},
-// 	}
+func TestIsSpace(t *testing.T) {
+	cases := map[string]struct {
+		in   rune
+		want bool
+	}{
+		"1": {'\t', true},
+		"2": {'\n', true},
+		"3": {'\v', true},
+		"4": {'\f', true},
+		"5": {'\r', true},
+		"6": {' ', true},
+		"7": {'a', false},
+		"8": {'"', false},
+	}
 
-// 	for name, c := range cases {
-// 		t.Run(name, func(t *testing.T) {
-// 			act := isSpace(c.in)
-// 			if act != c.want {
-// 				t.Fatalf("%t expected, but got %t", c.want, act)
-// 			}
-// 		})
-// 	}
-// }
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			act := isSpace(c.in)
+			if act != c.want {
+				t.Fatalf("%t expected, but got %t", c.want, act)
+			}
+		})
+	}
+}
 
 // func TestFindLVar(t *testing.T) {
 // 	cases := map[string]struct {
