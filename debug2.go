@@ -1,39 +1,44 @@
 package main
 
+import (
+	"fmt"
+	"log"
+)
+
 // for printTokens function, the pointer of the head token
 // stored in 'headTok'.
-// var headTok *Token
+var headTok *Token
 
-// func printTokens() {
-// 	fmt.Print("# Tokens: ")
-// 	tok := headTok.Next
-// 	var kind string
-// 	for tok.Next != nil {
-// 		switch tok.Kind {
-// 		case TK_IDENT:
-// 			kind = "IDENT"
-// 		case TK_NUM:
-// 			kind = "NUM"
-// 		case TK_RESERVED:
-// 			kind = "RESERVED"
-// 		case TK_SIZEOF:
-// 			kind = "SIZEOF"
-// 		case TK_STR:
-// 			kind = "STR"
-// 		default:
-// 			log.Fatal("unknown token kind")
-// 		}
-// 		fmt.Printf(" %s:'%s':%d ", kind, tok.Str, tok.Len)
-// 		// fmt.Printf(" '%s' ", tok.Str)
-// 		tok = tok.Next
-// 	}
+func printTokens() {
+	fmt.Print("# Tokens: ")
+	tok := headTok.Next
+	var kind string
+	for tok.Next != nil {
+		switch tok.Kind {
+		case TK_IDENT:
+			kind = "IDENT"
+		case TK_NUM:
+			kind = "NUM"
+		case TK_RESERVED:
+			kind = "RESERVED"
+		case TK_SIZEOF:
+			kind = "SIZEOF"
+		case TK_STR:
+			kind = "STR"
+		default:
+			log.Fatal("unknown token kind")
+		}
+		fmt.Printf(" %s:'%s':%d ", kind, tok.Str, tok.Len)
+		// fmt.Printf(" '%s' ", tok.Str)
+		tok = tok.Next
+	}
 
-// 	if tok.Kind == TK_EOF {
-// 		fmt.Print(" EOF ")
-// 	}
+	if tok.Kind == TK_EOF {
+		fmt.Print(" EOF ")
+	}
 
-// 	fmt.Println()
-// }
+	fmt.Println()
+}
 
 // func printCurTokInit() {
 // 	fmt.Print("# Current Token: ")

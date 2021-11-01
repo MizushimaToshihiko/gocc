@@ -5,7 +5,6 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -14,12 +13,12 @@ import (
 type TokenKind int
 
 const (
-	TK_RESERVED TokenKind = iota // Reserved words, and puncturators
-	TK_SIZEOF                    // 'sizeof' operator
-	TK_IDENT                     // idenfier such as variables, function names
-	TK_STR                       // string literals
-	TK_NUM                       // integer
-	TK_EOF                       // the end of tokens
+	TK_RESERVED TokenKind = iota // 0: Reserved words, and puncturators
+	TK_SIZEOF                    // 1: 'sizeof' operator
+	TK_IDENT                     // 2: idenfier such as variables, function names
+	TK_STR                       // 3: string literals
+	TK_NUM                       // 4: integer
+	TK_EOF                       // 5: the end of tokens
 )
 
 type Token struct {
@@ -38,7 +37,7 @@ type Token struct {
 var token *Token
 
 // inputted program
-var userInput string
+var userInput []byte
 
 // current index in 'userInput'
 var curIdx int
@@ -188,10 +187,9 @@ func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
 	return tok
 }
 
-// startsWith compare 'pp' and 'qq' , qq is keyword
-func startsWith(pp, qq string) bool {
-	p, q := []byte(pp), []byte(qq)
-	return len(p) >= len(q) && reflect.DeepEqual(p[:len(q)], q)
+// startsWith compare 'p' and 'q' , qq is keyword
+func startsWith(p, q string) bool {
+	return len(p) >= len(q) && p[:len(q)] == q
 }
 
 func startsWithReserved(p string) string {
@@ -200,7 +198,7 @@ func startsWithReserved(p string) string {
 		"int", "char"}
 
 	for _, k := range kw {
-		if startsWith(p, k) && len(p) > len(k) && !isAlNum(p[len(k)]) {
+		if startsWith(p, k) && len(p) >= len(k) && !isAlNum(p[len(k)]) {
 			return k
 		}
 	}
@@ -259,35 +257,36 @@ func getEscapeChar(c byte) byte {
 	}
 }
 
-func readStringLiteral(cur *Token, str string) (*Token, error) {
-	p := 1
+func readStringLiteral(cur *Token) (*Token, error) {
+	p := 0
+	fmt.Println("userInput[curIdx:]:", userInput[curIdx:])
 
 	buf := make([]byte, 0, 1024)
-	for ; p < len(str) && str[p] != '"'; p++ {
-		if str[p] == 0 {
+	for curIdx < len(userInput) {
+		fmt.Println("userInput[curIdx]:", userInput[curIdx])
+		if userInput[curIdx] == 0 {
 			return nil, fmt.Errorf(
 				"tokenize(): err:\n%s",
 				errorAt(curIdx+p, "unclosed string literal"),
 			)
 		}
+		if userInput[curIdx] == '"' {
+			break
+		}
 
-		if str[p] == '\\' {
-			p++
-			buf = append(buf, getEscapeChar(str[p]))
+		if userInput[curIdx] == '\\' {
+			curIdx++
+			buf = append(buf, getEscapeChar(userInput[curIdx]))
+			curIdx++
 		} else {
-			buf = append(buf, str[p])
+			buf = append(buf, byte(userInput[curIdx]))
+			curIdx++
 		}
 	}
-	if p == len(str) {
-		return nil, fmt.Errorf(
-			"tokenize(): err:\n%s",
-			errorAt(curIdx+p, "unclosed string literal"),
-		)
-	}
 
-	tok := newToken(TK_STR, cur, string(buf), len(buf)+1)
+	tok := newToken(TK_STR, cur, string(buf), len(buf))
 	tok.Contents = strNdUp(buf, len(buf))
-	tok.ContLen = len(buf) + 1
+	tok.ContLen = len(buf)
 	return tok, nil
 }
 
@@ -298,10 +297,11 @@ func tokenize() (*Token, error) {
 	cur := &head
 
 	// for printToken
-	// headTok = &head
+	headTok = &head
 
 	for curIdx < len(userInput) {
 
+		fmt.Printf("userInput[%d]: %s\n", curIdx, string(userInput[curIdx]))
 		// skip space(s)
 		if isSpace(userInput[curIdx]) {
 			curIdx++
@@ -309,7 +309,7 @@ func tokenize() (*Token, error) {
 		}
 
 		// skip line comment
-		if startsWith(userInput[curIdx:], "//") {
+		if startsWith(string(userInput[curIdx:]), "//") {
 			curIdx += 2
 			for ; curIdx < len(userInput) && userInput[curIdx] != '\n'; curIdx++ {
 			}
@@ -317,8 +317,8 @@ func tokenize() (*Token, error) {
 		}
 
 		// skip block comment
-		if startsWith(userInput[curIdx:], "/*") {
-			idx := strings.Index(userInput[curIdx:], "*/")
+		if startsWith(string(userInput[curIdx:]), "/*") {
+			idx := strings.Index(string(userInput[curIdx:]), "*/")
 			if idx == -1 {
 				return nil, fmt.Errorf(
 					"tokenize(): err:\n%s",
@@ -330,14 +330,14 @@ func tokenize() (*Token, error) {
 		}
 
 		// 'sizeof' keyword
-		if startsWith(userInput[curIdx:], "sizeof") {
+		if startsWith(string(userInput[curIdx:]), "sizeof") {
 			cur = newToken(TK_SIZEOF, cur, "sizeof", len("sizeof"))
 			curIdx += len("sizeof")
 			continue
 		}
 
 		// keyword or multi-letter punctuator
-		kw := startsWithReserved(userInput[curIdx:])
+		kw := startsWithReserved(string(userInput[curIdx:]))
 		if kw != "" {
 			cur = newToken(TK_RESERVED, cur, kw, len(kw))
 			curIdx += len(kw)
@@ -364,13 +364,13 @@ func tokenize() (*Token, error) {
 
 		// string literal
 		if userInput[curIdx] == '"' {
+			curIdx++
 			var err error
-			cur, err = readStringLiteral(cur, userInput[curIdx:])
+			cur, err = readStringLiteral(cur)
 			if err != nil {
 				return nil, err
 			}
-			curIdx += cur.Len
-			// fmt.Printf("cur:\n%#v\n", cur)
+			curIdx += cur.Len + 2
 			continue
 		}
 
@@ -383,7 +383,7 @@ func tokenize() (*Token, error) {
 			cur = newToken(TK_NUM, cur, sVal, len(sVal))
 			v, err := strconv.Atoi(sVal)
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 			cur.Val = v
 			continue

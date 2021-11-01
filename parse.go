@@ -105,24 +105,19 @@ type VarList struct {
 // local variables
 var locals *VarList
 var globals *VarList
+var scope *VarList
 
 func newVar(lvar *Var, tok *Token) *Node {
 	return &Node{Kind: ND_VAR, Tok: tok, Var: lvar}
 }
 
-// search a local variable by name.
+// search a variable by name.
 // if it wasn't find, return nil.
 func findLVar(tok *Token) *Var {
-	for vl := locals; vl != nil; vl = vl.Next {
+	for vl := scope; vl != nil; vl = vl.Next {
 		lvar := vl.Var
 		if len(lvar.Name) == tok.Len && tok.Str == lvar.Name {
 			return lvar
-		}
-	}
-
-	for vl := globals; vl != nil; vl = vl.Next {
-		if vl.Var.Name == tok.Str {
-			return vl.Var
 		}
 	}
 	return nil
@@ -144,6 +139,12 @@ func pushVar(name string, ty *Type, isLocal bool) *Var {
 		vl.Next = globals
 		globals = vl
 	}
+
+	sc := &VarList{
+		Var:  lvar,
+		Next: scope,
+	}
+	scope = sc
 
 	return lvar
 }
@@ -389,6 +390,7 @@ func stmt() *Node {
 		head := Node{}
 		cur := &head
 
+		sc := scope
 		for {
 			if consume("}") != nil {
 				break
@@ -396,6 +398,7 @@ func stmt() *Node {
 			cur.Next = stmt()
 			cur = cur.Next
 		}
+		scope = sc
 
 		node = &Node{Kind: ND_BLOCK, Tok: t}
 		node.Body = head.Next
@@ -549,6 +552,8 @@ func postfix() *Node {
 //
 // statement expression is a GNU extension.
 func stmtExpr(tok *Token) *Node {
+	sc := scope
+
 	node := &Node{
 		Kind: ND_STMT_EXPR,
 		Tok:  tok,
@@ -564,6 +569,8 @@ func stmtExpr(tok *Token) *Node {
 		cur = cur.Next
 	}
 	expect(")")
+
+	scope = sc
 
 	if cur.Kind != ND_EXPR_STMT {
 		panic("\n" +

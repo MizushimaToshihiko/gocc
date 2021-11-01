@@ -9,10 +9,10 @@ import (
 
 var filename string
 
-func readFile(path string) (string, error) {
+func readFile(path string) ([]byte, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
@@ -22,13 +22,13 @@ func readFile(path string) (string, error) {
 
 	b, err := io.ReadAll(f)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if len(b) == 0 || b[len(b)-1] != '\n' {
 		b = append(b, '\n')
 	}
 	// b = append(b, 0)
-	return string(b), nil
+	return b, nil
 }
 
 func alignTo(n, align int) int {
@@ -57,6 +57,7 @@ func compile(arg string, w io.Writer) error {
 
 	token, err = tokenize()
 	if err != nil {
+		printTokens()
 		return err
 	}
 	// printTokens()

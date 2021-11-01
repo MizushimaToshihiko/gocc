@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"reflect"
 	"testing"
 )
 
@@ -95,24 +97,124 @@ func TestCompile(t *testing.T) {
 // 	}
 // }
 
-// func TestStartWith(t *testing.T) {
-// 	kw := "return"
-// 	in := "return return;"
+func TestStartsWithReserved(t *testing.T) {
+	cases := map[string]struct {
+		kw string
+		in string
+	}{
+		"case ==": {
+			kw: "==",
+			in: "==0;",
+		},
+		// "case //": {
+		// 	kw: "//",
+		// 	in: "// aaa",
+		// },
+	}
 
-// 	acb := startsWith(in, kw)
-// 	if !acb {
-// 		t.Fatal("actual is not expected")
-// 	}
-// 	t.Log("startsWith OK")
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			acb := startsWith(c.in, c.kw)
+			if !acb {
+				t.Fatal("actual is not expected")
+			}
+			t.Log("startsWith OK")
 
-// 	ac := startsWithReserved(in)
-// 	if startsWith(in, kw) && len(in) > len(kw) && !isAlNum(in[len(kw)]) {
-// 		t.Log("true")
-// 	} else {
-// 		t.Log("false")
-// 	}
+			ac := startsWithReserved(c.in)
+			if startsWith(c.in, c.kw) && len(c.in) >= len(c.kw) && !isAlNum(c.in[len(c.kw)]) {
+				t.Log("true, ac: ", ac)
+			} else {
+				t.Log("false, ac: ", ac)
+			}
 
-// 	if ac != kw {
-// 		t.Fatalf("%s expected, but got %s", kw, ac)
-// 	}
-// }
+			if ac != c.kw {
+				t.Fatalf("%s expected, but got %s", c.kw, ac)
+			}
+		})
+	}
+}
+
+func TestStartsWith(t *testing.T) {
+	cases := map[string]struct {
+		kw string
+		in string
+	}{
+		// "case ==": {
+		// 	kw: "==",
+		// 	in: "==0;",
+		// },
+		"case //": {
+			kw: "//",
+			in: "// aaa",
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			acb := startsWith(c.in, c.kw)
+			if !acb {
+				t.Fatal("actual is not expected")
+			}
+			t.Log("startsWith OK")
+		})
+	}
+}
+
+func TestSkipLineComment(t *testing.T) {
+	cases := map[string]struct {
+		in string
+	}{
+		"case //": {
+			in: "// aaa",
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			userInput = []byte(c.in)
+			_, err := tokenize()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			printTokens()
+			fmt.Printf("%#v\n", headTok.Next)
+		})
+	}
+}
+
+// \"を認識しない原因　<= string型の変数に入れた時点で\の部分が消えてしまうから？
+// <= 'userInput'に入れるときに[]byteで入れる?
+func TestReadStringLiteral(t *testing.T) {
+	cases := map[string]struct {
+		in   string
+		want string
+	}{
+		// "case 1": {
+		// 	in:   "\"\\j\"[0]",
+		// 	want: "\"\\j\"[0]",
+		// },
+		"case 2": {
+			in:   "\"\"",
+			want: "\"\"",
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			tok := &Token{}
+			userInput = []byte(c.in)
+			fmt.Println("userInput", userInput)
+			var err error
+			tok, err = readStringLiteral(tok)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			fmt.Printf("%#v\n", tok)
+			if !reflect.DeepEqual(tok.Contents, []byte(c.want)) {
+				t.Fatalf("%s expected, but got %s", c.want, string(tok.Contents))
+			}
+		})
+	}
+}
