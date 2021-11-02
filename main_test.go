@@ -39,9 +39,9 @@ func TestCompile(t *testing.T) {
 
 	b2, err := exec.Command("./testdata/tmp").Output()
 	if err != nil {
-		t.Fatalf("\noutput: %s\n%v", string(b2), err)
+		t.Fatalf("\noutput:\n%s\n%v", string(b2), err)
 	}
-	t.Logf("\noutput: %s\n", string(b2))
+	t.Logf("\noutput:\n%s\n", string(b2))
 }
 
 func TestIsSpace(t *testing.T) {

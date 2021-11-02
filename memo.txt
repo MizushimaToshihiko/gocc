@@ -16,4 +16,6 @@ test実行時の出力がおかしい
  <= 本家ではコンパイラがcなので、gcc -o $@ $(OBJS) -std=c11 -g -static
     でgccコンパイラから「printf」をstaticリンクで認識している
  => 本家と同じようにgccとstaticリンクする？どのように？
+ 　 <= gcc に渡すときに-cを付けなければリンクされるみたい
+ 　　　https://tanakamura.github.io/pllp/docs/linker.html
  => cコンパイラからgoコンパイラに切り替える？
