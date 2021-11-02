@@ -47,19 +47,19 @@ var curIdx int
 func errorAt(errIdx int, formt string, a ...interface{}) string {
 	// get the start and end of the line 'errIdx' exists
 	line := errIdx
-	for 0 < line && userInput[line-1] != '\n' {
+	for 0 < line && userInput[line-1] != rune('\n') {
 		line--
 	}
 
 	end := errIdx
-	for end < len(userInput) && userInput[end] != '\n' {
+	for end < len(userInput) && userInput[end] != rune('\n') {
 		end++
 	}
 
 	// Find out what line the found line is in the whole.
 	lineNum := 1
 	for i := 0; i < line; i++ {
-		if userInput[i] == '\n' {
+		if userInput[i] == rune('\n') {
 			lineNum++
 		}
 	}

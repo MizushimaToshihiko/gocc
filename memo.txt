@@ -11,3 +11,9 @@ tokenize関数が\"を認識しない原因
  <= string型の変数に入れた時点で\の部分が消えてしまうから？
  <= 'userInput'に入れるときに[]runeで入れる?
   ⇒　[]runeに変更
+
+test実行時の出力がおかしい
+ <= 本家ではコンパイラがcなので、gcc -o $@ $(OBJS) -std=c11 -g -static
+    でgccコンパイラから「printf」をstaticリンクで認識している
+ => 本家と同じようにgccとstaticリンクする？どのように？
+ => cコンパイラからgoコンパイラに切り替える？

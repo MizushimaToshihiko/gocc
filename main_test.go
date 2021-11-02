@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"reflect"
@@ -29,19 +28,20 @@ func TestCompile(t *testing.T) {
 	}
 
 	// make a execution file with static-link to 'f'
-	b, err := exec.Command("gcc", "-static", "-o", "testdata/tmp", asm.Name()).CombinedOutput()
+	b1, err := exec.Command("gcc", "-static", "-o", "testdata/tmp", asm.Name()).CombinedOutput()
 	if err != nil {
-		t.Fatalf("\noutput: %s\n%v", string(b), err)
+		t.Fatalf("\noutput:\n%s\n%v", string(b1), err)
 	}
 	// quit this test sequence, if the execution file wasn't made
 	if _, err := os.Stat(asm.Name()); err != nil {
 		t.Fatal(err)
 	}
 
-	b, err = exec.Command("./testdata/tmp").CombinedOutput()
+	b2, err := exec.Command("./testdata/tmp").Output()
 	if err != nil {
-		t.Fatalf("\noutput: %s\n%v", string(b), err)
+		t.Fatalf("\noutput: %s\n%v", string(b2), err)
 	}
+	t.Logf("\noutput: %s\n", string(b2))
 }
 
 func TestIsSpace(t *testing.T) {
@@ -131,10 +131,10 @@ func TestStartsWith(t *testing.T) {
 		kw string
 		in string
 	}{
-		// "case ==": {
-		// 	kw: "==",
-		// 	in: "==0;",
-		// },
+		"case ==": {
+			kw: "==",
+			in: "==0;",
+		},
 		"case //": {
 			kw: "//",
 			in: "// aaa",
@@ -170,8 +170,8 @@ func TestSkipLineComment(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			printTokens()
-			fmt.Printf("%#v\n", headTok.Next)
+			// printTokens()
+			// fmt.Printf("%#v\n", headTok.Next)
 			if headTok.Next.Kind != TK_EOF {
 				t.Fatal("failed tokenize comments")
 			}

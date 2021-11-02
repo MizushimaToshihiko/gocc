@@ -53,6 +53,10 @@ func (c *codeWriter) genAddr(node *Node) {
 }
 
 func (c *codeWriter) genLval(node *Node) {
+	if c.err != nil {
+		return // do nothing
+	}
+
 	if node.Ty.Kind == TY_ARRAY {
 		c.err = fmt.Errorf(
 			"c.genLval(): err:\n%s",
@@ -138,36 +142,38 @@ func (c *codeWriter) gen(node *Node) {
 		c.Fprintf("	pop rax\n")
 		c.Fprintf("	cmp rax, 0\n")
 
+		seq := labelNo
 		labelNo++
 		if node.Els != nil {
-			c.Fprintf("	je .Lelse%03d\n", labelNo)
+			c.Fprintf("	je .Lelse%03d\n", seq)
 		} else {
-			c.Fprintf("	je .Lend%03d\n", labelNo)
+			c.Fprintf("	je .Lend%03d\n", seq)
 		}
 
 		c.gen(node.Then)
 
 		if node.Els != nil {
-			c.Fprintf(" jmp .Lend%03d\n", labelNo)
-			c.Fprintf(".Lelse%03d:\n", labelNo)
+			c.Fprintf(" jmp .Lend%03d\n", seq)
+			c.Fprintf(".Lelse%03d:\n", seq)
 			c.gen(node.Els)
 		}
 
-		c.Fprintf(".Lend%03d:\n", labelNo)
+		c.Fprintf(".Lend%03d:\n", seq)
 		return
 
 	case ND_WHILE:
+		seq := labelNo
 		labelNo++
-		c.Fprintf(".Lbegin%03d:\n", labelNo)
+		c.Fprintf(".Lbegin%03d:\n", seq)
 		c.gen(node.Cond)
 		c.Fprintf("	pop rax\n")
 		c.Fprintf("	cmp rax, 0\n")
-		c.Fprintf("	je .Lend%03d\n", labelNo)
+		c.Fprintf("	je .Lend%03d\n", seq)
 
 		c.gen(node.Then)
 
-		c.Fprintf("	jmp .Lbegin%03d\n", labelNo)
-		c.Fprintf(".Lend%03d:\n", labelNo)
+		c.Fprintf("	jmp .Lbegin%03d\n", seq)
+		c.Fprintf(".Lend%03d:\n", seq)
 		return
 
 	case ND_FOR:
@@ -175,14 +181,15 @@ func (c *codeWriter) gen(node *Node) {
 			c.gen(node.Init)
 		}
 
+		seq := labelNo
 		labelNo++
-		c.Fprintf(".Lbegin%03d:\n", labelNo)
+		c.Fprintf(".Lbegin%03d:\n", seq)
 
 		if node.Cond != nil {
 			c.gen(node.Cond)
 			c.Fprintf("	pop rax\n")
 			c.Fprintf("	cmp rax, 0\n")
-			c.Fprintf("	je .Lend%03d\n", labelNo)
+			c.Fprintf("	je .Lend%03d\n", seq)
 		}
 
 		c.gen(node.Then)
@@ -190,8 +197,8 @@ func (c *codeWriter) gen(node *Node) {
 		if node.Inc != nil {
 			c.gen(node.Inc)
 		}
-		c.Fprintf("	jmp .Lbegin%03d\n", labelNo)
-		c.Fprintf(".Lend%03d:\n", labelNo)
+		c.Fprintf("	jmp .Lbegin%03d\n", seq)
+		c.Fprintf(".Lend%03d:\n", seq)
 		return
 
 	case ND_FUNCCALL:
@@ -205,19 +212,20 @@ func (c *codeWriter) gen(node *Node) {
 			c.Fprintf("	pop %s\n", argReg8[i])
 		}
 
+		seq := labelNo
 		labelNo++
-		c.Fprintf("	mov rax, rsp\n")            // move rsp to rax
-		c.Fprintf("	and rax, 15\n")             // calculate rax & 15, when rax == 16, rax is 0b10000, and 15(0b1110) & 0b10000, ZF become 0.
-		c.Fprintf("	jnz .Lcall%03d\n", labelNo) // if ZF is 0, jamp to Lcall???.
-		c.Fprintf("	mov rax, 0\n")              // remove rax
+		c.Fprintf("	mov rax, rsp\n")        // move rsp to rax
+		c.Fprintf("	and rax, 15\n")         // calculate rax & 15, when rax == 16, rax is 0b10000, and 15(0b1110) & 0b10000, ZF become 0.
+		c.Fprintf("	jnz .Lcall%03d\n", seq) // if ZF is 0, jamp to Lcall???.
+		c.Fprintf("	mov rax, 0\n")          // remove rax
 		c.Fprintf("	call %s\n", node.FuncName)
-		c.Fprintf("	jmp .Lend%03d\n", labelNo)
-		c.Fprintf(".Lcall%03d:\n", labelNo)
+		c.Fprintf("	jmp .Lend%03d\n", seq)
+		c.Fprintf(".Lcall%03d:\n", seq)
 		c.Fprintf("	sub rsp, 8\n") // rspは8の倍数なので16の倍数にするために8を引く
 		c.Fprintf("	mov rax, 0\n")
 		c.Fprintf("	call %s\n", node.FuncName)
 		c.Fprintf("	add rsp, 8\n")
-		c.Fprintf(".Lend%03d:\n", labelNo)
+		c.Fprintf(".Lend%03d:\n", seq)
 		c.Fprintf("	push rax\n")
 		return
 
