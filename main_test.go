@@ -28,7 +28,7 @@ func TestCompile(t *testing.T) {
 	}
 
 	// make a execution file with static-link to 'f'
-	b1, err := exec.Command("gcc", "-static", "-o", "testdata/tmp", asm.Name()).CombinedOutput()
+	b1, err := exec.Command("gcc", "-static", "-g", "-o", "testdata/tmp", asm.Name()).CombinedOutput()
 	if err != nil {
 		t.Fatalf("\noutput:\n%s\n%v", string(b1), err)
 	}

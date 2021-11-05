@@ -282,7 +282,7 @@ func readStringLiteral(cur *Token) (*Token, error) {
 
 	tok := newToken(TK_STR, cur, string(buf), len(buf))
 	tok.Contents = strNdUp(buf, len(buf))
-	tok.ContLen = len(buf)
+	tok.ContLen = len(buf) + 1
 	curIdx++
 	return tok, nil
 }
