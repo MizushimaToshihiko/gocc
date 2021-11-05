@@ -7,14 +7,6 @@ import (
 	"testing"
 )
 
-// "error 1": {0, "return a;"},
-// "error 2": {0, "int return a;"},
-// "error 3": {0, "int main(){ return 1}"},
-// "error 4": {0, "int main() {int return a;"},
-// "error 5": {0, "int main() { x = y + + 5;}"},
-// "error 6": {0, "int main() { int x; int y; y = 1; x = y + + 5;}"},
-// "error 7": {0, "int main() { /* return 2;} "},
-
 func TestCompile(t *testing.T) {
 
 	asm, err := os.Create("testdata/asm.s")
@@ -27,8 +19,14 @@ func TestCompile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// make a execution file with static-link to 'f'
-	b1, err := exec.Command("gcc", "-static", "-g", "-o", "testdata/tmp", asm.Name()).CombinedOutput()
+	// make a execution file
+	b1, err := exec.Command(
+		"gcc",
+		"-static",
+		"-o",
+		"testdata/tmp",
+		asm.Name(),
+	).CombinedOutput()
 	if err != nil {
 		t.Fatalf("\noutput:\n%s\n%v", string(b1), err)
 	}
@@ -68,26 +66,6 @@ func TestIsSpace(t *testing.T) {
 		})
 	}
 }
-
-// func TestFindLVar(t *testing.T) {
-// 	cases := map[string]struct {
-// 		lvar *LVar
-// 		tok  *Token
-// 	}{
-// 		"case 1": {
-// 			&LVar{Name: "x"},
-// 			&Token{Str: "x", Len: 1},
-// 		},
-// 	}
-
-// 	for name, c := range cases {
-// 		t.Run(name, func(t *testing.T) {
-// 			locals = &VarList{Var: c.lvar, Next: nil}
-// 			lv := findLVar(c.tok)
-// 			fmt.Printf("%#v\n", lv)
-// 		})
-// 	}
-// }
 
 func TestStartsWithReserved(t *testing.T) {
 	cases := map[string]struct {
