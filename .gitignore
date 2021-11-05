@@ -1,5 +1,6 @@
 bin/*
 testdata/*
 !testdata/tests.c
+!testdata/examples
 profile
 funcs

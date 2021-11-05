@@ -76,10 +76,6 @@ func TestStartsWithReserved(t *testing.T) {
 			kw: "==",
 			in: "==0;",
 		},
-		// "case //": {
-		// 	kw: "//",
-		// 	in: "// aaa",
-		// },
 	}
 
 	for name, c := range cases {

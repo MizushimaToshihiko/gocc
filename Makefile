@@ -18,7 +18,7 @@ test: $(SRCS)
 
 clean: 
 	$(GOCLEAN)
-	rm -f testdata/temp* testdata/in*.c testdata/asm.s testdata/funcs_file profile
+	rm -f testdata/tmp testdata/asm.s profile
 
 fmt:
 	$(GOFMT) ./...
