@@ -23,6 +23,7 @@ func TestCompile(t *testing.T) {
 	b1, err := exec.Command(
 		"gcc",
 		"-static",
+		"-g",
 		"-o",
 		"testdata/tmp",
 		asm.Name(),
