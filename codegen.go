@@ -14,7 +14,7 @@ type codeWriter struct {
 	err error
 }
 
-func (c *codeWriter) Fprintf(format string, a ...interface{}) {
+func (c *codeWriter) printf(format string, a ...interface{}) {
 	if c.err != nil {
 		return // do nothing
 	}
@@ -35,14 +35,20 @@ func (c *codeWriter) genAddr(node *Node) {
 	switch node.Kind {
 	case ND_VAR:
 		if node.Var.IsLocal {
-			c.Fprintf("	lea rax, [rbp-%d]\n", node.Var.Offset)
-			c.Fprintf("	push rax\n")
+			c.printf("	lea rax, [rbp-%d]\n", node.Var.Offset)
+			c.printf("	push rax\n")
 		} else {
-			c.Fprintf("	push offset %s\n", node.Var.Name)
+			c.printf("	push offset %s\n", node.Var.Name)
 		}
 		return
 	case ND_DEREF:
 		c.gen(node.Lhs)
+		return
+	case ND_MEMBER:
+		c.genAddr(node.Lhs)
+		c.printf("	pop rax\n")
+		c.printf("	add rax, %d\n", node.Mem.Offset)
+		c.printf("	push rax\n")
 		return
 	default:
 		c.err = fmt.Errorf(
@@ -71,13 +77,13 @@ func (c *codeWriter) load(ty *Type) {
 		return // do nothing
 	}
 
-	c.Fprintf("	pop rax\n")
+	c.printf("	pop rax\n")
 	if sizeOf(ty) == 1 {
-		c.Fprintf("	movsx rax, byte ptr [rax]\n")
+		c.printf("	movsx rax, byte ptr [rax]\n")
 	} else {
-		c.Fprintf("	mov rax, [rax]\n")
+		c.printf("	mov rax, [rax]\n")
 	}
-	c.Fprintf("	push rax\n")
+	c.printf("	push rax\n")
 }
 
 func (c *codeWriter) store(ty *Type) {
@@ -85,16 +91,16 @@ func (c *codeWriter) store(ty *Type) {
 		return // do nothing
 	}
 
-	c.Fprintf("	pop rdi\n")
-	c.Fprintf("	pop rax\n")
+	c.printf("	pop rdi\n")
+	c.printf("	pop rax\n")
 
 	if sizeOf(ty) == 1 {
-		c.Fprintf("	mov [rax], dil\n")
+		c.printf("	mov [rax], dil\n")
 	} else {
-		c.Fprintf("	mov [rax], rdi\n")
+		c.printf("	mov [rax], rdi\n")
 	}
 
-	c.Fprintf("	push rdi\n")
+	c.printf("	push rdi\n")
 }
 
 func (c *codeWriter) gen(node *Node) {
@@ -106,13 +112,13 @@ func (c *codeWriter) gen(node *Node) {
 	case ND_NULL:
 		return
 	case ND_NUM:
-		c.Fprintf("	push %d\n", node.Val)
+		c.printf("	push %d\n", node.Val)
 		return
 	case ND_EXPR_STMT:
 		c.gen(node.Lhs)
-		c.Fprintf("	add rsp, 8\n")
+		c.printf("	add rsp, 8\n")
 		return
-	case ND_VAR:
+	case ND_VAR, ND_MEMBER:
 		c.genAddr(node)
 		if node.Ty.Kind != TY_ARRAY {
 			c.load(node.Ty)
@@ -139,41 +145,41 @@ func (c *codeWriter) gen(node *Node) {
 
 	case ND_IF:
 		c.gen(node.Cond)
-		c.Fprintf("	pop rax\n")
-		c.Fprintf("	cmp rax, 0\n")
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
 
 		seq := labelNo
 		labelNo++
 		if node.Els != nil {
-			c.Fprintf("	je .Lelse%03d\n", seq)
+			c.printf("	je .Lelse%03d\n", seq)
 		} else {
-			c.Fprintf("	je .Lend%03d\n", seq)
+			c.printf("	je .Lend%03d\n", seq)
 		}
 
 		c.gen(node.Then)
 
 		if node.Els != nil {
-			c.Fprintf(" jmp .Lend%03d\n", seq)
-			c.Fprintf(".Lelse%03d:\n", seq)
+			c.printf(" jmp .Lend%03d\n", seq)
+			c.printf(".Lelse%03d:\n", seq)
 			c.gen(node.Els)
 		}
 
-		c.Fprintf(".Lend%03d:\n", seq)
+		c.printf(".Lend%03d:\n", seq)
 		return
 
 	case ND_WHILE:
 		seq := labelNo
 		labelNo++
-		c.Fprintf(".Lbegin%03d:\n", seq)
+		c.printf(".Lbegin%03d:\n", seq)
 		c.gen(node.Cond)
-		c.Fprintf("	pop rax\n")
-		c.Fprintf("	cmp rax, 0\n")
-		c.Fprintf("	je .Lend%03d\n", seq)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	je .Lend%03d\n", seq)
 
 		c.gen(node.Then)
 
-		c.Fprintf("	jmp .Lbegin%03d\n", seq)
-		c.Fprintf(".Lend%03d:\n", seq)
+		c.printf("	jmp .Lbegin%03d\n", seq)
+		c.printf(".Lend%03d:\n", seq)
 		return
 
 	case ND_FOR:
@@ -183,13 +189,13 @@ func (c *codeWriter) gen(node *Node) {
 
 		seq := labelNo
 		labelNo++
-		c.Fprintf(".Lbegin%03d:\n", seq)
+		c.printf(".Lbegin%03d:\n", seq)
 
 		if node.Cond != nil {
 			c.gen(node.Cond)
-			c.Fprintf("	pop rax\n")
-			c.Fprintf("	cmp rax, 0\n")
-			c.Fprintf("	je .Lend%03d\n", seq)
+			c.printf("	pop rax\n")
+			c.printf("	cmp rax, 0\n")
+			c.printf("	je .Lend%03d\n", seq)
 		}
 
 		c.gen(node.Then)
@@ -197,8 +203,8 @@ func (c *codeWriter) gen(node *Node) {
 		if node.Inc != nil {
 			c.gen(node.Inc)
 		}
-		c.Fprintf("	jmp .Lbegin%03d\n", seq)
-		c.Fprintf(".Lend%03d:\n", seq)
+		c.printf("	jmp .Lbegin%03d\n", seq)
+		c.printf(".Lend%03d:\n", seq)
 		return
 
 	case ND_FUNCCALL:
@@ -209,24 +215,24 @@ func (c *codeWriter) gen(node *Node) {
 		}
 
 		for i := numArgs - 1; i >= 0; i-- {
-			c.Fprintf("	pop %s\n", argReg8[i])
+			c.printf("	pop %s\n", argReg8[i])
 		}
 
 		seq := labelNo
 		labelNo++
-		c.Fprintf("	mov rax, rsp\n")        // move rsp to rax
-		c.Fprintf("	and rax, 15\n")         // calculate rax & 15, when rax == 16, rax is 0b10000, and 15(0b1110) & 0b10000, ZF become 0.
-		c.Fprintf("	jnz .Lcall%03d\n", seq) // if ZF is 0, jamp to Lcall???.
-		c.Fprintf("	mov rax, 0\n")          // remove rax
-		c.Fprintf("	call %s\n", node.FuncName)
-		c.Fprintf("	jmp .Lend%03d\n", seq)
-		c.Fprintf(".Lcall%03d:\n", seq)
-		c.Fprintf("	sub rsp, 8\n") // rspは8の倍数なので16の倍数にするために8を引く
-		c.Fprintf("	mov rax, 0\n")
-		c.Fprintf("	call %s\n", node.FuncName)
-		c.Fprintf("	add rsp, 8\n")
-		c.Fprintf(".Lend%03d:\n", seq)
-		c.Fprintf("	push rax\n")
+		c.printf("	mov rax, rsp\n")        // move rsp to rax
+		c.printf("	and rax, 15\n")         // calculate rax & 15, when rax == 16, rax is 0b10000, and 15(0b1110) & 0b10000, ZF become 0.
+		c.printf("	jnz .Lcall%03d\n", seq) // if ZF is 0, jamp to Lcall???.
+		c.printf("	mov rax, 0\n")          // remove rax
+		c.printf("	call %s\n", node.FuncName)
+		c.printf("	jmp .Lend%03d\n", seq)
+		c.printf(".Lcall%03d:\n", seq)
+		c.printf("	sub rsp, 8\n") // rspは8の倍数なので16の倍数にするために8を引く
+		c.printf("	mov rax, 0\n")
+		c.printf("	call %s\n", node.FuncName)
+		c.printf("	add rsp, 8\n")
+		c.printf(".Lend%03d:\n", seq)
+		c.printf("	push rax\n")
 		return
 
 	case ND_BLOCK, ND_STMT_EXPR:
@@ -237,67 +243,67 @@ func (c *codeWriter) gen(node *Node) {
 
 	case ND_RETURN:
 		c.gen(node.Lhs)
-		c.Fprintf("	pop rax\n")
-		c.Fprintf("	jmp .Lreturn.%s\n", funcName)
+		c.printf("	pop rax\n")
+		c.printf("	jmp .Lreturn.%s\n", funcName)
 		return
 	}
 
 	c.gen(node.Lhs)
 	c.gen(node.Rhs)
 
-	c.Fprintf("	pop rdi\n")
-	c.Fprintf("	pop rax\n")
+	c.printf("	pop rdi\n")
+	c.printf("	pop rax\n")
 
 	switch node.Kind {
 	case ND_ADD:
 		if node.Ty.PtrTo != nil {
-			c.Fprintf("	imul rdi, %d\n", sizeOf(node.Ty.PtrTo))
+			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.PtrTo))
 		}
-		c.Fprintf("	add rax, rdi\n")
+		c.printf("	add rax, rdi\n")
 	case ND_SUB:
 		if node.Ty.PtrTo != nil {
-			c.Fprintf("	imul rdi, %d\n", sizeOf(node.Ty.PtrTo))
+			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.PtrTo))
 		}
-		c.Fprintf("	sub rax, rdi\n")
+		c.printf("	sub rax, rdi\n")
 	case ND_MUL:
-		c.Fprintf("	imul rax, rdi\n")
+		c.printf("	imul rax, rdi\n")
 	case ND_DIV:
-		c.Fprintf("	cqo\n")
-		c.Fprintf("	idiv rdi\n")
+		c.printf("	cqo\n")
+		c.printf("	idiv rdi\n")
 	case ND_EQ:
-		c.Fprintf("	cmp rax, rdi\n")
-		c.Fprintf("	sete al\n")
-		c.Fprintf("	movzb rax, al\n")
+		c.printf("	cmp rax, rdi\n")
+		c.printf("	sete al\n")
+		c.printf("	movzb rax, al\n")
 	case ND_NE:
-		c.Fprintf("	cmp rax, rdi\n")
-		c.Fprintf("	setne al\n")
-		c.Fprintf("	movzb rax, al\n")
+		c.printf("	cmp rax, rdi\n")
+		c.printf("	setne al\n")
+		c.printf("	movzb rax, al\n")
 	case ND_LT:
-		c.Fprintf("	cmp rax, rdi\n")
-		c.Fprintf("	setl al\n")
-		c.Fprintf("	movzb rax, al\n")
+		c.printf("	cmp rax, rdi\n")
+		c.printf("	setl al\n")
+		c.printf("	movzb rax, al\n")
 	case ND_LE:
-		c.Fprintf("	cmp rax, rdi\n")
-		c.Fprintf("	setle al\n")
-		c.Fprintf("	movzb rax, al\n")
+		c.printf("	cmp rax, rdi\n")
+		c.printf("	setle al\n")
+		c.printf("	movzb rax, al\n")
 	}
 
-	c.Fprintf("	push rax\n")
+	c.printf("	push rax\n")
 }
 
 func (c *codeWriter) emitData(prog *Program) {
-	c.Fprintf(".data\n")
+	c.printf(".data\n")
 
 	for vl := prog.Globals; vl != nil; vl = vl.Next {
-		c.Fprintf("%s:\n", vl.Var.Name)
+		c.printf("%s:\n", vl.Var.Name)
 
 		if vl.Var.Contents == nil {
-			c.Fprintf("	.zero %d\n", sizeOf(vl.Var.Ty))
+			c.printf("	.zero %d\n", sizeOf(vl.Var.Ty))
 			continue
 		}
 
 		for i := 0; i < vl.Var.ContLen; i++ {
-			c.Fprintf("	.byte %d\n", vl.Var.Contents[i])
+			c.printf("	.byte %d\n", vl.Var.Contents[i])
 		}
 	}
 }
@@ -305,28 +311,28 @@ func (c *codeWriter) emitData(prog *Program) {
 func (c *codeWriter) loadArg(lvar *Var, idx int) {
 	sz := sizeOf(lvar.Ty)
 	if sz == 1 {
-		c.Fprintf("	mov [rbp-%d], %s\n", lvar.Offset, argReg1[idx])
+		c.printf("	mov [rbp-%d], %s\n", lvar.Offset, argReg1[idx])
 	} else {
 		if sz != 8 {
 			c.err = errors.New("invalid size")
 		}
-		c.Fprintf("	mov [rbp-%d], %s\n", lvar.Offset, argReg8[idx])
+		c.printf("	mov [rbp-%d], %s\n", lvar.Offset, argReg8[idx])
 	}
 }
 
 func (c *codeWriter) emitText(prog *Program) {
-	c.Fprintf(".text\n")
+	c.printf(".text\n")
 
 	for fn := prog.Fns; fn != nil; fn = fn.Next {
-		c.Fprintf(".global %s\n", fn.Name)
-		c.Fprintf("%s:\n", fn.Name)
+		c.printf(".global %s\n", fn.Name)
+		c.printf("%s:\n", fn.Name)
 		funcName = fn.Name
 
 		// prologue
 		// secure an area for the stack size of 'fn'
-		c.Fprintf("	push rbp\n")
-		c.Fprintf("	mov rbp, rsp\n")
-		c.Fprintf("	sub rsp, %d\n", fn.StackSz)
+		c.printf("	push rbp\n")
+		c.printf("	mov rbp, rsp\n")
+		c.printf("	sub rsp, %d\n", fn.StackSz)
 
 		// push arguments to the stack
 		i := 0
@@ -342,17 +348,17 @@ func (c *codeWriter) emitText(prog *Program) {
 		// epilogue
 		// the result of the expression is in 'rax',
 		// and it is the return value
-		c.Fprintf(".Lreturn.%s:\n", funcName)
-		c.Fprintf("	mov rsp, rbp\n")
-		c.Fprintf("	pop rbp\n")
-		c.Fprintf("	ret\n")
+		c.printf(".Lreturn.%s:\n", funcName)
+		c.printf("	mov rsp, rbp\n")
+		c.printf("	pop rbp\n")
+		c.printf("	ret\n")
 	}
 }
 
 func codeGen(w io.Writer, prog *Program) error {
 	c := &codeWriter{w: w}
 	// output the former 3 lines of the assembly
-	c.Fprintf(".intel_syntax noprefix\n")
+	c.printf(".intel_syntax noprefix\n")
 	c.emitData(prog)
 	c.emitText(prog)
 

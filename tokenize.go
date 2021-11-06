@@ -195,7 +195,7 @@ func startsWith(p, q string) bool {
 func startsWithReserved(p string) string {
 	// reserved words
 	kw := []string{"return", "if", "then", "else", "while", "for",
-		"int", "char"}
+		"int", "char", "struct"}
 
 	for _, k := range kw {
 		if startsWith(p, k) && len(p) >= len(k) && !isAlNum(rune(p[len(k)])) {
@@ -341,7 +341,7 @@ func tokenize() (*Token, error) {
 		}
 
 		// single-letter punctuator
-		if strings.Contains("+-()*/<>=;{},&[]", string(userInput[curIdx])) {
+		if strings.Contains("+-()*/<>=;{},&[].", string(userInput[curIdx])) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue

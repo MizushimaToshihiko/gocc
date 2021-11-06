@@ -15,16 +15,25 @@ type errWriter struct {
 type TypeKind int
 
 const (
-	TY_INT   TypeKind = iota // int
-	TY_PTR                   // pointer
-	TY_ARRAY                 // array type
-	TY_CHAR                  // char type
+	TY_INT    TypeKind = iota // int
+	TY_PTR                    // pointer
+	TY_ARRAY                  // array type
+	TY_CHAR                   // char type
+	TY_STRUCT                 // struct
 )
 
 type Type struct {
 	Kind      TypeKind
 	PtrTo     *Type
 	ArraySize uint16
+	Mems      *Member
+}
+
+type Member struct {
+	Next   *Member
+	Ty     *Type
+	Name   string
+	Offset int
 }
 
 func newType(kind TypeKind) *Type {
@@ -57,12 +66,29 @@ func sizeOf(ty *Type) int {
 		return 1
 	case TY_INT, TY_PTR:
 		return 8
-	default:
-		if ty.Kind != TY_ARRAY {
-			panic("invalid type")
-		}
+	case TY_ARRAY:
 		return sizeOf(ty.PtrTo) * int(ty.ArraySize)
+	case TY_STRUCT:
+		mem := ty.Mems
+		for mem.Next != nil {
+			mem = mem.Next
+		}
+		return mem.Offset + sizeOf(mem.Ty)
+	default:
+		panic("invalid type")
 	}
+}
+
+func findMember(ty *Type, name string) *Member {
+	if ty.Kind != TY_STRUCT {
+		panic("invalid type")
+	}
+	for mem := ty.Mems; mem != nil; mem = mem.Next {
+		if mem.Name == name {
+			return mem
+		}
+	}
+	return nil
 }
 
 func (e *errWriter) visit(node *Node) {
@@ -128,6 +154,17 @@ func (e *errWriter) visit(node *Node) {
 		return
 	case ND_ASSIGN:
 		node.Ty = node.Lhs.Ty
+		return
+	case ND_MEMBER:
+		if node.Lhs.Ty.Kind != TY_STRUCT {
+			errorTok(node.Tok, "not a struct")
+		}
+		node.Mem = findMember(node.Lhs.Ty, node.MemName)
+		if node.Mem == nil {
+			e.err = fmt.Errorf("e.visit(): err:\n%s",
+				errorTok(node.Tok, "specified member does not exist"))
+		}
+		node.Ty = node.Mem.Ty
 		return
 	case ND_ADDR:
 		if node.Lhs.Ty.Kind == TY_ARRAY {

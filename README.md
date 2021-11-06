@@ -4,7 +4,9 @@
 ### EBNF
 ```ebnf
 program     = (global-var | function*)
-basetype    = ("int" | "char") "*"*
+basetype    = ("int" | "char" | struct-decl) "*"*
+struct-decl = "struct" "{" struct-member "}"
+struct-member = basetype ident ("{" num "}")* ";"
 param       = basetype ident
 params      = param ("," param)*
 function    = basetype ident "(" params? ")" "{" stmt* "}"
@@ -26,12 +28,12 @@ mul         = unary ("*" unary | "/" unary)*
 unary       = ("+" | "-" | "*" | "&")? unary
             | "sizeof" unary
             | postfix
-postfix    = primary ("[" expr "]")*
-stmt-expr  = "(" "{" stmt stmt* "}" ")"
-func-args  = "(" (assign("," assign)*)? ")"
-primary    = "(" "{" stmt-expr-tail
-           | ident func-args?
-           | "(" expr ")"
-           | num
-           | str
+postfix = primary ("[" expr "]" | "." ident)*
+stmt-expr   = "(" "{" stmt stmt* "}" ")"
+func-args   = "(" (assign("," assign)*)? ")"
+primary     = "(" "{" stmt-expr-tail
+            | ident func-args?
+            | "(" expr ")"
+            | num
+            | str
 ```
