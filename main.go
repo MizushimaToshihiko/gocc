@@ -38,10 +38,6 @@ func readFile(path string) ([]rune, error) {
 	return ret, nil
 }
 
-func alignTo(n, align int) int {
-	return (n + align - 1) & ^(align - 1)
-}
-
 func exists(name string) bool {
 	_, err := os.Stat(name)
 	return !os.IsNotExist(err)
