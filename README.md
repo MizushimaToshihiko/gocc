@@ -5,13 +5,15 @@
 ```ebnf
 program     = (global-var | function*)
 basetype    = ("int" | "char" | struct-decl) "*"*
-struct-decl = "struct" "{" struct-member "}"
+struct-decl = "struct" ident
+            | "struct" ident? "{" struct-member "}"
 struct-member = basetype ident ("{" num "}")* ";"
 param       = basetype ident
 params      = param ("," param)*
 function    = basetype ident "(" params? ")" "{" stmt* "}"
 global-var  = basetype ident ("[" num "]")* ";"
 declaration = basetype ident ("[" num "]")* ("=" expr) ";"
+            | basetype ";"
 stmt        = "return" expr ";"
             | "if" "(" expr ")" stmt ("else" stmt)?
             | "while" "(" expr ")" stmt

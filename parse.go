@@ -107,10 +107,19 @@ type VarList struct {
 	Var  *Var
 }
 
+// scope for struct tags
+type TagScope struct {
+	Next *TagScope
+	Name string
+	Ty   *Type
+}
+
 // local variables
 var locals *VarList
 var globals *VarList
+
 var scope *VarList
+var tagScope *TagScope
 
 func newVar(lvar *Var, tok *Token) *Node {
 	return &Node{Kind: ND_VAR, Tok: tok, Var: lvar}
@@ -123,6 +132,15 @@ func findLVar(tok *Token) *Var {
 		lvar := vl.Var
 		if len(lvar.Name) == tok.Len && tok.Str == lvar.Name {
 			return lvar
+		}
+	}
+	return nil
+}
+
+func findTag(tok *Token) *TagScope {
+	for sc := tagScope; sc != nil; sc = sc.Next {
+		if len(sc.Name) == tok.Len && tok.Str == sc.Name {
+			return sc
 		}
 	}
 	return nil
@@ -241,12 +259,32 @@ func readTypeSuffix(base *Type) *Type {
 	return arrayOf(base, uint16(sz))
 }
 
-// struct-decl = "struct" "{" struct-member "}"
+func pushTagScope(tok *Token, ty *Type) {
+	sc := &TagScope{
+		Next: tagScope,
+		Name: tok.Str,
+		Ty:   ty,
+	}
+	tagScope = sc
+}
+
+// struct-decl = "struct" ident
+//             | "struct" ident? "{" struct-member "}"
 func structDecl() *Type {
-	// read struct members.
 	expect("struct")
+
+	// read struct tag.
+	tag := consumeIdent()
+	if tag != nil && peek("{") == nil {
+		sc := findTag(tag)
+		if sc == nil {
+			panic("\n" + errorTok(tag, "unknown struct type"))
+		}
+		return sc.Ty
+	}
 	expect("{")
 
+	// read struct members.
 	head := &Member{}
 	cur := head
 
@@ -269,6 +307,10 @@ func structDecl() *Type {
 		}
 	}
 
+	// register the struct type if a name was given.
+	if tag != nil {
+		pushTagScope(tag, ty)
+	}
 	return ty
 }
 
@@ -350,9 +392,14 @@ func globalVar() {
 }
 
 // declaration = basetype ident ("[" num "]")* ("=" expr) ";"
+//             | basetype ";"
 func declaration() *Node {
 	tok := token
 	ty := basetype()
+	if consume(";") != nil {
+		return &Node{Kind: ND_NULL, Tok: tok}
+	}
+
 	name := expectIdent()
 	ty = readTypeSuffix(ty)
 	lvar := pushVar(name, ty, true)
@@ -441,7 +488,8 @@ func stmt() *Node {
 		head := Node{}
 		cur := &head
 
-		sc := scope
+		sc1 := scope
+		sc2 := tagScope
 		for {
 			if consume("}") != nil {
 				break
@@ -449,7 +497,8 @@ func stmt() *Node {
 			cur.Next = stmt()
 			cur = cur.Next
 		}
-		scope = sc
+		scope = sc1
+		tagScope = sc2
 
 		node = &Node{Kind: ND_BLOCK, Tok: t}
 		node.Body = head.Next
@@ -609,7 +658,8 @@ func postfix() *Node {
 //
 // statement expression is a GNU extension.
 func stmtExpr(tok *Token) *Node {
-	sc := scope
+	sc1 := scope
+	sc2 := tagScope
 
 	node := &Node{
 		Kind: ND_STMT_EXPR,
@@ -627,7 +677,8 @@ func stmtExpr(tok *Token) *Node {
 	}
 	expect(")")
 
-	scope = sc
+	scope = sc1
+	tagScope = sc2
 
 	if cur.Kind != ND_EXPR_STMT {
 		panic("\n" +
