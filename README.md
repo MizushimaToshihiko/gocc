@@ -30,7 +30,7 @@ mul         = unary ("*" unary | "/" unary)*
 unary       = ("+" | "-" | "*" | "&")? unary
             | "sizeof" unary
             | postfix
-postfix = primary ("[" expr "]" | "." ident)*
+postfix = primary ("[" expr "]" | "." ident | "->" ident)*
 stmt-expr   = "(" "{" stmt stmt* "}" ")"
 func-args   = "(" (assign("," assign)*)? ")"
 primary     = "(" "{" stmt-expr-tail

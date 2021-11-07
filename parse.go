@@ -631,7 +631,7 @@ func unary() *Node {
 	return postfix()
 }
 
-// postfix = primary ("[" expr "]" | "." ident)*
+// postfix = primary ("[" expr "]" | "." ident | "->" ident)*
 func postfix() *Node {
 	node := primary()
 
@@ -645,6 +645,14 @@ func postfix() *Node {
 		}
 
 		if tok := consume("."); tok != nil {
+			node = newUnary(ND_MEMBER, node, tok)
+			node.MemName = expectIdent()
+			continue
+		}
+
+		if tok := consume("->"); tok != nil {
+			// x->y is shrot for (*x).y
+			node = newUnary(ND_DEREF, node, tok)
 			node = newUnary(ND_MEMBER, node, tok)
 			node.MemName = expectIdent()
 			continue
