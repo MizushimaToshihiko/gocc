@@ -128,7 +128,6 @@ func (c *codeWriter) gen(node *Node) {
 	case ND_ASSIGN:
 		c.genLval(node.Lhs)
 		c.gen(node.Rhs)
-		// store
 		c.store(node.Ty)
 		return
 

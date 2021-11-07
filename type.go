@@ -38,6 +38,7 @@ type Member struct {
 }
 
 func alignTo(n, align int) int {
+	// fmt.Printf("n: %d, align: %d, return: %d\n", n, align, (n+align-1) & ^(align-1))
 	return (n + align - 1) & ^(align - 1)
 }
 
@@ -54,7 +55,7 @@ func intType() *Type {
 }
 
 func pointerTo(base *Type) *Type {
-	return &Type{Kind: TY_PTR, PtrTo: base}
+	return &Type{Kind: TY_PTR, PtrTo: base, Align: 8}
 }
 
 func arrayOf(base *Type, size uint16) *Type {

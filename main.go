@@ -77,6 +77,7 @@ func compile(arg string, w io.Writer) error {
 	for fn := prog.Fns; fn != nil; fn = fn.Next {
 		offset := 0
 		for vl := fn.Locals; vl != nil; vl = vl.Next {
+			offset = alignTo(offset, vl.Var.Ty.Align)
 			offset += sizeOf(vl.Var.Ty)
 			vl.Var.Offset = offset
 		}

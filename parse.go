@@ -158,7 +158,7 @@ func pushVar(name string, ty *Type, isLocal bool) *Var {
 var cnt int
 
 func newLabel() string {
-	res := fmt.Sprintf(".L.date.%d", cnt)
+	res := fmt.Sprintf(".L.data.%d", cnt)
 	cnt++
 	return res
 }
