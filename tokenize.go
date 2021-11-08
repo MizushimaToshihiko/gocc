@@ -287,6 +287,37 @@ func readStringLiteral(cur *Token) (*Token, error) {
 	curIdx++
 	return tok, nil
 }
+func readCharLiteral(cur *Token, start int) (*Token, error) {
+	p := start + 1
+	if p < len(userInput) && userInput[p] == 0 {
+		return nil, fmt.Errorf(
+			"tokenize(): err:\n%s",
+			errorAt(curIdx, "unclosed char literal"),
+		)
+	}
+
+	var c rune
+	if userInput[p] == '\\' {
+		p++
+		c = getEscapeChar(userInput[p])
+		p++
+	} else {
+		c = userInput[p]
+		p++
+	}
+
+	if userInput[p] != '\'' {
+		return nil, fmt.Errorf(
+			"tokenize(): err:\n%s",
+			errorAt(curIdx, "char literal too long"),
+		)
+	}
+	p++
+
+	tok := newToken(TK_NUM, cur, string(userInput[start]), p-start)
+	tok.Val = int64(c)
+	return tok, nil
+}
 
 // tokenize inputted string 'userInput', and return new tokens.
 func tokenize() (*Token, error) {
@@ -367,6 +398,16 @@ func tokenize() (*Token, error) {
 			if err != nil {
 				return nil, err
 			}
+			continue
+		}
+
+		// character literal
+		if userInput[curIdx] == '\'' {
+			cur, err := readCharLiteral(cur, curIdx)
+			if err != nil {
+				return nil, err
+			}
+			curIdx += cur.Len
 			continue
 		}
 
