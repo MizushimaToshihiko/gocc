@@ -251,28 +251,97 @@ func program() *Program {
 }
 
 // type-specifier = builtin-type | struct-decl | typedef-name
-// builtin-type   = "void" | "_Bool" | "char" | "short" | "int" | "long"
+//
+// builtin-type   = "void"
+//                | "_Bool"
+//                | "char"
+//                | "short" | "short" "int" | "int" "short"
+//                | "int"
+//                | "long" | "long" "int" | "int" "long"
+//
+// node that "typedef" can appear anywhere in a type-specifier
 func typeSpecifier() *Type {
 	if !isTypename() {
 		panic("\n" + errorTok(token, "typename expected"))
 	}
 
-	if consume("void") != nil {
-		return voidType()
-	} else if consume("_Bool") != nil {
-		return boolType()
-	} else if consume("char") != nil {
-		return charType()
-	} else if consume("short") != nil {
-		return shortType()
-	} else if consume("int") != nil {
-		return intType()
-	} else if consume("long") != nil {
-		return longType()
-	} else if consume("struct") != nil {
-		return structDecl()
+	var ty *Type = nil
+
+	const (
+		VOID  = 1 << 1
+		BOOL  = 1 << 3
+		CHAR  = 1 << 5
+		SHORT = 1 << 7
+		INT   = 1 << 9
+		LONG  = 1 << 11
+	)
+
+	baseTy := 0
+	var userTy *Type
+
+	isTypedef := false
+
+	for {
+		// read one token at a time.
+		tok := token
+		if consume("typedef") != nil {
+			isTypedef = true
+		} else if consume("void") != nil {
+			baseTy += VOID
+		} else if consume("_Bool") != nil {
+			baseTy += BOOL
+		} else if consume("char") != nil {
+			baseTy += CHAR
+		} else if consume("short") != nil {
+			baseTy += SHORT
+		} else if consume("int") != nil {
+			baseTy += INT
+		} else if consume("long") != nil {
+			baseTy += LONG
+		} else if peek("struct") != nil {
+			if baseTy != 0 || userTy != nil {
+				break
+			}
+			userTy = structDecl()
+		} else {
+			if baseTy != 0 || userTy != nil {
+				break
+			}
+			ty_ := findTypedef(token)
+			if ty_ == nil {
+				break
+			}
+			token = token.Next
+			userTy = ty_
+		}
+
+		switch baseTy {
+		case VOID:
+			ty = voidType()
+		case BOOL:
+			ty = boolType()
+		case CHAR:
+			ty = charType()
+		case SHORT, SHORT + INT:
+			ty = shortType()
+		case INT:
+			ty = intType()
+		case LONG, LONG + INT:
+			ty = longType()
+		case 0:
+			// if there's no type specifier, it becomes int.
+			// for expample, 'typedef x' defines x as an alias for int.
+			if userTy != nil {
+				ty = userTy
+			} else {
+				ty = intType()
+			}
+		default:
+			panic("\n" + errorTok(tok, "invalid type"))
+		}
 	}
-	return findVar(consumeIdent()).TyDef
+	ty.IsTypedef = isTypedef
+	return ty
 }
 
 // declarator = "*" ("(" declarator ")") | ident) type-suffix
@@ -318,6 +387,7 @@ func pushTagScope(tok *Token, ty *Type) {
 func structDecl() *Type {
 
 	// read struct tag.
+	expect("struct")
 	tag := consumeIdent()
 	if tag != nil && peek("{") == nil {
 		sc := findTag(tag)
@@ -463,6 +533,13 @@ func declaration() *Node {
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
 
+	if ty.IsTypedef {
+		expect(";")
+		ty.IsTypedef = false
+		pushScope(name).TyDef = ty
+		return &Node{Kind: ND_NULL, Tok: tok}
+	}
+
 	if ty.Kind == TY_VOID {
 		panic("\n" + errorTok(tok, "variable declared void"))
 	}
@@ -485,13 +562,9 @@ func readExprStmt() *Node {
 }
 
 func isTypename() bool {
-	return peek("void") != nil ||
-		peek("_Bool") != nil ||
-		peek("char") != nil ||
-		peek("short") != nil ||
-		peek("int") != nil ||
-		peek("long") != nil ||
-		peek("struct") != nil ||
+	return peek("void") != nil || peek("_Bool") != nil || peek("char") != nil ||
+		peek("short") != nil || peek("int") != nil || peek("long") != nil ||
+		peek("struct") != nil || peek("typedef") != nil ||
 		findTypedef(token) != nil
 }
 
@@ -500,7 +573,6 @@ func isTypename() bool {
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
-//      | "typedef" type-specifier declarator type-suffix ";"
 //      | declaration
 //      | expr ";"
 func stmt() *Node {
@@ -571,17 +643,6 @@ func stmt() *Node {
 
 		node = &Node{Kind: ND_BLOCK, Tok: t}
 		node.Body = head.Next
-
-	} else if t := consume("typedef"); t != nil {
-
-		ty := typeSpecifier()
-		var name string
-		ty = declarator(ty, &name)
-		ty = typeSuffix(ty)
-		expect(";")
-
-		pushScope(name).TyDef = ty
-		return &Node{Kind: ND_NULL, Tok: t}
 
 	} else {
 

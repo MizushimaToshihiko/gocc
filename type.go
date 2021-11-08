@@ -29,11 +29,12 @@ const (
 
 type Type struct {
 	Kind      TypeKind
-	Align     int
-	PtrTo     *Type
-	ArraySize uint16
-	Mems      *Member
-	RetTy     *Type
+	IsTypedef bool    // typedef
+	Align     int     // alignment
+	PtrTo     *Type   // pointer or array
+	ArraySize uint16  // array
+	Mems      *Member // struct
+	RetTy     *Type   // function
 }
 
 type Member struct {
