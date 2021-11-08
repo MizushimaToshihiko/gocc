@@ -219,12 +219,13 @@ type Program struct {
 
 func isFunction() bool {
 	tok := token
-	basetype()
-	t1 := consumeIdent()
-	t2 := consume("(")
-	isFunc := (t1 != nil) && (t2 != nil)
-	token = tok
 
+	ty := typeSpecifier()
+	var name string
+	declarator(ty, &name)
+	isFunc := name != "" && consume("(") != nil
+
+	token = tok
 	return isFunc
 }
 
@@ -249,44 +250,54 @@ func program() *Program {
 	return prog
 }
 
-// basetype = ("int" | "char" | struct-decl | typedef-name) "*"*
-func basetype() *Type {
+// type-specifier = builtin-type | struct-decl | typedef-name
+// builtin-type   = "char" | "short" | "int" | "long"
+func typeSpecifier() *Type {
 	if !isTypename() {
 		panic("\n" + errorTok(token, "typename expected"))
 	}
 
-	var ty *Type
 	if consume("char") != nil {
-		ty = charType()
+		return charType()
 	} else if consume("short") != nil {
-		ty = shortType()
+		return shortType()
 	} else if consume("int") != nil {
-		ty = intType()
+		return intType()
 	} else if consume("long") != nil {
-		ty = longType()
+		return longType()
 	} else if consume("struct") != nil {
-		ty = structDecl()
-	} else {
-		ty = findVar(consumeIdent()).TyDef
+		return structDecl()
 	}
-	if ty == nil {
-		panic("'ty' wasn't made")
-	}
+	return findVar(consumeIdent()).TyDef
+}
 
+// declarator = "*" ("(" declarator ")") | ident) type-suffix
+func declarator(ty *Type, name *string) *Type {
 	for consume("*") != nil {
 		ty = pointerTo(ty)
 	}
-	return ty
+
+	if consume("(") != nil {
+		placeholder := &Type{}
+		newTy := declarator(placeholder, name)
+		expect(")")
+		*placeholder = *typeSuffix(ty)
+		return newTy
+	}
+
+	*name = expectIdent()
+	return typeSuffix(ty)
 }
 
-func readTypeSuffix(base *Type) *Type {
+// type-suffix = ("[" num "]" type-suffix)?
+func typeSuffix(ty *Type) *Type {
 	if consume("[") == nil {
-		return base
+		return ty
 	}
 	sz := expectNumber()
 	expect("]")
-	base = readTypeSuffix(base)
-	return arrayOf(base, uint16(sz))
+	ty = typeSuffix(ty)
+	return arrayOf(ty, uint16(sz))
 }
 
 func pushTagScope(tok *Token, ty *Type) {
@@ -345,17 +356,23 @@ func structDecl() *Type {
 
 // struct-member = basetype ident ("{" num "}")* ";"
 func structMember() *Member {
-	mem := &Member{Ty: basetype(), Name: expectIdent()}
-	mem.Ty = readTypeSuffix(mem.Ty)
+	var ty *Type = typeSpecifier()
+	var name string
+	ty = declarator(ty, &name)
+	ty = typeSuffix(ty)
 	expect(";")
+
+	mem := &Member{Ty: ty, Name: name}
 	return mem
 }
 
-// param = basetype ident
+// param = type-specifier declarator type-suffix
 func readFuncParam() *VarList {
-	ty := basetype() // 'baseType' function will be booted first.
-	name := expectIdent()
-	ty = readTypeSuffix(ty)
+	ty := typeSpecifier()
+	var name string
+	ty = declarator(ty, &name)
+	ty = typeSuffix(ty)
+
 	vl := &VarList{Var: pushVar(name, ty, true)}
 	return vl
 }
@@ -383,14 +400,17 @@ func readFuncParams() *VarList {
 	return head
 }
 
-// function = basetype ident "(" params? ")" "{" stmt* "}"
+// function = type-specifier declarator "(" params? ")" "{" stmt* "}"
 func function() *Function {
 	// printCurTok()
 	// printCurFunc()
 	locals = nil
 
-	basetype()
-	fn := &Function{Name: expectIdent()}
+	ty := typeSpecifier()
+	var name string
+	declarator(ty, &name)
+
+	fn := &Function{Name: name}
 	expect("(")
 	fn.Params = readFuncParams()
 	expect("{")
@@ -411,26 +431,28 @@ func function() *Function {
 	return fn
 }
 
-// global-var = basetype ident ("[" num "]")* ";"
+// global-var = type-specifier declarator type-suffix ";"
 func globalVar() {
-	ty := basetype()
-	name := expectIdent()
-	ty = readTypeSuffix(ty)
+	ty := typeSpecifier()
+	var name string
+	ty = declarator(ty, &name)
+	ty = typeSuffix(ty)
 	expect(";")
 	pushVar(name, ty, false)
 }
 
-// declaration = basetype ident ("[" num "]")* ("=" expr) ";"
-//             | basetype ";"
+// declaration = type-specifier declarator type-suffix ("=" expr)? ";"
+//             | type-specifier ";"
 func declaration() *Node {
 	tok := token
-	ty := basetype()
+	ty := typeSpecifier()
 	if consume(";") != nil {
 		return &Node{Kind: ND_NULL, Tok: tok}
 	}
 
-	name := expectIdent()
-	ty = readTypeSuffix(ty)
+	var name string
+	ty = declarator(ty, &name)
+	ty = typeSuffix(ty)
 	lvar := pushVar(name, ty, true)
 
 	if consume(";") != nil {
@@ -464,7 +486,7 @@ func isTypename() bool {
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
-//      | "typedef" basetype ident ("[" num "]")* ";"
+//      | "typedef" type-specifier declarator type-suffix ";"
 //      | declaration
 //      | expr ";"
 func stmt() *Node {
@@ -538,10 +560,12 @@ func stmt() *Node {
 
 	} else if t := consume("typedef"); t != nil {
 
-		ty := basetype()
-		name := expectIdent()
-		ty = readTypeSuffix(ty)
+		ty := typeSpecifier()
+		var name string
+		ty = declarator(ty, &name)
+		ty = typeSuffix(ty)
 		expect(";")
+
 		pushScope(name).TyDef = ty
 		return &Node{Kind: ND_NULL, Tok: t}
 
