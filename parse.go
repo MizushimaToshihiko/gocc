@@ -362,6 +362,22 @@ func declarator(ty *Type, name *string) *Type {
 	return typeSuffix(ty)
 }
 
+// abstract-declarator = "*"* ("(" abstract-declarator ")")? type-suffix
+func abstractDeclarator(ty *Type) *Type {
+	for consume("*") != nil {
+		ty = pointerTo(ty)
+	}
+
+	if consume("(") != nil {
+		placeholder := &Type{}
+		newTy := abstractDeclarator(placeholder)
+		expect(")")
+		*placeholder = *typeSuffix(ty)
+		return newTy
+	}
+	return typeSuffix(ty)
+}
+
 // type-suffix = ("[" num "]" type-suffix)?
 func typeSuffix(ty *Type) *Type {
 	if consume("[") == nil {
@@ -371,6 +387,12 @@ func typeSuffix(ty *Type) *Type {
 	expect("]")
 	ty = typeSuffix(ty)
 	return arrayOf(ty, uint16(sz))
+}
+
+func typeName() *Type {
+	ty := typeSpecifier()
+	ty = abstractDeclarator(ty)
+	return typeSuffix(ty)
 }
 
 func pushTagScope(tok *Token, ty *Type) {
@@ -749,14 +771,24 @@ func mul() *Node {
 }
 
 // unary = ("+" | "-" | "*" | "&")? unary
+//       | "sizeof" "(" type-name ")"
 //       | "sizeof" unary
 //       | postfix
 func unary() *Node {
 	// printCurTok()
 	// printCurFunc()
 	if t := consumeSizeof(); t != nil {
+		if consume("(") != nil {
+			if isTypename() {
+				ty := typeName()
+				expect(")")
+				return newNodeNum(sizeOf(ty), t)
+			}
+			token = t.Next
+		}
 		return newUnary(ND_SIZEOF, unary(), t)
 	}
+
 	if t := consume("+"); t != nil {
 		return unary()
 	}

@@ -37,6 +37,7 @@ relational     = add ("<" add | "<=" add | ">" add | ">=" add)*
 add            = mul ("+" mul | "-" mul)*
 mul            = unary ("*" unary | "/" unary)*
 unary          = ("+" | "-" | "*" | "&")? unary
+               | "sizeof" "(" type-name ")"
                | "sizeof" unary
                | postfix
 postfix        = primary ("[" expr "]" | "." ident | "->" ident)*
