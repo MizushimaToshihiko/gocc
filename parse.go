@@ -31,8 +31,9 @@ const (
 	ND_DEREF                     // 19: unary *
 	ND_EXPR_STMT                 // 20: expression statement
 	ND_STMT_EXPR                 // 21: statement expression
-	ND_NULL                      // 22: empty statement
-	ND_SIZEOF                    // 23: "sizeof" operator
+	ND_CAST                      // 22: type cast
+	ND_NULL                      // 23: empty statement
+	ND_SIZEOF                    // 24: "sizeof" operator
 )
 
 // define AST node
@@ -753,24 +754,42 @@ func add() *Node {
 	}
 }
 
-// mul = unary ("*" unary | "/" unary)*
+// mul = cast ("*" cast | "/" cast)*
 func mul() *Node {
 	// printCurTok()
 	// printCurFunc()
-	node := unary()
+	node := cast()
 
 	for {
 		if t := consume("*"); t != nil {
-			node = newNode(ND_MUL, node, unary(), t)
+			node = newNode(ND_MUL, node, cast(), t)
 		} else if consume("/") != nil {
-			node = newNode(ND_DIV, node, unary(), t)
+			node = newNode(ND_DIV, node, cast(), t)
 		} else {
 			return node
 		}
 	}
 }
 
-// unary = ("+" | "-" | "*" | "&")? unary
+// cast = "(" type-name ")" cast | unary
+func cast() *Node {
+	tok := token
+
+	if consume("(") != nil {
+		if isTypename() {
+			ty := typeName()
+			expect(")")
+			node := newUnary(ND_CAST, cast(), tok)
+			node.Ty = ty
+			return node
+		}
+		token = tok
+	}
+
+	return unary()
+}
+
+// unary = ("+" | "-" | "*" | "&")? cast
 //       | "sizeof" "(" type-name ")"
 //       | "sizeof" unary
 //       | postfix
@@ -790,16 +809,16 @@ func unary() *Node {
 	}
 
 	if t := consume("+"); t != nil {
-		return unary()
+		return cast()
 	}
 	if t := consume("-"); t != nil {
-		return newNode(ND_SUB, newNodeNum(0, t), unary(), t)
+		return newNode(ND_SUB, newNodeNum(0, t), cast(), t)
 	}
 	if t := consume("&"); t != nil {
-		return newUnary(ND_ADDR, unary(), t)
+		return newUnary(ND_ADDR, cast(), t)
 	}
 	if t := consume("*"); t != nil {
-		return newUnary(ND_DEREF, unary(), t)
+		return newUnary(ND_DEREF, cast(), t)
 	}
 	return postfix()
 }
