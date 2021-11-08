@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 )
 
 // struct errWriter is for the error handling
@@ -161,8 +162,15 @@ func (e *errWriter) visit(node *Node) {
 	}
 
 	switch node.Kind {
-	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE, ND_NUM:
+	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE:
 		node.Ty = intType()
+		return
+	case ND_NUM:
+		if node.Val <= int64(math.MaxInt32) {
+			node.Ty = intType()
+		} else {
+			node.Ty = longType()
+		}
 		return
 	case ND_VAR:
 		node.Ty = node.Var.Ty
@@ -234,7 +242,7 @@ func (e *errWriter) visit(node *Node) {
 	case ND_SIZEOF:
 		node.Kind = ND_NUM
 		node.Ty = intType()
-		node.Val = sizeOf(node.Lhs.Ty)
+		node.Val = int64(sizeOf(node.Lhs.Ty))
 		node.Lhs = nil
 		return
 	}

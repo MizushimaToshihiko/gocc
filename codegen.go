@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 )
 
 var ErrInvalidSize error = errors.New("invalid size")
@@ -138,7 +139,12 @@ func (c *codeWriter) gen(node *Node) {
 	case ND_NULL:
 		return
 	case ND_NUM:
-		c.printf("	push %d\n", node.Val)
+		if node.Val <= int64(math.MaxInt32) {
+			c.printf("	push %d\n", node.Val)
+		} else {
+			c.printf("	movabs rax, %d\n", node.Val)
+			c.printf("	push rax\n")
+		}
 		return
 	case ND_EXPR_STMT:
 		c.gen(node.Lhs)

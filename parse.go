@@ -63,8 +63,8 @@ type Node struct {
 	FuncName string
 	Args     *Node
 
-	Val int  // it would be used when 'Kind' is 'ND_NUM'
-	Var *Var // it would be used when 'Kind' is 'ND_LVAR'
+	Val int64 // it would be used when 'Kind' is 'ND_NUM'
+	Var *Var  // it would be used when 'Kind' is 'ND_VAR'
 }
 
 func newNode(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
@@ -76,7 +76,7 @@ func newNode(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
 	}
 }
 
-func newNodeNum(val int, tok *Token) *Node {
+func newNodeNum(val int64, tok *Token) *Node {
 	return &Node{
 		Kind: ND_NUM,
 		Val:  val,
@@ -782,7 +782,7 @@ func unary() *Node {
 			if isTypename() {
 				ty := typeName()
 				expect(")")
-				return newNodeNum(sizeOf(ty), t)
+				return newNodeNum(int64(sizeOf(ty)), t)
 			}
 			token = t.Next
 		}

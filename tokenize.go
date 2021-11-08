@@ -24,7 +24,7 @@ const (
 type Token struct {
 	Kind TokenKind // type of token
 	Next *Token    // next
-	Val  int       // if 'kind' is TK_NUM, it's integer
+	Val  int64     // if 'kind' is TK_NUM, it's integer
 	Loc  int       // the location in 'userInput'
 	Str  string    // token string
 	Len  int       // length of token
@@ -156,7 +156,7 @@ func expect(s string) {
 
 // if next token is integer, the read position of token exceed one
 // character or report an error.
-func expectNumber() int {
+func expectNumber() int64 {
 	// defer printCurTok()
 	if token.Kind != TK_NUM {
 		panic("\n" + errorAt(token.Loc, "is not a number"))
@@ -377,7 +377,7 @@ func tokenize() (*Token, error) {
 				sVal += string(userInput[curIdx])
 			}
 			cur = newToken(TK_NUM, cur, sVal, len(sVal))
-			v, err := strconv.Atoi(sVal)
+			v, err := strconv.ParseInt(sVal, 10, 64)
 			if err != nil {
 				return nil, err
 			}
