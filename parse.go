@@ -354,7 +354,7 @@ func structDecl() *Type {
 	return ty
 }
 
-// struct-member = basetype ident ("{" num "}")* ";"
+// struct-member = type-specifier declarator type-suffix ";"
 func structMember() *Member {
 	var ty *Type = typeSpecifier()
 	var name string
