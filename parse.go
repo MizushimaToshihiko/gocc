@@ -107,6 +107,14 @@ type VarList struct {
 	Var  *Var
 }
 
+// scope for local variables, global variables or typedefs
+type VarScope struct {
+	Next  *VarScope
+	Name  string
+	Var   *Var
+	TyDef *Type
+}
+
 // scope for struct tags
 type TagScope struct {
 	Next *TagScope
@@ -118,20 +126,15 @@ type TagScope struct {
 var locals *VarList
 var globals *VarList
 
-var scope *VarList
+var varScope *VarScope
 var tagScope *TagScope
 
-func newVar(lvar *Var, tok *Token) *Node {
-	return &Node{Kind: ND_VAR, Tok: tok, Var: lvar}
-}
-
-// search a variable by name.
+// findVar searchs a variable by name.
 // if it wasn't find, return nil.
-func findLVar(tok *Token) *Var {
-	for vl := scope; vl != nil; vl = vl.Next {
-		lvar := vl.Var
-		if len(lvar.Name) == tok.Len && tok.Str == lvar.Name {
-			return lvar
+func findVar(tok *Token) *VarScope {
+	for sc := varScope; sc != nil; sc = sc.Next {
+		if len(sc.Name) == tok.Len && tok.Str == sc.Name {
+			return sc
 		}
 	}
 	return nil
@@ -144,6 +147,19 @@ func findTag(tok *Token) *TagScope {
 		}
 	}
 	return nil
+}
+
+func newVar(lvar *Var, tok *Token) *Node {
+	return &Node{Kind: ND_VAR, Tok: tok, Var: lvar}
+}
+
+func pushScope(name string) *VarScope {
+	sc := &VarScope{
+		Name: name,
+		Next: varScope,
+	}
+	varScope = sc
+	return sc
 }
 
 func pushVar(name string, ty *Type, isLocal bool) *Var {
@@ -163,13 +179,18 @@ func pushVar(name string, ty *Type, isLocal bool) *Var {
 		globals = vl
 	}
 
-	sc := &VarList{
-		Var:  lvar,
-		Next: scope,
-	}
-	scope = sc
-
+	pushScope(name).Var = lvar
 	return lvar
+}
+
+func findTypedef(tok *Token) *Type {
+	if tok.Kind == TK_IDENT {
+		sc := findVar(token)
+		if sc != nil {
+			return sc.TyDef
+		}
+	}
+	return nil
 }
 
 // for newLabel function
@@ -228,7 +249,7 @@ func program() *Program {
 	return prog
 }
 
-// basetype = ("int" | "char" | struct-decl) "*"*
+// basetype = ("int" | "char" | struct-decl | typedef-name) "*"*
 func basetype() *Type {
 	if !isTypename() {
 		panic("\n" + errorTok(token, "typename expected"))
@@ -239,8 +260,13 @@ func basetype() *Type {
 		ty = charType()
 	} else if consume("int") != nil {
 		ty = intType()
-	} else {
+	} else if consume("struct") != nil {
 		ty = structDecl()
+	} else {
+		ty = findVar(consumeIdent()).TyDef
+	}
+	if ty == nil {
+		panic("'ty' wasn't made")
 	}
 
 	for consume("*") != nil {
@@ -271,7 +297,6 @@ func pushTagScope(tok *Token, ty *Type) {
 // struct-decl = "struct" ident
 //             | "struct" ident? "{" struct-member "}"
 func structDecl() *Type {
-	expect("struct")
 
 	// read struct tag.
 	tag := consumeIdent()
@@ -424,7 +449,8 @@ func readExprStmt() *Node {
 func isTypename() bool {
 	return peek("char") != nil ||
 		peek("int") != nil ||
-		peek("struct") != nil
+		peek("struct") != nil ||
+		findTypedef(token) != nil
 }
 
 // stmt = "return" expr ";"
@@ -432,6 +458,7 @@ func isTypename() bool {
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
+//      | "typedef" basetype ident ("[" num "]")* ";"
 //      | declaration
 //      | expr ";"
 func stmt() *Node {
@@ -488,7 +515,7 @@ func stmt() *Node {
 		head := Node{}
 		cur := &head
 
-		sc1 := scope
+		sc1 := varScope
 		sc2 := tagScope
 		for {
 			if consume("}") != nil {
@@ -497,11 +524,20 @@ func stmt() *Node {
 			cur.Next = stmt()
 			cur = cur.Next
 		}
-		scope = sc1
+		varScope = sc1
 		tagScope = sc2
 
 		node = &Node{Kind: ND_BLOCK, Tok: t}
 		node.Body = head.Next
+
+	} else if t := consume("typedef"); t != nil {
+
+		ty := basetype()
+		name := expectIdent()
+		ty = readTypeSuffix(ty)
+		expect(";")
+		pushScope(name).TyDef = ty
+		return &Node{Kind: ND_NULL, Tok: t}
 
 	} else {
 
@@ -666,7 +702,7 @@ func postfix() *Node {
 //
 // statement expression is a GNU extension.
 func stmtExpr(tok *Token) *Node {
-	sc1 := scope
+	sc1 := varScope
 	sc2 := tagScope
 
 	node := &Node{
@@ -685,7 +721,7 @@ func stmtExpr(tok *Token) *Node {
 	}
 	expect(")")
 
-	scope = sc1
+	varScope = sc1
 	tagScope = sc2
 
 	if cur.Kind != ND_EXPR_STMT {
@@ -749,11 +785,11 @@ func primary() *Node {
 		}
 
 		// local variables
-		lvar := findLVar(tok)
-		if lvar == nil {
-			panic("\n" + errorTok(tok, "undefined variable"))
+		sc := findVar(tok)
+		if sc != nil && sc.Var != nil {
+			return newVar(sc.Var, tok)
 		}
-		return newVar(lvar, tok)
+		panic("\n" + errorTok(tok, "undefined variable"))
 	}
 
 	tok := token

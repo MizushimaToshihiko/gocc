@@ -4,7 +4,7 @@
 ### EBNF
 ```ebnf
 program     = (global-var | function*)
-basetype    = ("int" | "char" | struct-decl) "*"*
+basetype    = ("int" | "char" | struct-decl | typedef-name) "*"*
 struct-decl = "struct" ident
             | "struct" ident? "{" struct-member "}"
 struct-member = basetype ident ("{" num "}")* ";"
@@ -19,6 +19,7 @@ stmt        = "return" expr ";"
             | "while" "(" expr ")" stmt
             | "for" "(" expr? ";" expr? ";" expr? ")" stmt
             | "{" stmt* "}"
+            | "typedef" basetype ident ("[" num "]")* ";"
             | declaration
             | expr ";"
 expr        = assign
