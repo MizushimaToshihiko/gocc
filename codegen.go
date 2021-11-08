@@ -107,6 +107,12 @@ func (c *codeWriter) store(ty *Type) {
 	c.printf("	pop rdi\n")
 	c.printf("	pop rax\n")
 
+	if ty.Kind == TY_BOOL {
+		c.printf("	cmp rdi, 0\n")
+		c.printf("	setne dil\n")
+		c.printf("	movzb rdi, dil\n")
+	}
+
 	switch sizeOf(ty) {
 	case 1:
 		c.printf("	mov [rax], dil\n")

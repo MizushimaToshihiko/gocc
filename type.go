@@ -16,6 +16,7 @@ type TypeKind int
 
 const (
 	TY_VOID   TypeKind = iota // void type
+	TY_BOOL                   // boolean
 	TY_CHAR                   // char
 	TY_SHORT                  // short
 	TY_INT                    // int
@@ -53,6 +54,10 @@ func newType(kind TypeKind, align int) *Type {
 
 func voidType() *Type {
 	return newType(TY_VOID, 1)
+}
+
+func boolType() *Type {
+	return newType(TY_BOOL, 1)
 }
 
 func charType() *Type {
@@ -94,7 +99,7 @@ func sizeOf(ty *Type) int {
 	}
 
 	switch ty.Kind {
-	case TY_CHAR:
+	case TY_BOOL, TY_CHAR:
 		return 1
 	case TY_SHORT:
 		return 2
