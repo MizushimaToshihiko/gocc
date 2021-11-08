@@ -9,6 +9,8 @@ import (
 	"io"
 )
 
+var ErrInvalidSize error = errors.New("invalid size")
+
 type codeWriter struct {
 	w   io.Writer
 	err error
@@ -24,6 +26,7 @@ func (c *codeWriter) printf(format string, a ...interface{}) {
 
 var labelNo int
 var argReg1 = []string{"dil", "sil", "dl", "cl", "r8b", "r9b"}
+var argReg4 = []string{"edi", "esi", "edx", "ecx", "r8d", "r9d"}
 var argReg8 = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 var funcName string
 
@@ -78,11 +81,18 @@ func (c *codeWriter) load(ty *Type) {
 	}
 
 	c.printf("	pop rax\n")
-	if sizeOf(ty) == 1 {
+
+	switch sizeOf(ty) {
+	case 1:
 		c.printf("	movsx rax, byte ptr [rax]\n")
-	} else {
+	case 4:
+		c.printf("	movsxd rax, dword ptr [rax]\n")
+	case 8:
 		c.printf("	mov rax, [rax]\n")
+	default:
+		c.err = ErrInvalidSize
 	}
+
 	c.printf("	push rax\n")
 }
 
@@ -94,10 +104,15 @@ func (c *codeWriter) store(ty *Type) {
 	c.printf("	pop rdi\n")
 	c.printf("	pop rax\n")
 
-	if sizeOf(ty) == 1 {
+	switch sizeOf(ty) {
+	case 1:
 		c.printf("	mov [rax], dil\n")
-	} else {
+	case 4:
+		c.printf("	mov [rax], edi\n")
+	case 8:
 		c.printf("	mov [rax], rdi\n")
+	default:
+		c.err = ErrInvalidSize
 	}
 
 	c.printf("	push rdi\n")
@@ -308,14 +323,15 @@ func (c *codeWriter) emitData(prog *Program) {
 }
 
 func (c *codeWriter) loadArg(lvar *Var, idx int) {
-	sz := sizeOf(lvar.Ty)
-	if sz == 1 {
+	switch sizeOf(lvar.Ty) {
+	case 1:
 		c.printf("	mov [rbp-%d], %s\n", lvar.Offset, argReg1[idx])
-	} else {
-		if sz != 8 {
-			c.err = errors.New("invalid size")
-		}
+	case 4:
+		c.printf("	mov [rbp-%d], %s\n", lvar.Offset, argReg4[idx])
+	case 8:
 		c.printf("	mov [rbp-%d], %s\n", lvar.Offset, argReg8[idx])
+	default:
+		c.err = ErrInvalidSize
 	}
 }
 
