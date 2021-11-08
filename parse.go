@@ -251,13 +251,15 @@ func program() *Program {
 }
 
 // type-specifier = builtin-type | struct-decl | typedef-name
-// builtin-type   = "char" | "short" | "int" | "long"
+// builtin-type   = "void" | "char" | "short" | "int" | "long"
 func typeSpecifier() *Type {
 	if !isTypename() {
 		panic("\n" + errorTok(token, "typename expected"))
 	}
 
-	if consume("char") != nil {
+	if consume("void") != nil {
+		return voidType()
+	} else if consume("char") != nil {
 		return charType()
 	} else if consume("short") != nil {
 		return shortType()
@@ -458,8 +460,11 @@ func declaration() *Node {
 	var name string
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
-	lvar := pushVar(name, ty, true)
 
+	if ty.Kind == TY_VOID {
+		panic("\n" + errorTok(tok, "variable declared void"))
+	}
+	lvar := pushVar(name, ty, true)
 	if consume(";") != nil {
 		return &Node{Kind: ND_NULL, Tok: tok}
 	}
@@ -478,7 +483,8 @@ func readExprStmt() *Node {
 }
 
 func isTypename() bool {
-	return peek("char") != nil ||
+	return peek("void") != nil ||
+		peek("char") != nil ||
 		peek("short") != nil ||
 		peek("int") != nil ||
 		peek("long") != nil ||

@@ -273,6 +273,8 @@ int main() {
 
   assert(3, *g1_prt(), "*g1_prt()");
 
+  { void *x; }
+
   printf("OK\n");
   return 0;
 }

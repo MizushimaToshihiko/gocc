@@ -15,7 +15,8 @@ type errWriter struct {
 type TypeKind int
 
 const (
-	TY_CHAR   TypeKind = iota // char
+	TY_VOID   TypeKind = iota // void type
+	TY_CHAR                   // char
 	TY_SHORT                  // short
 	TY_INT                    // int
 	TY_LONG                   // long
@@ -48,6 +49,10 @@ func alignTo(n, align int) int {
 
 func newType(kind TypeKind, align int) *Type {
 	return &Type{Kind: kind, Align: align}
+}
+
+func voidType() *Type {
+	return newType(TY_VOID, 1)
 }
 
 func charType() *Type {
@@ -84,6 +89,10 @@ func arrayOf(base *Type, size uint16) *Type {
 }
 
 func sizeOf(ty *Type) int {
+	if ty.Kind == TY_VOID {
+		panic("invalid type")
+	}
+
 	switch ty.Kind {
 	case TY_CHAR:
 		return 1
@@ -203,17 +212,18 @@ func (e *errWriter) visit(node *Node) {
 		return
 	case ND_DEREF:
 		if node.Lhs.Ty.PtrTo == nil {
-
-			// fmt.Printf("node: %#v\n'%s'\n\n", node, node.Tok.Str)
-			// fmt.Printf("node.Rhs: %#v\n'%s'\n\n", node.Rhs, node.Rhs.Tok.Str)
-			// fmt.Printf("node.Lhs: %#v\n'%s'\n\n", node.Lhs, node.Lhs.Tok.Str)
-
 			e.err = fmt.Errorf(
-				"e.visit(): err: \n%s",
+				"e.visit(): err:\n%s",
 				errorTok(node.Tok, "invalid pointer dereference"),
 			)
 		}
 		node.Ty = node.Lhs.Ty.PtrTo
+		if node.Ty.Kind == TY_VOID {
+			e.err = fmt.Errorf(
+				"e.visit(): err:\n%s",
+				errorTok(node.Tok, "dereferencing a void pointer"),
+			)
+		}
 		return
 	case ND_SIZEOF:
 		node.Kind = ND_NUM
