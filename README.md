@@ -5,7 +5,13 @@
 ```ebnf
 program        = (global-var | function*)
 type-specifier = builtin-type | struct-decl | typedef-name
-builtin-type   = "char" | "short" | "int" | "long"
+ node that "typedef" can appear anywhere in a type-specifier
+builtin-type   = "void"
+               | "_Bool"
+               | "char"
+               | "short" | "short" "int" | "int" "short"
+               | "int"
+               | "long" | "long" "int" | "int" "long"
 declarator     = "*" ("(" declarator ")") | ident) type-suffix
 type-suffix    = ("[" num "]" type-suffix)?
 struct-decl    = "struct" ident
@@ -22,7 +28,6 @@ stmt           = "return" expr ";"
                | "while" "(" expr ")" stmt
                | "for" "(" expr? ";" expr? ";" expr? ")" stmt
                | "{" stmt* "}"
-               | "typedef" type-specifier declarator type-suffix ";"
                | declaration
                | expr ";"
 expr           = assign
