@@ -258,8 +258,12 @@ func basetype() *Type {
 	var ty *Type
 	if consume("char") != nil {
 		ty = charType()
+	} else if consume("short") != nil {
+		ty = shortType()
 	} else if consume("int") != nil {
 		ty = intType()
+	} else if consume("long") != nil {
+		ty = longType()
 	} else if consume("struct") != nil {
 		ty = structDecl()
 	} else {
@@ -448,7 +452,9 @@ func readExprStmt() *Node {
 
 func isTypename() bool {
 	return peek("char") != nil ||
+		peek("short") != nil ||
 		peek("int") != nil ||
+		peek("long") != nil ||
 		peek("struct") != nil ||
 		findTypedef(token) != nil
 }

@@ -26,6 +26,7 @@ func (c *codeWriter) printf(format string, a ...interface{}) {
 
 var labelNo int
 var argReg1 = []string{"dil", "sil", "dl", "cl", "r8b", "r9b"}
+var argReg2 = []string{"di", "si", "dx", "cx", "r8w", "r9w"}
 var argReg4 = []string{"edi", "esi", "edx", "ecx", "r8d", "r9d"}
 var argReg8 = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 var funcName string
@@ -85,6 +86,8 @@ func (c *codeWriter) load(ty *Type) {
 	switch sizeOf(ty) {
 	case 1:
 		c.printf("	movsx rax, byte ptr [rax]\n")
+	case 2:
+		c.printf("	movsx rax, word ptr [rax]\n")
 	case 4:
 		c.printf("	movsxd rax, dword ptr [rax]\n")
 	case 8:
@@ -107,6 +110,8 @@ func (c *codeWriter) store(ty *Type) {
 	switch sizeOf(ty) {
 	case 1:
 		c.printf("	mov [rax], dil\n")
+	case 2:
+		c.printf("	mov [rax], di\n")
 	case 4:
 		c.printf("	mov [rax], edi\n")
 	case 8:
@@ -326,6 +331,8 @@ func (c *codeWriter) loadArg(lvar *Var, idx int) {
 	switch sizeOf(lvar.Ty) {
 	case 1:
 		c.printf("	mov [rbp-%d], %s\n", lvar.Offset, argReg1[idx])
+	case 2:
+		c.printf("	mov [rbp-%d], %s\n", lvar.Offset, argReg2[idx])
 	case 4:
 		c.printf("	mov [rbp-%d], %s\n", lvar.Offset, argReg4[idx])
 	case 8:
