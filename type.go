@@ -22,6 +22,7 @@ const (
 	TY_PTR                    // pointer
 	TY_ARRAY                  // array type
 	TY_STRUCT                 // struct
+	TY_FUNC                   // function
 )
 
 type Type struct {
@@ -30,6 +31,7 @@ type Type struct {
 	PtrTo     *Type
 	ArraySize uint16
 	Mems      *Member
+	RetTy     *Type
 }
 
 type Member struct {
@@ -62,6 +64,10 @@ func intType() *Type {
 
 func longType() *Type {
 	return newType(TY_LONG, 8)
+}
+
+func funcType(returnTy *Type) *Type {
+	return &Type{Kind: TY_FUNC, Align: 1, RetTy: returnTy}
 }
 
 func pointerTo(base *Type) *Type {
@@ -140,7 +146,7 @@ func (e *errWriter) visit(node *Node) {
 	}
 
 	switch node.Kind {
-	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE, ND_FUNCCALL, ND_NUM:
+	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE, ND_NUM:
 		node.Ty = intType()
 		return
 	case ND_VAR:

@@ -174,7 +174,7 @@ func pushVar(name string, ty *Type, isLocal bool) *Var {
 	if isLocal {
 		vl.Next = locals
 		locals = vl
-	} else {
+	} else if ty.Kind != TY_FUNC {
 		vl.Next = globals
 		globals = vl
 	}
@@ -408,13 +408,18 @@ func function() *Function {
 
 	ty := typeSpecifier()
 	var name string
-	declarator(ty, &name)
+	ty = declarator(ty, &name)
 
+	// add a function type to the scope
+	pushVar(name, funcType(ty), false)
+
+	// construct a function object
 	fn := &Function{Name: name}
 	expect("(")
 	fn.Params = readFuncParams()
 	expect("{")
 
+	// read function body
 	cur := &Node{}
 	head := cur
 
@@ -805,13 +810,25 @@ func primary() *Node {
 	}
 
 	if tok := consumeIdent(); tok != nil {
+		var node *Node
 		if t := consume("("); t != nil { // function call
-			return &Node{
+			node = &Node{
 				Kind:     ND_FUNCCALL,
 				Tok:      tok,
 				FuncName: tok.Str,
 				Args:     funcArgs(),
 			}
+
+			sc := findVar(tok)
+			if sc != nil {
+				if sc.Var == nil || sc.Var.Ty.Kind != TY_FUNC {
+					panic("\n" + errorTok(tok, "not a function"))
+				}
+				node.Ty = sc.Var.Ty.RetTy
+			} else {
+				node.Ty = intType()
+			}
+			return node
 		}
 
 		// local variables
