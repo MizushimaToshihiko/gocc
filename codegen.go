@@ -27,6 +27,7 @@ func (c *codeWriter) printf(format string, a ...interface{}) {
 
 var labelNo int
 var brkseq int
+var contseq int
 var argReg1 = []string{"dil", "sil", "dl", "cl", "r8b", "r9b"}
 var argReg2 = []string{"di", "si", "dx", "cx", "r8w", "r9w"}
 var argReg4 = []string{"edi", "esi", "edx", "ecx", "r8d", "r9d"}
@@ -364,8 +365,10 @@ func (c *codeWriter) gen(node *Node) {
 		seq := labelNo
 		labelNo++
 		brk := brkseq
+		cont := contseq
 		brkseq = seq
-		c.printf(".Lbegin%d:\n", seq)
+		contseq = seq
+		c.printf(".L.continue.%d:\n", seq)
 		c.gen(node.Cond)
 		c.printf("	pop rax\n")
 		c.printf("	cmp rax, 0\n")
@@ -373,22 +376,24 @@ func (c *codeWriter) gen(node *Node) {
 
 		c.gen(node.Then)
 
-		c.printf("	jmp .Lbegin%d\n", seq)
+		c.printf("	jmp .L.continue.%d\n", seq)
 		c.printf(".L.break.%d:\n", seq)
 
 		brkseq = brk
+		contseq = cont
 		return
 
 	case ND_FOR:
 		seq := labelNo
 		labelNo++
 		brk := brkseq
+		cont := contseq
 		brkseq = seq
+		contseq = seq
 
 		if node.Init != nil {
 			c.gen(node.Init)
 		}
-
 		c.printf(".Lbegin%d:\n", seq)
 
 		if node.Cond != nil {
@@ -399,7 +404,7 @@ func (c *codeWriter) gen(node *Node) {
 		}
 
 		c.gen(node.Then)
-
+		c.printf(".L.continue.%d:\n", seq)
 		if node.Inc != nil {
 			c.gen(node.Inc)
 		}
@@ -407,8 +412,17 @@ func (c *codeWriter) gen(node *Node) {
 		c.printf(".L.break.%d:\n", seq)
 
 		brkseq = brk
+		contseq = cont
 		return
-
+	case ND_CONTINUE:
+		if contseq == 0 {
+			c.err = fmt.Errorf(
+				"c.gen(): err:\n%s",
+				errorTok(node.Tok, "stray continue"),
+			)
+		}
+		c.printf("	jmp .L.continue.%d\n", contseq)
+		return
 	case ND_FUNCCALL:
 		numArgs := 0
 		for arg := node.Args; arg != nil; arg = arg.Next {

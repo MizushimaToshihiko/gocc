@@ -31,6 +31,8 @@ stmt           = "return" expr ";"
                | "while" "(" expr ")" stmt
                | "for" "(" expr? ";" expr? ";" expr? ")" stmt
                | "{" stmt* "}"
+               | "break" ";"
+               | continue" ";"
                | declaration
                | expr ";"
 expr           = assign

@@ -51,6 +51,7 @@ const (
 	ND_LOGAND                    // 40: &&
 	ND_LOGOR                     // 41: ||
 	ND_BREAK                     // 42: "break"
+	ND_CONTINUE                  // 43: "continue"
 )
 
 // define AST node
@@ -775,6 +776,7 @@ func isTypename() bool {
 //      | "for" "(" (expr? ";" | declaration) expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
 //      | "break" ";"
+//      | "continue" ";"
 //      | declaration
 //      | expr ";"
 func stmt() *Node {
@@ -856,6 +858,11 @@ func stmt() *Node {
 
 		expect(";")
 		node = &Node{Kind: ND_BREAK, Tok: t}
+
+	} else if t := consume("continue"); t != nil {
+
+		expect(";")
+		node = &Node{Kind: ND_CONTINUE, Tok: t}
 
 	} else {
 

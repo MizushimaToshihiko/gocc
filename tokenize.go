@@ -196,7 +196,7 @@ func startsWithReserved(p string) string {
 	// reserved words
 	kw := []string{"return", "if", "then", "else", "while", "for",
 		"int", "char", "struct", "typedef", "short", "long", "void",
-		"_Bool", "enum", "static", "break"}
+		"_Bool", "enum", "static", "break", "continue"}
 
 	for _, k := range kw {
 		if startsWith(p, k) && len(p) >= len(k) && !isAlNum(rune(p[len(k)])) {
