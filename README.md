@@ -17,6 +17,9 @@ type-suffix    = ("[" num "]" type-suffix)?
 struct-decl    = "struct" ident
                | "struct" ident? "{" struct-member "}"
 struct-member  = type-specifier declarator type-suffix ";"
+enum-specifier = "enum" ident
+               | "enum" ident? "{" enum-list? "}"
+enum-list      = ident ("=" num)? ("," ident ("=" num)?)*
 param          = type-specifier declarator type-suffix
 params         = param ("," param)*
 function       = type-specifier declarator "(" params? ")" ("{" stmt* "}" | ";")
