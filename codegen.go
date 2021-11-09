@@ -25,7 +25,7 @@ func (c *codeWriter) printf(format string, a ...interface{}) {
 	_, c.err = fmt.Fprintf(c.w, format, a...)
 }
 
-var labelNo int
+var labelNo int = 1
 var brkseq int
 var contseq int
 var argReg1 = []string{"dil", "sil", "dl", "cl", "r8b", "r9b"}
@@ -414,6 +414,7 @@ func (c *codeWriter) gen(node *Node) {
 		brkseq = brk
 		contseq = cont
 		return
+
 	case ND_CONTINUE:
 		if contseq == 0 {
 			c.err = fmt.Errorf(
@@ -423,13 +424,16 @@ func (c *codeWriter) gen(node *Node) {
 		}
 		c.printf("	jmp .L.continue.%d\n", contseq)
 		return
+
 	case ND_GOTO:
 		c.printf("	jmp .L.label.%s.%s\n", funcName, node.LabelName)
 		return
+
 	case ND_LABEL:
 		c.printf(".L.label.%s.%s:\n", funcName, node.LabelName)
 		c.gen(node.Lhs)
 		return
+
 	case ND_FUNCCALL:
 		numArgs := 0
 		for arg := node.Args; arg != nil; arg = arg.Next {
@@ -458,6 +462,45 @@ func (c *codeWriter) gen(node *Node) {
 		c.printf("	push rax\n")
 
 		c.truncate(node.Ty)
+		return
+
+	case ND_SWITCH:
+		seq := labelNo
+		labelNo++
+		brk := brkseq
+		brkseq = seq
+		node.CaseLbl = seq
+
+		c.gen(node.Cond)
+		c.printf("	pop rax\n")
+
+		for n := node.CaseNext; n != nil; n = n.CaseNext {
+			n.CaseLbl = labelNo
+			labelNo++
+			n.CaseEndLbl = seq
+			c.printf("	cmp rax, %d\n", n.Val)
+			c.printf("	je .L.case.%d\n", n.CaseLbl)
+		}
+
+		if node.DefCase != nil {
+			i := labelNo
+			labelNo++
+			node.DefCase.CaseEndLbl = seq
+			node.DefCase.CaseLbl = i
+			c.printf("	jmp .L.case.%d\n", i)
+		}
+
+		c.printf("	jmp .L.break.%d\n", seq)
+		c.gen(node.Then)
+		c.printf(".L.break.%d:\n", seq)
+
+		brkseq = brk
+		return
+
+	case ND_CASE:
+		c.printf(".L.case.%d:\n", node.CaseLbl)
+		c.gen(node.Lhs)
+		c.printf("	jmp .L.break.%d\n", node.CaseEndLbl)
 		return
 
 	case ND_BLOCK, ND_STMT_EXPR:

@@ -54,6 +54,8 @@ const (
 	ND_CONTINUE                  // 43: "continue"
 	ND_GOTO                      // 44: "goto"
 	ND_LABEL                     // 45: label
+	ND_SWITCH                    // 46: "switch"
+	ND_CASE                      // 47: "break"
 )
 
 // define AST node
@@ -86,6 +88,12 @@ type Node struct {
 
 	// goto or labeld statement
 	LabelName string
+
+	// Switch-cases
+	CaseNext   *Node
+	DefCase    *Node
+	CaseLbl    int
+	CaseEndLbl int
 
 	Val int64 // it would be used when 'Kind' is 'ND_NUM'
 	Var *Var  // it would be used when 'Kind' is 'ND_VAR'
@@ -163,6 +171,8 @@ var globals *VarList
 var varScope *VarScope
 var tagScope *TagScope
 var scopeDepth int
+
+var currentSwitch *Node
 
 func enterScope() *Scope {
 	sc := &Scope{
@@ -777,6 +787,9 @@ func isTypename() bool {
 
 // stmt = "return" expr ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
+//      | "switch" "(" expr ")" stmt
+//      | "case" num ":" stmt
+//      | "default" ":" stmt
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" (expr? ";" | declaration) expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
@@ -799,7 +812,6 @@ func stmt() *Node {
 	}
 
 	if t := consume("if"); t != nil {
-
 		node = &Node{Kind: ND_IF, Tok: t}
 		expect("(")
 		node.Cond = expr()
@@ -812,8 +824,45 @@ func stmt() *Node {
 		return node
 	}
 
-	if t := consume("while"); t != nil {
+	if t := consume("switch"); t != nil {
+		node := &Node{Kind: ND_SWITCH, Tok: t}
+		expect("(")
+		node.Cond = expr()
+		expect(")")
 
+		sw := currentSwitch
+		currentSwitch = node
+		node.Then = stmt()
+		currentSwitch = sw
+		return node
+	}
+
+	if t := consume("case"); t != nil {
+		if currentSwitch == nil {
+			panic("\n" + errorTok(t, "stray case"))
+		}
+		val := expectNumber()
+		expect(":")
+
+		node := newUnary(ND_CASE, stmt(), t)
+		node.Val = val
+		node.CaseNext = currentSwitch.CaseNext
+		currentSwitch.CaseNext = node
+		return node
+	}
+
+	if t := consume("default"); t != nil {
+		if currentSwitch == nil {
+			panic("\n" + errorTok(t, "stray default"))
+		}
+		expect(":")
+
+		node = newUnary(ND_CASE, stmt(), t)
+		currentSwitch.DefCase = node
+		return node
+	}
+
+	if t := consume("while"); t != nil {
 		node = &Node{Kind: ND_WHILE, Tok: t}
 		expect("(")
 		node.Cond = expr()

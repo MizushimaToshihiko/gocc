@@ -28,6 +28,9 @@ declaration    = type-specifier declarator type-suffix ("=" expr)? ";"
                | type-specifier ";"
 stmt           = "return" expr ";"
                | "if" "(" expr ")" stmt ("else" stmt)?
+               | "switch" "(" expr ")" stmt
+               | "case" num ":" stmt
+               | "default" ":" stmt
                | "while" "(" expr ")" stmt
                | "for" "(" expr? ";" expr? ";" expr? ")" stmt
                | "{" stmt* "}"
