@@ -283,6 +283,15 @@ func (c *codeWriter) gen(node *Node) {
 		}
 		return
 
+	case ND_NOT:
+		c.gen(node.Lhs)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	sete al\n")
+		c.printf("	movzb rax, al\n")
+		c.printf("	push rax\n")
+		return
+
 	case ND_IF:
 		c.gen(node.Cond)
 		c.printf("	pop rax\n")

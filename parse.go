@@ -38,11 +38,12 @@ const (
 	ND_MEMBER                    // 26: . (struct member access)
 	ND_ADDR                      // 27: unary &
 	ND_DEREF                     // 28: unary *
-	ND_EXPR_STMT                 // 29: expression statement
-	ND_STMT_EXPR                 // 30: statement expression
-	ND_CAST                      // 31: type cast
-	ND_NULL                      // 32: empty statement
-	ND_SIZEOF                    // 33: "sizeof" operator
+	ND_NOT                       // 29: !
+	ND_EXPR_STMT                 // 30: expression statement
+	ND_STMT_EXPR                 // 31: statement expression
+	ND_CAST                      // 32: type cast
+	ND_NULL                      // 33: empty statement
+	ND_SIZEOF                    // 34: "sizeof" operator
 )
 
 // define AST node
@@ -919,7 +920,7 @@ func cast() *Node {
 	return unary()
 }
 
-// unary = ("+" | "-" | "*" | "&")? cast
+// unary = ("+" | "-" | "*" | "&" | "!")? cast
 //       | ("++" | "--") unary
 //       | "sizeof" "(" type-name ")"
 //       | "sizeof" unary
@@ -950,6 +951,9 @@ func unary() *Node {
 	}
 	if t := consume("*"); t != nil {
 		return newUnary(ND_DEREF, cast(), t)
+	}
+	if t := consume("!"); t != nil {
+		return newUnary(ND_NOT, cast(), t)
 	}
 	if t := consume("++"); t != nil {
 		return newUnary(ND_PRE_INC, unary(), t)
