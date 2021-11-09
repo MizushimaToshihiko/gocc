@@ -237,6 +237,36 @@ func (c *codeWriter) gen(node *Node) {
 		c.inc(node.Ty)
 		return
 
+	case ND_A_ADD, ND_A_SUB, ND_A_MUL, ND_A_DIV:
+		c.genLval(node.Lhs)
+		c.printf("	push [rsp]\n")
+		c.load(node.Lhs.Ty)
+		c.gen(node.Rhs)
+		c.printf("	pop rdi\n")
+		c.printf("	pop rax\n")
+
+		switch node.Kind {
+		case ND_A_ADD:
+			if node.Ty.PtrTo != nil {
+				c.printf("	imul rdi, %d\n", sizeOf(node.Ty.PtrTo))
+			}
+			c.printf("	add rax, rdi\n")
+		case ND_A_SUB:
+			if node.Ty.PtrTo != nil {
+				c.printf("	imul rdi, %d\n", sizeOf(node.Ty.PtrTo))
+			}
+			c.printf("	sub rax, rdi\n")
+		case ND_A_MUL:
+			c.printf("	imul rax, rdi\n")
+		case ND_A_DIV:
+			c.printf("	cqo\n")
+			c.printf("	idiv rdi\n")
+		}
+
+		c.printf("	push rax\n")
+		c.store(node.Ty)
+		return
+
 	case ND_COMMA:
 		c.gen(node.Lhs)
 		c.gen(node.Rhs)

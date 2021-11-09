@@ -22,23 +22,27 @@ const (
 	ND_PRE_DEC                   // 10: pre --
 	ND_POST_INC                  // 11: post ++
 	ND_POST_DEC                  // 12: post --
-	ND_COMMA                     // 13: ,
-	ND_VAR                       // 14: local or global variables
-	ND_NUM                       // 15: integer
-	ND_RETURN                    // 16: 'return'
-	ND_IF                        // 17: "if"
-	ND_WHILE                     // 18: "while"
-	ND_FOR                       // 19: "for"
-	ND_BLOCK                     // 20: {...}
-	ND_FUNCCALL                  // 21: function call
-	ND_MEMBER                    // 22: . (struct member access)
-	ND_ADDR                      // 23: unary &
-	ND_DEREF                     // 24: unary *
-	ND_EXPR_STMT                 // 25: expression statement
-	ND_STMT_EXPR                 // 26: statement expression
-	ND_CAST                      // 27: type cast
-	ND_NULL                      // 28: empty statement
-	ND_SIZEOF                    // 29: "sizeof" operator
+	ND_A_ADD                     // 13: +=
+	ND_A_SUB                     // 14: -=
+	ND_A_MUL                     // 15: *=
+	ND_A_DIV                     // 16: /=
+	ND_COMMA                     // 17: ,
+	ND_VAR                       // 18: local or global variables
+	ND_NUM                       // 19: integer
+	ND_RETURN                    // 20: 'return'
+	ND_IF                        // 21: "if"
+	ND_WHILE                     // 22: "while"
+	ND_FOR                       // 23: "for"
+	ND_BLOCK                     // 24: {...}
+	ND_FUNCCALL                  // 25: function call
+	ND_MEMBER                    // 26: . (struct member access)
+	ND_ADDR                      // 27: unary &
+	ND_DEREF                     // 28: unary *
+	ND_EXPR_STMT                 // 29: expression statement
+	ND_STMT_EXPR                 // 30: statement expression
+	ND_CAST                      // 31: type cast
+	ND_NULL                      // 32: empty statement
+	ND_SIZEOF                    // 33: "sizeof" operator
 )
 
 // define AST node
@@ -800,13 +804,26 @@ func expr() *Node {
 	return node
 }
 
-// assign     = equality ("=" assign)?
+// assign     = equality (assign-op assign)?
+// assign-op  = "=" | "+=" | "-=" | "*=" | "/="
 func assign() *Node {
 	// printCurTok()
 	// printCurFunc()
 	node := equality()
 	if t := consume("="); t != nil {
 		node = newNode(ND_ASSIGN, node, assign(), t)
+	}
+	if t := consume("+="); t != nil {
+		node = newNode(ND_A_ADD, node, assign(), t)
+	}
+	if t := consume("-="); t != nil {
+		node = newNode(ND_A_SUB, node, assign(), t)
+	}
+	if t := consume("*="); t != nil {
+		node = newNode(ND_A_MUL, node, assign(), t)
+	}
+	if t := consume("/="); t != nil {
+		node = newNode(ND_A_DIV, node, assign(), t)
 	}
 
 	return node
