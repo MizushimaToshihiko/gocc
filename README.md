@@ -35,7 +35,9 @@ stmt           = "return" expr ";"
                | declaration
                | expr ";"
 expr           = assign
-assign         = bitor ("=" assign)?
+assign         = logor ("=" assign)?
+logor          = logand ("||" logand)*
+logand         = bitor ("&&" bitor)*
 bitor          = bitxor ("|" bitxor)*
 bitxor         = bitand ("^" bitand)*
 bitand         = equality ("&" equality)*

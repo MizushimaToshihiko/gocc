@@ -48,6 +48,8 @@ const (
 	ND_BITAND                    // 36: &
 	ND_BITOR                     // 37: |
 	ND_BITXOR                    // 38: ^
+	ND_LOGAND                    // 40: &&
+	ND_LOGOR                     // 41: ||
 )
 
 // define AST node
@@ -809,12 +811,12 @@ func expr() *Node {
 	return node
 }
 
-// assign     = bitor (assign-op assign)?
+// assign     = logor (assign-op assign)?
 // assign-op  = "=" | "+=" | "-=" | "*=" | "/="
 func assign() *Node {
 	// printCurTok()
 	// printCurFunc()
-	node := bitor()
+	node := logor()
 	if t := consume("="); t != nil {
 		node = newNode(ND_ASSIGN, node, assign(), t)
 	}
@@ -831,6 +833,32 @@ func assign() *Node {
 		node = newNode(ND_A_DIV, node, assign(), t)
 	}
 
+	return node
+}
+
+// logor = logand ("||" logand)*
+func logor() *Node {
+	node := logand()
+	for {
+		tok := consume("||")
+		if tok == nil {
+			break
+		}
+		node = newNode(ND_LOGOR, node, logand(), tok)
+	}
+	return node
+}
+
+// logand = bitor ("&&" bitor)*
+func logand() *Node {
+	node := bitor()
+	for {
+		tok := consume("&&")
+		if tok == nil {
+			break
+		}
+		node = newNode(ND_LOGAND, node, bitor(), tok)
+	}
 	return node
 }
 

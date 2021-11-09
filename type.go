@@ -177,7 +177,9 @@ func (e *errWriter) visit(node *Node) {
 		ND_NE,
 		ND_LT,
 		ND_LE,
-		ND_NOT:
+		ND_NOT,
+		ND_LOGAND,
+		ND_LOGOR:
 		node.Ty = intType()
 		return
 	case ND_NUM:

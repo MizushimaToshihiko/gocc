@@ -299,6 +299,42 @@ func (c *codeWriter) gen(node *Node) {
 		c.printf("	push rax\n")
 		return
 
+	case ND_LOGAND:
+		seq := labelNo
+		labelNo++
+		c.gen(node.Lhs)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	je .Lfalse%03d\n", seq)
+		c.gen(node.Rhs)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	je .Lfalse%03d\n", seq)
+		c.printf("	push 1\n")
+		c.printf("	jmp .Lend%03d\n", seq)
+		c.printf(".Lfalse%03d:\n", seq)
+		c.printf("	push 0\n")
+		c.printf(".Lend%03d:\n", seq)
+		return
+
+	case ND_LOGOR:
+		seq := labelNo
+		labelNo++
+		c.gen(node.Lhs)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	jne .Ltrue%03d\n", seq)
+		c.gen(node.Rhs)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	jne .Ltrue%03d\n", seq)
+		c.printf("	push 0\n")
+		c.printf("	jmp .Lend%03d\n", seq)
+		c.printf(".Ltrue%03d:\n", seq)
+		c.printf("	push 1\n")
+		c.printf(".Lend%03d:\n", seq)
+		return
+
 	case ND_IF:
 		c.gen(node.Cond)
 		c.printf("	pop rax\n")
