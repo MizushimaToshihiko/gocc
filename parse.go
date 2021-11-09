@@ -182,7 +182,6 @@ func pushVar(name string, ty *Type, isLocal bool) *Var {
 		globals = vl
 	}
 
-	pushScope(name).Var = lvar
 	return lvar
 }
 
@@ -267,7 +266,7 @@ func program() *Program {
 //                | "int"
 //                | "long" | "long" "int" | "int" "long"
 //
-// node that "typedef" can appear anywhere in a type-specifier
+// node that "typedef" and "static" can appear anywhere in a type-specifier
 func typeSpecifier() *Type {
 	if !isTypename() {
 		panic("\n" + errorTok(token, "typename expected"))
@@ -288,12 +287,15 @@ func typeSpecifier() *Type {
 	var userTy *Type
 
 	isTypedef := false
+	isStatic := false
 
 	for {
 		// read one token at a time.
 		tok := token
 		if consume("typedef") != nil {
 			isTypedef = true
+		} else if consume("static") != nil {
+			isStatic = true
 		} else if consume("void") != nil {
 			baseTy += VOID
 		} else if consume("_Bool") != nil {
@@ -354,6 +356,7 @@ func typeSpecifier() *Type {
 		}
 	}
 	ty.IsTypedef = isTypedef
+	ty.IsStatic = isStatic
 	return ty
 }
 
@@ -537,7 +540,10 @@ func readFuncParam() *VarList {
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
 
-	vl := &VarList{Var: pushVar(name, ty, true)}
+	var_ := pushVar(name, ty, true)
+	pushScope(name).Var = var_
+
+	vl := &VarList{Var: var_}
 	return vl
 }
 
@@ -575,7 +581,8 @@ func function() *Function {
 	ty = declarator(ty, &name)
 
 	// add a function type to the scope
-	pushVar(name, funcType(ty), false)
+	var_ := pushVar(name, funcType(ty), false)
+	pushScope(name).Var = var_
 
 	// construct a function object
 	fn := &Function{Name: name}
@@ -611,7 +618,9 @@ func globalVar() {
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
 	expect(";")
-	pushVar(name, ty, false)
+
+	var_ := pushVar(name, ty, false)
+	pushScope(name).Var = var_
 }
 
 // declaration = type-specifier declarator type-suffix ("=" expr)? ";"
@@ -637,13 +646,22 @@ func declaration() *Node {
 	if ty.Kind == TY_VOID {
 		panic("\n" + errorTok(tok, "variable declared void"))
 	}
-	lvar := pushVar(name, ty, true)
+
+	var var_ *Var
+	if ty.IsStatic {
+		var_ = pushVar(newLabel(), ty, false)
+	} else {
+		var_ = pushVar(name, ty, true)
+	}
+	pushScope(name).Var = var_
+
 	if consume(";") != nil {
 		return &Node{Kind: ND_NULL, Tok: tok}
 	}
 
 	expect("=")
-	lhs := newVar(lvar, tok)
+
+	lhs := newVar(var_, tok)
 	rhs := expr()
 	expect(";")
 	node := newNode(ND_ASSIGN, lhs, rhs, tok)
@@ -659,7 +677,7 @@ func isTypename() bool {
 	return peek("void") != nil || peek("_Bool") != nil || peek("char") != nil ||
 		peek("short") != nil || peek("int") != nil || peek("long") != nil ||
 		peek("enum") != nil || peek("struct") != nil || peek("typedef") != nil ||
-		findTypedef(token) != nil
+		peek("static") != nil || findTypedef(token) != nil
 }
 
 // stmt = "return" expr ";"

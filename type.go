@@ -32,6 +32,7 @@ const (
 type Type struct {
 	Kind      TypeKind
 	IsTypedef bool    // typedef
+	IsStatic  bool    // static
 	Align     int     // alignment
 	PtrTo     *Type   // pointer or array
 	ArraySize uint16  // array

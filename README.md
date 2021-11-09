@@ -1,11 +1,12 @@
 ### 9cc in Golang
-- It's based on rui314's [chibicc](https://github.com/rui314/chibicc/tree/reference) and https://www.sigbus.info/compilerbook .
+- It's based on rui314's [chibicc](https://github.com/rui314/chibicc/tree/reference) and https://www.sigbus.info/compilerbook . 
+- This is for my own learning.
 
 ### EBNF
 ```ebnf
 program        = (global-var | function*)
 type-specifier = builtin-type | struct-decl | typedef-name
- node that "typedef" can appear anywhere in a type-specifier
+ node that "typedef" and "static" can appear anywhere in a type-specifier
 builtin-type   = "void"
                | "_Bool"
                | "char"
