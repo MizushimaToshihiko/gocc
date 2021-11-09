@@ -33,6 +33,8 @@ stmt           = "return" expr ";"
                | "{" stmt* "}"
                | "break" ";"
                | continue" ";"
+               | "goto" ident ";"
+               | ident ":" stmt
                | declaration
                | expr ";"
 expr           = assign

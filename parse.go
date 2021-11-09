@@ -52,6 +52,8 @@ const (
 	ND_LOGOR                     // 41: ||
 	ND_BREAK                     // 42: "break"
 	ND_CONTINUE                  // 43: "continue"
+	ND_GOTO                      // 44: "goto"
+	ND_LABEL                     // 45: label
 )
 
 // define AST node
@@ -81,6 +83,9 @@ type Node struct {
 	// for function call
 	FuncName string
 	Args     *Node
+
+	// goto or labeld statement
+	LabelName string
 
 	Val int64 // it would be used when 'Kind' is 'ND_NUM'
 	Var *Var  // it would be used when 'Kind' is 'ND_VAR'
@@ -777,6 +782,8 @@ func isTypename() bool {
 //      | "{" stmt* "}"
 //      | "break" ";"
 //      | "continue" ";"
+//      | "goto" ident ";"
+//      | ident ":" stmt
 //      | declaration
 //      | expr ";"
 func stmt() *Node {
@@ -788,8 +795,10 @@ func stmt() *Node {
 
 		node = &Node{Kind: ND_RETURN, Lhs: expr(), Tok: t}
 		expect(";")
+		return node
+	}
 
-	} else if t := consume("if"); t != nil {
+	if t := consume("if"); t != nil {
 
 		node = &Node{Kind: ND_IF, Tok: t}
 		expect("(")
@@ -800,17 +809,20 @@ func stmt() *Node {
 		if consume("else") != nil {
 			node.Els = stmt()
 		}
+		return node
+	}
 
-	} else if t := consume("while"); t != nil {
+	if t := consume("while"); t != nil {
 
 		node = &Node{Kind: ND_WHILE, Tok: t}
 		expect("(")
 		node.Cond = expr()
 		expect(")")
 		node.Then = stmt()
+		return node
+	}
 
-	} else if t := consume("for"); t != nil {
-
+	if t := consume("for"); t != nil {
 		node = &Node{Kind: ND_FOR, Tok: t}
 		expect("(")
 
@@ -835,8 +847,10 @@ func stmt() *Node {
 		node.Then = stmt()
 
 		leaveScope(sc)
+		return node
+	}
 
-	} else if t := consume("{"); t != nil {
+	if t := consume("{"); t != nil {
 
 		head := Node{}
 		cur := &head
@@ -853,27 +867,40 @@ func stmt() *Node {
 
 		node = &Node{Kind: ND_BLOCK, Tok: t}
 		node.Body = head.Next
-
-	} else if t := consume("break"); t != nil {
-
-		expect(";")
-		node = &Node{Kind: ND_BREAK, Tok: t}
-
-	} else if t := consume("continue"); t != nil {
-
-		expect(";")
-		node = &Node{Kind: ND_CONTINUE, Tok: t}
-
-	} else {
-
-		if isTypename() {
-			return declaration()
-		}
-
-		node = readExprStmt()
-		expect(";")
+		return node
 	}
 
+	if t := consume("break"); t != nil {
+		expect(";")
+		return &Node{Kind: ND_BREAK, Tok: t}
+	}
+
+	if t := consume("continue"); t != nil {
+		expect(";")
+		return &Node{Kind: ND_CONTINUE, Tok: t}
+	}
+
+	if t := consume("goto"); t != nil {
+		node = &Node{Kind: ND_GOTO, Tok: t, LabelName: expectIdent()}
+		expect(";")
+		return node
+	}
+
+	if t := consumeIdent(); t != nil {
+		if consume(":") != nil {
+			node = newUnary(ND_LABEL, stmt(), t)
+			node.LabelName = t.Str
+			return node
+		}
+		token = t
+	}
+
+	if isTypename() {
+		return declaration()
+	}
+
+	node = readExprStmt()
+	expect(";")
 	return node
 }
 
