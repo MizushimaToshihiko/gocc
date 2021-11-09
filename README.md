@@ -15,8 +15,7 @@ builtin-type   = "void"
                | "long" | "long" "int" | "int" "long"
 declarator     = "*" ("(" declarator ")") | ident) type-suffix
 type-suffix    = ("[" num? "]" type-suffix)?
-struct-decl    = "struct" ident
-               | "struct" ident? "{" struct-member "}"
+struct-decl    = "struct" ident? ("{" struct-member "}")?
 struct-member  = type-specifier declarator type-suffix ";"
 enum-specifier = "enum" ident
                | "enum" ident? "{" enum-list? "}"

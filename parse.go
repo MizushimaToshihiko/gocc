@@ -129,6 +129,7 @@ type VarList struct {
 type VarScope struct {
 	Next    *VarScope
 	Name    string
+	Depth   int
 	Var     *Var
 	TyDef   *Type
 	EnumTy  *Type
@@ -137,9 +138,10 @@ type VarScope struct {
 
 // scope for struct tags
 type TagScope struct {
-	Next *TagScope
-	Name string
-	Ty   *Type
+	Next  *TagScope
+	Name  string
+	Depth int
+	Ty    *Type
 }
 
 type Scope struct {
@@ -153,18 +155,21 @@ var globals *VarList
 
 var varScope *VarScope
 var tagScope *TagScope
+var scopeDepth int
 
 func enterScope() *Scope {
 	sc := &Scope{
 		VarScope: varScope,
 		TagScope: tagScope,
 	}
+	scopeDepth++
 	return sc
 }
 
 func leaveScope(sc *Scope) {
 	varScope = sc.VarScope
 	tagScope = sc.TagScope
+	scopeDepth--
 }
 
 // findVar searchs a variable by name.
@@ -193,8 +198,9 @@ func newVar(lvar *Var, tok *Token) *Node {
 
 func pushScope(name string) *VarScope {
 	sc := &VarScope{
-		Name: name,
-		Next: varScope,
+		Name:  name,
+		Next:  varScope,
+		Depth: scopeDepth,
 	}
 	varScope = sc
 	return sc
@@ -458,15 +464,15 @@ func typeName() *Type {
 
 func pushTagScope(tok *Token, ty *Type) {
 	sc := &TagScope{
-		Next: tagScope,
-		Name: tok.Str,
-		Ty:   ty,
+		Next:  tagScope,
+		Name:  tok.Str,
+		Ty:    ty,
+		Depth: scopeDepth,
 	}
 	tagScope = sc
 }
 
-// struct-decl = "struct" ident
-//             | "struct" ident? "{" struct-member "}"
+// struct-decl = "struct" ident? ("{" struct-member "}")?
 func structDecl() *Type {
 
 	// read struct tag.
@@ -474,15 +480,44 @@ func structDecl() *Type {
 	tag := consumeIdent()
 	if tag != nil && peek("{") == nil {
 		sc := findTag(tag)
+
 		if sc == nil {
-			panic("\n" + errorTok(tag, "unknown struct type"))
+			ty := structType()
+			pushTagScope(tag, ty)
+			return ty
 		}
+
 		if sc.Ty.Kind != TY_STRUCT {
 			panic("\n" + errorTok(tag, "not a struct tag"))
 		}
 		return sc.Ty
 	}
-	expect("{")
+
+	// Although it looks weird, "struct *foo" is legal C that defines
+	// foo as a pointer to an unnamed incomplete struct type.
+	if consume("{") == nil {
+		return structType()
+	}
+
+	sc := findTag(tag)
+	var ty *Type
+
+	if sc != nil && sc.Depth == scopeDepth {
+		// If there's an existing struct type having the same tag name in
+		// the same block scope, this is a redefinition.
+		if sc.Ty.Kind != TY_STRUCT {
+			panic("\n" + errorTok(tag, "not a struct tag"))
+		}
+		ty = sc.Ty
+	} else {
+		// Register a struct type as an incomplete type early, so that you
+		// can write recursive structs such as
+		// "struct T { struct T *next; }".
+		ty = structType()
+		if tag != nil {
+			pushTagScope(tag, ty)
+		}
+	}
 
 	// read struct members.
 	head := &Member{}
@@ -493,7 +528,7 @@ func structDecl() *Type {
 		cur = cur.Next
 	}
 
-	ty := &Type{Kind: TY_STRUCT, Mems: head.Next}
+	ty.Mems = head.Next
 
 	// assign offsets within the struct to members.
 	offset := 0
@@ -508,9 +543,7 @@ func structDecl() *Type {
 	}
 
 	// register the struct type if a name was given.
-	if tag != nil {
-		pushTagScope(tag, ty)
-	}
+	ty.IsIncomp = false
 	return ty
 }
 

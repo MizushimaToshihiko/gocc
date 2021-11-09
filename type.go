@@ -86,6 +86,12 @@ func enumType() *Type {
 	return newType(TY_ENUM, 4)
 }
 
+func structType() *Type {
+	ty := newType(TY_STRUCT, 1)
+	ty.IsIncomp = true
+	return ty
+}
+
 func funcType(returnTy *Type) *Type {
 	return &Type{Kind: TY_FUNC, Align: 1, RetTy: returnTy}
 }
