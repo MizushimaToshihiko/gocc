@@ -22,6 +22,7 @@ const (
 	TY_SHORT                  // short
 	TY_INT                    // int
 	TY_LONG                   // long
+	TY_ENUM                   // enum
 	TY_PTR                    // pointer
 	TY_ARRAY                  // array type
 	TY_STRUCT                 // struct
@@ -78,6 +79,10 @@ func longType() *Type {
 	return newType(TY_LONG, 8)
 }
 
+func enumType() *Type {
+	return newType(TY_ENUM, 4)
+}
+
 func funcType(returnTy *Type) *Type {
 	return &Type{Kind: TY_FUNC, Align: 1, RetTy: returnTy}
 }
@@ -105,7 +110,7 @@ func sizeOf(ty *Type) int {
 		return 1
 	case TY_SHORT:
 		return 2
-	case TY_INT:
+	case TY_INT, TY_ENUM:
 		return 4
 	case TY_LONG, TY_PTR:
 		return 8

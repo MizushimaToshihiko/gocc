@@ -110,10 +110,12 @@ type VarList struct {
 
 // scope for local variables, global variables or typedefs
 type VarScope struct {
-	Next  *VarScope
-	Name  string
-	Var   *Var
-	TyDef *Type
+	Next    *VarScope
+	Name    string
+	Var     *Var
+	TyDef   *Type
+	EnumTy  *Type
+	EnumVal int
 }
 
 // scope for struct tags
@@ -256,7 +258,7 @@ func program() *Program {
 	return prog
 }
 
-// type-specifier = builtin-type | struct-decl | typedef-name
+// type-specifier = builtin-type | struct-decl | typedef-name | enum-specifier
 //
 // builtin-type   = "void"
 //                | "_Bool"
@@ -309,6 +311,11 @@ func typeSpecifier() *Type {
 				break
 			}
 			userTy = structDecl()
+		} else if peek("enum") != nil {
+			if baseTy != 0 || userTy != nil {
+				break
+			}
+			userTy = enumSpecifier()
 		} else {
 			if baseTy != 0 || userTy != nil {
 				break
@@ -422,6 +429,9 @@ func structDecl() *Type {
 		if sc == nil {
 			panic("\n" + errorTok(tag, "unknown struct type"))
 		}
+		if sc.Ty.Kind != TY_STRUCT {
+			panic("\n" + errorTok(tag, "not a struct tag"))
+		}
 		return sc.Ty
 	}
 	expect("{")
@@ -450,6 +460,58 @@ func structDecl() *Type {
 	}
 
 	// register the struct type if a name was given.
+	if tag != nil {
+		pushTagScope(tag, ty)
+	}
+	return ty
+}
+
+// enum-specifier = "enum" ident
+//                | "enum" ident? "{" enum-list? "}"
+//
+// enum-list = ident ("=" num)? ("," ident ("=" num)?)*
+func enumSpecifier() *Type {
+	expect("enum")
+	ty := enumType()
+
+	// read an enum tag
+	tag := consumeIdent()
+	if tag != nil && peek("{") == nil {
+		sc := findTag(tag)
+		if sc == nil {
+			panic("\n" + errorTok(tag, "unknown enum type"))
+		}
+		if sc.Ty.Kind != TY_ENUM {
+			panic("\n" + errorTok(tag, "not an enum tag"))
+		}
+		return sc.Ty
+	}
+
+	expect("{")
+
+	// read enum-list
+	cnt := 0
+	for {
+		name := expectIdent()
+		if consume("=") != nil {
+			cnt = int(expectNumber())
+		}
+
+		sc := pushScope(name)
+		sc.EnumTy = ty
+		sc.EnumVal = cnt
+		cnt++
+
+		if consume(",") != nil {
+			if consume("}") != nil {
+				break
+			}
+			continue
+		}
+		expect("}")
+		break
+	}
+
 	if tag != nil {
 		pushTagScope(tag, ty)
 	}
@@ -596,7 +658,7 @@ func readExprStmt() *Node {
 func isTypename() bool {
 	return peek("void") != nil || peek("_Bool") != nil || peek("char") != nil ||
 		peek("short") != nil || peek("int") != nil || peek("long") != nil ||
-		peek("struct") != nil || peek("typedef") != nil ||
+		peek("enum") != nil || peek("struct") != nil || peek("typedef") != nil ||
 		findTypedef(token) != nil
 }
 
@@ -963,8 +1025,13 @@ func primary() *Node {
 
 		// local variables
 		sc := findVar(tok)
-		if sc != nil && sc.Var != nil {
-			return newVar(sc.Var, tok)
+		if sc != nil {
+			if sc.Var != nil {
+				return newVar(sc.Var, tok)
+			}
+			if sc.EnumTy != nil {
+				return newNodeNum(int64(sc.EnumVal), tok)
+			}
 		}
 		panic("\n" + errorTok(tok, "undefined variable"))
 	}
