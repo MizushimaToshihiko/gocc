@@ -45,6 +45,9 @@ const (
 	ND_NULL                      // 33: empty statement
 	ND_SIZEOF                    // 34: "sizeof" operator
 	ND_BITNOT                    // 35: ~
+	ND_BITAND                    // 36: &
+	ND_BITOR                     // 37: |
+	ND_BITXOR                    // 38: ^
 )
 
 // define AST node
@@ -806,12 +809,12 @@ func expr() *Node {
 	return node
 }
 
-// assign     = equality (assign-op assign)?
+// assign     = bitor (assign-op assign)?
 // assign-op  = "=" | "+=" | "-=" | "*=" | "/="
 func assign() *Node {
 	// printCurTok()
 	// printCurFunc()
-	node := equality()
+	node := bitor()
 	if t := consume("="); t != nil {
 		node = newNode(ND_ASSIGN, node, assign(), t)
 	}
@@ -828,6 +831,45 @@ func assign() *Node {
 		node = newNode(ND_A_DIV, node, assign(), t)
 	}
 
+	return node
+}
+
+// bitor = bitxor ("|" bitxor)*
+func bitor() *Node {
+	node := bitxor()
+	for {
+		tok := consume("|")
+		if tok == nil {
+			break
+		}
+		node = newNode(ND_BITOR, node, bitxor(), tok)
+	}
+	return node
+}
+
+// bitxor = bitand ("^" bitand)*
+func bitxor() *Node {
+	node := bitand()
+	for {
+		tok := consume("^")
+		if tok == nil {
+			break
+		}
+		node = newNode(ND_BITXOR, node, bitxor(), tok)
+	}
+	return node
+}
+
+// bitand = equality ("&" equality)*
+func bitand() *Node {
+	node := equality()
+	for {
+		tok := consume("&")
+		if tok == nil {
+			break
+		}
+		node = newNode(ND_BITAND, node, equality(), tok)
+	}
 	return node
 }
 

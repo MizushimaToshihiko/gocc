@@ -433,6 +433,12 @@ func (c *codeWriter) gen(node *Node) {
 	case ND_DIV:
 		c.printf("	cqo\n")
 		c.printf("	idiv rdi\n")
+	case ND_BITAND:
+		c.printf("	and rax, rdi\n")
+	case ND_BITOR:
+		c.printf("	or rax, rdi\n")
+	case ND_BITXOR:
+		c.printf("	xor rax, rdi\n")
 	case ND_EQ:
 		c.printf("	cmp rax, rdi\n")
 		c.printf("	sete al\n")

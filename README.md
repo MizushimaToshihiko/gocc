@@ -35,7 +35,10 @@ stmt           = "return" expr ";"
                | declaration
                | expr ";"
 expr           = assign
-assign         = equality ("=" assign)?
+assign         = bitor ("=" assign)?
+bitor          = bitxor ("|" bitxor)*
+bitxor         = bitand ("^" bitand)*
+bitand         = equality ("&" equality)*
 equality       = relational ("==" relational | "!=" relational)*
 relational     = add ("<" add | "<=" add | ">" add | ">=" add)*
 add            = mul ("+" mul | "-" mul)*
