@@ -587,6 +587,12 @@ func readFuncParam() *VarList {
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
 
+	// "array of T" is converted to "pointer to T" only in the parameter
+	// context. For examplem *argv[] is converted to **argv by this.
+	if ty.Kind == TY_ARRAY {
+		ty = pointerTo(ty.PtrTo)
+	}
+
 	var_ := pushVar(name, ty, true, tok)
 	pushScope(name).Var = var_
 
