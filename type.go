@@ -33,6 +33,7 @@ type Type struct {
 	Kind      TypeKind
 	IsTypedef bool    // typedef
 	IsStatic  bool    // static
+	IsIncomp  bool    // incomplete array
 	Align     int     // alignment
 	PtrTo     *Type   // pointer or array
 	ArraySize uint16  // array
@@ -43,6 +44,7 @@ type Type struct {
 type Member struct {
 	Next   *Member
 	Ty     *Type
+	Tok    *Token // for error report
 	Name   string
 	Offset int
 }
@@ -101,9 +103,13 @@ func arrayOf(base *Type, size uint16) *Type {
 	}
 }
 
-func sizeOf(ty *Type) int {
+func sizeOf(ty *Type, tok *Token) int {
 	if ty.Kind == TY_VOID {
 		panic("invalid type")
+	}
+
+	if ty.IsIncomp {
+		panic("\n" + errorTok(tok, "incomplete type"))
 	}
 
 	switch ty.Kind {
@@ -116,13 +122,13 @@ func sizeOf(ty *Type) int {
 	case TY_LONG, TY_PTR:
 		return 8
 	case TY_ARRAY:
-		return sizeOf(ty.PtrTo) * int(ty.ArraySize)
+		return sizeOf(ty.PtrTo, tok) * int(ty.ArraySize)
 	case TY_STRUCT:
 		mem := ty.Mems
 		for mem.Next != nil {
 			mem = mem.Next
 		}
-		end := mem.Offset + sizeOf(mem.Ty)
+		end := mem.Offset + sizeOf(mem.Ty, mem.Tok)
 		return alignTo(end, ty.Align)
 	default:
 		panic("invalid type")
@@ -271,7 +277,7 @@ func (e *errWriter) visit(node *Node) {
 	case ND_SIZEOF:
 		node.Kind = ND_NUM
 		node.Ty = intType()
-		node.Val = int64(sizeOf(node.Lhs.Ty))
+		node.Val = int64(sizeOf(node.Lhs.Ty, node.Tok))
 		node.Lhs = nil
 		return
 	}

@@ -109,6 +109,7 @@ func newUnary(kind NodeKind, expr *Node, tok *Token) *Node {
 type Var struct {
 	Name    string // the name of the variable
 	Ty      *Type  // the data type
+	Tok     *Token // for error message
 	IsLocal bool   // local or global
 
 	// local variables
@@ -141,12 +142,30 @@ type TagScope struct {
 	Ty   *Type
 }
 
+type Scope struct {
+	VarScope *VarScope
+	TagScope *TagScope
+}
+
 // local variables
 var locals *VarList
 var globals *VarList
 
 var varScope *VarScope
 var tagScope *TagScope
+
+func enterScope() *Scope {
+	sc := &Scope{
+		VarScope: varScope,
+		TagScope: tagScope,
+	}
+	return sc
+}
+
+func leaveScope(sc *Scope) {
+	varScope = sc.VarScope
+	tagScope = sc.TagScope
+}
 
 // findVar searchs a variable by name.
 // if it wasn't find, return nil.
@@ -181,11 +200,12 @@ func pushScope(name string) *VarScope {
 	return sc
 }
 
-func pushVar(name string, ty *Type, isLocal bool) *Var {
+func pushVar(name string, ty *Type, isLocal bool, tok *Token) *Var {
 	lvar := &Var{
 		Name:    name,
 		Ty:      ty,
 		IsLocal: isLocal,
+		Tok:     tok,
 	}
 
 	vl := &VarList{Var: lvar}
@@ -410,15 +430,24 @@ func abstractDeclarator(ty *Type) *Type {
 	return typeSuffix(ty)
 }
 
-// type-suffix = ("[" num "]" type-suffix)?
+// type-suffix = ("[" num? "]" type-suffix)?
 func typeSuffix(ty *Type) *Type {
 	if consume("[") == nil {
 		return ty
 	}
-	sz := expectNumber()
-	expect("]")
+
+	var sz int64
+	var isIncomp bool = true
+	if consume("]") == nil {
+		sz = expectNumber()
+		isIncomp = false
+		expect("]")
+	}
+
 	ty = typeSuffix(ty)
-	return arrayOf(ty, uint16(sz))
+	ty = arrayOf(ty, uint16(sz))
+	ty.IsIncomp = isIncomp
+	return ty
 }
 
 func typeName() *Type {
@@ -471,7 +500,7 @@ func structDecl() *Type {
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
 		offset = alignTo(offset, mem.Ty.Align)
 		mem.Offset = offset
-		offset += sizeOf(mem.Ty)
+		offset += sizeOf(mem.Ty, mem.Tok)
 
 		if ty.Align < mem.Ty.Align {
 			ty.Align = mem.Ty.Align
@@ -540,12 +569,13 @@ func enumSpecifier() *Type {
 // struct-member = type-specifier declarator type-suffix ";"
 func structMember() *Member {
 	var ty *Type = typeSpecifier()
+	tok := token
 	var name string
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
 	expect(";")
 
-	mem := &Member{Ty: ty, Name: name}
+	mem := &Member{Ty: ty, Name: name, Tok: tok}
 	return mem
 }
 
@@ -553,10 +583,11 @@ func structMember() *Member {
 func readFuncParam() *VarList {
 	ty := typeSpecifier()
 	var name string
+	tok := token
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
 
-	var_ := pushVar(name, ty, true)
+	var_ := pushVar(name, ty, true, tok)
 	pushScope(name).Var = var_
 
 	vl := &VarList{Var: var_}
@@ -594,10 +625,11 @@ func function() *Function {
 
 	ty := typeSpecifier()
 	var name string
+	tok := token
 	ty = declarator(ty, &name)
 
 	// add a function type to the scope
-	var_ := pushVar(name, funcType(ty), false)
+	var_ := pushVar(name, funcType(ty), false, tok)
 	pushScope(name).Var = var_
 
 	// construct a function object
@@ -631,23 +663,24 @@ func function() *Function {
 func globalVar() {
 	ty := typeSpecifier()
 	var name string
+	tok := token
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
 	expect(";")
 
-	var_ := pushVar(name, ty, false)
+	var_ := pushVar(name, ty, false, tok)
 	pushScope(name).Var = var_
 }
 
 // declaration = type-specifier declarator type-suffix ("=" expr)? ";"
 //             | type-specifier ";"
 func declaration() *Node {
-	tok := token
 	ty := typeSpecifier()
-	if consume(";") != nil {
+	if tok := consume(";"); tok != nil {
 		return &Node{Kind: ND_NULL, Tok: tok}
 	}
 
+	tok := token
 	var name string
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
@@ -665,9 +698,9 @@ func declaration() *Node {
 
 	var var_ *Var
 	if ty.IsStatic {
-		var_ = pushVar(newLabel(), ty, false)
+		var_ = pushVar(newLabel(), ty, false, tok)
 	} else {
-		var_ = pushVar(name, ty, true)
+		var_ = pushVar(name, ty, true, tok)
 	}
 	pushScope(name).Var = var_
 
@@ -738,8 +771,7 @@ func stmt() *Node {
 		node = &Node{Kind: ND_FOR, Tok: t}
 		expect("(")
 
-		sc1 := varScope
-		sc2 := tagScope
+		sc := enterScope()
 
 		if consume(";") == nil {
 			if isTypename() {
@@ -759,16 +791,14 @@ func stmt() *Node {
 		}
 		node.Then = stmt()
 
-		varScope = sc1
-		tagScope = sc2
+		leaveScope(sc)
 
 	} else if t := consume("{"); t != nil {
 
 		head := Node{}
 		cur := &head
 
-		sc1 := varScope
-		sc2 := tagScope
+		sc := enterScope()
 		for {
 			if consume("}") != nil {
 				break
@@ -776,8 +806,7 @@ func stmt() *Node {
 			cur.Next = stmt()
 			cur = cur.Next
 		}
-		varScope = sc1
-		tagScope = sc2
+		leaveScope(sc)
 
 		node = &Node{Kind: ND_BLOCK, Tok: t}
 		node.Body = head.Next
@@ -1004,7 +1033,7 @@ func unary() *Node {
 			if isTypename() {
 				ty := typeName()
 				expect(")")
-				return newNodeNum(int64(sizeOf(ty)), t)
+				return newNodeNum(int64(sizeOf(ty, t)), t)
 			}
 			token = t.Next
 		}
@@ -1083,8 +1112,7 @@ func postfix() *Node {
 //
 // statement expression is a GNU extension.
 func stmtExpr(tok *Token) *Node {
-	sc1 := varScope
-	sc2 := tagScope
+	sc := enterScope()
 
 	node := &Node{
 		Kind: ND_STMT_EXPR,
@@ -1102,8 +1130,7 @@ func stmtExpr(tok *Token) *Node {
 	}
 	expect(")")
 
-	varScope = sc1
-	tagScope = sc2
+	leaveScope(sc)
 
 	if cur.Kind != ND_EXPR_STMT {
 		panic("\n" +
@@ -1195,7 +1222,7 @@ func primary() *Node {
 		token = token.Next
 
 		ty := arrayOf(charType(), uint16(tok.ContLen))
-		var_ := pushVar(newLabel(), ty, false)
+		var_ := pushVar(newLabel(), ty, false, nil)
 		var_.Contents = tok.Contents
 		var_.ContLen = tok.ContLen
 		return newVar(var_, tok)

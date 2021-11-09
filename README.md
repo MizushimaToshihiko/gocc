@@ -14,7 +14,7 @@ builtin-type   = "void"
                | "int"
                | "long" | "long" "int" | "int" "long"
 declarator     = "*" ("(" declarator ")") | ident) type-suffix
-type-suffix    = ("[" num "]" type-suffix)?
+type-suffix    = ("[" num? "]" type-suffix)?
 struct-decl    = "struct" ident
                | "struct" ident? "{" struct-member "}"
 struct-member  = type-specifier declarator type-suffix ";"
