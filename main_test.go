@@ -19,6 +19,15 @@ func TestCompile(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// make tmp2.o
+	const shell = "/bin/bash"
+	b0, err := exec.Command(shell,
+		"-c", "echo 'int char_fn() { return 257; }' | gcc -xc -c -o testdata/tmp2.o -",
+	).CombinedOutput()
+	if err != nil {
+		t.Fatalf("\noutput:\n%s\n%v", string(b0), err)
+	}
+
 	// make a execution file
 	b1, err := exec.Command(
 		"gcc",
@@ -27,6 +36,7 @@ func TestCompile(t *testing.T) {
 		"-o",
 		"testdata/tmp",
 		asm.Name(),
+		"testdata/tmp2.o",
 	).CombinedOutput()
 	if err != nil {
 		t.Fatalf("\noutput:\n%s\n%v", string(b1), err)

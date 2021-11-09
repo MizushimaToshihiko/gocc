@@ -240,11 +240,16 @@ func program() *Program {
 
 	for !atEof() {
 		if isFunction() {
-			cur.Next = function()
+			fn := function()
+			if fn == nil {
+				continue
+			}
+			cur.Next = fn
 			cur = cur.Next
-		} else {
-			globalVar()
+			continue
 		}
+
+		globalVar()
 	}
 
 	prog := &Program{Globals: globals, Fns: head.Next}
@@ -497,7 +502,7 @@ func readFuncParams() *VarList {
 	return head
 }
 
-// function = type-specifier declarator "(" params? ")" "{" stmt* "}"
+// function = type-specifier declarator "(" params? ")" ("{" stmt* "}" | ";")
 func function() *Function {
 	// printCurTok()
 	// printCurFunc()
@@ -514,11 +519,15 @@ func function() *Function {
 	fn := &Function{Name: name}
 	expect("(")
 	fn.Params = readFuncParams()
-	expect("{")
+
+	if consume(";") != nil {
+		return nil
+	}
 
 	// read function body
 	cur := &Node{}
 	head := cur
+	expect("{")
 
 	for {
 		if t := consume("}"); t != nil {

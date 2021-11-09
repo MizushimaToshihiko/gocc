@@ -19,7 +19,7 @@ struct-decl    = "struct" ident
 struct-member  = type-specifier declarator type-suffix ";"
 param          = type-specifier declarator type-suffix
 params         = param ("," param)*
-function       = type-specifier declarator "(" params? ")" "{" stmt* "}"
+function       = type-specifier declarator "(" params? ")" ("{" stmt* "}" | ";")
 global-var     = type-specifier declarator type-suffix ";"
 declaration    = type-specifier declarator type-suffix ("=" expr)? ";"
                | type-specifier ";"
