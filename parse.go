@@ -50,6 +50,7 @@ const (
 	ND_BITXOR                    // 38: ^
 	ND_LOGAND                    // 40: &&
 	ND_LOGOR                     // 41: ||
+	ND_BREAK                     // 42: "break"
 )
 
 // define AST node
@@ -773,6 +774,7 @@ func isTypename() bool {
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" (expr? ";" | declaration) expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
+//      | "break" ";"
 //      | declaration
 //      | expr ";"
 func stmt() *Node {
@@ -849,6 +851,11 @@ func stmt() *Node {
 
 		node = &Node{Kind: ND_BLOCK, Tok: t}
 		node.Body = head.Next
+
+	} else if t := consume("break"); t != nil {
+
+		expect(";")
+		node = &Node{Kind: ND_BREAK, Tok: t}
 
 	} else {
 

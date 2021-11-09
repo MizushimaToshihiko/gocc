@@ -26,6 +26,7 @@ func (c *codeWriter) printf(format string, a ...interface{}) {
 }
 
 var labelNo int
+var brkseq int
 var argReg1 = []string{"dil", "sil", "dl", "cl", "r8b", "r9b"}
 var argReg2 = []string{"di", "si", "dx", "cx", "r8w", "r9w"}
 var argReg4 = []string{"edi", "esi", "edx", "ecx", "r8d", "r9d"}
@@ -305,16 +306,16 @@ func (c *codeWriter) gen(node *Node) {
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")
 		c.printf("	cmp rax, 0\n")
-		c.printf("	je .Lfalse%03d\n", seq)
+		c.printf("	je .Lfalse%d\n", seq)
 		c.gen(node.Rhs)
 		c.printf("	pop rax\n")
 		c.printf("	cmp rax, 0\n")
-		c.printf("	je .Lfalse%03d\n", seq)
+		c.printf("	je .Lfalse%d\n", seq)
 		c.printf("	push 1\n")
-		c.printf("	jmp .Lend%03d\n", seq)
-		c.printf(".Lfalse%03d:\n", seq)
+		c.printf("	jmp .Lend%d\n", seq)
+		c.printf(".Lfalse%d:\n", seq)
 		c.printf("	push 0\n")
-		c.printf(".Lend%03d:\n", seq)
+		c.printf(".Lend%d:\n", seq)
 		return
 
 	case ND_LOGOR:
@@ -323,16 +324,16 @@ func (c *codeWriter) gen(node *Node) {
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")
 		c.printf("	cmp rax, 0\n")
-		c.printf("	jne .Ltrue%03d\n", seq)
+		c.printf("	jne .Ltrue%d\n", seq)
 		c.gen(node.Rhs)
 		c.printf("	pop rax\n")
 		c.printf("	cmp rax, 0\n")
-		c.printf("	jne .Ltrue%03d\n", seq)
+		c.printf("	jne .Ltrue%d\n", seq)
 		c.printf("	push 0\n")
-		c.printf("	jmp .Lend%03d\n", seq)
-		c.printf(".Ltrue%03d:\n", seq)
+		c.printf("	jmp .Lend%d\n", seq)
+		c.printf(".Ltrue%d:\n", seq)
 		c.printf("	push 1\n")
-		c.printf(".Lend%03d:\n", seq)
+		c.printf(".Lend%d:\n", seq)
 		return
 
 	case ND_IF:
@@ -343,51 +344,58 @@ func (c *codeWriter) gen(node *Node) {
 		seq := labelNo
 		labelNo++
 		if node.Els != nil {
-			c.printf("	je .Lelse%03d\n", seq)
+			c.printf("	je .Lelse%d\n", seq)
 		} else {
-			c.printf("	je .Lend%03d\n", seq)
+			c.printf("	je .Lend%d\n", seq)
 		}
 
 		c.gen(node.Then)
 
 		if node.Els != nil {
-			c.printf(" jmp .Lend%03d\n", seq)
-			c.printf(".Lelse%03d:\n", seq)
+			c.printf(" jmp .Lend%d\n", seq)
+			c.printf(".Lelse%d:\n", seq)
 			c.gen(node.Els)
 		}
 
-		c.printf(".Lend%03d:\n", seq)
+		c.printf(".Lend%d:\n", seq)
 		return
 
 	case ND_WHILE:
 		seq := labelNo
 		labelNo++
-		c.printf(".Lbegin%03d:\n", seq)
+		brk := brkseq
+		brkseq = seq
+		c.printf(".Lbegin%d:\n", seq)
 		c.gen(node.Cond)
 		c.printf("	pop rax\n")
 		c.printf("	cmp rax, 0\n")
-		c.printf("	je .Lend%03d\n", seq)
+		c.printf("	je .L.break.%d\n", seq)
 
 		c.gen(node.Then)
 
-		c.printf("	jmp .Lbegin%03d\n", seq)
-		c.printf(".Lend%03d:\n", seq)
+		c.printf("	jmp .Lbegin%d\n", seq)
+		c.printf(".L.break.%d:\n", seq)
+
+		brkseq = brk
 		return
 
 	case ND_FOR:
+		seq := labelNo
+		labelNo++
+		brk := brkseq
+		brkseq = seq
+
 		if node.Init != nil {
 			c.gen(node.Init)
 		}
 
-		seq := labelNo
-		labelNo++
-		c.printf(".Lbegin%03d:\n", seq)
+		c.printf(".Lbegin%d:\n", seq)
 
 		if node.Cond != nil {
 			c.gen(node.Cond)
 			c.printf("	pop rax\n")
 			c.printf("	cmp rax, 0\n")
-			c.printf("	je .Lend%03d\n", seq)
+			c.printf("	je .L.break.%d\n", seq)
 		}
 
 		c.gen(node.Then)
@@ -395,8 +403,10 @@ func (c *codeWriter) gen(node *Node) {
 		if node.Inc != nil {
 			c.gen(node.Inc)
 		}
-		c.printf("	jmp .Lbegin%03d\n", seq)
-		c.printf(".Lend%03d:\n", seq)
+		c.printf("	jmp .Lbegin%d\n", seq)
+		c.printf(".L.break.%d:\n", seq)
+
+		brkseq = brk
 		return
 
 	case ND_FUNCCALL:
@@ -412,18 +422,18 @@ func (c *codeWriter) gen(node *Node) {
 
 		seq := labelNo
 		labelNo++
-		c.printf("	mov rax, rsp\n")        // move rsp to rax
-		c.printf("	and rax, 15\n")         // calculate rax & 15, when rax == 16, rax is 0b10000, and 15(0b1110) & 0b10000, ZF become 0.
-		c.printf("	jnz .Lcall%03d\n", seq) // if ZF is 0, jamp to Lcall???.
-		c.printf("	mov rax, 0\n")          // remove rax
+		c.printf("	mov rax, rsp\n")      // move rsp to rax
+		c.printf("	and rax, 15\n")       // calculate rax & 15, when rax == 16, rax is 0b10000, and 15(0b1110) & 0b10000, ZF become 0.
+		c.printf("	jnz .Lcall%d\n", seq) // if ZF is 0, jamp to Lcall???.
+		c.printf("	mov rax, 0\n")        // remove rax
 		c.printf("	call %s\n", node.FuncName)
-		c.printf("	jmp .Lend%03d\n", seq)
-		c.printf(".Lcall%03d:\n", seq)
+		c.printf("	jmp .Lend%d\n", seq)
+		c.printf(".Lcall%d:\n", seq)
 		c.printf("	sub rsp, 8\n") // rspは8の倍数なので16の倍数にするために8を引く
 		c.printf("	mov rax, 0\n")
 		c.printf("	call %s\n", node.FuncName)
 		c.printf("	add rsp, 8\n")
-		c.printf(".Lend%03d:\n", seq)
+		c.printf(".Lend%d:\n", seq)
 		c.printf("	push rax\n")
 
 		c.truncate(node.Ty)
@@ -435,6 +445,15 @@ func (c *codeWriter) gen(node *Node) {
 		}
 		return
 
+	case ND_BREAK:
+		if brkseq == 0 {
+			c.err = fmt.Errorf(
+				"c.gen(): err:\n%s",
+				errorTok(node.Tok, "stray break"),
+			)
+		}
+		c.printf("	jmp .L.break.%d\n", brkseq)
+		return
 	case ND_RETURN:
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")
