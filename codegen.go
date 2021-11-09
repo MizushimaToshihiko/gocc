@@ -284,6 +284,8 @@ func (c *codeWriter) gen(node *Node) {
 		c.printf("	add rsp, 8\n")
 		c.printf(".Lend%03d:\n", seq)
 		c.printf("	push rax\n")
+
+		c.truncate(node.Ty)
 		return
 
 	case ND_BLOCK, ND_STMT_EXPR:
