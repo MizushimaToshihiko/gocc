@@ -212,6 +212,9 @@ func (e *errWriter) visit(node *Node) {
 	case ND_ASSIGN:
 		node.Ty = node.Lhs.Ty
 		return
+	case ND_COMMA:
+		node.Ty = node.Rhs.Ty
+		return
 	case ND_MEMBER:
 		if node.Lhs.Ty.Kind != TY_STRUCT {
 			errorTok(node.Tok, "not a struct")

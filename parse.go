@@ -18,22 +18,23 @@ const (
 	ND_LT                        // 6: <
 	ND_LE                        // 7: <=
 	ND_ASSIGN                    // 8: =
-	ND_VAR                       // 9: local or global variables
-	ND_NUM                       // 10: integer
-	ND_RETURN                    // 11: 'return'
-	ND_IF                        // 12: "if"
-	ND_WHILE                     // 13: "while"
-	ND_FOR                       // 14: "for"
-	ND_BLOCK                     // 15: {...}
-	ND_FUNCCALL                  // 16: function call
-	ND_MEMBER                    // 17: . (struct member access)
-	ND_ADDR                      // 18: unary &
-	ND_DEREF                     // 19: unary *
-	ND_EXPR_STMT                 // 20: expression statement
-	ND_STMT_EXPR                 // 21: statement expression
-	ND_CAST                      // 22: type cast
-	ND_NULL                      // 23: empty statement
-	ND_SIZEOF                    // 24: "sizeof" operator
+	ND_COMMA                     // 9: ,
+	ND_VAR                       // 10: local or global variables
+	ND_NUM                       // 11: integer
+	ND_RETURN                    // 12: 'return'
+	ND_IF                        // 13: "if"
+	ND_WHILE                     // 14: "while"
+	ND_FOR                       // 15: "for"
+	ND_BLOCK                     // 16: {...}
+	ND_FUNCCALL                  // 17: function call
+	ND_MEMBER                    // 18: . (struct member access)
+	ND_ADDR                      // 19: unary &
+	ND_DEREF                     // 20: unary *
+	ND_EXPR_STMT                 // 21: expression statement
+	ND_STMT_EXPR                 // 22: statement expression
+	ND_CAST                      // 23: type cast
+	ND_NULL                      // 24: empty statement
+	ND_SIZEOF                    // 25: "sizeof" operator
 )
 
 // define AST node
@@ -779,11 +780,20 @@ func stmt() *Node {
 	return node
 }
 
-// expr       = assign
+// expr       = assign ("," assign)*
 func expr() *Node {
 	// printCurTok()
 	// printCurFunc()
-	return assign()
+	node := assign()
+	for {
+		tok := consume(",")
+		if tok == nil {
+			break
+		}
+		node = newUnary(ND_EXPR_STMT, node, node.Tok)
+		node = newNode(ND_COMMA, node, assign(), tok)
+	}
+	return node
 }
 
 // assign     = equality ("=" assign)?

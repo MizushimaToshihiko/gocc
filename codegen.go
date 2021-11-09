@@ -183,6 +183,11 @@ func (c *codeWriter) gen(node *Node) {
 		c.store(node.Ty)
 		return
 
+	case ND_COMMA:
+		c.gen(node.Lhs)
+		c.gen(node.Rhs)
+		return
+
 	case ND_ADDR:
 		c.genAddr(node.Lhs)
 		return
