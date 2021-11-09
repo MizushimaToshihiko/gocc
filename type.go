@@ -209,7 +209,7 @@ func (e *errWriter) visit(node *Node) {
 
 		node.Ty = node.Lhs.Ty
 		return
-	case ND_ASSIGN:
+	case ND_ASSIGN, ND_PRE_INC, ND_PRE_DEC, ND_POST_INC, ND_POST_DEC:
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_COMMA:

@@ -18,23 +18,27 @@ const (
 	ND_LT                        // 6: <
 	ND_LE                        // 7: <=
 	ND_ASSIGN                    // 8: =
-	ND_COMMA                     // 9: ,
-	ND_VAR                       // 10: local or global variables
-	ND_NUM                       // 11: integer
-	ND_RETURN                    // 12: 'return'
-	ND_IF                        // 13: "if"
-	ND_WHILE                     // 14: "while"
-	ND_FOR                       // 15: "for"
-	ND_BLOCK                     // 16: {...}
-	ND_FUNCCALL                  // 17: function call
-	ND_MEMBER                    // 18: . (struct member access)
-	ND_ADDR                      // 19: unary &
-	ND_DEREF                     // 20: unary *
-	ND_EXPR_STMT                 // 21: expression statement
-	ND_STMT_EXPR                 // 22: statement expression
-	ND_CAST                      // 23: type cast
-	ND_NULL                      // 24: empty statement
-	ND_SIZEOF                    // 25: "sizeof" operator
+	ND_PRE_INC                   // 9: pre ++
+	ND_PRE_DEC                   // 10: pre --
+	ND_POST_INC                  // 11: post ++
+	ND_POST_DEC                  // 12: post --
+	ND_COMMA                     // 13: ,
+	ND_VAR                       // 14: local or global variables
+	ND_NUM                       // 15: integer
+	ND_RETURN                    // 16: 'return'
+	ND_IF                        // 17: "if"
+	ND_WHILE                     // 18: "while"
+	ND_FOR                       // 19: "for"
+	ND_BLOCK                     // 20: {...}
+	ND_FUNCCALL                  // 21: function call
+	ND_MEMBER                    // 22: . (struct member access)
+	ND_ADDR                      // 23: unary &
+	ND_DEREF                     // 24: unary *
+	ND_EXPR_STMT                 // 25: expression statement
+	ND_STMT_EXPR                 // 26: statement expression
+	ND_CAST                      // 27: type cast
+	ND_NULL                      // 28: empty statement
+	ND_SIZEOF                    // 29: "sizeof" operator
 )
 
 // define AST node
@@ -899,6 +903,7 @@ func cast() *Node {
 }
 
 // unary = ("+" | "-" | "*" | "&")? cast
+//       | ("++" | "--") unary
 //       | "sizeof" "(" type-name ")"
 //       | "sizeof" unary
 //       | postfix
@@ -929,10 +934,16 @@ func unary() *Node {
 	if t := consume("*"); t != nil {
 		return newUnary(ND_DEREF, cast(), t)
 	}
+	if t := consume("++"); t != nil {
+		return newUnary(ND_PRE_INC, unary(), t)
+	}
+	if t := consume("--"); t != nil {
+		return newUnary(ND_PRE_DEC, unary(), t)
+	}
 	return postfix()
 }
 
-// postfix = primary ("[" expr "]" | "." ident | "->" ident)*
+// postfix = primary ("[" expr "]" | "." ident | "->" ident | "++" | "--")*
 func postfix() *Node {
 	node := primary()
 
@@ -956,6 +967,16 @@ func postfix() *Node {
 			node = newUnary(ND_DEREF, node, tok)
 			node = newUnary(ND_MEMBER, node, tok)
 			node.MemName = expectIdent()
+			continue
+		}
+
+		if tok := consume("++"); tok != nil {
+			node = newUnary(ND_POST_INC, node, tok)
+			continue
+		}
+
+		if tok := consume("--"); tok != nil {
+			node = newUnary(ND_POST_DEC, node, tok)
 			continue
 		}
 
