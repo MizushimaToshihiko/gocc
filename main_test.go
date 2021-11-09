@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"reflect"
@@ -217,8 +216,6 @@ func TestReadCharLiteral(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			t.Logf("tok: %#v\n", tok)
-			t.Logf("tok.Next: %#v\n", tok.Next)
 			if tok.Val != int64(c.want1) {
 				t.Fatalf("tok.Val: %d expected, but got %d", c.want1, tok.Val)
 			}
@@ -232,11 +229,15 @@ func TestReadCharLiteral(t *testing.T) {
 func TestTokenize(t *testing.T) {
 	cases := map[string]struct {
 		in   []rune
-		want int64
+		kind []TokenKind
+		str  []string
+		val  []int64
 	}{
 		"case 'a',": {
 			in:   append([]rune("3, 'a',"), 0),
-			want: int64('a'),
+			kind: []TokenKind{TK_NUM, TK_RESERVED, TK_NUM, TK_RESERVED, TK_EOF},
+			str:  []string{"3", ",", "'a'", ","},
+			val:  []int64{3, 0, 97, 0},
 		},
 	}
 
@@ -244,9 +245,20 @@ func TestTokenize(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			userInput = c.in
 			curIdx = 0
-			fmt.Println("userInput:", userInput)
 			tokenize()
-			printTokens()
+			i := 0
+			for tok := headTok.Next; tok.Next != nil; tok = tok.Next {
+				if tok.Kind != c.kind[i] {
+					t.Fatalf("tok.Kind: %d expected, but got %d", c.kind[i], tok.Kind)
+				}
+				if tok.Str != c.str[i] {
+					t.Fatalf("tok.Str: %s expected, but got %s", c.str[i], tok.Str)
+				}
+				if tok.Val != c.val[i] {
+					t.Fatalf("tok.Val: %d expected, but got %d", c.val[i], tok.Val)
+				}
+				i++
+			}
 		})
 	}
 }
