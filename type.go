@@ -217,7 +217,8 @@ func (e *errWriter) visit(node *Node) {
 		ND_A_ADD,
 		ND_A_SUB,
 		ND_A_MUL,
-		ND_A_DIV:
+		ND_A_DIV,
+		ND_BITNOT:
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_COMMA:

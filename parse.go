@@ -44,6 +44,7 @@ const (
 	ND_CAST                      // 32: type cast
 	ND_NULL                      // 33: empty statement
 	ND_SIZEOF                    // 34: "sizeof" operator
+	ND_BITNOT                    // 35: ~
 )
 
 // define AST node
@@ -920,7 +921,7 @@ func cast() *Node {
 	return unary()
 }
 
-// unary = ("+" | "-" | "*" | "&" | "!")? cast
+// unary = ("+" | "-" | "*" | "&" | "!" | "~")? cast
 //       | ("++" | "--") unary
 //       | "sizeof" "(" type-name ")"
 //       | "sizeof" unary
@@ -954,6 +955,9 @@ func unary() *Node {
 	}
 	if t := consume("!"); t != nil {
 		return newUnary(ND_NOT, cast(), t)
+	}
+	if t := consume("~"); t != nil {
+		return newUnary(ND_BITNOT, cast(), t)
 	}
 	if t := consume("++"); t != nil {
 		return newUnary(ND_PRE_INC, unary(), t)

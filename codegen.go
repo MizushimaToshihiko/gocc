@@ -292,6 +292,13 @@ func (c *codeWriter) gen(node *Node) {
 		c.printf("	push rax\n")
 		return
 
+	case ND_BITNOT:
+		c.gen(node.Lhs)
+		c.printf("	pop rax\n")
+		c.printf("	not rax\n")
+		c.printf("	push rax\n")
+		return
+
 	case ND_IF:
 		c.gen(node.Cond)
 		c.printf("	pop rax\n")
