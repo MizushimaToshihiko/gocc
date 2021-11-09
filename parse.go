@@ -683,7 +683,7 @@ func isTypename() bool {
 // stmt = "return" expr ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "while" "(" expr ")" stmt
-//      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+//      | "for" "(" (expr? ";" | declaration) expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
 //      | declaration
 //      | expr ";"
@@ -722,9 +722,16 @@ func stmt() *Node {
 		node = &Node{Kind: ND_FOR, Tok: t}
 		expect("(")
 
+		sc1 := varScope
+		sc2 := tagScope
+
 		if consume(";") == nil {
-			node.Init = readExprStmt()
-			expect(";")
+			if isTypename() {
+				node.Init = declaration()
+			} else {
+				node.Init = readExprStmt()
+				expect(";")
+			}
 		}
 		if consume(";") == nil {
 			node.Cond = expr()
@@ -735,6 +742,9 @@ func stmt() *Node {
 			expect(")")
 		}
 		node.Then = stmt()
+
+		varScope = sc1
+		tagScope = sc2
 
 	} else if t := consume("{"); t != nil {
 
