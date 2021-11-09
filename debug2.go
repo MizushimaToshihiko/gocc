@@ -10,7 +10,7 @@ import (
 var headTok *Token
 
 func printTokens() {
-	fmt.Print("# Tokens: ")
+	fmt.Print("# Tokens:\n")
 	tok := headTok.Next
 	var kind string
 	for tok.Next != nil {
@@ -28,7 +28,7 @@ func printTokens() {
 		default:
 			log.Fatal("unknown token kind")
 		}
-		fmt.Printf(" %s:'%s':%d ", kind, tok.Str, tok.Len)
+		fmt.Printf(" %s: Str:\"%s\" :%d Val:%d\n", kind, tok.Str, tok.Len, tok.Val)
 		// fmt.Printf(" '%s' ", tok.Str)
 		tok = tok.Next
 	}
@@ -37,7 +37,7 @@ func printTokens() {
 		fmt.Print(" EOF ")
 	}
 
-	fmt.Println()
+	fmt.Print("\n\n")
 }
 
 // func printCurTokInit() {

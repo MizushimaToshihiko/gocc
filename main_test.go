@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"reflect"
@@ -183,6 +184,69 @@ func TestReadStringLiteral(t *testing.T) {
 			if !reflect.DeepEqual(tok.Contents, c.want) {
 				t.Fatalf("%s expected, but got %s", string(c.want), string(tok.Contents))
 			}
+		})
+	}
+}
+
+func TestReadCharLiteral(t *testing.T) {
+	cases := map[string]struct {
+		in    string
+		want1 int64
+		want2 string
+	}{
+		"case 'a'": {
+			in:    "'a'",
+			want1: int64('a'),
+			want2: "'a'",
+		},
+		"case '\n'": {
+			in:    "'\n'",
+			want1: int64('\n'),
+			want2: "'\n'",
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			tok := &Token{}
+			userInput = []rune(c.in)
+			curIdx = 0
+			var err error
+			tok, err = readCharLiteral(tok, curIdx)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			t.Logf("tok: %#v\n", tok)
+			t.Logf("tok.Next: %#v\n", tok.Next)
+			if tok.Val != int64(c.want1) {
+				t.Fatalf("tok.Val: %d expected, but got %d", c.want1, tok.Val)
+			}
+			if tok.Str != c.want2 {
+				t.Fatalf("tok.Str: %s expected, but got %s", c.want2, tok.Str)
+			}
+		})
+	}
+}
+
+func TestTokenize(t *testing.T) {
+	cases := map[string]struct {
+		in   []rune
+		want int64
+	}{
+		"case 'a',": {
+			in:   append([]rune("3, 'a',"), 0),
+			want: int64('a'),
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			userInput = c.in
+			curIdx = 0
+			fmt.Println("userInput:", userInput)
+			tokenize()
+			printTokens()
 		})
 	}
 }

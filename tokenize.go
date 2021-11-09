@@ -287,6 +287,7 @@ func readStringLiteral(cur *Token) (*Token, error) {
 	curIdx++
 	return tok, nil
 }
+
 func readCharLiteral(cur *Token, start int) (*Token, error) {
 	p := start + 1
 	if p < len(userInput) && userInput[p] == 0 {
@@ -314,7 +315,7 @@ func readCharLiteral(cur *Token, start int) (*Token, error) {
 	}
 	p++
 
-	tok := newToken(TK_NUM, cur, string(userInput[start]), p-start)
+	tok := newToken(TK_NUM, cur, string(userInput[start:p]), p-start)
 	tok.Val = int64(c)
 	return tok, nil
 }
@@ -403,7 +404,8 @@ func tokenize() (*Token, error) {
 
 		// character literal
 		if userInput[curIdx] == '\'' {
-			cur, err := readCharLiteral(cur, curIdx)
+			var err error
+			cur, err = readCharLiteral(cur, curIdx)
 			if err != nil {
 				return nil, err
 			}
