@@ -248,6 +248,9 @@ func (e *errWriter) visit(node *Node) {
 		ND_BITNOT:
 		node.Ty = node.Lhs.Ty
 		return
+	case ND_TERNARY:
+		node.Ty = node.Then.Ty
+		return
 	case ND_COMMA:
 		node.Ty = node.Rhs.Ty
 		return

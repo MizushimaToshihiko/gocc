@@ -376,7 +376,7 @@ func tokenize() (*Token, error) {
 		}
 
 		// single-letter punctuator
-		if strings.Contains("+-()*/<>=;{},&[].,!~|^:", string(userInput[curIdx])) {
+		if strings.Contains("+-()*/<>=;{},&[].,!~|^:?", string(userInput[curIdx])) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue

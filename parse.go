@@ -60,6 +60,7 @@ const (
 	ND_SHR                       // 49: >>
 	ND_A_SHL                     // 50: <<=
 	ND_A_SHR                     // 51: >>=
+	ND_TERNARY                   // 52: "?:"
 )
 
 // define AST node
@@ -973,12 +974,13 @@ func expr() *Node {
 	return node
 }
 
-// assign     = logor (assign-op assign)?
+// assign     = conditional (assign-op assign)?
 // assign-op  = "=" | "+=" | "-=" | "*=" | "/=" | "<<=" | ">>="
 func assign() *Node {
 	// printCurTok()
 	// printCurFunc()
-	node := logor()
+	node := conditional()
+
 	if t := consume("="); t != nil {
 		node = newNode(ND_ASSIGN, node, assign(), t)
 	}
@@ -1002,6 +1004,20 @@ func assign() *Node {
 	}
 
 	return node
+}
+
+// conditional = logor ("?" expr ":" conditional)?
+func conditional() *Node {
+	node := logor()
+	t := consume("?")
+	if t == nil {
+		return node
+	}
+
+	ternary := &Node{Kind: ND_TERNARY, Tok: t, Cond: node, Then: expr()}
+	expect(":")
+	ternary.Els = conditional()
+	return ternary
 }
 
 // logor = logand ("||" logand)*

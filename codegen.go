@@ -205,6 +205,20 @@ func (c *codeWriter) gen(node *Node) {
 		c.store(node.Ty)
 		return
 
+	case ND_TERNARY:
+		seq := labelNo
+		labelNo++
+		c.gen(node.Cond)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	je .Lelse%d\n", seq)
+		c.gen(node.Then)
+		c.printf("	jmp .Lend%d\n", seq)
+		c.printf(".Lelse%d:\n", seq)
+		c.gen(node.Els)
+		c.printf(".Lend%d:\n", seq)
+		return
+
 	case ND_PRE_INC:
 		c.genLval(node.Lhs)
 		c.printf("	push [rsp]\n")
