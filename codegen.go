@@ -461,7 +461,9 @@ func (c *codeWriter) gen(node *Node) {
 		c.printf(".Lend%d:\n", seq)
 		c.printf("	push rax\n")
 
-		c.truncate(node.Ty)
+		if node.Ty.Kind != TY_VOID {
+			c.truncate(node.Ty)
+		}
 		return
 
 	case ND_SWITCH:
@@ -518,6 +520,7 @@ func (c *codeWriter) gen(node *Node) {
 		}
 		c.printf("	jmp .L.break.%d\n", brkseq)
 		return
+
 	case ND_RETURN:
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")
