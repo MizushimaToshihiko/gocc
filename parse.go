@@ -458,7 +458,7 @@ func abstractDeclarator(ty *Type) *Type {
 	return typeSuffix(ty)
 }
 
-// type-suffix = ("[" num? "]" type-suffix)?
+// type-suffix = ("[" const-expr? "]" type-suffix)?
 func typeSuffix(ty *Type) *Type {
 	if consume("[") == nil {
 		return ty
@@ -467,7 +467,7 @@ func typeSuffix(ty *Type) *Type {
 	var sz int64
 	var isIncomp bool = true
 	if consume("]") == nil {
-		sz = expectNumber()
+		sz = constExpr()
 		isIncomp = false
 		expect("]")
 	}
@@ -572,7 +572,8 @@ func structDecl() *Type {
 // enum-specifier = "enum" ident
 //                | "enum" ident? "{" enum-list? "}"
 //
-// enum-list = ident ("=" num)? ("," ident ("=" num)?)*
+// enum-list = enum-elem ("," enum-elem)* ","?
+// enum-elem = ident ("=" const-expr)?
 func enumSpecifier() *Type {
 	expect("enum")
 	ty := enumType()
@@ -593,16 +594,16 @@ func enumSpecifier() *Type {
 	expect("{")
 
 	// read enum-list
-	cnt := 0
+	var cnt int64 = 0
 	for {
 		name := expectIdent()
 		if consume("=") != nil {
-			cnt = int(expectNumber())
+			cnt = constExpr()
 		}
 
 		sc := pushScope(name)
 		sc.EnumTy = ty
-		sc.EnumVal = cnt
+		sc.EnumVal = int(cnt)
 		cnt++
 
 		if consume(",") != nil {
@@ -793,7 +794,7 @@ func isTypename() bool {
 // stmt = "return" expr ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "switch" "(" expr ")" stmt
-//      | "case" num ":" stmt
+//      | "case" const-expr ":" stmt
 //      | "default" ":" stmt
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" (expr? ";" | declaration) expr? ";" expr? ")" stmt
@@ -846,7 +847,7 @@ func stmt() *Node {
 		if currentSwitch == nil {
 			panic("\n" + errorTok(t, "stray case"))
 		}
-		val := expectNumber()
+		val := constExpr()
 		expect(":")
 
 		node := newUnary(ND_CASE, stmt(), t)
@@ -972,6 +973,85 @@ func expr() *Node {
 		node = newNode(ND_COMMA, node, assign(), tok)
 	}
 	return node
+}
+
+func eval(node *Node) int64 {
+	switch node.Kind {
+	case ND_ADD:
+		return eval(node.Lhs) + eval(node.Rhs)
+	case ND_SUB:
+		return eval(node.Lhs) - eval(node.Rhs)
+	case ND_MUL:
+		return eval(node.Lhs) * eval(node.Rhs)
+	case ND_DIV:
+		return eval(node.Lhs) / eval(node.Rhs)
+	case ND_BITAND:
+		return eval(node.Lhs) & eval(node.Rhs)
+	case ND_BITOR:
+		return eval(node.Lhs) | eval(node.Rhs)
+	case ND_BITXOR:
+		return eval(node.Lhs) ^ eval(node.Rhs)
+	case ND_SHL:
+		return eval(node.Lhs) << eval(node.Rhs)
+	case ND_SHR:
+		return eval(node.Lhs) >> eval(node.Rhs)
+	case ND_EQ:
+		b := eval(node.Lhs) == eval(node.Rhs)
+		if b {
+			return 1
+		}
+		return 0
+	case ND_NE:
+		b := eval(node.Lhs) != eval(node.Rhs)
+		if b {
+			return 1
+		}
+		return 0
+	case ND_LT:
+		b := eval(node.Lhs) < eval(node.Rhs)
+		if b {
+			return 1
+		}
+		return 0
+	case ND_LE:
+		b := eval(node.Lhs) <= eval(node.Rhs)
+		if b {
+			return 1
+		}
+		return 0
+	case ND_TERNARY:
+		if eval(node.Cond) != 0 {
+			return eval(node.Then)
+		}
+		return eval(node.Els)
+	case ND_COMMA:
+		return eval(node.Rhs)
+	case ND_NOT:
+		if eval(node.Lhs) != 0 {
+			return 0
+		}
+		return 1
+	case ND_BITNOT:
+		return ^eval(node.Lhs)
+	case ND_LOGAND:
+		if eval(node.Lhs) != 0 && eval(node.Rhs) != 0 {
+			return 1
+		}
+		return 0
+	case ND_LOGOR:
+		if eval(node.Lhs) != 0 || eval(node.Rhs) != 0 {
+			return 1
+		}
+		return 0
+	case ND_NUM:
+		return node.Val
+	default:
+		panic("\n" + errorTok(node.Tok, "not a constant expression"))
+	}
+}
+
+func constExpr() int64 {
+	return eval(conditional())
 }
 
 // assign     = conditional (assign-op assign)?

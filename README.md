@@ -14,12 +14,12 @@ builtin-type   = "void"
                | "int"
                | "long" | "long" "int" | "int" "long"
 declarator     = "*" ("(" declarator ")") | ident) type-suffix
-type-suffix    = ("[" num? "]" type-suffix)?
+type-suffix    = ("[" const-expr? "]" type-suffix)?
 struct-decl    = "struct" ident? ("{" struct-member "}")?
 struct-member  = type-specifier declarator type-suffix ";"
 enum-specifier = "enum" ident
                | "enum" ident? "{" enum-list? "}"
-enum-list      = ident ("=" num)? ("," ident ("=" num)?)*
+enum-list      = enum-elem ("," enum-elem)* ","?
 param          = type-specifier declarator type-suffix
 params         = param ("," param)*
 function       = type-specifier declarator "(" params? ")" ("{" stmt* "}" | ";")
@@ -29,7 +29,7 @@ declaration    = type-specifier declarator type-suffix ("=" expr)? ";"
 stmt           = "return" expr ";"
                | "if" "(" expr ")" stmt ("else" stmt)?
                | "switch" "(" expr ")" stmt
-               | "case" num ":" stmt
+               | "case" const-expr ":" stmt
                | "default" ":" stmt
                | "while" "(" expr ")" stmt
                | "for" "(" expr? ";" expr? ";" expr? ")" stmt
