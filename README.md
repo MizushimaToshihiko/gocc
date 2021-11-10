@@ -24,7 +24,9 @@ param          = type-specifier declarator type-suffix
 params         = param ("," param)*
 function       = type-specifier declarator "(" params? ")" ("{" stmt* "}" | ";")
 global-var     = type-specifier declarator type-suffix ";"
-declaration    = type-specifier declarator type-suffix ("=" expr)? ";"
+lvar-initializer = assign
+                 | "{" lvar-initializer ("," lvar-initializer)* ","? "}"
+declaration    = type-specifier declarator type-suffix ("=" lvar-initializer)? ";"
                | type-specifier ";"
 stmt           = "return" expr ";"
                | "if" "(" expr ")" stmt ("else" stmt)?

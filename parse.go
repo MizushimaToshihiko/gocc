@@ -721,6 +721,25 @@ func function() *Function {
 	return fn
 }
 
+// Initializer list can end either with "}" or "," followed by "}"
+// to allow a trailing comma. This function returns true if it looks
+// like we are at the end of an initializer list.
+func peekEnd() bool {
+	tok := token
+	ret := consume("}") != nil || (consume(",") != nil && consume("}") != nil)
+	token = tok
+	return ret
+}
+
+func expectEnd() {
+	tok := token
+	if consume(",") != nil && consume("}") != nil {
+		return
+	}
+	token = tok
+	expect("}")
+}
+
 // global-var = type-specifier declarator type-suffix ";"
 func globalVar() {
 	ty := typeSpecifier()
@@ -734,7 +753,73 @@ func globalVar() {
 	pushScope(name).Var = var_
 }
 
-// declaration = type-specifier declarator type-suffix ("=" expr)? ";"
+type Designator struct {
+	Next *Designator
+	Idx  int
+}
+
+// Creates a node for an array access. For example, if var represents
+// a variable x and desg represents indices 3 and 4, this function
+// returns a node representing x[3][4].
+func newDesgNode2(va *Var, desg *Designator) *Node {
+	tok := va.Tok
+	if desg == nil {
+		return newVar(va, tok)
+	}
+
+	node := newDesgNode2(va, desg.Next)
+	node = newNode(ND_ADD, node, newNodeNum(int64(desg.Idx), tok), tok)
+	return newUnary(ND_DEREF, node, tok)
+}
+
+func newDesgNode(va *Var, desg *Designator, rhs *Node) *Node {
+	lhs := newDesgNode2(va, desg)
+	node := newNode(ND_ASSIGN, lhs, rhs, rhs.Tok)
+	return newUnary(ND_EXPR_STMT, node, rhs.Tok)
+}
+
+// lvar-initializer = assign
+//                  | "{" lvar-initializer ("," lvar-initializer)* ","? "}"
+//
+// An initializer for a local variable is expanded to multiple
+// assignments. For expample, this function creates the following
+// nodes for x[2][3]={{1,2,3},{4,5,6}}.
+//
+//   x[0][0]=1;
+//   x[0][1]=2;
+//   x[0][2]=3;
+//   x[1][0]=4;
+//   x[1][1]=5;
+//   x[1][2]=6;
+//
+func lverInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
+	tok := consume("{")
+	if tok == nil {
+		cur.Next = newDesgNode(va, desg, assign())
+		return cur.Next
+	}
+
+	if ty.Kind == TY_ARRAY {
+		i := 0
+
+		for {
+			desg2 := &Designator{Next: desg, Idx: i}
+			i++
+			cur = lverInitializer(cur, va, ty.PtrTo, desg2)
+			if !peekEnd() && consume(",") != nil {
+				continue
+			}
+			break
+		}
+
+		expectEnd()
+		return cur
+	}
+
+	panic("\n" + errorTok(tok, "invalid array initializer"))
+}
+
+// declaration = type-specifier declarator type-suffix ("=" lvar-initializer)? ";"
 //             | type-specifier ";"
 func declaration() *Node {
 	ty := typeSpecifier()
@@ -772,11 +857,12 @@ func declaration() *Node {
 
 	expect("=")
 
-	lhs := newVar(var_, tok)
-	rhs := expr()
+	var head Node
+	head.Next = nil
+	lverInitializer(&head, var_, var_.Ty, nil)
 	expect(";")
-	node := newNode(ND_ASSIGN, lhs, rhs, tok)
-	return newUnary(ND_EXPR_STMT, node, tok)
+
+	return &Node{Kind: ND_BLOCK, Tok: tok, Body: head.Next}
 }
 
 func readExprStmt() *Node {
