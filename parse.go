@@ -808,7 +808,39 @@ func lvarInitZero(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 //
 // If an initilizer list is shorter than an array, excess array
 // elements are initilized with 0.
+//
+// A char array can be initializer by a string literal, For example,
+// `char x[4] = "foo"` is equivalent to `char x[4] = {'f', 'o', 'o',
+// '\0'}`.
 func lverInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
+	if ty.Kind == TY_ARRAY && ty.PtrTo.Kind == TY_CHAR &&
+		token.Kind == TK_STR {
+		// Initialize a char array with a string literal.
+		tok := token
+		token = token.Next
+
+		var len int
+		if ty.ArraySize < uint16(tok.ContLen) {
+			len = int(ty.ArraySize)
+		} else {
+			len = tok.ContLen
+		}
+
+		var i int
+		for i = 0; i < len; i++ {
+			desg2 := &Designator{Next: desg, Idx: i}
+			rhs := newNodeNum(int64(tok.Contents[i]), tok)
+			cur.Next = newDesgNode(va, desg2, rhs)
+			cur = cur.Next
+		}
+
+		for ; i < int(ty.ArraySize); i++ {
+			desg2 := &Designator{Next: desg, Idx: i}
+			cur = lvarInitZero(cur, va, ty.PtrTo, desg2)
+		}
+		return cur
+	}
+
 	tok := consume("{")
 	if tok == nil {
 		cur.Next = newDesgNode(va, desg, assign())
