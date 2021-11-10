@@ -41,14 +41,16 @@ stmt           = "return" expr ";"
                | declaration
                | expr ";"
 expr           = assign
-assign         = logor ("=" assign)?
+assign         = logor (assign-op assign)?
+assign-op      = "=" | "+=" | "-=" | "*=" | "/=" | "<<=" | ">>="
 logor          = logand ("||" logand)*
 logand         = bitor ("&&" bitor)*
 bitor          = bitxor ("|" bitxor)*
 bitxor         = bitand ("^" bitand)*
 bitand         = equality ("&" equality)*
 equality       = relational ("==" relational | "!=" relational)*
-relational     = add ("<" add | "<=" add | ">" add | ">=" add)*
+relational     = shift ("<" shift | "<=" shift | ">" shift | ">=" shift)*
+shift          = add ("<<" add | ">>" add)*
 add            = mul ("+" mul | "-" mul)*
 mul            = unary ("*" unary | "/" unary)*
 unary          = ("+" | "-" | "*" | "&" | "!")? unary

@@ -239,7 +239,7 @@ func (c *codeWriter) gen(node *Node) {
 		c.inc(node)
 		return
 
-	case ND_A_ADD, ND_A_SUB, ND_A_MUL, ND_A_DIV:
+	case ND_A_ADD, ND_A_SUB, ND_A_MUL, ND_A_DIV, ND_A_SHL, ND_A_SHR:
 		c.genLval(node.Lhs)
 		c.printf("	push [rsp]\n")
 		c.load(node.Lhs.Ty)
@@ -263,6 +263,12 @@ func (c *codeWriter) gen(node *Node) {
 		case ND_A_DIV:
 			c.printf("	cqo\n")
 			c.printf("	idiv rdi\n")
+		case ND_A_SHL:
+			c.printf("	mov cl, dil\n")
+			c.printf("	shl rax, cl\n")
+		case ND_A_SHR:
+			c.printf("	mov cl, dil\n")
+			c.printf("	sar rax, cl\n")
 		}
 
 		c.printf("	push rax\n")
@@ -561,6 +567,12 @@ func (c *codeWriter) gen(node *Node) {
 		c.printf("	or rax, rdi\n")
 	case ND_BITXOR:
 		c.printf("	xor rax, rdi\n")
+	case ND_SHL:
+		c.printf("	mov cl, dil\n")
+		c.printf("	shl rax, cl\n")
+	case ND_SHR:
+		c.printf("	mov cl, dil\n")
+		c.printf("	sar rax, cl\n")
 	case ND_EQ:
 		c.printf("	cmp rax, rdi\n")
 		c.printf("	sete al\n")

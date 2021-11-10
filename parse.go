@@ -56,6 +56,10 @@ const (
 	ND_LABEL                     // 45: label
 	ND_SWITCH                    // 46: "switch"
 	ND_CASE                      // 47: "break"
+	ND_SHL                       // 48: <<
+	ND_SHR                       // 49: >>
+	ND_A_SHL                     // 50: <<=
+	ND_A_SHR                     // 51: >>=
 )
 
 // define AST node
@@ -970,7 +974,7 @@ func expr() *Node {
 }
 
 // assign     = logor (assign-op assign)?
-// assign-op  = "=" | "+=" | "-=" | "*=" | "/="
+// assign-op  = "=" | "+=" | "-=" | "*=" | "/=" | "<<=" | ">>="
 func assign() *Node {
 	// printCurTok()
 	// printCurFunc()
@@ -989,6 +993,12 @@ func assign() *Node {
 	}
 	if t := consume("/="); t != nil {
 		node = newNode(ND_A_DIV, node, assign(), t)
+	}
+	if t := consume("<<="); t != nil {
+		node = newNode(ND_A_SHL, node, assign(), t)
+	}
+	if t := consume(">>="); t != nil {
+		node = newNode(ND_A_SHR, node, assign(), t)
 	}
 
 	return node
@@ -1076,21 +1086,36 @@ func equality() *Node {
 	}
 }
 
-// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+// relational = shift ("<" shift | "<=" shift | ">" shift | ">=" shift)*
 func relational() *Node {
 	// printCurTok()
 	// printCurFunc()
-	node := add()
+	node := shift()
 
 	for {
 		if t := consume("<"); t != nil {
-			node = newNode(ND_LT, node, add(), t)
+			node = newNode(ND_LT, node, shift(), t)
 		} else if t := consume("<="); t != nil {
-			node = newNode(ND_LE, node, add(), t)
+			node = newNode(ND_LE, node, shift(), t)
 		} else if t := consume(">"); t != nil {
-			node = newNode(ND_LT, add(), node, t)
+			node = newNode(ND_LT, shift(), node, t)
 		} else if t := consume(">="); t != nil {
-			node = newNode(ND_LE, add(), node, t)
+			node = newNode(ND_LE, shift(), node, t)
+		} else {
+			return node
+		}
+	}
+}
+
+// shift  = add ("<<" add | ">>" add)*
+func shift() *Node {
+	node := add()
+
+	for {
+		if t := consume("<<"); t != nil {
+			node = newNode(ND_SHL, node, add(), t)
+		} else if t := consume(">>"); t != nil {
+			node = newNode(ND_SHR, node, add(), t)
 		} else {
 			return node
 		}
