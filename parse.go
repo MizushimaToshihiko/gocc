@@ -806,18 +806,30 @@ func lvarInitZero(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 //   x[1][1]=5;
 //   x[1][2]=6;
 //
-// If an initilizer list is shorter than an array, excess array
-// elements are initilized with 0.
+// There are a few special rules for ambiguous initializer and
+// shorthand notations:
 //
-// A char array can be initializer by a string literal, For example,
-// `char x[4] = "foo"` is equivalent to `char x[4] = {'f', 'o', 'o',
-// '\0'}`.
+// - If an initilizer list is shorter than an array, excess array
+//   elements are initilized with 0.
+//
+// - A char array can be initializer by a string literal, For example,
+//   `char x[4] = "foo"` is equivalent to `char x[4] = {'f', 'o', 'o',
+//   '\0'}`.
+//
+// - If a rhs is an incomplete array, its size is set by counting the
+//   number of items on the rhs. For example, `x` in `int x[]={1,2,3}`
+//   has type `int[3]`.
 func lverInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 	if ty.Kind == TY_ARRAY && ty.PtrTo.Kind == TY_CHAR &&
 		token.Kind == TK_STR {
 		// Initialize a char array with a string literal.
 		tok := token
 		token = token.Next
+
+		if ty.IsIncomp {
+			ty.ArraySize = uint16(tok.ContLen)
+			ty.IsIncomp = false
+		}
 
 		var len int
 		if ty.ArraySize < uint16(tok.ContLen) {
@@ -868,6 +880,12 @@ func lverInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 			i++
 			cur = lvarInitZero(cur, va, ty.PtrTo, desg2)
 		}
+
+		if ty.IsIncomp {
+			ty.ArraySize = uint16(i)
+			ty.IsIncomp = false
+		}
+
 		return cur
 	}
 
