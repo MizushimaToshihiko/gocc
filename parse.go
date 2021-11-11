@@ -672,13 +672,19 @@ func readFuncParam() *VarList {
 	return vl
 }
 
-// params = param ("," param)*
+// params = param ("," param)* | "void"
 func readFuncParams() *VarList {
 	// printCurTok()
 	// printCurFunc()
 	if consume(")") != nil { // no argument
 		return nil
 	}
+
+	tok := token
+	if consume("void") != nil && consume(")") != nil {
+		return nil
+	}
+	token = tok
 
 	head := readFuncParam()
 	cur := head

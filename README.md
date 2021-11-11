@@ -21,7 +21,7 @@ enum-specifier = "enum" ident
                | "enum" ident? "{" enum-list? "}"
 enum-list      = enum-elem ("," enum-elem)* ","?
 param          = type-specifier declarator type-suffix
-params         = param ("," param)*
+params         = param ("," param)* | "void"
 function       = type-specifier declarator "(" params? ")" ("{" stmt* "}" | ";")
 global-var     = type-specifier declarator type-suffix ";"
 lvar-initializer = assign
