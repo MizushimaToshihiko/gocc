@@ -824,6 +824,28 @@ func skipExcessElements() {
 func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 	tok := token
 
+	if ty.Kind == TY_ARRAY && ty.PtrTo.Kind == TY_CHAR &&
+		token.Kind == TK_STR {
+		token = token.Next
+
+		if ty.IsIncomp {
+			ty.ArraySize = uint16(tok.ContLen)
+			ty.IsIncomp = false
+		}
+
+		var len int
+		if ty.ArraySize < uint16(tok.ContLen) {
+			len = int(ty.ArraySize)
+		} else {
+			len = tok.ContLen
+		}
+
+		for i := 0; i < len; i++ {
+			cur = newInitVal(cur, 1, int(tok.Contents[i]))
+		}
+		return newInitZero(cur, int(ty.ArraySize)-len)
+	}
+
 	if ty.Kind == TY_ARRAY {
 		open := consume("{") != nil
 		i := 0
