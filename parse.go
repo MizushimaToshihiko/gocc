@@ -104,6 +104,17 @@ type Node struct {
 	Var *Var  // it would be used when 'Kind' is 'ND_VAR'
 }
 
+type Initializer struct {
+	Next *Initializer
+
+	// constant expression
+	Sz  int
+	Val int64
+
+	// reference to another global variable
+	Label string
+}
+
 func newNode(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
 	return &Node{
 		Kind: kind,
@@ -136,8 +147,9 @@ type Var struct {
 	Offset int // the offset from RBP
 
 	// global vaiables
-	Contents []rune
-	ContLen  int
+	Contents    []rune
+	ContLen     int
+	Initializer *Initializer
 }
 
 type VarList struct {
@@ -740,22 +752,69 @@ func expectEnd() {
 	expect("}")
 }
 
-// global-var = type-specifier declarator type-suffix ";"
+func newInitVal(cur *Initializer, sz int, val int) *Initializer {
+	init := &Initializer{Sz: sz, Val: int64(val)}
+	cur.Next = init
+	return init
+}
+
+func newInitLabel(cur *Initializer, label string) *Initializer {
+	init := &Initializer{Label: label}
+	cur.Next = init
+	return init
+}
+
+func gvarInitString(p string, len int) *Initializer {
+	head := &Initializer{}
+	head.Next = nil
+	cur := head
+	for i := 0; i < len; i++ {
+		cur = newInitVal(cur, 1, int(p[i]))
+	}
+	return head.Next
+}
+
+func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
+	tok := token
+	expr := conditional()
+
+	if expr.Kind == ND_ADDR {
+		if expr.Lhs.Kind != ND_VAR {
+			panic("\n" + errorTok(tok, "invalid initializer"))
+		}
+		return newInitLabel(cur, expr.Lhs.Var.Name)
+	}
+
+	if expr.Kind == ND_VAR && expr.Var.Ty.Kind == TY_ARRAY {
+		return newInitLabel(cur, expr.Var.Name)
+	}
+
+	return newInitVal(cur, sizeOf(ty, token), int(eval(expr)))
+}
+
+// global-var = type-specifier declarator type-suffix ("=" gvar-initializer)? ";"
 func globalVar() {
 	ty := typeSpecifier()
 	var name string
 	tok := token
 	ty = declarator(ty, &name)
 	ty = typeSuffix(ty)
-	expect(";")
 
 	var_ := pushVar(name, ty, false, tok)
 	pushScope(name).Var = var_
+
+	if consume("=") != nil {
+		head := &Initializer{}
+		gvarInitializer(head, ty)
+		var_.Initializer = head.Next
+	}
+	expect(";")
 }
 
 type Designator struct {
 	Next *Designator
-	Idx  int
+	Idx  int     // array
+	Mem  *Member // struct
 }
 
 // Creates a node for an array access. For example, if var represents
@@ -768,6 +827,13 @@ func newDesgNode2(va *Var, desg *Designator) *Node {
 	}
 
 	node := newDesgNode2(va, desg.Next)
+
+	if desg.Mem != nil {
+		node = newUnary(ND_MEMBER, node, desg.Mem.Tok)
+		node.MemName = desg.Mem.Name
+		return node
+	}
+
 	node = newNode(ND_ADD, node, newNodeNum(int64(desg.Idx), tok), tok)
 	return newUnary(ND_DEREF, node, tok)
 }
@@ -781,7 +847,7 @@ func newDesgNode(va *Var, desg *Designator, rhs *Node) *Node {
 func lvarInitZero(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 	if ty.Kind == TY_ARRAY {
 		for i := 0; i < int(ty.ArraySize); i++ {
-			desg2 := &Designator{Next: desg, Idx: i}
+			desg2 := &Designator{Next: desg, Idx: i, Mem: nil}
 			i++
 			cur = lvarInitZero(cur, va, ty.PtrTo, desg2)
 		}
@@ -806,6 +872,9 @@ func lvarInitZero(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 //   x[1][1]=5;
 //   x[1][2]=6;
 //
+// Struct members are initialized in declaration order. For example,
+// `struct { int a; int b;} x = {1, 2}` sets x.a to 1 and x.b to 2.
+//
 // There are a few special rules for ambiguous initializer and
 // shorthand notations:
 //
@@ -819,7 +888,7 @@ func lvarInitZero(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 // - If a rhs is an incomplete array, its size is set by counting the
 //   number of items on the rhs. For example, `x` in `int x[]={1,2,3}`
 //   has type `int[3]`.
-func lverInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
+func lvarInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 	if ty.Kind == TY_ARRAY && ty.PtrTo.Kind == TY_CHAR &&
 		token.Kind == TK_STR {
 		// Initialize a char array with a string literal.
@@ -840,14 +909,14 @@ func lverInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 
 		var i int
 		for i = 0; i < len; i++ {
-			desg2 := &Designator{Next: desg, Idx: i}
+			desg2 := &Designator{Next: desg, Idx: i, Mem: nil}
 			rhs := newNodeNum(int64(tok.Contents[i]), tok)
 			cur.Next = newDesgNode(va, desg2, rhs)
 			cur = cur.Next
 		}
 
 		for ; i < int(ty.ArraySize); i++ {
-			desg2 := &Designator{Next: desg, Idx: i}
+			desg2 := &Designator{Next: desg, Idx: i, Mem: nil}
 			cur = lvarInitZero(cur, va, ty.PtrTo, desg2)
 		}
 		return cur
@@ -863,9 +932,9 @@ func lverInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 		i := 0
 
 		for {
-			desg2 := &Designator{Next: desg, Idx: i}
+			desg2 := &Designator{Next: desg, Idx: i, Mem: nil}
 			i++
-			cur = lverInitializer(cur, va, ty.PtrTo, desg2)
+			cur = lvarInitializer(cur, va, ty.PtrTo, desg2)
 			if !peekEnd() && consume(",") != nil {
 				continue
 			}
@@ -886,6 +955,29 @@ func lverInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 			ty.IsIncomp = false
 		}
 
+		return cur
+	}
+
+	if ty.Kind == TY_STRUCT {
+		mem := ty.Mems
+
+		for {
+			desg2 := &Designator{Next: desg, Idx: 0, Mem: mem}
+			cur = lvarInitializer(cur, va, mem.Ty, desg2)
+			mem = mem.Next
+			if !peekEnd() && consume(",") != nil {
+				continue
+			}
+			break
+		}
+
+		expectEnd()
+
+		// set excess struct elements to zero.
+		for ; mem != nil; mem = mem.Next {
+			desg2 := &Designator{Next: desg, Idx: 0, Mem: mem}
+			cur = lvarInitZero(cur, va, mem.Ty, desg2)
+		}
 		return cur
 	}
 
@@ -932,7 +1024,7 @@ func declaration() *Node {
 
 	var head Node
 	head.Next = nil
-	lverInitializer(&head, var_, var_.Ty, nil)
+	lvarInitializer(&head, var_, var_.Ty, nil)
 	expect(";")
 
 	return &Node{Kind: ND_BLOCK, Tok: tok, Body: head.Next}
@@ -1632,8 +1724,7 @@ func primary() *Node {
 
 		ty := arrayOf(charType(), uint16(tok.ContLen))
 		var_ := pushVar(newLabel(), ty, false, nil)
-		var_.Contents = tok.Contents
-		var_.ContLen = tok.ContLen
+		var_.Initializer = gvarInitString(string(tok.Contents), tok.ContLen)
 		return newVar(var_, tok)
 	}
 

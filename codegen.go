@@ -614,13 +614,22 @@ func (c *codeWriter) emitData(prog *Program) {
 	for vl := prog.Globals; vl != nil; vl = vl.Next {
 		c.printf("%s:\n", vl.Var.Name)
 
-		if vl.Var.Contents == nil {
+		if vl.Var.Initializer == nil {
 			c.printf("	.zero %d\n", sizeOf(vl.Var.Ty, vl.Var.Tok))
 			continue
 		}
 
-		for i := 0; i < vl.Var.ContLen; i++ {
-			c.printf("	.byte %d\n", vl.Var.Contents[i])
+		for init := vl.Var.Initializer; init != nil; init = init.Next {
+			if init.Label != "" {
+				c.printf("	.quad %s\n", init.Label)
+				continue
+			}
+
+			if init.Sz == 1 {
+				c.printf("	.byte %d\n", init.Val)
+			} else {
+				c.printf("	.%dbyte %d\n", init.Sz, init.Val)
+			}
 		}
 	}
 }
