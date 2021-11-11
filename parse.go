@@ -748,7 +748,7 @@ func peekEnd() bool {
 
 func consumeEnd() bool {
 	tok := token
-	if (consume("}") != nil || consume(",") != nil) && consume("}") != nil {
+	if consume("}") != nil || (consume(",") != nil && consume("}") != nil) {
 		return true
 	}
 	token = tok
