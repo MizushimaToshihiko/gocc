@@ -285,9 +285,10 @@ func newLabel() string {
 }
 
 type Function struct {
-	Next   *Function
-	Name   string
-	Params *VarList
+	Next     *Function
+	Name     string
+	Params   *VarList
+	IsStatic bool
 
 	Node    *Node
 	Locals  *VarList
@@ -718,6 +719,7 @@ func function() *Function {
 
 	// construct a function object
 	fn := &Function{Name: name}
+	fn.IsStatic = ty.IsStatic
 	expect("(")
 	fn.Params = readFuncParams()
 

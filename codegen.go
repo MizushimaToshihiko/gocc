@@ -653,7 +653,9 @@ func (c *codeWriter) emitText(prog *Program) {
 	c.printf(".text\n")
 
 	for fn := prog.Fns; fn != nil; fn = fn.Next {
-		c.printf(".global %s\n", fn.Name)
+		if !fn.IsStatic {
+			c.printf(".global %s\n", fn.Name)
+		}
 		c.printf("%s:\n", fn.Name)
 		funcName = fn.Name
 
