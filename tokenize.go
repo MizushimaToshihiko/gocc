@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -78,15 +79,25 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 		"\n"
 }
 
-func errorTok(tok *Token, formt string, a ...interface{}) string {
+func errorTok(tok *Token, formt string, ap ...interface{}) string {
 	var errStr string
 	if tok != nil {
-		errStr += errorAt(tok.Loc, formt, a...)
+		errStr += errorAt(tok.Loc, formt, ap...)
 	}
 
 	return errStr +
-		fmt.Sprintf(formt, a...) +
+		fmt.Sprintf(formt, ap...) +
 		"\n"
+}
+
+func warnTok(tok *Token, frmt string, ap ...string) {
+	var errStr string
+	if tok != nil {
+		errStr += errorAt(tok.Loc, frmt, ap)
+	} else {
+		errStr += fmt.Sprintf(frmt, ap) + "\n"
+	}
+	fmt.Fprint(os.Stderr, errStr)
 }
 
 // strNdUp function returns the []rune terminates with '\0'

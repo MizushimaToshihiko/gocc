@@ -746,13 +746,13 @@ func peekEnd() bool {
 	return ret
 }
 
-func expectEnd() {
+func consumeEnd() bool {
 	tok := token
-	if consume(",") != nil && consume("}") != nil {
-		return
+	if (consume("}") != nil || consume(",") != nil) && consume("}") != nil {
+		return true
 	}
 	token = tok
-	expect("}")
+	return false
 }
 
 func newInitVal(cur *Initializer, sz int, val int) *Initializer {
@@ -800,6 +800,27 @@ func emitStructPadding(cur *Initializer, parent *Type, mem *Member) *Initializer
 	return cur
 }
 
+func skipExcessElements2() {
+	for {
+		if consume("{") != nil {
+			skipExcessElements2()
+		} else {
+			assign()
+		}
+
+		if consumeEnd() {
+			return
+		}
+		expect(",")
+	}
+}
+
+func skipExcessElements() {
+	expect(",")
+	warnTok(token, "excess elements in initializer")
+	skipExcessElements2()
+}
+
 func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 	tok := token
 
@@ -822,8 +843,8 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 			break
 		}
 
-		if open {
-			expectEnd()
+		if open && !consumeEnd() {
+			skipExcessElements()
 		}
 
 		// set excess arra elements to zero.
@@ -852,8 +873,8 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 			break
 		}
 
-		if open {
-			expectEnd()
+		if open && !consumeEnd() {
+			skipExcessElements()
 		}
 
 		// set excess struct elements to zero.
@@ -1036,8 +1057,8 @@ func lvarInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 			break
 		}
 
-		if open {
-			expectEnd()
+		if open && !consumeEnd() {
+			skipExcessElements()
 		}
 
 		// Set excess array elements to zero.
@@ -1069,8 +1090,8 @@ func lvarInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 			break
 		}
 
-		if open {
-			expectEnd()
+		if open && !consumeEnd() {
+			skipExcessElements()
 		}
 
 		// set excess struct elements to zero.
