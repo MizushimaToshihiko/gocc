@@ -621,7 +621,7 @@ func (c *codeWriter) emitData(prog *Program) {
 
 		for init := vl.Var.Initializer; init != nil; init = init.Next {
 			if init.Label != "" {
-				c.printf("	.quad %s\n", init.Label)
+				c.printf("	.quad %s%+d\n", init.Label, init.Addend)
 				continue
 			}
 

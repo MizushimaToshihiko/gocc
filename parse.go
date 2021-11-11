@@ -115,7 +115,8 @@ type Initializer struct {
 	Val int64
 
 	// reference to another global variable
-	Label string
+	Label  string
+	Addend int64
 }
 
 func newNode(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
@@ -761,8 +762,8 @@ func newInitVal(cur *Initializer, sz int, val int) *Initializer {
 	return init
 }
 
-func newInitLabel(cur *Initializer, label string) *Initializer {
-	init := &Initializer{Label: label}
+func newInitLabel(cur *Initializer, label string, addend int64) *Initializer {
+	init := &Initializer{Label: label, Addend: addend}
 	cur.Next = init
 	return init
 }
@@ -915,18 +916,12 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 		expect("}")
 	}
 
-	if expr.Kind == ND_ADDR {
-		if expr.Lhs.Kind != ND_VAR {
-			panic("\n" + errorTok(tok, "invalid initializer"))
-		}
-		return newInitLabel(cur, expr.Lhs.Var.Name)
+	var va *Var
+	addend := eval2(expr, &va)
+	if va != nil {
+		return newInitLabel(cur, va.Name, addend)
 	}
-
-	if expr.Kind == ND_VAR && expr.Var.Ty.Kind == TY_ARRAY {
-		return newInitLabel(cur, expr.Var.Name)
-	}
-
-	return newInitVal(cur, sizeOf(ty, token), int(eval(expr)))
+	return newInitVal(cur, sizeOf(ty, token), int(addend))
 }
 
 // global-var = type-specifier declarator type-suffix ("=" gvar-initializer)? ";"
@@ -1375,11 +1370,17 @@ func expr() *Node {
 }
 
 func eval(node *Node) int64 {
+	return eval2(node, nil)
+}
+
+func eval2(node *Node, va **Var) int64 {
 	switch node.Kind {
 	case ND_ADD:
-		return eval(node.Lhs) + eval(node.Rhs)
+		lhs := eval2(node.Lhs, va)
+		return lhs + eval2(node.Rhs, va)
 	case ND_SUB:
-		return eval(node.Lhs) - eval(node.Rhs)
+		lhs := eval2(node.Lhs, va)
+		return lhs - eval(node.Rhs)
 	case ND_MUL:
 		return eval(node.Lhs) * eval(node.Rhs)
 	case ND_DIV:
@@ -1444,6 +1445,18 @@ func eval(node *Node) int64 {
 		return 0
 	case ND_NUM:
 		return node.Val
+	case ND_ADDR:
+		if va == nil || *va != nil || node.Lhs.Kind != ND_VAR {
+			panic("\n" + errorTok(node.Tok, "invalid initializer"))
+		}
+		*va = node.Lhs.Var
+		return 0
+	case ND_VAR:
+		if va == nil || *va != nil || node.Var.Ty.Kind != TY_ARRAY {
+			panic("\n" + errorTok(node.Tok, "invalid initializer"))
+		}
+		*va = node.Var
+		return 0
 	default:
 		panic("\n" + errorTok(node.Tok, "not a constant expression"))
 	}
