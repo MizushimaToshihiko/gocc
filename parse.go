@@ -3,7 +3,10 @@
 //
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 // the types of AST node
 type NodeKind int
@@ -800,63 +803,74 @@ func emitStructPadding(cur *Initializer, parent *Type, mem *Member) *Initializer
 func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 	tok := token
 
-	if consume("{") != nil {
-		if ty.Kind == TY_ARRAY {
-			i := 0
-
-			for {
-				cur = gvarInitializer(cur, ty.PtrTo)
-				i++
-				if !peekEnd() && consume(",") != nil {
-					continue
-				}
-				break
-			}
-
-			expectEnd()
-
-			// set excess arra elements to zero.
-			if i < int(ty.ArraySize) {
-				cur = newInitZero(cur, sizeOf(ty.PtrTo, tok)*(int(ty.ArraySize)-1))
-			}
-
-			if ty.IsIncomp {
-				ty.ArraySize = uint16(i)
-				ty.IsIncomp = false
-			}
-
-			return cur
+	if ty.Kind == TY_ARRAY {
+		open := consume("{") != nil
+		i := 0
+		var limit int
+		if ty.IsIncomp {
+			limit = math.MaxInt32
+		} else {
+			limit = int(ty.ArraySize)
 		}
 
-		if ty.Kind == TY_STRUCT {
-			mem := ty.Mems
-
-			for {
-				cur = gvarInitializer(cur, mem.Ty)
-				cur = emitStructPadding(cur, ty, mem)
-				mem = mem.Next
-				if !peekEnd() && consume(",") != nil {
-					continue
-				}
-				break
+		for {
+			cur = gvarInitializer(cur, ty.PtrTo)
+			i++
+			if i < limit && !peekEnd() && consume(",") != nil {
+				continue
 			}
-
-			expectEnd()
-
-			// set excess struct elements to zero.
-			if mem != nil {
-				sz := sizeOf(ty, tok) - mem.Offset
-				if sz != 0 {
-					cur = newInitZero(cur, sz)
-				}
-			}
-			return cur
+			break
 		}
 
-		panic("\n" + errorTok(tok, "invalid initializer"))
+		if open {
+			expectEnd()
+		}
+
+		// set excess arra elements to zero.
+		cur = newInitZero(cur,
+			sizeOf(ty.PtrTo, tok)*(int(ty.ArraySize)-i))
+
+		if ty.IsIncomp {
+			ty.ArraySize = uint16(i)
+			ty.IsIncomp = false
+		}
+
+		return cur
 	}
 
+	if ty.Kind == TY_STRUCT {
+		open := consume("{") != nil
+		mem := ty.Mems
+
+		for {
+			cur = gvarInitializer(cur, mem.Ty)
+			cur = emitStructPadding(cur, ty, mem)
+			mem = mem.Next
+			if mem != nil && !peekEnd() && consume(",") != nil {
+				continue
+			}
+			break
+		}
+
+		if open {
+			expectEnd()
+		}
+
+		// set excess struct elements to zero.
+		if mem != nil {
+			sz := sizeOf(ty, tok) - mem.Offset
+			if sz != 0 {
+				cur = newInitZero(cur, sz)
+			}
+		}
+		return cur
+	}
+
+	open := consume("{") != nil
 	expr := conditional()
+	if open {
+		expect("}")
+	}
 
 	if expr.Kind == ND_ADDR {
 		if expr.Lhs.Kind != ND_VAR {
@@ -1002,26 +1016,29 @@ func lvarInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 		return cur
 	}
 
-	tok := consume("{")
-	if tok == nil {
-		cur.Next = newDesgNode(va, desg, assign())
-		return cur.Next
-	}
-
 	if ty.Kind == TY_ARRAY {
+		open := consume("{") != nil
 		i := 0
+		var limit int
+		if ty.IsIncomp {
+			limit = math.MaxInt32
+		} else {
+			limit = int(ty.ArraySize)
+		}
 
 		for {
 			desg2 := &Designator{Next: desg, Idx: i, Mem: nil}
 			i++
 			cur = lvarInitializer(cur, va, ty.PtrTo, desg2)
-			if !peekEnd() && consume(",") != nil {
+			if i < limit && !peekEnd() && consume(",") != nil {
 				continue
 			}
 			break
 		}
 
-		expectEnd()
+		if open {
+			expectEnd()
+		}
 
 		// Set excess array elements to zero.
 		for i < int(ty.ArraySize) {
@@ -1039,19 +1056,22 @@ func lvarInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 	}
 
 	if ty.Kind == TY_STRUCT {
+		open := consume("{") != nil
 		mem := ty.Mems
 
 		for {
 			desg2 := &Designator{Next: desg, Idx: 0, Mem: mem}
 			cur = lvarInitializer(cur, va, mem.Ty, desg2)
 			mem = mem.Next
-			if !peekEnd() && consume(",") != nil {
+			if mem != nil && !peekEnd() && consume(",") != nil {
 				continue
 			}
 			break
 		}
 
-		expectEnd()
+		if open {
+			expectEnd()
+		}
 
 		// set excess struct elements to zero.
 		for ; mem != nil; mem = mem.Next {
@@ -1061,7 +1081,12 @@ func lvarInitializer(cur *Node, va *Var, ty *Type, desg *Designator) *Node {
 		return cur
 	}
 
-	panic("\n" + errorTok(tok, "invalid array initializer"))
+	open := consume("{") != nil
+	cur.Next = newDesgNode(va, desg, assign())
+	if open {
+		expect("}")
+	}
+	return cur.Next
 }
 
 // declaration = type-specifier declarator type-suffix ("=" lvar-initializer)? ";"
