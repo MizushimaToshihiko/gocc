@@ -764,6 +764,13 @@ func newInitLabel(cur *Initializer, label string) *Initializer {
 	return init
 }
 
+func newInitZero(cur *Initializer, nbytes int) *Initializer {
+	for i := 0; i < nbytes; i++ {
+		cur = newInitVal(cur, 1, 0)
+	}
+	return cur
+}
+
 func gvarInitString(p string, len int) *Initializer {
 	head := &Initializer{}
 	head.Next = nil
@@ -774,8 +781,81 @@ func gvarInitString(p string, len int) *Initializer {
 	return head.Next
 }
 
+func emitStructPadding(cur *Initializer, parent *Type, mem *Member) *Initializer {
+	end := mem.Offset + sizeOf(mem.Ty, token)
+
+	var padding int
+	if mem.Next != nil {
+		padding = mem.Next.Offset - end
+	} else {
+		padding = sizeOf(parent, token) - end
+	}
+
+	if padding != 0 {
+		cur = newInitZero(cur, padding)
+	}
+	return cur
+}
+
 func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 	tok := token
+
+	if consume("{") != nil {
+		if ty.Kind == TY_ARRAY {
+			i := 0
+
+			for {
+				cur = gvarInitializer(cur, ty.PtrTo)
+				i++
+				if !peekEnd() && consume(",") != nil {
+					continue
+				}
+				break
+			}
+
+			expectEnd()
+
+			// set excess arra elements to zero.
+			if i < int(ty.ArraySize) {
+				cur = newInitZero(cur, sizeOf(ty.PtrTo, tok)*(int(ty.ArraySize)-1))
+			}
+
+			if ty.IsIncomp {
+				ty.ArraySize = uint16(i)
+				ty.IsIncomp = false
+			}
+
+			return cur
+		}
+
+		if ty.Kind == TY_STRUCT {
+			mem := ty.Mems
+
+			for {
+				cur = gvarInitializer(cur, mem.Ty)
+				cur = emitStructPadding(cur, ty, mem)
+				mem = mem.Next
+				if !peekEnd() && consume(",") != nil {
+					continue
+				}
+				break
+			}
+
+			expectEnd()
+
+			// set excess struct elements to zero.
+			if mem != nil {
+				sz := sizeOf(ty, tok) - mem.Offset
+				if sz != 0 {
+					cur = newInitZero(cur, sz)
+				}
+			}
+			return cur
+		}
+
+		panic("\n" + errorTok(tok, "invalid initializer"))
+	}
+
 	expr := conditional()
 
 	if expr.Kind == ND_ADDR {
