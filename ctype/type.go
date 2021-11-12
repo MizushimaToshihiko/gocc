@@ -1,5 +1,5 @@
 // add 'Type' to AST
-package main
+package ctype
 
 import (
 	"fmt"

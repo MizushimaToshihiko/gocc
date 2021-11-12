@@ -18,7 +18,7 @@ test: $(SRCS)
 
 clean: 
 	$(GOCLEAN)
-	rm -f bin/* testdata/*.o testdata/*.s testdata/tmp* profile
+	rm -f bin/* testdata/*.o testdata/*.s testdata/asm* profile
 
 fmt:
 	$(GOFMT) ./...

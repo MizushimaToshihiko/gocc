@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -47,12 +46,12 @@ func compile(arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
 
-	if !exists(arg) {
-		return fmt.Errorf("compile(): err: %s: %v", arg, os.ErrNotExist)
-	}
+	// if !exists(arg) {
+	// 	return fmt.Errorf("compile(): err: %s: %v", arg, os.ErrNotExist)
+	// }
 
 	var err error
-	userInput, err = readFile(arg)
+	userInput = []rune(arg)
 	if err != nil {
 		return err
 	}
@@ -63,9 +62,11 @@ func compile(arg string, w io.Writer) error {
 		printTokens()
 		return err
 	}
+	node := expr()
 
 	printTokens()
-	return nil
+
+	return codegen(node, w) // make the asm code, down on the AST
 	/*
 		// the parsed result is in 'prog'
 		prog := program()

@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"reflect"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -13,53 +16,128 @@ type testcase struct {
 }
 
 var cases = map[string]testcase{
-	"1": {0, ""},
+	"1":  {0, "0"},
+	"2":  {42, "42"},
+	"3":  {21, "5+20-4"},
+	"4":  {41, " 12 + 34 - 5 "},
+	"5":  {47, "5+6*7"},
+	"6":  {15, "5*(9-6)"},
+	"7":  {4, "(3+5)/2"},
+	"8":  {10, "-10+20"},
+	"9":  {10, "- -10"},
+	"10": {10, "- - +10"},
+
+	"11": {0, "0==1"},
+	"12": {1, "42==42"},
+	"13": {1, "0!=1"},
+	"14": {0, "42!=42"},
+
+	"15": {1, "0<1"},
+	"16": {0, "1<1"},
+	"17": {0, "2<1"},
+	"18": {1, "0<=1"},
+	"19": {1, "1<=1"},
+	"20": {0, "2<=1"},
+
+	"21": {1, "1>0"},
+	"22": {0, "1>1"},
+	"23": {0, "1>2"},
+	"24": {1, "1>=0"},
+	"25": {1, "1>=1"},
+	"26": {0, "1>=2"},
 }
 
 func TestCompile(t *testing.T) {
 
-	asm, err := os.Create("testdata/asm.s")
-	if err != nil {
-		t.Fatal(err)
-	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			asmN := fmt.Sprintf("testdata/asm%s.s", name)
+			asm, err := os.Create(asmN)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() {
+				if err := asm.Close(); err != nil {
+					t.Fatal(err)
+				}
+			}()
 
-	// start the test
-	if err := compile("testdata/tests.c", asm); err != nil {
-		t.Fatal(err)
-	}
+			if err := compile(c.in, asm); err != nil {
+				t.Fatal(err)
+			}
 
-	// make tmp2.o
-	const shell = "/bin/bash"
-	b0, err := exec.Command(shell,
-		"-c", "echo 'int char_fn() { return 257; }' | gcc -xc -c -o testdata/tmp2.o -",
-	).CombinedOutput()
-	if err != nil {
-		t.Fatalf("\noutput:\n%s\n%v", string(b0), err)
-	}
+			execN := fmt.Sprintf("testdata/asm%s", name)
+			b, err := exec.Command("gcc", "-static", "-g", "-o", execN, asmN).CombinedOutput()
+			if err != nil {
+				t.Fatalf("\noutput:\n%s\n%v", string(b), err)
+			}
 
-	// make a execution file
-	b1, err := exec.Command(
-		"gcc",
-		"-static",
-		"-g",
-		"-o",
-		"testdata/tmp",
-		asm.Name(),
-		"testdata/tmp2.o",
-	).CombinedOutput()
-	if err != nil {
-		t.Fatalf("\noutput:\n%s\n%v", string(b1), err)
-	}
-	// quit this test sequence, if the execution file wasn't made
-	if _, err := os.Stat(asm.Name()); err != nil {
-		t.Fatal(err)
-	}
+			b, err = exec.Command(execN).CombinedOutput()
+			if err != nil {
+				if ee, ok := err.(*exec.ExitError); !ok {
+					t.Fatalf("\noutput:\n%s\n%v", string(b), err)
+				} else {
+					// the return value of temporary.s is saved in exit status code normally
+					actual := ee.ProcessState.ExitCode()
+					if c.want != actual {
+						t.Fatalf("%d expected, but got %d", c.want, actual)
+					}
+					t.Logf("%s => %d", c.in, actual)
+					return
+				}
+			}
 
-	b2, err := exec.Command("./testdata/tmp").Output()
-	if err != nil {
-		t.Fatalf("\noutput:\n%s\n%v", string(b2), err)
+			// the return value of temporary.s is saved in exit status code,
+			// so the below will be used only when the return value is 0.
+			ans, err := exec.Command("sh", "-c", "echo $?").Output()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			actual, err := strconv.Atoi(strings.Trim(string(ans), "\n"))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if c.want != actual {
+				t.Fatalf("%d expected, but got %d", c.want, actual)
+			}
+			t.Logf("%s => %d", c.in, actual)
+		})
 	}
-	t.Logf("\noutput:\n%s\n", string(b2))
+	// asm, err := os.Create("testdata/asm.s")
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	// // start the test
+	// if err := compile("testdata/tests", asm); err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	// // make a execution file
+	// b1, err := exec.Command(
+	// 	"gcc",
+	// 	"-static",
+	// 	"-g",
+	// 	"-o",
+	// 	"testdata/tmp",
+	// 	asm.Name(),
+	// ).CombinedOutput()
+	// if err != nil {
+	// 	t.Fatalf("\noutput:\n%s\n%v", string(b1), err)
+	// }
+
+	// // quit this test sequence, if the execution file wasn't made
+	// if _, err := os.Stat(asm.Name()); err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	// b2, err := exec.Command("./testdata/tmp").Output()
+	// if err != nil {
+	// 	t.Fatalf("\noutput:\n%s\n%v", string(b2), err)
+	// }
+	// t.Logf("\noutput:\n%s\n", string(b2))
 }
 
 func TestIsSpace(t *testing.T) {
