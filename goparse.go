@@ -19,6 +19,7 @@ const (
 	ND_LE                        // <=
 	ND_ASSIGN                    // = , ":=" is unimplememted
 	ND_RETURN                    // "return"
+	ND_IF                        // "if"
 	ND_EXPR_STMT                 // Expression statement
 	ND_VAR                       // Variables
 	ND_NUM                       // Integer
@@ -28,10 +29,17 @@ const (
 type Node struct {
 	Kind NodeKind // type of node
 	Next *Node    // Next node
-	Lhs  *Node    // left branch
-	Rhs  *Node    // right branch
-	Var  *Var     // used if kind == ND_VAR
-	Val  int64    // it would be used when kind is 'ND_NUM'
+
+	Lhs *Node // left branch
+	Rhs *Node // right branch
+
+	// "if" statement
+	Cond *Node
+	Then *Node
+	Els  *Node
+
+	Var *Var  // used if kind == ND_VAR
+	Val int64 // it would be used when kind is 'ND_NUM'
 }
 
 var locals *Var
@@ -99,7 +107,12 @@ func program() *Program {
 	return &Program{Node: head.Next, Locals: locals}
 }
 
+func readExprStmt() *Node {
+	return newUnary(ND_EXPR_STMT, expr())
+}
+
 // stmt = "return" expr (";" | "\n" | EOF)
+//      | "if" expr stmt ("else" stmt)?
 //      | expr (";" | "\n" | EOF)
 func stmt() *Node {
 	// printCurTok()
@@ -111,7 +124,17 @@ func stmt() *Node {
 		return node
 	}
 
-	node := newUnary(ND_EXPR_STMT, expr())
+	if consume("if") != nil {
+		node := &Node{Kind: ND_IF}
+		node.Cond = expr()
+		node.Then = stmt()
+		if consume("else") != nil {
+			node.Els = stmt()
+		}
+		return node
+	}
+
+	node := readExprStmt()
 	expectEnd()
 	return node
 }

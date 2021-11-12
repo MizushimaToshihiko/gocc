@@ -58,6 +58,12 @@ return 3`},
 
 	"33": {3, "foo=3; return foo"},
 	"34": {8, "foo123=3; bar=5; return foo123+bar"},
+
+	"35": {3, "if 0 return 2; return 3;"},
+	"36": {3, "if 1-1 return 2; return 3"},
+	"37": {2, "if 1 return 2; return 3"},
+	"38": {2, "if 2-1 return 2; return 3"},
+	"39": {2, "if 2 - 1 return 2; return 3"},
 }
 
 func TestCompile(t *testing.T) {

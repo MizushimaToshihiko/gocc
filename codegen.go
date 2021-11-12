@@ -20,6 +20,8 @@ func (c *codeWriter) printf(frmt string, a ...interface{}) {
 	_, c.err = fmt.Fprintf(c.w, frmt, a...)
 }
 
+var labelseq int
+
 // Pushes the given node's address to the stack
 func (c *codeWriter) genAddr(node *Node) {
 	if node.Kind == ND_VAR {
@@ -65,6 +67,28 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.genAddr(node.Lhs)
 		c.gen(node.Rhs)
 		c.store()
+		return
+	case ND_IF:
+		seq := labelseq
+		labelseq++
+		if node.Els != nil {
+			c.gen(node.Cond)
+			c.printf("	pop rax\n")
+			c.printf("	cmp rax, 0\n")
+			c.printf("	je .Lelse%d\n", seq)
+			c.gen(node.Then)
+			c.printf("	jmp .Lend%d\n", seq)
+			c.printf(".Lelse%d:\n", seq)
+			c.gen(node.Els)
+			c.printf(".Lend%d:\n", seq)
+			return
+		}
+		c.gen(node.Cond)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	je .Lend%d\n", seq)
+		c.gen(node.Then)
+		c.printf(".Lend%d:\n", seq)
 		return
 	case ND_RETURN:
 		c.gen(node.Lhs)
