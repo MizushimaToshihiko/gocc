@@ -7,6 +7,15 @@ import (
 	"testing"
 )
 
+type testcase struct {
+	want int
+	in   string
+}
+
+var cases = map[string]testcase{
+	"1": {0, ""},
+}
+
 func TestCompile(t *testing.T) {
 
 	asm, err := os.Create("testdata/asm.s")

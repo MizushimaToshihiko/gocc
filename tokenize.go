@@ -205,10 +205,20 @@ func startsWith(p, q string) bool {
 
 func startsWithReserved(p string) string {
 	// reserved words
-	kw := []string{"return", "if", "then", "else", "while", "for",
-		"int", "char", "struct", "typedef", "short", "long", "void",
-		"_Bool", "enum", "static", "break", "continue", "goto", "switch",
-		"case", "default"}
+	kw := []string{
+		"return", "if", "else", "while", "for", "type", "var", "func", "struct",
+		"break", "continue", "goto", "switch", "case", "default",
+		"true", "false",
+		"nil",
+		"int", "int64", "uint8", "bool", "rune"}
+	// unimplemented:
+	// "chan", "const", "defer", "fallthrough", "interface", "map", "package", "range", "select"
+	// "int32","bool", "byte", "complex64", "complex128", "error",
+	// "float32", "float64", "int8", "int16", "int32", "int64",
+	// "string", "uint", "uint16", "uint32", "uint64", "uintptr"
+	// "iota"
+	// "append", "cap", "close", "complex", "copy", "delete", "imag",
+	// "len", "make", "new", "panic", "print", "println", "real", "recover"
 
 	for _, k := range kw {
 		if startsWith(p, k) && len(p) >= len(k) && !isAlNum(rune(p[len(k)])) {

@@ -63,37 +63,39 @@ func compile(arg string, w io.Writer) error {
 		printTokens()
 		return err
 	}
-	// printTokens()
 
-	// the parsed result is in 'prog'
-	prog := program()
-	// add 'Type' to ASTs
-	err = addType(prog)
-	if err != nil {
-		return err
-	}
-
-	// assign offsets to local variables.
-	for fn := prog.Fns; fn != nil; fn = fn.Next {
-		offset := 0
-		for vl := fn.Locals; vl != nil; vl = vl.Next {
-			offset = alignTo(offset, vl.Var.Ty.Align)
-			offset += sizeOf(vl.Var.Ty, vl.Var.Tok)
-			vl.Var.Offset = offset
+	printTokens()
+	return nil
+	/*
+		// the parsed result is in 'prog'
+		prog := program()
+		// add 'Type' to ASTs
+		err = addType(prog)
+		if err != nil {
+			return err
 		}
-		fn.StackSz = alignTo(offset, 8)
-	}
 
-	// // walk in-order
-	// for _, n := range code {
-	// 	walkInOrder(n)
-	// }
-	// // walk pre order
-	// for _, n := range code {
-	// 	walkPreOrder(n)
-	// }
+		// assign offsets to local variables.
+		for fn := prog.Fns; fn != nil; fn = fn.Next {
+			offset := 0
+			for vl := fn.Locals; vl != nil; vl = vl.Next {
+				offset = alignTo(offset, vl.Var.Ty.Align)
+				offset += sizeOf(vl.Var.Ty, vl.Var.Tok)
+				vl.Var.Offset = offset
+			}
+			fn.StackSz = alignTo(offset, 8)
+		}
 
-	return codeGen(w, prog)
+		// // walk in-order
+		// for _, n := range code {
+		// 	walkInOrder(n)
+		// }
+		// // walk pre order
+		// for _, n := range code {
+		// 	walkPreOrder(n)
+		// }
+
+		return codeGen(w, prog) */
 }
 
 func main() {
