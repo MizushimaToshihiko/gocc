@@ -20,6 +20,7 @@ const (
 	ND_ASSIGN                    // = , ":=" is unimplememted
 	ND_RETURN                    // "return"
 	ND_IF                        // "if"
+	ND_WHILE                     // "for" instead of "while"
 	ND_EXPR_STMT                 // Expression statement
 	ND_VAR                       // Variables
 	ND_NUM                       // Integer
@@ -33,7 +34,7 @@ type Node struct {
 	Lhs *Node // left branch
 	Rhs *Node // right branch
 
-	// "if" statement
+	// "if" or "for" statement
 	Cond *Node
 	Then *Node
 	Els  *Node
@@ -131,6 +132,13 @@ func stmt() *Node {
 		if consume("else") != nil {
 			node.Els = stmt()
 		}
+		return node
+	}
+
+	if consume("for") != nil {
+		node := &Node{Kind: ND_WHILE}
+		node.Cond = expr()
+		node.Then = stmt()
 		return node
 	}
 

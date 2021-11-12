@@ -90,6 +90,18 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.gen(node.Then)
 		c.printf(".Lend%d:\n", seq)
 		return
+	case ND_WHILE:
+		seq := labelseq
+		labelseq++
+		c.printf(".Lbegin%d:\n", seq)
+		c.gen(node.Cond)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	je .Lend%d\n", seq)
+		c.gen(node.Then)
+		c.printf("	jmp .Lbegin%d\n", seq)
+		c.printf(".Lend%d:\n", seq)
+		return
 	case ND_RETURN:
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")

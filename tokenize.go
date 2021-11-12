@@ -223,7 +223,7 @@ func startsWith(p, q string) bool {
 func startsWithReserved(p string) string {
 	// reserved words
 	kw := []string{
-		"return", "if", "else", "while", "for", "type", "var", "func", "struct",
+		"return", "if", "else", "for", "type", "var", "func", "struct",
 		"break", "continue", "goto", "switch", "case", "default",
 		"true", "false",
 		"nil",
