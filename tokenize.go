@@ -169,7 +169,7 @@ func expectEnd() {
 	if atEof() {
 		return
 	}
-	if peek(";") != nil || token.Str != "\n" {
+	if peek(";") != nil || peek("\n") != nil {
 		token = token.Next
 		return
 	}
@@ -256,7 +256,7 @@ func startsWithReserved(p string) string {
 }
 
 func isSpace(op rune) bool {
-	return strings.Contains("\t\n\v\f\r ", string(op))
+	return strings.Contains("\t\v\f\r ", string(op))
 }
 
 func isDigit(op rune) bool {
@@ -415,6 +415,13 @@ func tokenize() (*Token, error) {
 
 		// single-letter punctuator
 		if strings.Contains("+-()*/<>=;{},&[].,!~|^:?", string(userInput[curIdx])) {
+			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
+			curIdx++
+			continue
+		}
+
+		// newline
+		if userInput[curIdx] == '\n' {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue

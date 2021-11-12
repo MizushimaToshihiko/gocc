@@ -50,7 +50,11 @@ var cases = map[string]testcase{
 
 	"27": {1, "return 1; 2; 3"},
 	"29": {2, "1; return 2; 3;"},
-	"30": {3, "1; 2; return 3"},
+	"30": {3, `1; 2
+return 3`},
+
+	"31": {3, "a=3; return a"},
+	"32": {8, "a=3; z=5; return a+z"},
 }
 
 func TestCompile(t *testing.T) {
@@ -111,39 +115,6 @@ func TestCompile(t *testing.T) {
 			t.Logf("%s => %d", c.in, actual)
 		})
 	}
-	// asm, err := os.Create("testdata/asm.s")
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// // start the test
-	// if err := compile("testdata/tests", asm); err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// // make a execution file
-	// b1, err := exec.Command(
-	// 	"gcc",
-	// 	"-static",
-	// 	"-g",
-	// 	"-o",
-	// 	"testdata/tmp",
-	// 	asm.Name(),
-	// ).CombinedOutput()
-	// if err != nil {
-	// 	t.Fatalf("\noutput:\n%s\n%v", string(b1), err)
-	// }
-
-	// // quit this test sequence, if the execution file wasn't made
-	// if _, err := os.Stat(asm.Name()); err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// b2, err := exec.Command("./testdata/tmp").Output()
-	// if err != nil {
-	// 	t.Fatalf("\noutput:\n%s\n%v", string(b2), err)
-	// }
-	// t.Logf("\noutput:\n%s\n", string(b2))
 }
 
 func TestIsSpace(t *testing.T) {
@@ -152,13 +123,12 @@ func TestIsSpace(t *testing.T) {
 		want bool
 	}{
 		"1": {'\t', true},
-		"2": {'\n', true},
-		"3": {'\v', true},
-		"4": {'\f', true},
-		"5": {'\r', true},
-		"6": {' ', true},
-		"7": {'a', false},
-		"8": {'"', false},
+		"2": {'\v', true},
+		"3": {'\f', true},
+		"4": {'\r', true},
+		"5": {' ', true},
+		"6": {'a', false},
+		"7": {'"', false},
 	}
 
 	for name, c := range cases {

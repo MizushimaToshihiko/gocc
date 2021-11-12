@@ -3,16 +3,19 @@ package main
 type NodeKind int
 
 const (
-	ND_ADD    NodeKind = iota // +
-	ND_SUB                    // -
-	ND_MUL                    // *
-	ND_DIV                    // /
-	ND_EQ                     // ==
-	ND_NE                     // !=
-	ND_LT                     // <
-	ND_LE                     // <=
-	ND_RETURN                 // return
-	ND_NUM                    // integer
+	ND_ADD       NodeKind = iota // +
+	ND_SUB                       // -
+	ND_MUL                       // *
+	ND_DIV                       // /
+	ND_EQ                        // ==
+	ND_NE                        // !=
+	ND_LT                        // <
+	ND_LE                        // <=
+	ND_ASSIGN                    // = , ":=" is unnimplememted
+	ND_RETURN                    // "return"
+	ND_EXPR_STMT                 // expression statement
+	ND_VAR                       // local variables
+	ND_NUM                       // integer
 )
 
 // define AST node
@@ -21,6 +24,7 @@ type Node struct {
 	Next *Node    // Next node
 	Lhs  *Node    // left branch
 	Rhs  *Node    // right branch
+	Name rune     // used if kind == ND_VAR
 	Val  int64    // it would be used when kind is 'ND_NUM'
 }
 
@@ -32,16 +36,20 @@ func newBinary(kind NodeKind, lhs *Node, rhs *Node) *Node {
 	}
 }
 
-func newNodeNum(val int64) *Node {
+func newUnary(kind NodeKind, expr *Node) *Node {
+	node := &Node{Kind: kind, Lhs: expr}
+	return node
+}
+
+func newNum(val int64) *Node {
 	return &Node{
 		Kind: ND_NUM,
 		Val:  val,
 	}
 }
 
-func newUnary(kind NodeKind, expr *Node) *Node {
-	node := &Node{Kind: kind, Lhs: expr}
-	return node
+func newVar(name rune) *Node {
+	return &Node{Kind: ND_VAR, Name: name}
 }
 
 // program = stmt*
@@ -71,17 +79,25 @@ func stmt() *Node {
 		return node
 	}
 
-	node := expr()
+	node := newUnary(ND_EXPR_STMT, expr())
 	expectEnd()
 	return node
 }
 
-// expr       = equality
+// expr       = assign
 func expr() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	return equality()
+	return assign()
+}
+
+func assign() *Node {
+	node := equality()
+	if consume("=") != nil {
+		node = newBinary(ND_ASSIGN, node, assign())
+	}
+	return node
 }
 
 // equality   = relational ("==" relational | "!=" relational)*
@@ -170,12 +186,12 @@ func unary() *Node {
 		return unary()
 	}
 	if consume("-") != nil {
-		return newBinary(ND_SUB, newNodeNum(0), unary())
+		return newBinary(ND_SUB, newNum(0), unary())
 	}
 	return primary()
 }
 
-// primary = "(" expr ")" | num
+// primary = "(" expr ")" | ident | num
 func primary() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -188,6 +204,10 @@ func primary() *Node {
 		return node
 	}
 
+	if tok := consumeIdent(); tok != nil {
+		return newVar(rune(tok.Str[0]))
+	}
+
 	// or must be integer
-	return newNodeNum(expectNumber())
+	return newNum(expectNumber())
 }

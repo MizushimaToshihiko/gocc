@@ -20,6 +20,31 @@ func (c *codeWriter) printf(frmt string, a ...interface{}) {
 	_, c.err = fmt.Fprintf(c.w, frmt, a...)
 }
 
+// Pushes the given node's address to the stack
+func (c *codeWriter) genAddr(node *Node) {
+	if node.Kind == ND_VAR {
+		offset := int(node.Name-'a'+1) * 8
+		c.printf("	lea rax, [rbp-%d]\n", offset)
+		c.printf("	push rax\n")
+		return
+	}
+
+	c.err = fmt.Errorf("not an lvalue")
+}
+
+func (c *codeWriter) load() {
+	c.printf("	pop rax\n")
+	c.printf("	mov rax, [rax]\n")
+	c.printf("	push rax\n")
+}
+
+func (c *codeWriter) store() {
+	c.printf("	pop rdi\n")
+	c.printf("	pop rax\n")
+	c.printf("	mov [rax], rdi\n")
+	c.printf("	push rdi\n")
+}
+
 func (c *codeWriter) gen(node *Node) (err error) {
 	if c.err != nil {
 		return
@@ -29,10 +54,23 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	case ND_NUM:
 		c.printf("	push %d\n", node.Val)
 		return
+	case ND_EXPR_STMT:
+		c.gen(node.Lhs)
+		c.printf("	add rsp, 8\n")
+		return
+	case ND_VAR:
+		c.genAddr(node)
+		c.load()
+		return
+	case ND_ASSIGN:
+		c.genAddr(node.Lhs)
+		c.gen(node.Rhs)
+		c.store()
+		return
 	case ND_RETURN:
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")
-		c.printf("	ret\n")
+		c.printf("	jmp .Lreturn\n")
 		return
 	}
 
@@ -79,11 +117,19 @@ func codegen(node *Node, w io.Writer) error {
 	// output the former 3 lines of the assembly
 	c.printf(".intel_syntax noprefix\n.globl main\nmain:\n")
 
+	// Prologue
+	c.printf("	push rbp\n")
+	c.printf("	mov rbp, rsp\n")
+	c.printf("	sub rsp, 208\n")
+
 	for n := node; n != nil; n = n.Next {
 		c.gen(n)
-		c.printf("	pop rax\n")
 	}
 
+	// Epilogue
+	c.printf(".Lreturn:\n")
+	c.printf("	mov rsp, rbp\n")
+	c.printf("	pop rbp\n")
 	c.printf("	ret\n")
 	return c.err
 }
