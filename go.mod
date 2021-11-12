@@ -1,3 +1,3 @@
-module github.com/MizushimaToshihiko/9cc
+module github.com/MizushimaToshihiko/gocc
 
 go 1.17

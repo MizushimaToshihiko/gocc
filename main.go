@@ -62,9 +62,13 @@ func compile(arg string, w io.Writer) error {
 		printTokens()
 		return err
 	}
-	node := expr()
 
-	printTokens()
+	// printTokens()
+	node := program()
+
+	// for n := node; n != nil; n = n.Next {
+	// 	walkInOrder(n)
+	// }
 
 	return codegen(node, w) // make the asm code, down on the AST
 	/*

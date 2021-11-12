@@ -165,6 +165,23 @@ func expect(s string) {
 	token = token.Next
 }
 
+func expectEnd() {
+	if atEof() {
+		return
+	}
+	if peek(";") != nil || token.Str != "\n" {
+		token = token.Next
+		return
+	}
+
+	panic("\n" +
+		errorAt(token.Loc,
+			"unexpected %s, expecting semicolon or newline",
+			token.Str,
+		),
+	)
+}
+
 // if next token is integer, the read position of token exceed one
 // character or report an error.
 func expectNumber() int64 {

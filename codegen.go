@@ -25,8 +25,14 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	}
 
-	if node.Kind == ND_NUM {
+	switch node.Kind {
+	case ND_NUM:
 		c.printf("	push %d\n", node.Val)
+		return
+	case ND_RETURN:
+		c.gen(node.Lhs)
+		c.printf("	pop rax\n")
+		c.printf("	ret\n")
 		return
 	}
 
@@ -73,11 +79,11 @@ func codegen(node *Node, w io.Writer) error {
 	// output the former 3 lines of the assembly
 	c.printf(".intel_syntax noprefix\n.globl main\nmain:\n")
 
-	c.gen(node)
+	for n := node; n != nil; n = n.Next {
+		c.gen(n)
+		c.printf("	pop rax\n")
+	}
 
-	// the value of the expression should remain on the top of 'stack',
-	// so load this value into rax.
-	c.printf("	pop rax\n")
 	c.printf("	ret\n")
 	return c.err
 }

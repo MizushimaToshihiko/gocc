@@ -16,35 +16,41 @@ type testcase struct {
 }
 
 var cases = map[string]testcase{
-	"1":  {0, "0"},
-	"2":  {42, "42"},
-	"3":  {21, "5+20-4"},
-	"4":  {41, " 12 + 34 - 5 "},
-	"5":  {47, "5+6*7"},
-	"6":  {15, "5*(9-6)"},
-	"7":  {4, "(3+5)/2"},
-	"8":  {10, "-10+20"},
-	"9":  {10, "- -10"},
-	"10": {10, "- - +10"},
+	"1":  {0, "return 0;"},
+	"2":  {42, "return 42;"},
+	"3":  {21, "return 5+20-4;"},
+	"4":  {41, "return  12 + 34 - 5; "},
+	"5":  {47, "return 5+6*7;"},
+	"6":  {15, "return 5*(9-6);"},
+	"7":  {4, "return (3+5)/2;"},
+	"8":  {10, "return -10+20;"},
+	"9":  {10, "return - -10;"},
+	"10": {10, "return - - +10;"},
 
-	"11": {0, "0==1"},
-	"12": {1, "42==42"},
-	"13": {1, "0!=1"},
-	"14": {0, "42!=42"},
+	"11": {0, "return 0==1;"},
+	"12": {1, "return 42==42;"},
+	"13": {1, "return 0!=1;"},
+	"14": {0, "return 42!=42;"},
 
-	"15": {1, "0<1"},
-	"16": {0, "1<1"},
-	"17": {0, "2<1"},
-	"18": {1, "0<=1"},
-	"19": {1, "1<=1"},
-	"20": {0, "2<=1"},
+	"15": {1, "return 0<1;"},
+	"16": {0, "return 1<1;"},
+	"17": {0, "return 2<1;"},
+	"18": {1, "return 0<=1;"},
+	"19": {1, "return 1<=1;"},
+	"20": {0, "return 2<=1;"},
 
-	"21": {1, "1>0"},
-	"22": {0, "1>1"},
-	"23": {0, "1>2"},
-	"24": {1, "1>=0"},
-	"25": {1, "1>=1"},
-	"26": {0, "1>=2"},
+	"21": {1, "return 1>0;"},
+	"22": {0, "return 1>1;"},
+	"23": {0, "return 1>2;"},
+	"24": {1, "return 1>=0;"},
+	"25": {1, "return 1>=1;"},
+	"26": {0, "return 1>=2;"},
+
+	"28": {0, "return 0==1; 42==42; 12 + 34 - 5; 0"},
+
+	"27": {1, "return 1; 2; 3"},
+	"29": {2, "1; return 2; 3;"},
+	"30": {3, "1; 2; return 3"},
 }
 
 func TestCompile(t *testing.T) {
@@ -355,6 +361,34 @@ func TestTokenize(t *testing.T) {
 					t.Fatalf("tok.Val: %d expected, but got %d", c.val[i], tok.Val)
 				}
 				i++
+			}
+		})
+	}
+}
+
+func TestExpect(t *testing.T) {
+	cases := map[string]struct {
+		in   string
+		want string
+	}{
+		"case 1": {
+			in:   "\n",
+			want: "",
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			next := &Token{Kind: TK_EOF}
+			token = &Token{
+				Kind: TK_RESERVED,
+				Len:  len(c.in),
+				Str:  c.in,
+				Next: next,
+			}
+			expect(c.in)
+			if token.Kind != TK_EOF {
+				t.Fatal("unexpected token")
 			}
 		})
 	}
