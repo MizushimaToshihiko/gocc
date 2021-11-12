@@ -64,13 +64,21 @@ func compile(arg string, w io.Writer) error {
 	}
 
 	// printTokens()
-	node := program()
+	prog := program()
+
+	// Assign offsets to local variables
+	offset := 0
+	for v := prog.Locals; v != nil; v = v.Next {
+		offset += 8
+		v.Offset = offset
+	}
+	prog.StackSz = offset
 
 	// for n := node; n != nil; n = n.Next {
 	// 	walkInOrder(n)
 	// }
 
-	return codegen(node, w) // make the asm code, down on the AST
+	return codegen(prog, w) // make the asm code, down on the AST
 	/*
 		// the parsed result is in 'prog'
 		prog := program()

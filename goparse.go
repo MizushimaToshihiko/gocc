@@ -2,6 +2,12 @@ package main
 
 type NodeKind int
 
+type Var struct {
+	Next   *Var
+	Name   string // Variable name
+	Offset int    // Offset from RBP
+}
+
 const (
 	ND_ADD       NodeKind = iota // +
 	ND_SUB                       // -
@@ -11,11 +17,11 @@ const (
 	ND_NE                        // !=
 	ND_LT                        // <
 	ND_LE                        // <=
-	ND_ASSIGN                    // = , ":=" is unnimplememted
+	ND_ASSIGN                    // = , ":=" is unimplememted
 	ND_RETURN                    // "return"
-	ND_EXPR_STMT                 // expression statement
-	ND_VAR                       // local variables
-	ND_NUM                       // integer
+	ND_EXPR_STMT                 // Expression statement
+	ND_VAR                       // Variables
+	ND_NUM                       // Integer
 )
 
 // define AST node
@@ -24,8 +30,20 @@ type Node struct {
 	Next *Node    // Next node
 	Lhs  *Node    // left branch
 	Rhs  *Node    // right branch
-	Name rune     // used if kind == ND_VAR
+	Var  *Var     // used if kind == ND_VAR
 	Val  int64    // it would be used when kind is 'ND_NUM'
+}
+
+var locals *Var
+
+// Find a local variable by name.
+func findVar(tok *Token) *Var {
+	for v := locals; v != nil; v = v.Next {
+		if v.Name == tok.Str {
+			return v
+		}
+	}
+	return nil
 }
 
 func newBinary(kind NodeKind, lhs *Node, rhs *Node) *Node {
@@ -48,14 +66,28 @@ func newNum(val int64) *Node {
 	}
 }
 
-func newVar(name rune) *Node {
-	return &Node{Kind: ND_VAR, Name: name}
+func newVar(v *Var) *Node {
+	return &Node{Kind: ND_VAR, Var: v}
+}
+
+func pushVar(name string) *Var {
+	v := &Var{Next: locals, Name: name}
+	locals = v
+	return v
+}
+
+type Program struct {
+	Node    *Node
+	Locals  *Var
+	StackSz int
 }
 
 // program = stmt*
-func program() *Node {
+func program() *Program {
 	// printCurTok()
 	// printCalledFunc()
+
+	locals = nil
 
 	head := &Node{}
 	cur := head
@@ -64,7 +96,7 @@ func program() *Node {
 		cur.Next = stmt()
 		cur = cur.Next
 	}
-	return head.Next
+	return &Program{Node: head.Next, Locals: locals}
 }
 
 // stmt = "return" expr (";" | "\n" | EOF)
@@ -205,7 +237,11 @@ func primary() *Node {
 	}
 
 	if tok := consumeIdent(); tok != nil {
-		return newVar(rune(tok.Str[0]))
+		v := findVar(tok)
+		if v == nil {
+			v = pushVar(tok.Str)
+		}
+		return newVar(v)
 	}
 
 	// or must be integer

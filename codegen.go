@@ -23,8 +23,7 @@ func (c *codeWriter) printf(frmt string, a ...interface{}) {
 // Pushes the given node's address to the stack
 func (c *codeWriter) genAddr(node *Node) {
 	if node.Kind == ND_VAR {
-		offset := int(node.Name-'a'+1) * 8
-		c.printf("	lea rax, [rbp-%d]\n", offset)
+		c.printf("	lea rax, [rbp-%d]\n", node.Var.Offset)
 		c.printf("	push rax\n")
 		return
 	}
@@ -112,7 +111,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	return
 }
 
-func codegen(node *Node, w io.Writer) error {
+func codegen(prog *Program, w io.Writer) error {
 	c := &codeWriter{w: w}
 	// output the former 3 lines of the assembly
 	c.printf(".intel_syntax noprefix\n.globl main\nmain:\n")
@@ -120,9 +119,9 @@ func codegen(node *Node, w io.Writer) error {
 	// Prologue
 	c.printf("	push rbp\n")
 	c.printf("	mov rbp, rsp\n")
-	c.printf("	sub rsp, 208\n")
+	c.printf("	sub rsp, %d\n", prog.StackSz)
 
-	for n := node; n != nil; n = n.Next {
+	for n := prog.Node; n != nil; n = n.Next {
 		c.gen(n)
 	}
 

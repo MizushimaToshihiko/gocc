@@ -55,6 +55,9 @@ return 3`},
 
 	"31": {3, "a=3; return a"},
 	"32": {8, "a=3; z=5; return a+z"},
+
+	"33": {3, "foo=3; return foo"},
+	"34": {8, "foo123=3; bar=5; return foo123+bar"},
 }
 
 func TestCompile(t *testing.T) {
