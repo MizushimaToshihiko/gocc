@@ -185,7 +185,7 @@ func expectEnd() {
 // if next token is integer, the read position of token exceed one
 // character or report an error.
 func expectNumber() int64 {
-	// defer printCurTok()
+	defer printCurTok()
 	if token.Kind != TK_NUM {
 		panic("\n" + errorAt(token.Loc, "is not a number"))
 	}

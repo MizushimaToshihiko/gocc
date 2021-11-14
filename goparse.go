@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type NodeKind int
 
 type Var struct {
@@ -21,6 +23,8 @@ const (
 	ND_RETURN                    // "return"
 	ND_IF                        // "if"
 	ND_WHILE                     // "for" instead of "while"
+	ND_FOR                       // "for"
+	ND_BLOCK                     // { ... }
 	ND_EXPR_STMT                 // Expression statement
 	ND_VAR                       // Variables
 	ND_NUM                       // Integer
@@ -38,6 +42,11 @@ type Node struct {
 	Cond *Node
 	Then *Node
 	Els  *Node
+	Init *Node
+	Inc  *Node
+
+	// Block
+	Body *Node
 
 	Var *Var  // used if kind == ND_VAR
 	Val int64 // it would be used when kind is 'ND_NUM'
@@ -112,9 +121,40 @@ func readExprStmt() *Node {
 	return newUnary(ND_EXPR_STMT, expr())
 }
 
+func readBlockStmt() *Node {
+	head := &Node{}
+	cur := head
+
+	for {
+		if consume("}") != nil {
+			break
+		}
+		cur.Next = stmt()
+		cur = cur.Next
+	}
+	fmt.Printf("%#v\n", token)
+	node := &Node{Kind: ND_BLOCK}
+	node.Body = head.Next
+	expectEnd()
+	return node
+}
+
+// func isCond() bool {
+// 	tok := token
+
+// 	if tok.Kind == TK_NUM || tok.Kind == TK_IDENT {
+// 		return false
+// 	}
+
+// }
+
 // stmt = "return" expr (";" | "\n" | EOF)
-//      | "if" expr stmt ("else" stmt)?
+//      | "if" expr "{" stmt "}" ("else" "{" stmt "}" )?
+//      | while-loop
+//      | for-loop
+//      | "{" stmt* "}"
 //      | expr (";" | "\n" | EOF)
+// while-loop  = "for" expr stmt
 func stmt() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -137,9 +177,33 @@ func stmt() *Node {
 
 	if consume("for") != nil {
 		node := &Node{Kind: ND_WHILE}
-		node.Cond = expr()
-		node.Then = stmt()
+		if consume("{") == nil {
+			node.Cond = expr()
+		}
+		expect("{")
+
+		head := &Node{}
+		cur := head
+
+		for {
+			if consume("}") != nil {
+				break
+			}
+			cur.Next = stmt()
+			cur = cur.Next
+		}
+
+		node.Then = head.Next
 		return node
+		// if consume(";") != nil { // for-loop
+		// 	return readForLoop()
+		// } else {
+
+		// }
+	}
+
+	if consume("{") != nil {
+		return readBlockStmt()
 	}
 
 	node := readExprStmt()

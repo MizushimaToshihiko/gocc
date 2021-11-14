@@ -102,6 +102,31 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.printf("	jmp .Lbegin%d\n", seq)
 		c.printf(".Lend%d:\n", seq)
 		return
+	case ND_FOR:
+		seq := labelseq
+		labelseq++
+		if node.Init != nil {
+			c.gen(node.Init)
+		}
+		c.printf(".Lbegin%d:\n", seq)
+		if node.Cond != nil {
+			c.gen(node.Cond)
+			c.printf("	pop rax\n")
+			c.printf("	cmp rax, 0\n")
+			c.printf("	je .Lend%d\n", seq)
+		}
+		c.gen(node.Then)
+		if node.Inc != nil {
+			c.gen(node.Inc)
+		}
+		c.printf("	jmp .Lbegin%d\n", seq)
+		c.printf(".Lend%d:\n", seq)
+		return
+	case ND_BLOCK:
+		for n := node.Body; n != nil; n = n.Next {
+			c.gen(n)
+		}
+		return
 	case ND_RETURN:
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")
