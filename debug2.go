@@ -29,7 +29,7 @@ func printTokens() {
 		// 		log.Fatal("unknown token kind")
 		// 	}
 		// 	fmt.Printf(" %s: Str:\"%s\" :%d Val:%d\n", kind, tok.Str, tok.Len, tok.Val)
-		fmt.Printf(" %d:'%s' ", tok.Kind, tok.Str)
+		fmt.Printf(" '%s'", tok.Str)
 		tok = tok.Next
 	}
 
@@ -49,8 +49,11 @@ func printCurTok() {
 }
 
 func printCalledFunc() {
-	pc, _, line, _ := runtime.Caller(1)
+	pc, _, line, _ := runtime.Caller(2)
 	fn := runtime.FuncForPC(pc)
+	fmt.Printf(" %s %d\n", fn.Name(), line)
+	pc, _, line, _ = runtime.Caller(1)
+	fn = runtime.FuncForPC(pc)
 	fmt.Printf(" %s %d\n", fn.Name(), line)
 }
 
