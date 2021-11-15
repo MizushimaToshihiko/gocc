@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type NodeKind int
 
 type Var struct {
@@ -100,8 +102,8 @@ type Program struct {
 
 // program = stmt*
 func program() *Program {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok()
+	printCalledFunc()
 
 	locals = nil
 
@@ -119,9 +121,9 @@ func readExprStmt() *Node {
 	return newUnary(ND_EXPR_STMT, expr())
 }
 
-// Block = "{" StatementList "}" .
-// StatementList = { Statement ";" } .
 func block() *Node {
+	printCurTok()
+	printCalledFunc()
 	head := &Node{}
 	cur := head
 
@@ -139,15 +141,16 @@ func block() *Node {
 
 // stmt = "return" expr ";"
 //      | "if" expr "{" stmt "}" ("else" "{" stmt "}" )?
-//      | ForStmt
-//      | ForClause -> unimplemented
+//      | for-stmt
 //      | "{" stmt* "}"
 //      | expr ";"
-// ForStmt = "for" [ Condition ] Block .
-// Condition = Expression .
+// for-stmt = "for" [ condition ] block .
+// condition = expr .
+// block = "{" stmt-list "}" .
+// stmt-list = { stmt ";" } .
 func stmt() *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok()
+	printCalledFunc()
 
 	if consume("return") != nil {
 		node := newUnary(ND_RETURN, expr())
@@ -158,11 +161,9 @@ func stmt() *Node {
 	if consume("if") != nil {
 		node := &Node{Kind: ND_IF}
 		node.Cond = expr()
-		expect("{")
-		node.Then = block()
+		node.Then = stmt()
 		if consume("else") != nil {
-			expect(";")
-			node.Els = block()
+			node.Els = stmt()
 		}
 		return node
 	}
@@ -171,16 +172,32 @@ func stmt() *Node {
 		node := &Node{Kind: ND_WHILE}
 		if consume("{") == nil {
 			node.Cond = expr()
+		} else {
+			node.Cond = newNum(1)
 		}
-		expect("{")
 
-		node.Then = block()
+		node.Then = stmt()
 		return node
 		// if consume(";") != nil { // for-loop
 		// 	return readForLoop()
 		// } else {
 
 		// }
+	}
+
+	if consume("{") != nil {
+
+		head := Node{}
+		cur := &head
+
+		for consume("}") == nil {
+			fmt.Printf("token: %#v\n", token)
+			cur.Next = stmt()
+			cur = cur.Next
+		}
+		fmt.Println("ここ")
+		expect(";")
+		return &Node{Kind: ND_BLOCK, Body: head.Next}
 	}
 
 	// if consume("{") != nil {
@@ -194,13 +211,16 @@ func stmt() *Node {
 
 // expr       = assign
 func expr() *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok()
+	printCalledFunc()
 
 	return assign()
 }
 
 func assign() *Node {
+	printCurTok()
+	printCalledFunc()
+
 	node := equality()
 	if consume("=") != nil {
 		node = newBinary(ND_ASSIGN, node, assign())
@@ -228,8 +248,8 @@ func equality() *Node {
 
 // relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 func relational() *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok()
+	printCalledFunc()
 
 	node := add()
 
@@ -250,8 +270,8 @@ func relational() *Node {
 
 // add        = mul ("+" mul | "-" mul)*
 func add() *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok()
+	printCalledFunc()
 
 	node := mul()
 
@@ -268,8 +288,8 @@ func add() *Node {
 
 // mul = unary ("*" unary | "/" unary)*
 func mul() *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok()
+	printCalledFunc()
 
 	node := unary()
 
@@ -287,8 +307,8 @@ func mul() *Node {
 // unary   = ("+" | "-")? unary
 //         | primary
 func unary() *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok()
+	printCalledFunc()
 
 	if consume("+") != nil {
 		return unary()
@@ -301,8 +321,8 @@ func unary() *Node {
 
 // primary = "(" expr ")" | ident | num
 func primary() *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok()
+	printCalledFunc()
 
 	// if the next token is '(', the program must be
 	// "(" expr ")"

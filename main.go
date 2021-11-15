@@ -63,7 +63,7 @@ func compile(arg string, w io.Writer) error {
 		return err
 	}
 
-	// printTokens()
+	printTokens()
 	prog := program()
 
 	// Assign offsets to local variables

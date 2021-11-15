@@ -157,7 +157,7 @@ func consumeSizeof() *Token {
 	return t
 }
 
-// if the next token is an expected symbol, the read position
+// if the current token is an expected symbol, the read position
 // of token exceed one token.
 func expect(s string) {
 	// defer printCurTok()

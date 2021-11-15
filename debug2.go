@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"runtime"
 )
 
@@ -13,24 +12,24 @@ var headTok *Token
 func printTokens() {
 	fmt.Print("# Tokens:\n")
 	tok := headTok.Next
-	var kind string
+	// var kind string
 	for tok.Next != nil {
-		switch tok.Kind {
-		case TK_IDENT:
-			kind = "IDENT"
-		case TK_NUM:
-			kind = "NUM"
-		case TK_RESERVED:
-			kind = "RESERVED"
-		case TK_SIZEOF:
-			kind = "SIZEOF"
-		case TK_STR:
-			kind = "STR"
-		default:
-			log.Fatal("unknown token kind")
-		}
-		fmt.Printf(" %s: Str:\"%s\" :%d Val:%d\n", kind, tok.Str, tok.Len, tok.Val)
-		// fmt.Printf(" '%s' ", tok.Str)
+		// 	switch tok.Kind {
+		// 	case TK_IDENT:
+		// 		kind = "IDENT"
+		// 	case TK_NUM:
+		// 		kind = "NUM"
+		// 	case TK_RESERVED:
+		// 		kind = "RESERVED"
+		// 	case TK_SIZEOF:
+		// 		kind = "SIZEOF"
+		// 	case TK_STR:
+		// 		kind = "STR"
+		// 	default:
+		// 		log.Fatal("unknown token kind")
+		// 	}
+		// 	fmt.Printf(" %s: Str:\"%s\" :%d Val:%d\n", kind, tok.Str, tok.Len, tok.Val)
+		fmt.Printf(" %d:'%s' ", tok.Kind, tok.Str)
 		tok = tok.Next
 	}
 
