@@ -65,7 +65,7 @@ var cases = map[string]testcase{
 	// 	"38": {2, "if 2-1 return 2; return 3"},
 	// 	"39": {2, "if 2 - 1 return 2; return 3"},
 
-	"40": {10, "i=0; for i<10 { i=i+1 }; return i"},
+	"40": {10, "i=0\n for i<10 {\n i=i+1\n }\n return i\n"},
 }
 
 func TestCompile(t *testing.T) {

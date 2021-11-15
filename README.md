@@ -12,4 +12,4 @@ Group       = "(" Expression ")" .
 Option      = "[" Expression "]" .
 Repetition  = "{" Expression "}" .
 ```
-From : [golang.org/x/exp](https://pkg.go.dev/golang.org/x/exp/ebnf)
+From : [golang.org/x/exp](https://golang.org/ref/spec#Notation)

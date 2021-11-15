@@ -14,12 +14,15 @@ import (
 type TokenKind int
 
 const (
-	TK_RESERVED TokenKind = iota // 0: Reserved words, and puncturators
+	TK_RESERVED TokenKind = iota // 0: Reserved words(key words), operators, and puncturators
 	TK_SIZEOF                    // 1: 'sizeof' operator
 	TK_IDENT                     // 2: idenfier such as variables, function names
-	TK_STR                       // 3: string literals
-	TK_NUM                       // 4: integer
-	TK_EOF                       // 5: the end of tokens
+
+	// literals
+	TK_STR // 3: string literals
+	TK_NUM // 4: integer
+
+	TK_EOF // 5: the end of tokens
 )
 
 type Token struct {
@@ -256,7 +259,7 @@ func startsWithReserved(p string) string {
 }
 
 func isSpace(op rune) bool {
-	return strings.Contains("\t\v\f\r ", string(op))
+	return strings.Contains("\n\t\v\f\r ", string(op))
 }
 
 func isDigit(op rune) bool {
@@ -360,6 +363,16 @@ func readCharLiteral(cur *Token, start int) (*Token, error) {
 	return tok, nil
 }
 
+// addSemiColn adds ";" token as terminators
+// Reference: https://golang.org/ref/spec#Semicolons
+func addSemiColn(cur *Token) *Token {
+	if (curIdx < len(userInput)-1 && userInput[curIdx] == '\n') ||
+		(curIdx == len(userInput)-1) {
+		return newToken(TK_RESERVED, cur, ";", 1)
+	}
+	return nil
+}
+
 // tokenize inputted string 'userInput', and return new tokens.
 func tokenize() (*Token, error) {
 	var head Token
@@ -381,12 +394,14 @@ func tokenize() (*Token, error) {
 		if startsWith(string(userInput[curIdx:]), "//") {
 			curIdx += 2
 			for ; curIdx < len(userInput) && userInput[curIdx] != '\n'; curIdx++ {
+				// skip to the end of line.
 			}
 			continue
 		}
 
 		// skip block comment
 		if startsWith(string(userInput[curIdx:]), "/*") {
+			// skip to the first of '*/' in userInput[curIdx:].
 			idx := strings.Index(string(userInput[curIdx:]), "*/")
 			if idx == -1 {
 				return nil, fmt.Errorf(
@@ -402,6 +417,8 @@ func tokenize() (*Token, error) {
 		if startsWith(string(userInput[curIdx:]), "sizeof") {
 			cur = newToken(TK_SIZEOF, cur, "sizeof", len("sizeof"))
 			curIdx += len("sizeof")
+			cur = addSemiColn(cur)
+			curIdx += cur.Len
 			continue
 		}
 
@@ -410,6 +427,8 @@ func tokenize() (*Token, error) {
 		if kw != "" {
 			cur = newToken(TK_RESERVED, cur, kw, len(kw))
 			curIdx += len(kw)
+			cur = addSemiColn(cur)
+			curIdx += cur.Len
 			continue
 		}
 
@@ -417,13 +436,8 @@ func tokenize() (*Token, error) {
 		if strings.Contains("+-()*/<>=;{},&[].,!~|^:?", string(userInput[curIdx])) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
-			continue
-		}
-
-		// newline
-		if userInput[curIdx] == '\n' {
-			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
-			curIdx++
+			cur = addSemiColn(cur)
+			curIdx += cur.Len
 			continue
 		}
 
@@ -435,6 +449,8 @@ func tokenize() (*Token, error) {
 				ident = append(ident, userInput[curIdx])
 			}
 			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
+			cur = addSemiColn(cur)
+			curIdx += cur.Len
 			continue
 		}
 
@@ -446,6 +462,8 @@ func tokenize() (*Token, error) {
 			if err != nil {
 				return nil, err
 			}
+			cur = addSemiColn(cur)
+			curIdx += cur.Len
 			continue
 		}
 
@@ -456,6 +474,8 @@ func tokenize() (*Token, error) {
 			if err != nil {
 				return nil, err
 			}
+			curIdx += cur.Len
+			cur = addSemiColn(cur)
 			curIdx += cur.Len
 			continue
 		}
@@ -472,6 +492,8 @@ func tokenize() (*Token, error) {
 				return nil, err
 			}
 			cur.Val = v
+			cur = addSemiColn(cur)
+			curIdx += cur.Len
 			continue
 		}
 

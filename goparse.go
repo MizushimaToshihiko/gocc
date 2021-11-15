@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type NodeKind int
 
 type Var struct {
@@ -120,33 +118,6 @@ func program() *Program {
 func readExprStmt() *Node {
 	return newUnary(ND_EXPR_STMT, expr())
 }
-
-func readBlockStmt() *Node {
-	head := &Node{}
-	cur := head
-
-	for {
-		if consume("}") != nil {
-			break
-		}
-		cur.Next = stmt()
-		cur = cur.Next
-	}
-	fmt.Printf("%#v\n", token)
-	node := &Node{Kind: ND_BLOCK}
-	node.Body = head.Next
-	expectEnd()
-	return node
-}
-
-// func isCond() bool {
-// 	tok := token
-
-// 	if tok.Kind == TK_NUM || tok.Kind == TK_IDENT {
-// 		return false
-// 	}
-
-// }
 
 // stmt = "return" expr (";" | "\n" | EOF)
 //      | "if" expr "{" stmt "}" ("else" "{" stmt "}" )?
