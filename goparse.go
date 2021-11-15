@@ -119,6 +119,19 @@ func readExprStmt() *Node {
 	return newUnary(ND_EXPR_STMT, expr())
 }
 
+func isForClause() bool {
+	tok := token
+
+	for consume("{") == nil {
+		if peek(";") != nil {
+			token = tok
+			return true
+		}
+	}
+	token = tok
+	return false
+}
+
 // stmt = "return" expr ";"
 //      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
 //      | for-stmt
@@ -149,20 +162,33 @@ func stmt() *Node {
 	}
 
 	if consume("for") != nil {
-		node := &Node{Kind: ND_WHILE}
-		if peek("{") == nil {
-			node.Cond = expr()
+		if !isForClause() {
+			node := &Node{Kind: ND_WHILE}
+			if peek("{") == nil {
+				node.Cond = expr()
+			} else {
+				node.Cond = newNum(1)
+			}
+
+			node.Then = stmt()
+			return node
+
 		} else {
-			node.Cond = newNum(1)
+			node := &Node{Kind: ND_FOR}
+			if consume(";") == nil {
+				node.Init = readExprStmt()
+				expect(";")
+			}
+			if consume(";") == nil {
+				node.Cond = expr()
+				expect(";")
+			}
+			if peek("{") == nil {
+				node.Inc = readExprStmt()
+			}
+			node.Then = stmt()
+			return node
 		}
-
-		node.Then = stmt()
-		return node
-		// if consume(";") != nil { // for-clause
-		// 	return readForLoop()
-		// } else {
-
-		// }
 	}
 
 	if consume("{") != nil {

@@ -162,7 +162,7 @@ func consumeSizeof() *Token {
 func expect(s string) {
 	// defer printCurTok()
 	if peek(s) == nil {
-		panic("\n" + errorAt(token.Loc, "is not '%s'", string(s)))
+		panic("\n" + errorAt(token.Loc, "'%s' expected", string(s)))
 	}
 	token = token.Next
 }
