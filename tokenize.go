@@ -168,23 +168,6 @@ func expect(s string) {
 	token = token.Next
 }
 
-func expectEnd() {
-	if atEof() {
-		return
-	}
-	if peek(";") != nil || peek("\n") != nil {
-		token = token.Next
-		return
-	}
-
-	panic("\n" +
-		errorAt(token.Loc,
-			"unexpected %s, expecting semicolon or newline",
-			token.Str,
-		),
-	)
-}
-
 // if next token is integer, the read position of token exceed one
 // character or report an error.
 func expectNumber() int64 {
@@ -363,14 +346,28 @@ func readCharLiteral(cur *Token, start int) (*Token, error) {
 	return tok, nil
 }
 
+func isTermOfProd(cur *Token) bool {
+	if (curIdx < len(userInput)-1 && userInput[curIdx+1] == '\n') ||
+		(curIdx == len(userInput)-1) {
+		return cur.Kind == TK_IDENT ||
+			cur.Kind == TK_NUM ||
+			cur.Kind == TK_STR ||
+			(cur.Kind == TK_RESERVED &&
+				(cur.Str == "break" ||
+					cur.Str == "continue" ||
+					cur.Str == "fallthrough" ||
+					cur.Str == "return"))
+	}
+	return false
+}
+
 // addSemiColn adds ";" token as terminators
 // Reference: https://golang.org/ref/spec#Semicolons
 func addSemiColn(cur *Token) *Token {
-	if (curIdx < len(userInput)-1 && userInput[curIdx] == '\n') ||
-		(curIdx == len(userInput)-1) {
+	if isTermOfProd(cur) {
 		return newToken(TK_RESERVED, cur, ";", 1)
 	}
-	return nil
+	return cur
 }
 
 // tokenize inputted string 'userInput', and return new tokens.
@@ -417,8 +414,6 @@ func tokenize() (*Token, error) {
 		if startsWith(string(userInput[curIdx:]), "sizeof") {
 			cur = newToken(TK_SIZEOF, cur, "sizeof", len("sizeof"))
 			curIdx += len("sizeof")
-			cur = addSemiColn(cur)
-			curIdx += cur.Len
 			continue
 		}
 
@@ -428,7 +423,6 @@ func tokenize() (*Token, error) {
 			cur = newToken(TK_RESERVED, cur, kw, len(kw))
 			curIdx += len(kw)
 			cur = addSemiColn(cur)
-			curIdx += cur.Len
 			continue
 		}
 
@@ -437,7 +431,6 @@ func tokenize() (*Token, error) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			cur = addSemiColn(cur)
-			curIdx += cur.Len
 			continue
 		}
 
@@ -450,7 +443,6 @@ func tokenize() (*Token, error) {
 			}
 			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
 			cur = addSemiColn(cur)
-			curIdx += cur.Len
 			continue
 		}
 
@@ -463,7 +455,6 @@ func tokenize() (*Token, error) {
 				return nil, err
 			}
 			cur = addSemiColn(cur)
-			curIdx += cur.Len
 			continue
 		}
 
@@ -476,7 +467,6 @@ func tokenize() (*Token, error) {
 			}
 			curIdx += cur.Len
 			cur = addSemiColn(cur)
-			curIdx += cur.Len
 			continue
 		}
 
@@ -493,7 +483,6 @@ func tokenize() (*Token, error) {
 			}
 			cur.Val = v
 			cur = addSemiColn(cur)
-			curIdx += cur.Len
 			continue
 		}
 

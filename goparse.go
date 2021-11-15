@@ -119,20 +119,27 @@ func readExprStmt() *Node {
 	return newUnary(ND_EXPR_STMT, expr())
 }
 
+// Block = "{" StatementList "}" .
+// StatementList = { Statement ";" } .
+// func block() *Node {
+
+// }
+
 // stmt = "return" expr (";" | "\n" | EOF)
 //      | "if" expr "{" stmt "}" ("else" "{" stmt "}" )?
-//      | while-loop
-//      | for-loop
+//      | ForStmt
+//      | ForClause -> unimplemented
 //      | "{" stmt* "}"
 //      | expr (";" | "\n" | EOF)
-// while-loop  = "for" expr stmt
+// ForStmt = "for" [ Condition ] Block .
+// Condition = Expression .
 func stmt() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
 	if consume("return") != nil {
 		node := newUnary(ND_RETURN, expr())
-		expectEnd()
+		expect(";")
 		return node
 	}
 
@@ -173,12 +180,12 @@ func stmt() *Node {
 		// }
 	}
 
-	if consume("{") != nil {
-		return readBlockStmt()
-	}
+	// if consume("{") != nil {
+	// 	return readBlockStmt()
+	// }
 
 	node := readExprStmt()
-	expectEnd()
+	expect(";")
 	return node
 }
 
