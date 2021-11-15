@@ -114,7 +114,6 @@ func strNdUp(b []rune, len int) []rune {
 // peek function returns the token, when the current token matches 's'.
 func peek(s string) *Token {
 	if token.Kind != TK_RESERVED ||
-		len(s) != token.Len ||
 		token.Str != s {
 		return nil
 	}
@@ -122,7 +121,7 @@ func peek(s string) *Token {
 }
 
 // consume returns token(pointer), if the current token is expected
-//  symbol, the read position of token exceed one character.
+// symbol, the read position of token exceed one character.
 func consume(s string) *Token {
 	// defer printCurTok()
 	if peek(s) == nil {
@@ -171,7 +170,7 @@ func expect(s string) {
 // if next token is integer, the read position of token exceed one
 // character or report an error.
 func expectNumber() int64 {
-	defer printCurTok()
+	// defer printCurTok()
 	if token.Kind != TK_NUM {
 		panic("\n" + errorAt(token.Loc, "is not a number"))
 	}
@@ -347,8 +346,7 @@ func readCharLiteral(cur *Token, start int) (*Token, error) {
 }
 
 func isTermOfProd(cur *Token) bool {
-	if (curIdx < len(userInput)-1 && userInput[curIdx+1] == '\n') ||
-		(curIdx == len(userInput)-1) {
+	if curIdx == len(userInput) || userInput[curIdx] == '\n' {
 		return cur.Kind == TK_IDENT ||
 			cur.Kind == TK_NUM ||
 			cur.Kind == TK_STR ||
@@ -356,7 +354,10 @@ func isTermOfProd(cur *Token) bool {
 				(cur.Str == "break" ||
 					cur.Str == "continue" ||
 					cur.Str == "fallthrough" ||
-					cur.Str == "return"))
+					cur.Str == "return" ||
+					cur.Str == "++" ||
+					cur.Str == "--" ||
+					strings.Contains(")]}", cur.Str)))
 	}
 	return false
 }
@@ -365,7 +366,7 @@ func isTermOfProd(cur *Token) bool {
 // Reference: https://golang.org/ref/spec#Semicolons
 func addSemiColn(cur *Token) *Token {
 	if isTermOfProd(cur) {
-		return newToken(TK_RESERVED, cur, ";", 1)
+		return newToken(TK_RESERVED, cur, ";", 0)
 	}
 	return cur
 }

@@ -16,56 +16,55 @@ type testcase struct {
 }
 
 var cases = map[string]testcase{
-	// 	"1":  {0, "return 0;"},
-	// 	"2":  {42, "return 42;"},
-	// 	"3":  {21, "return 5+20-4;"},
-	// 	"4":  {41, "return  12 + 34 - 5; "},
-	// 	"5":  {47, "return 5+6*7;"},
-	// 	"6":  {15, "return 5*(9-6);"},
-	// 	"7":  {4, "return (3+5)/2;"},
-	// 	"8":  {10, "return -10+20;"},
-	// 	"9":  {10, "return - -10;"},
-	// 	"10": {10, "return - - +10;"},
+	"1":  {0, "return 0\n"},
+	"2":  {42, "return 42\n"},
+	"3":  {21, "return 5+20-4\n"},
+	"4":  {41, "return  12 + 34 - 5\n"},
+	"5":  {47, "return 5+6*7\n"},
+	"6":  {15, "return 5*(9-6)\n"},
+	"7":  {4, "return (3+5)/2\n"},
+	"8":  {10, "return -10+20;"},
+	"9":  {10, "return - -10\n"},
+	"10": {10, "return - - +10\n"},
 
-	// 	"11": {0, "return 0==1;"},
-	// 	"12": {1, "return 42==42;"},
-	// 	"13": {1, "return 0!=1;"},
-	// 	"14": {0, "return 42!=42;"},
+	"11": {0, "return 0==1\n"},
+	"12": {1, "return 42==42\n"},
+	"13": {1, "return 0!=1\n"},
+	"14": {0, "return 42!=42\n"},
 
-	// 	"15": {1, "return 0<1;"},
-	// 	"16": {0, "return 1<1;"},
-	// 	"17": {0, "return 2<1;"},
-	// 	"18": {1, "return 0<=1;"},
-	// 	"19": {1, "return 1<=1;"},
-	// 	"20": {0, "return 2<=1;"},
+	"15": {1, "return 0<1\n"},
+	"16": {0, "return 1<1\n"},
+	"17": {0, "return 2<1\n"},
+	"18": {1, "return 0<=1\n"},
+	"19": {1, "return 1<=1\n"},
+	"20": {0, "return 2<=1\n"},
 
-	// 	"21": {1, "return 1>0;"},
-	// 	"22": {0, "return 1>1;"},
-	// 	"23": {0, "return 1>2;"},
-	// 	"24": {1, "return 1>=0;"},
-	// 	"25": {1, "return 1>=1;"},
-	// 	"26": {0, "return 1>=2;"},
+	"21": {1, "return 1>0\n"},
+	"22": {0, "return 1>1\n"},
+	"23": {0, "return 1>2\n"},
+	"24": {1, "return 1>=0\n"},
+	"25": {1, "return 1>=1\n"},
+	"26": {0, "return 1>=2\n"},
 
-	// 	"28": {0, "return 0==1; 42==42; 12 + 34 - 5; 0"},
+	"28": {0, "return 0==1\n42==42\n12 + 34 - 5\n0"},
 
-	// 	"27": {1, "return 1; 2; 3"},
-	// 	"29": {2, "1; return 2; 3;"},
-	// 	"30": {3, `1; 2
-	// return 3`},
+	"27": {1, "return 1\n2\n3"},
+	"29": {2, "1\nreturn 2\n3\n"},
+	"30": {3, "1\n2\nreturn 3"},
 
-	// 	"31": {3, "a=3; return a"},
-	// 	"32": {8, "a=3; z=5; return a+z"},
+	"31": {3, "a=3\nreturn a"},
+	"32": {8, "a=3\nz=5\nreturn a+z\n"},
 
-	// 	"33": {3, "foo=3; return foo"},
-	// 	"34": {8, "foo123=3; bar=5; return foo123+bar"},
+	"33": {3, "foo=3\nreturn foo\n"},
+	"34": {8, "foo123=3\nbar=5\nreturn foo123+bar"},
 
-	// 	"35": {3, "if 0 return 2; return 3;"},
-	// 	"36": {3, "if 1-1 return 2; return 3"},
-	// 	"37": {2, "if 1 return 2; return 3"},
-	// 	"38": {2, "if 2-1 return 2; return 3"},
-	// 	"39": {2, "if 2 - 1 return 2; return 3"},
+	"35": {3, "if 0 {\nreturn 2\n}\nreturn 3\n"},
+	"36": {3, "if 1-1{\nreturn 2\n}\nreturn 3\n"},
+	"37": {2, "if 1 {\nreturn 2\n}\nreturn 3\n"},
+	"38": {2, "if 2-1{\nreturn 2\n}\nreturn 3\n"},
+	"39": {2, "if 2 - 1 {\nreturn 2\n}\nreturn 3\n"},
 
-	"40": {10, "i=0\n for i<10 {\n i=i+1\n }\n return i\n"},
+	"40": {10, "i=0\nfor i<10 {\n\ti=i+1\n}\nreturn i\n"},
 }
 
 func TestCompile(t *testing.T) {
@@ -103,7 +102,7 @@ func TestCompile(t *testing.T) {
 					if c.want != actual {
 						t.Fatalf("%d expected, but got %d", c.want, actual)
 					}
-					t.Logf("%s => %d", c.in, actual)
+					t.Logf("\n%s => %d", c.in, actual)
 					return
 				}
 			}
@@ -123,7 +122,7 @@ func TestCompile(t *testing.T) {
 			if c.want != actual {
 				t.Fatalf("%d expected, but got %d", c.want, actual)
 			}
-			t.Logf("%s => %d", c.in, actual)
+			t.Logf("\n%s => %d", c.in, actual)
 		})
 	}
 }

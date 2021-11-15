@@ -121,16 +121,28 @@ func readExprStmt() *Node {
 
 // Block = "{" StatementList "}" .
 // StatementList = { Statement ";" } .
-// func block() *Node {
+func block() *Node {
+	head := &Node{}
+	cur := head
 
-// }
+	for {
+		if consume("}") != nil {
+			break
+		}
+		cur.Next = stmt()
+		cur = cur.Next
+	}
 
-// stmt = "return" expr (";" | "\n" | EOF)
+	expect(";")
+	return head.Next
+}
+
+// stmt = "return" expr ";"
 //      | "if" expr "{" stmt "}" ("else" "{" stmt "}" )?
 //      | ForStmt
 //      | ForClause -> unimplemented
 //      | "{" stmt* "}"
-//      | expr (";" | "\n" | EOF)
+//      | expr ";"
 // ForStmt = "for" [ Condition ] Block .
 // Condition = Expression .
 func stmt() *Node {
@@ -146,9 +158,11 @@ func stmt() *Node {
 	if consume("if") != nil {
 		node := &Node{Kind: ND_IF}
 		node.Cond = expr()
-		node.Then = stmt()
+		expect("{")
+		node.Then = block()
 		if consume("else") != nil {
-			node.Els = stmt()
+			expect(";")
+			node.Els = block()
 		}
 		return node
 	}
@@ -160,18 +174,7 @@ func stmt() *Node {
 		}
 		expect("{")
 
-		head := &Node{}
-		cur := head
-
-		for {
-			if consume("}") != nil {
-				break
-			}
-			cur.Next = stmt()
-			cur = cur.Next
-		}
-
-		node.Then = head.Next
+		node.Then = block()
 		return node
 		// if consume(";") != nil { // for-loop
 		// 	return readForLoop()
