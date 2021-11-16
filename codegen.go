@@ -33,7 +33,7 @@ func (c *codeWriter) genAddr(node *Node) {
 		return
 	}
 
-	c.err = fmt.Errorf("not an lvalue")
+	c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
 }
 
 func (c *codeWriter) load() {
@@ -219,6 +219,13 @@ func codegen(prog *Function, w io.Writer) error {
 		c.printf("	push rbp\n")
 		c.printf("	mov rbp, rsp\n")
 		c.printf("	sub rsp, %d\n", prog.StackSz)
+
+		// Push arguments to the stack
+		i := 0
+		for vl := fn.Params; vl != nil; vl = vl.Next {
+			c.printf("	mov [rbp-%d], %s\n", vl.Var.Offset, argreg[i])
+			i++
+		}
 
 		// Emit code
 		for n := fn.Node; n != nil; n = n.Next {

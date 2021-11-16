@@ -3,9 +3,13 @@ package main
 type NodeKind int
 
 type Var struct {
-	Next   *Var
 	Name   string // Variable name
 	Offset int    // Offset from RBP
+}
+
+type VarList struct {
+	Next *VarList
+	Var  *Var
 }
 
 const (
@@ -18,6 +22,8 @@ const (
 	ND_LT                        // <
 	ND_LE                        // <=
 	ND_ASSIGN                    // = , ":=" is unimplememted
+	ND_ADDR                      // unary &
+	ND_DEREF                     // urary *
 	ND_RETURN                    // "return"
 	ND_IF                        // "if"
 	ND_WHILE                     // "for" instead of "while"
@@ -33,6 +39,7 @@ const (
 type Node struct {
 	Kind NodeKind // type of node
 	Next *Node    // Next node
+	Tok  *Token   // Representive token
 
 	Lhs *Node // left branch
 	Rhs *Node // right branch
@@ -55,53 +62,63 @@ type Node struct {
 	Val int64 // it would be used when kind is 'ND_NUM'
 }
 
-var locals *Var
+var locals *VarList
 
 // Find a local variable by name.
 func findVar(tok *Token) *Var {
-	for v := locals; v != nil; v = v.Next {
-		if v.Name == tok.Str {
-			return v
+	for vl := locals; vl != nil; vl = vl.Next {
+		if vl.Var.Name == tok.Str {
+			return vl.Var
 		}
 	}
 	return nil
 }
 
-func newBinary(kind NodeKind, lhs *Node, rhs *Node) *Node {
+func newNode(kind NodeKind, tok *Token) *Node {
+	return &Node{Kind: kind, Tok: tok}
+}
+
+func newBinary(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
 	return &Node{
 		Kind: kind,
+		Tok:  tok,
 		Lhs:  lhs,
 		Rhs:  rhs,
 	}
 }
 
-func newUnary(kind NodeKind, expr *Node) *Node {
-	node := &Node{Kind: kind, Lhs: expr}
+func newUnary(kind NodeKind, expr *Node, tok *Token) *Node {
+	node := &Node{Kind: kind, Lhs: expr, Tok: tok}
 	return node
 }
 
-func newNum(val int64) *Node {
+func newNum(val int64, tok *Token) *Node {
 	return &Node{
 		Kind: ND_NUM,
+		Tok:  tok,
 		Val:  val,
 	}
 }
 
-func newVar(v *Var) *Node {
-	return &Node{Kind: ND_VAR, Var: v}
+func newVar(v *Var, tok *Token) *Node {
+	return &Node{Kind: ND_VAR, Tok: tok, Var: v}
 }
 
 func pushVar(name string) *Var {
-	v := &Var{Next: locals, Name: name}
-	locals = v
-	return v
+	v := &Var{Name: name}
+
+	vl := &VarList{Var: v, Next: locals}
+	locals = vl
+	return vl.Var
 }
 
 type Function struct {
-	Next    *Function
-	Name    string
+	Next   *Function
+	Name   string
+	Params *VarList
+
 	Node    *Node
-	Locals  *Var
+	Locals  *VarList
 	StackSz int
 }
 
@@ -120,29 +137,49 @@ func program() *Function {
 	return head.Next
 }
 
-// function = "func" ident "(" ")" "{" stmt "}"
+// params = ident ("," ident)*
+func readFuncParams() *VarList {
+	if consume(")") != nil {
+		return nil
+	}
+
+	head := &VarList{Var: pushVar(expectIdent())}
+	cur := head
+
+	for consume(")") == nil {
+		expect(",")
+		cur.Next = &VarList{Var: pushVar(expectIdent())}
+		cur = cur.Next
+	}
+
+	return head
+}
+
+// function = "func" ident "(" params? ")" "{" stmt "}"
 func function() *Function {
 	locals = nil
 
 	expect("func")
-	name := expectIdent()
+	fn := &Function{Name: expectIdent()}
 	expect("(")
-	expect(")")
+	fn.Params = readFuncParams()
 	expect("{")
 
 	head := &Node{}
 	cur := head
-
 	for consume("}") == nil {
 		cur.Next = stmt()
 		cur = cur.Next
 	}
 	expect(";")
-	return &Function{Name: name, Node: head.Next, Locals: locals}
+	fn.Node = head.Next
+	fn.Locals = locals
+	return fn
 }
 
 func readExprStmt() *Node {
-	return newUnary(ND_EXPR_STMT, expr())
+	t := token
+	return newUnary(ND_EXPR_STMT, expr(), t)
 }
 
 func isForClause() bool {
@@ -172,14 +209,14 @@ func stmt() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume("return") != nil {
-		node := newUnary(ND_RETURN, expr())
+	if t := consume("return"); t != nil {
+		node := newUnary(ND_RETURN, expr(), t)
 		expect(";")
 		return node
 	}
 
-	if consume("if") != nil {
-		node := &Node{Kind: ND_IF}
+	if t := consume("if"); t != nil {
+		node := newNode(ND_IF, t)
 		node.Cond = expr()
 		node.Then = stmt()
 		if consume("else") != nil {
@@ -188,20 +225,20 @@ func stmt() *Node {
 		return node
 	}
 
-	if consume("for") != nil {
+	if t := consume("for"); t != nil {
 		if !isForClause() {
-			node := &Node{Kind: ND_WHILE}
+			node := newNode(ND_WHILE, t)
 			if peek("{") == nil {
 				node.Cond = expr()
 			} else {
-				node.Cond = newNum(1)
+				node.Cond = newNum(1, t)
 			}
 
 			node.Then = stmt()
 			return node
 
 		} else {
-			node := &Node{Kind: ND_FOR}
+			node := newNode(ND_FOR, t)
 			if consume(";") == nil {
 				node.Init = readExprStmt()
 				expect(";")
@@ -218,7 +255,7 @@ func stmt() *Node {
 		}
 	}
 
-	if consume("{") != nil {
+	if t := consume("{"); t != nil {
 
 		head := Node{}
 		cur := &head
@@ -228,7 +265,7 @@ func stmt() *Node {
 			cur = cur.Next
 		}
 		expect(";")
-		return &Node{Kind: ND_BLOCK, Body: head.Next}
+		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
 	}
 
 	node := readExprStmt()
@@ -249,8 +286,8 @@ func assign() *Node {
 	// printCalledFunc()
 
 	node := equality()
-	if consume("=") != nil {
-		node = newBinary(ND_ASSIGN, node, assign())
+	if t := consume("="); t != nil {
+		node = newBinary(ND_ASSIGN, node, assign(), t)
 	}
 	return node
 }
@@ -263,10 +300,10 @@ func equality() *Node {
 	node := relational()
 
 	for {
-		if consume("==") != nil {
-			node = newBinary(ND_EQ, node, relational())
+		if t := consume("=="); t != nil {
+			node = newBinary(ND_EQ, node, relational(), t)
 		} else if consume("!=") != nil {
-			node = newBinary(ND_NE, node, relational())
+			node = newBinary(ND_NE, node, relational(), t)
 		} else {
 			return node
 		}
@@ -281,14 +318,14 @@ func relational() *Node {
 	node := add()
 
 	for {
-		if consume("<") != nil {
-			node = newBinary(ND_LT, node, add())
-		} else if consume("<=") != nil {
-			node = newBinary(ND_LE, node, add())
-		} else if consume(">") != nil {
-			node = newBinary(ND_LT, add(), node)
-		} else if consume(">=") != nil {
-			node = newBinary(ND_LE, add(), node)
+		if t := consume("<"); t != nil {
+			node = newBinary(ND_LT, node, add(), t)
+		} else if t := consume("<="); t != nil {
+			node = newBinary(ND_LE, node, add(), t)
+		} else if t := consume(">"); t != nil {
+			node = newBinary(ND_LT, add(), node, t)
+		} else if t := consume(">="); t != nil {
+			node = newBinary(ND_LE, add(), node, t)
 		} else {
 			return node
 		}
@@ -303,10 +340,10 @@ func add() *Node {
 	node := mul()
 
 	for {
-		if consume("+") != nil {
-			node = newBinary(ND_ADD, node, mul())
-		} else if consume("-") != nil {
-			node = newBinary(ND_SUB, node, mul())
+		if t := consume("+"); t != nil {
+			node = newBinary(ND_ADD, node, mul(), t)
+		} else if t := consume("-"); t != nil {
+			node = newBinary(ND_SUB, node, mul(), t)
 		} else {
 			return node
 		}
@@ -321,10 +358,10 @@ func mul() *Node {
 	node := unary()
 
 	for {
-		if consume("*") != nil {
-			node = newBinary(ND_MUL, node, unary())
-		} else if consume("/") != nil {
-			node = newBinary(ND_DIV, node, unary())
+		if t := consume("*"); t != nil {
+			node = newBinary(ND_MUL, node, unary(), t)
+		} else if t := consume("/"); t != nil {
+			node = newBinary(ND_DIV, node, unary(), t)
 		} else {
 			return node
 		}
@@ -337,11 +374,11 @@ func unary() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume("+") != nil {
+	if t := consume("+"); t != nil {
 		return unary()
 	}
-	if consume("-") != nil {
-		return newBinary(ND_SUB, newNum(0), unary())
+	if t := consume("-"); t != nil {
+		return newBinary(ND_SUB, newNum(0, t), unary(), t)
 	}
 	return primary()
 }
@@ -377,18 +414,22 @@ func primary() *Node {
 		return node
 	}
 
-	if tok := consumeIdent(); tok != nil {
+	if t := consumeIdent(); t != nil {
 		if consume("(") != nil {
-			return &Node{Kind: ND_FUNCALL, FuncName: tok.Str, Args: funcArgs()}
+			return &Node{Kind: ND_FUNCALL, Tok: t, FuncName: t.Str, Args: funcArgs()}
 		}
 
-		v := findVar(tok)
+		v := findVar(t)
 		if v == nil {
-			v = pushVar(tok.Str)
+			v = pushVar(t.Str)
 		}
-		return newVar(v)
+		return newVar(v, t)
 	}
 
 	// or must be integer
-	return newNum(expectNumber())
+	t := token
+	if t.Kind != TK_NUM {
+		panic("\n" + errorTok(t, "expected expression"))
+	}
+	return newNum(expectNumber(), t)
 }

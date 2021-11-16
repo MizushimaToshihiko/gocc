@@ -77,6 +77,9 @@ var cases = map[string]testcase{
 	"46": {8, "func main() {\n\treturn add(3, 5)\n}"},
 	"47": {2, "func main() {\n\treturn sub(5, 3)\n}"},
 	"48": {21, "func main() {\n\treturn add6(1,2,3,4,5,6)\n}"},
+	"49": {7, "func main() {\n\treturn add2(3,4)\n}\nfunc add2(x,y) {\n\treturn x+y\n}"},
+	"50": {1, "func main() {\n\treturn sub2(4,3)\n}\nfunc sub2(x,y) {\n\treturn x-y\n}"},
+	"51": {55, "func main() {\n\treturn fib(9)\n}\nfunc fib(x) {\n\tif x<=1 {\n\t\treturn 1\n\t}\n\treturn fib(x-1) + fib(x-2)\n}"},
 }
 
 var tmp2 string = `int ret3() { return 3; }
