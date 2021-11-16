@@ -4,6 +4,7 @@ type NodeKind int
 
 type Var struct {
 	Name   string // Variable name
+	Ty     *Type  // Type
 	Offset int    // Offset from RBP
 }
 
@@ -33,6 +34,7 @@ const (
 	ND_EXPR_STMT                 // Expression statement
 	ND_VAR                       // Variables
 	ND_NUM                       // Integer
+	ND_NULL                      // Empty statement
 )
 
 // define AST node
@@ -105,8 +107,8 @@ func newVar(v *Var, tok *Token) *Node {
 	return &Node{Kind: ND_VAR, Tok: tok, Var: v}
 }
 
-func pushVar(name string) *Var {
-	v := &Var{Name: name}
+func pushVar(name string, ty *Type) *Var {
+	v := &Var{Name: name, Ty: ty}
 
 	vl := &VarList{Var: v, Next: locals}
 	locals = vl
@@ -138,25 +140,44 @@ func program() *Function {
 	return head.Next
 }
 
+// basetype = "*"* "int"
+func basetype() *Type {
+	ty := intType()
+	for consume("*") != nil {
+		ty = pointerTo(ty)
+	}
+	expect("int")
+	return ty
+}
+
+// param = ident basetype
+func readFuncParam() *VarList {
+	vl := &VarList{}
+	name := expectIdent()
+	ty := basetype()
+	vl.Var = pushVar(name, ty)
+	return vl
+}
+
 // params = ident ("," ident)*
 func readFuncParams() *VarList {
 	if consume(")") != nil {
 		return nil
 	}
 
-	head := &VarList{Var: pushVar(expectIdent())}
+	head := readFuncParam()
 	cur := head
 
 	for consume(")") == nil {
 		expect(",")
-		cur.Next = &VarList{Var: pushVar(expectIdent())}
+		cur.Next = readFuncParam()
 		cur = cur.Next
 	}
 
 	return head
 }
 
-// function = "func" ident "(" params? ")" "{" stmt "}"
+// function = "func" ident basetype "(" params? ")" "{" stmt "}"
 func function() *Function {
 	locals = nil
 
@@ -164,6 +185,7 @@ func function() *Function {
 	fn := &Function{Name: expectIdent()}
 	expect("(")
 	fn.Params = readFuncParams()
+	basetype()
 	expect("{")
 
 	head := &Node{}
@@ -176,6 +198,26 @@ func function() *Function {
 	fn.Node = head.Next
 	fn.Locals = locals
 	return fn
+}
+
+// declaration = "var" ident basetype ("=" expr)
+func declaration() *Node {
+	tok := token
+	expect("var")
+	name := expectIdent()
+	ty := basetype()
+	v := pushVar(name, ty)
+
+	if consume(";") != nil {
+		return newNode(ND_NULL, tok)
+	}
+
+	expect("=")
+	lhs := newVar(v, tok)
+	rhs := expr()
+	expect(";")
+	node := newBinary(ND_ASSIGN, lhs, rhs, tok)
+	return newUnary(ND_EXPR_STMT, node, tok)
 }
 
 func readExprStmt() *Node {
@@ -201,6 +243,7 @@ func isForClause() bool {
 //      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
 //      | for-stmt
 //      | "{" stmt* "}"
+//      | declaration
 //      | expr ";"
 // for-stmt = "for" [ condition ] block .
 // condition = expr .
@@ -267,6 +310,10 @@ func stmt() *Node {
 		}
 		expect(";")
 		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
+	}
+
+	if t := peek("var"); t != nil {
+		return declaration()
 	}
 
 	node := readExprStmt()
@@ -428,7 +475,7 @@ func primary() *Node {
 
 		v := findVar(t)
 		if v == nil {
-			v = pushVar(t.Str)
+			panic("\n" + errorTok(t, "undifined variable"))
 		}
 		return newVar(v, t)
 	}

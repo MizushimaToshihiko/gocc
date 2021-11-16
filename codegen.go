@@ -59,6 +59,8 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	}
 
 	switch node.Kind {
+	case ND_NULL:
+		return
 	case ND_NUM:
 		c.printf("	push %d\n", node.Val)
 		return

@@ -54,8 +54,11 @@ func (e *errWriter) visit(node *Node) {
 	}
 
 	switch node.Kind {
-	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE, ND_VAR, ND_FUNCALL, ND_NUM:
+	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE, ND_FUNCALL, ND_NUM:
 		node.Ty = intType()
+		return
+	case ND_VAR:
+		node.Ty = node.Var.Ty
 		return
 	case ND_ADD:
 		if node.Rhs.Ty.Kind == TY_PTR {
@@ -86,7 +89,10 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = pointerTo(node.Lhs.Ty)
 		return
 	case ND_DEREF:
-		node.Ty = intType()
+		if node.Lhs.Ty.Kind != TY_PTR {
+			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
+		}
+		node.Ty = node.Lhs.Ty.Base
 		return
 	}
 }
