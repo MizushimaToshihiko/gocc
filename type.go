@@ -31,6 +31,10 @@ func pointerTo(base *Type) *Type {
 	return &Type{Kind: TY_PTR, Base: base}
 }
 
+func sizeOf(ty *Type) int {
+	return 1
+}
+
 func (e *errWriter) visit(node *Node) {
 	if e.err != nil {
 		return
