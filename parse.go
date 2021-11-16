@@ -122,11 +122,12 @@ func readExprStmt() *Node {
 func isForClause() bool {
 	tok := token
 
-	for consume("{") == nil {
+	for peek("{") == nil {
 		if peek(";") != nil {
 			token = tok
 			return true
 		}
+		token = token.Next
 	}
 	token = tok
 	return false
