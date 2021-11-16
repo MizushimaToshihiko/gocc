@@ -67,16 +67,18 @@ func compile(arg string, w io.Writer) error {
 	prog := program()
 
 	// Assign offsets to local variables
-	offset := 0
-	for v := prog.Locals; v != nil; v = v.Next {
-		offset += 8
-		v.Offset = offset
-	}
-	prog.StackSz = offset
+	for fn := prog; fn != nil; fn = fn.Next {
+		offset := 0
+		for v := prog.Locals; v != nil; v = v.Next {
+			offset += 8
+			v.Offset = offset
+		}
+		prog.StackSz = offset
 
-	// for n := node; n != nil; n = n.Next {
-	// 	walkInOrder(n)
-	// }
+		// for n := node; n != nil; n = n.Next {
+		// 	walkInOrder(n)
+		// }
+	}
 
 	return codegen(prog, w) // make the asm code, down on the AST
 	/*

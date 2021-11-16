@@ -16,71 +16,83 @@ type testcase struct {
 }
 
 var cases = map[string]testcase{
-	"1":  {0, "return 0\n"},
-	"2":  {42, "return 42\n"},
-	"3":  {21, "return 5+20-4\n"},
-	"4":  {41, "return  12 + 34 - 5\n"},
-	"5":  {47, "return 5+6*7\n"},
-	"6":  {15, "return 5*(9-6)\n"},
-	"7":  {4, "return (3+5)/2\n"},
-	"8":  {10, "return -10+20;"},
-	"9":  {10, "return - -10\n"},
-	"10": {10, "return - - +10\n"},
+	"1":  {0, "func main() {\n\treturn 0\n}"},
+	"2":  {42, "func main() {\n\treturn 42\n}"},
+	"3":  {21, "func main() {\n\treturn 5+20-4\n}"},
+	"4":  {41, "func main() {\n\treturn  12 + 34 - 5\n}"},
+	"5":  {47, "func main() {\n\treturn 5+6*7\n}"},
+	"6":  {15, "func main() {\n\treturn 5*(9-6)\n}"},
+	"7":  {4, "func main() {\n\treturn (3+5)/2\n}"},
+	"8":  {10, "func main() {\n\treturn -10+20;\n}"},
+	"9":  {10, "func main() {\n\treturn - -10\n}"},
+	"10": {10, "func main() {\n\treturn - - +10\n}"},
 
-	"11": {0, "return 0==1\n"},
-	"12": {1, "return 42==42\n"},
-	"13": {1, "return 0!=1\n"},
-	"14": {0, "return 42!=42\n"},
+	"11": {0, "func main() {\n\treturn 0==1\n}"},
+	"12": {1, "func main() {\n\treturn 42==42\n}"},
+	"13": {1, "func main() {\n\treturn 0!=1\n}"},
+	"14": {0, "func main() {\n\treturn 42!=42\n}"},
 
-	"15": {1, "return 0<1\n"},
-	"16": {0, "return 1<1\n"},
-	"17": {0, "return 2<1\n"},
-	"18": {1, "return 0<=1\n"},
-	"19": {1, "return 1<=1\n"},
-	"20": {0, "return 2<=1\n"},
+	"15": {1, "func main() {\n\treturn 0<1\n}"},
+	"16": {0, "func main() {\n\treturn 1<1\n}"},
+	"17": {0, "func main() {\n\treturn 2<1\n}"},
+	"18": {1, "func main() {\n\treturn 0<=1\n}"},
+	"19": {1, "func main() {\n\treturn 1<=1\n}"},
+	"20": {0, "func main() {\n\treturn 2<=1\n}"},
 
-	"21": {1, "return 1>0\n"},
-	"22": {0, "return 1>1\n"},
-	"23": {0, "return 1>2\n"},
-	"24": {1, "return 1>=0\n"},
-	"25": {1, "return 1>=1\n"},
-	"26": {0, "return 1>=2\n"},
+	"21": {1, "func main() {\n\treturn 1>0\n}"},
+	"22": {0, "func main() {\n\treturn 1>1\n}"},
+	"23": {0, "func main() {\n\treturn 1>2\n}"},
+	"24": {1, "func main() {\n\treturn 1>=0\n}"},
+	"25": {1, "func main() {\n\treturn 1>=1\n}"},
+	"26": {0, "func main() {\n\treturn 1>=2\n}"},
 
-	"28": {0, "return 0==1\n42==42\n12 + 34 - 5\n0"},
+	"28": {0, "func main() {\n\treturn 0==1\n\t42==42\n\t12 + 34 - 5\n\t0\n}"},
 
-	"27": {1, "return 1\n2\n3"},
-	"29": {2, "1\nreturn 2\n3\n"},
-	"30": {3, "1\n2\nreturn 3"},
+	"27": {1, "func main() {\n\treturn 1\n\t2\n\t3\n}"},
+	"29": {2, "func main() {\n\t1\n\treturn 2\n\t3\n}"},
+	"30": {3, "func main() {\n\t1\n\t2\n\treturn 3\n}"},
 
-	"31": {3, "a=3\nreturn a"},
-	"32": {8, "a=3\nz=5\nreturn a+z\n"},
+	"31": {3, "func main() {\n\ta=3\n\treturn a\n}"},
+	"32": {8, "func main() {\n\ta=3\n\tz=5\n\treturn a+z\n}"},
 
-	"33": {3, "foo=3\nreturn foo\n"},
-	"34": {8, "foo123=3\nbar=5\nreturn foo123+bar"},
+	"33": {3, "func main() {\n\tfoo=3\n\treturn foo\n}"},
+	"34": {8, "func main() {\n\tfoo123=3\n\tbar=5\n\treturn foo123+bar\n}"},
 
-	"35": {3, "if 0 {\nreturn 2\n}\nreturn 3\n"},
-	"36": {3, "if 1-1{\nreturn 2\n}\nreturn 3\n"},
-	"37": {2, "if 1 {\nreturn 2\n}\nreturn 3\n"},
-	"38": {2, "if 2-1{\nreturn 2\n}\nreturn 3\n"},
-	"39": {2, "if 2 - 1 {\nreturn 2\n}\nreturn 3\n"},
+	"35": {3, "func main() {\n\tif 0 {\n\t\treturn 2\n\t}\n\treturn 3\n}"},
+	"36": {3, "func main() {\n\tif 1-1{\n\t\treturn 2\n\t}\n\treturn 3\n}"},
+	"37": {2, "func main() {\n\tif 1 {\n\t\treturn 2\n\t}\n\treturn 3\n}"},
+	"38": {2, "func main() {\n\tif 2-1{\n\t\treturn 2\n\t}\n\treturn 3\n}"},
+	"39": {2, "func main() {\nif 2 - 1 {\n\t\treturn 2\n\t}\n\treturn 3\n}"},
 
-	"35-1": {3, "if 0 return 2\nreturn 3\n"},
+	"35-1": {3, "func main() {\n\tif 0 return 2\n\treturn 3\n}"},
 
-	"40": {10, "i=0\nfor i<10 {\n\ti=i+1\n}\nreturn i\n"},
-	"41": {6, "i=0\nfor {\n\ti=i+1\n\tif i>5 {\n\t\treturn i\n\t}\n}\nreturn 0\n"},
+	"40": {10, "func main() {\n\ti=0\n\tfor i<10 {\n\t\ti=i+1\n\t}\n\treturn i\n}"},
+	"41": {6, "func main() {\n\ti=0\n\tfor {\n\t\ti=i+1\n\t\tif i>5 {\n\t\t\treturn i\n\t\t}\n\t}\n\treturn 0\n}"},
 
-	"42": {55, "i=0\nj=0\nfor i=0; i<=10; i=i+1 {\n\tj=i+j\n}\nreturn j\n"},
-	"43": {3, "for ;; {\n\treturn 3\n\treturn 5\n}"},
+	"42": {55, "func main() {\n\ti=0\n\tj=0\n\tfor i=0; i<=10; i=i+1 {\n\t\tj=i+j\n\t}\n\treturn j\n}"},
+	"43": {3, "func main() {\nfor ;; {\n\treturn 3\n\treturn 5\n}\n}"},
 
-	"44": {3, "return ret3()"},
-	"45": {5, "return ret5()"},
+	"44": {3, "func main() {\n\treturn ret3()\n}"},
+	"45": {5, "func main() {\n\treturn ret5()\n}"},
+	"46": {8, "func main() {\n\treturn add(3, 5)\n}"},
+	"47": {2, "func main() {\n\treturn sub(5, 3)\n}"},
+	"48": {21, "func main() {\n\treturn add6(1,2,3,4,5,6)\n}"},
 }
+
+var tmp2 string = `int ret3() { return 3; }
+int ret5() { return 5; }
+int add(int x, int y) { return x+y; }
+int sub(int x, int y) { return x-y; }
+
+int add6(int a, int b, int c, int d, int e, int f) {
+  return a+b+c+d+e+f;
+}`
 
 func TestCompile(t *testing.T) {
 
 	b, err := exec.Command(
 		"/bin/bash", "-c",
-		"echo \"int ret3() { return 3; }\nint ret5() { return 5; }\" | gcc -xc -c -o testdata/tmp2.o -",
+		"echo \""+tmp2+"\" | gcc -xc -c -o testdata/tmp2.o -",
 	).CombinedOutput()
 	if err != nil {
 		t.Fatalf("\noutput:\n%s\n%c", string(b), err)
@@ -104,7 +116,15 @@ func TestCompile(t *testing.T) {
 			}
 
 			execN := fmt.Sprintf("testdata/asm%s", name)
-			b, err := exec.Command("gcc", "-static", "-g", "-o", execN, asmN, "testdata/tmp2.o").CombinedOutput()
+			b, err := exec.Command(
+				"gcc",
+				"-static",
+				"-g",
+				"-o",
+				execN,
+				asmN,
+				"testdata/tmp2.o",
+			).CombinedOutput()
 			if err != nil {
 				t.Fatalf("\noutput:\n%s\n%v", string(b), err)
 			}
@@ -177,6 +197,10 @@ func TestStartsWithReserved(t *testing.T) {
 		"case ==": {
 			kw: "==",
 			in: "==0;",
+		},
+		"case func": {
+			kw: "func",
+			in: "func ",
 		},
 	}
 

@@ -49,6 +49,7 @@ type Node struct {
 
 	// Function call
 	FuncName string
+	Args     *Node
 
 	Var *Var  // used if kind == ND_VAR
 	Val int64 // it would be used when kind is 'ND_NUM'
@@ -96,27 +97,48 @@ func pushVar(name string) *Var {
 	return v
 }
 
-type Program struct {
+type Function struct {
+	Next    *Function
+	Name    string
 	Node    *Node
 	Locals  *Var
 	StackSz int
 }
 
-// program = stmt*
-func program() *Program {
+// program = function*
+func program() *Function {
 	// printCurTok()
 	// printCalledFunc()
 
+	head := &Function{}
+	cur := head
+
+	for !atEof() {
+		cur.Next = function()
+		cur = cur.Next
+	}
+	return head.Next
+}
+
+// function = "func" ident "(" ")" "{" stmt "}"
+func function() *Function {
 	locals = nil
+
+	expect("func")
+	name := expectIdent()
+	expect("(")
+	expect(")")
+	expect("{")
 
 	head := &Node{}
 	cur := head
 
-	for !atEof() {
+	for consume("}") == nil {
 		cur.Next = stmt()
 		cur = cur.Next
 	}
-	return &Program{Node: head.Next, Locals: locals}
+	expect(";")
+	return &Function{Name: name, Node: head.Next, Locals: locals}
 }
 
 func readExprStmt() *Node {
@@ -324,6 +346,23 @@ func unary() *Node {
 	return primary()
 }
 
+// func-args = "(" (assign ("," assign)*)? ")"
+func funcArgs() *Node {
+	if consume(")") != nil {
+		return nil
+	}
+
+	head := assign()
+	cur := head
+
+	for consume(",") != nil {
+		cur.Next = assign()
+		cur = cur.Next
+	}
+	expect(")")
+	return head
+}
+
 // primary = "(" expr ")" | ident args? | num
 // args = "(" ")"
 func primary() *Node {
@@ -340,8 +379,7 @@ func primary() *Node {
 
 	if tok := consumeIdent(); tok != nil {
 		if consume("(") != nil {
-			expect(")")
-			return &Node{Kind: ND_FUNCALL, FuncName: tok.Str}
+			return &Node{Kind: ND_FUNCALL, FuncName: tok.Str, Args: funcArgs()}
 		}
 
 		v := findVar(tok)

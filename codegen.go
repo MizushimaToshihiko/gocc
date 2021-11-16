@@ -20,7 +20,10 @@ func (c *codeWriter) printf(frmt string, a ...interface{}) {
 	_, c.err = fmt.Fprintf(c.w, frmt, a...)
 }
 
+var argreg []string = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
+
 var labelseq int
+var funcname string
 
 // Pushes the given node's address to the stack
 func (c *codeWriter) genAddr(node *Node) {
@@ -128,13 +131,39 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		}
 		return
 	case ND_FUNCALL:
+		nargs := 0
+		for arg := node.Args; arg != nil; arg = arg.Next {
+			c.gen(arg)
+			nargs++
+		}
+
+		for i := nargs - 1; i >= 0; i-- {
+			c.printf("	pop %s\n", argreg[i])
+		}
+
+		// We need to align RSP to a 16 byte boundary before
+		// calling a function because it is an ABI requirement.
+		// RAX is set to 0 for variadic function.
+		seq := labelseq
+		labelseq++
+		c.printf("	mov rax, rsp\n")
+		c.printf("	and rax, 15\n")
+		c.printf("	jnz .Lcall%d\n", seq)
+		c.printf("	mov rax, 0\n")
 		c.printf("	call %s\n", node.FuncName)
+		c.printf("	jmp .Lend%d\n", seq)
+		c.printf(".Lcall%d:\n", seq)
+		c.printf("	sub rsp, 8\n")
+		c.printf("	mov rax, 0\n")
+		c.printf("	call %s\n", node.FuncName)
+		c.printf("	add rsp, 8\n")
+		c.printf(".Lend%d:\n", seq)
 		c.printf("	push rax\n")
 		return
 	case ND_RETURN:
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")
-		c.printf("	jmp .Lreturn\n")
+		c.printf("	jmp .Lreturn.%s\n", funcname)
 		return
 	}
 
@@ -176,24 +205,31 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	return
 }
 
-func codegen(prog *Program, w io.Writer) error {
+func codegen(prog *Function, w io.Writer) error {
 	c := &codeWriter{w: w}
 	// output the former 3 lines of the assembly
-	c.printf(".intel_syntax noprefix\n.globl main\nmain:\n")
+	c.printf(".intel_syntax noprefix\n")
 
-	// Prologue
-	c.printf("	push rbp\n")
-	c.printf("	mov rbp, rsp\n")
-	c.printf("	sub rsp, %d\n", prog.StackSz)
+	for fn := prog; fn != nil; fn = fn.Next {
+		c.printf(".globl %s\n", fn.Name)
+		c.printf("%s:\n", fn.Name)
+		funcname = fn.Name
 
-	for n := prog.Node; n != nil; n = n.Next {
-		c.gen(n)
+		// Prologue
+		c.printf("	push rbp\n")
+		c.printf("	mov rbp, rsp\n")
+		c.printf("	sub rsp, %d\n", prog.StackSz)
+
+		// Emit code
+		for n := fn.Node; n != nil; n = n.Next {
+			c.gen(n)
+		}
+
+		// Epilogue
+		c.printf(".Lreturn.%s:\n", funcname)
+		c.printf("	mov rsp, rbp\n")
+		c.printf("	pop rbp\n")
+		c.printf("	ret\n")
 	}
-
-	// Epilogue
-	c.printf(".Lreturn:\n")
-	c.printf("	mov rsp, rbp\n")
-	c.printf("	pop rbp\n")
-	c.printf("	ret\n")
 	return c.err
 }
