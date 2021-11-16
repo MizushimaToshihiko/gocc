@@ -83,11 +83,11 @@ var cases = map[string]testcase{
 
 	"52": {3, "func main() {\n\tx=3\n\treturn *&x\n}"},
 	"53": {3, "func main() {\n\tx=3\n\ty=&x\n\tz=&y\n\treturn **z\n}"},
-	"54": {5, "func main() {\n\tx=3\n\ty=5\n\treturn *(&x+8)\n}"},
-	"55": {3, "func main() {\n\tx=3\n\ty=5\n\treturn *(&y-8)\n}"},
+	"54": {5, "func main() {\n\tx=3\n\ty=5\n\treturn *(&x+1)\n}"},
+	"55": {3, "func main() {\n\tx=3\n\ty=5\n\treturn *(&y-1)\n}"},
 	"56": {5, "func main() {\n\tx=3\n\ty=&x\n\t*y=5\n\treturn x\n}"},
-	"57": {7, "func main() {\n\tx=3\n\ty=5\n\t*(&x+8)=7\n\treturn y\n}"},
-	"58": {7, "func main() {\n\tx=3\n\ty=5\n\t*(&y-8)=7\n\treturn x\n}"},
+	"57": {7, "func main() {\n\tx=3\n\ty=5\n\t*(&x+1)=7\n\treturn y\n}"},
+	"58": {7, "func main() {\n\tx=3\n\ty=5\n\t*(&y-1)=7\n\treturn x\n}"},
 }
 
 var tmp2 string = `int ret3() { return 3; }

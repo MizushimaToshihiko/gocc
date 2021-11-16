@@ -186,8 +186,14 @@ func (c *codeWriter) gen(node *Node) (err error) {
 
 	switch node.Kind {
 	case ND_ADD:
+		if node.Ty.Kind == TY_PTR {
+			c.printf("	imul rdi, 8\n")
+		}
 		c.printf("	add rax, rdi\n")
 	case ND_SUB:
+		if node.Ty.Kind == TY_PTR {
+			c.printf("	imul rdi, 8\n")
+		}
 		c.printf("	sub rax, rdi\n")
 	case ND_MUL:
 		c.printf("	imul rax, rdi\n")

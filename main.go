@@ -65,6 +65,7 @@ func compile(arg string, w io.Writer) error {
 
 	printTokens()
 	prog := program()
+	addType(prog)
 
 	// Assign offsets to local variables
 	for fn := prog; fn != nil; fn = fn.Next {

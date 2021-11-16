@@ -39,6 +39,7 @@ const (
 type Node struct {
 	Kind NodeKind // type of node
 	Next *Node    // Next node
+	Ty   *Type    // Type e.g. int or pointer to int
 	Tok  *Token   // Representive token
 
 	Lhs *Node // left branch
