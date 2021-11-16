@@ -27,9 +27,13 @@ var funcname string
 
 // Pushes the given node's address to the stack
 func (c *codeWriter) genAddr(node *Node) {
-	if node.Kind == ND_VAR {
+	switch node.Kind {
+	case ND_VAR:
 		c.printf("	lea rax, [rbp-%d]\n", node.Var.Offset)
 		c.printf("	push rax\n")
+		return
+	case ND_DEREF:
+		c.gen(node.Lhs)
 		return
 	}
 
@@ -70,6 +74,13 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.genAddr(node.Lhs)
 		c.gen(node.Rhs)
 		c.store()
+		return
+	case ND_ADDR:
+		c.genAddr(node.Lhs)
+		return
+	case ND_DEREF:
+		c.gen(node.Lhs)
+		c.load()
 		return
 	case ND_IF:
 		seq := labelseq

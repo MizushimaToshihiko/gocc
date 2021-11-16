@@ -368,7 +368,7 @@ func mul() *Node {
 	}
 }
 
-// unary   = ("+" | "-")? unary
+// unary   = ("+" | "-" | "*" | "&")? unary
 //         | primary
 func unary() *Node {
 	// printCurTok()
@@ -379,6 +379,12 @@ func unary() *Node {
 	}
 	if t := consume("-"); t != nil {
 		return newBinary(ND_SUB, newNum(0, t), unary(), t)
+	}
+	if t := consume("&"); t != nil {
+		return newUnary(ND_ADDR, unary(), t)
+	}
+	if t := consume("*"); t != nil {
+		return newUnary(ND_DEREF, unary(), t)
 	}
 	return primary()
 }
