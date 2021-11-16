@@ -14,11 +14,13 @@ type errWriter struct {
 const (
 	TY_INT TypeKind = iota
 	TY_PTR
+	TY_ARRAY
 )
 
 type Type struct {
-	Kind TypeKind
-	Base *Type
+	Kind  TypeKind
+	Base  *Type
+	ArrSz int // Array size
 }
 
 func intType() *Type {

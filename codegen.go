@@ -40,6 +40,13 @@ func (c *codeWriter) genAddr(node *Node) {
 	c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
 }
 
+func (c *codeWriter) genLval(node *Node) {
+	if node.Ty.Kind == TY_ARRAY {
+		c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
+	}
+	c.genAddr(node)
+}
+
 func (c *codeWriter) load() {
 	c.printf("	pop rax\n")
 	c.printf("	mov rax, [rax]\n")
@@ -73,7 +80,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.load()
 		return
 	case ND_ASSIGN:
-		c.genAddr(node.Lhs)
+		c.genLval(node.Lhs)
 		c.gen(node.Rhs)
 		c.store()
 		return
@@ -82,7 +89,9 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	case ND_DEREF:
 		c.gen(node.Lhs)
-		c.load()
+		if node.Ty.Kind != TY_ARRAY {
+			c.load()
+		}
 		return
 	case ND_IF:
 		seq := labelseq
@@ -188,13 +197,13 @@ func (c *codeWriter) gen(node *Node) (err error) {
 
 	switch node.Kind {
 	case ND_ADD:
-		if node.Ty.Kind == TY_PTR {
-			c.printf("	imul rdi, 8\n")
+		if node.Ty.Base != nil {
+			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base))
 		}
 		c.printf("	add rax, rdi\n")
 	case ND_SUB:
-		if node.Ty.Kind == TY_PTR {
-			c.printf("	imul rdi, 8\n")
+		if node.Ty.Base != nil {
+			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base))
 		}
 		c.printf("	sub rax, rdi\n")
 	case ND_MUL:
