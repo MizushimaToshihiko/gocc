@@ -69,11 +69,22 @@ var cases = map[string]testcase{
 	"40": {10, "i=0\nfor i<10 {\n\ti=i+1\n}\nreturn i\n"},
 	"41": {6, "i=0\nfor {\n\ti=i+1\n\tif i>5 {\n\t\treturn i\n\t}\n}\nreturn 0\n"},
 
-	"42": {55, "i=0\nj=0\nfor i=0; i<=10; i=i+1 {\n\tj=i+j\n\treturn j\n}"},
+	"42": {55, "i=0\nj=0\nfor i=0; i<=10; i=i+1 {\n\tj=i+j\n}\nreturn j\n"},
 	"43": {3, "for ;; {\n\treturn 3\n\treturn 5\n}"},
+
+	"44": {3, "return ret3()"},
+	"45": {5, "return ret5()"},
 }
 
 func TestCompile(t *testing.T) {
+
+	b, err := exec.Command(
+		"/bin/bash", "-c",
+		"echo \"int ret3() { return 3; }\nint ret5() { return 5; }\" | gcc -xc -c -o testdata/tmp2.o -",
+	).CombinedOutput()
+	if err != nil {
+		t.Fatalf("\noutput:\n%s\n%c", string(b), err)
+	}
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -93,7 +104,7 @@ func TestCompile(t *testing.T) {
 			}
 
 			execN := fmt.Sprintf("testdata/asm%s", name)
-			b, err := exec.Command("gcc", "-static", "-g", "-o", execN, asmN).CombinedOutput()
+			b, err := exec.Command("gcc", "-static", "-g", "-o", execN, asmN, "testdata/tmp2.o").CombinedOutput()
 			if err != nil {
 				t.Fatalf("\noutput:\n%s\n%v", string(b), err)
 			}

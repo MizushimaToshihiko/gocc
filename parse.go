@@ -23,6 +23,7 @@ const (
 	ND_WHILE                     // "for" instead of "while"
 	ND_FOR                       // "for"
 	ND_BLOCK                     // { ... }
+	ND_FUNCALL                   // Function call
 	ND_EXPR_STMT                 // Expression statement
 	ND_VAR                       // Variables
 	ND_NUM                       // Integer
@@ -45,6 +46,9 @@ type Node struct {
 
 	// Block
 	Body *Node
+
+	// Function call
+	FuncName string
 
 	Var *Var  // used if kind == ND_VAR
 	Val int64 // it would be used when kind is 'ND_NUM'
@@ -320,7 +324,8 @@ func unary() *Node {
 	return primary()
 }
 
-// primary = "(" expr ")" | ident | num
+// primary = "(" expr ")" | ident args? | num
+// args = "(" ")"
 func primary() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -334,6 +339,11 @@ func primary() *Node {
 	}
 
 	if tok := consumeIdent(); tok != nil {
+		if consume("(") != nil {
+			expect(")")
+			return &Node{Kind: ND_FUNCALL, FuncName: tok.Str}
+		}
+
 		v := findVar(tok)
 		if v == nil {
 			v = pushVar(tok.Str)

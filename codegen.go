@@ -127,6 +127,10 @@ func (c *codeWriter) gen(node *Node) (err error) {
 			c.gen(n)
 		}
 		return
+	case ND_FUNCALL:
+		c.printf("	call %s\n", node.FuncName)
+		c.printf("	push rax\n")
+		return
 	case ND_RETURN:
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")
