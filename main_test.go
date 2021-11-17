@@ -82,7 +82,7 @@ var cases = map[string]testcase{
 	// "51": {55, "func main() int {\n\treturn fib(9)\n}\nfunc fib(x int) int {\n\tif x<=1 {\n\t\treturn 1\n\t}\n\treturn fib(x-1) + fib(x-2)\n}"},
 
 	// "52": {3, "func main() int {\n\tvar x int=3\n\treturn *&x\n}"},
-	// "53": {3, "func main() int {\n\tvar x int=3\n\tvar y *int=&x\n\tvar z *int=&y\n\treturn **z\n}"},
+	"53": {3, "func main() int {\n\tvar x int=3\n\tvar y *int=&x\n\tvar z *int=&y\n\treturn **z\n}"},
 	// "54": {5, "func main() int {\n\tvar x int=3\n\tvar y int=5\n\treturn *(&x+1)\n}"},
 	// "55": {3, "func main() int {\n\tvar x int=3\n\tvar y int=5\n\treturn *(&y-1)\n}"},
 	// "56": {5, "func main() int {\n\tvar x int=3\n\tvar y *int=&x\n\t*y=5\n\treturn x\n}"},
@@ -90,19 +90,19 @@ var cases = map[string]testcase{
 	// "58": {7, "func main() int {\n\tvar x int=3\n\tvar y int=5\n\t*(&y-1)=7\n\treturn x\n}"},
 	// "59": {8, "func main() int {\n\tvar x int=3\n\tvar y int=5\n\treturn foo(&x, y)\n}\nfunc foo(x *int, y int) int {\n\treturn *x + y\n}"},
 
-	"60": {3, "func main() int {\n\tvar x [2]int\n\tvar y *int=&x\n\t*y=3\n\treturn *x\n}"},
+	// "60": {3, "func main() int {\n\tvar x [2]int\n\tvar y *int=&x\n\t*y=3\n\treturn *x\n}"},
 
-	"61": {3, "func main() int {\n\tvar x [3]int\n\t*x=3\n\t*(x+1)=4\n\t*(x+2)=5\n\treturn *x\n}"},
-	"62": {4, "func main() int {\n\tvar x [3]int\n\t*x=3\n\t*(x+1)=4\n\t*(x+2)=5\n\treturn *(x+1)\n}"},
-	"63": {5, "func main() int {\n\tvar x [3]int\n\t*x=3\n\t*(x+1)=4\n\t*(x+2)=5\n\treturn *(x+2)\n}"},
+	// "61": {3, "func main() int {\n\tvar x [3]int\n\t*x=3\n\t*(x+1)=4\n\t*(x+2)=5\n\treturn *x\n}"},
+	// "62": {4, "func main() int {\n\tvar x [3]int\n\t*x=3\n\t*(x+1)=4\n\t*(x+2)=5\n\treturn *(x+1)\n}"},
+	// "63": {5, "func main() int {\n\tvar x [3]int\n\t*x=3\n\t*(x+1)=4\n\t*(x+2)=5\n\treturn *(x+2)\n}"},
 
-	"64": {0, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*y=0\n\treturn **x\n}"},
-	"65": {1, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+1)=1\n\treturn *(*x+1)\n}"},
-	"66": {2, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+2)=2\n\treturn *(*x+2)\n}"},
-	"67": {3, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+3)=3\n\treturn **(x+1)\n}"},
-	"68": {4, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+4)=4\n\treturn *(*(x+1)+1)\n}"},
-	"69": {5, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+5)=5\n\treturn *(*(x+1)+2)\n}"},
-	"70": {6, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+6)=6\n\treturn **(x+2)\n}"},
+	// "64": {0, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*y=0\n\treturn **x\n}"},
+	// "65": {1, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+1)=1\n\treturn *(*x+1)\n}"},
+	// "66": {2, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+2)=2\n\treturn *(*x+2)\n}"},
+	// "67": {3, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+3)=3\n\treturn **(x+1)\n}"},
+	// "68": {4, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+4)=4\n\treturn *(*(x+1)+1)\n}"},
+	// "69": {5, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+5)=5\n\treturn *(*(x+1)+2)\n}"},
+	// "70": {6, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+6)=6\n\treturn **(x+2)\n}"},
 }
 
 var tmp2 string = `int ret3() { return 3; }
