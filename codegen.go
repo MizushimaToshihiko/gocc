@@ -77,7 +77,9 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	case ND_VAR:
 		c.genAddr(node)
-		c.load()
+		if node.Ty.Kind != TY_ARRAY {
+			c.load()
+		}
 		return
 	case ND_ASSIGN:
 		c.genLval(node.Lhs)

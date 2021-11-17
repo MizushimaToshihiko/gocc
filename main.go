@@ -65,13 +65,16 @@ func compile(arg string, w io.Writer) error {
 
 	printTokens()
 	prog := program()
-	addType(prog)
+	err = addType(prog)
+	if err != nil {
+		return err
+	}
 
 	// Assign offsets to local variables
 	for fn := prog; fn != nil; fn = fn.Next {
 		offset := 0
 		for vl := fn.Locals; vl != nil; vl = vl.Next {
-			offset += 8
+			offset += sizeOf(vl.Var.Ty)
 			vl.Var.Offset = offset
 		}
 		prog.StackSz = offset

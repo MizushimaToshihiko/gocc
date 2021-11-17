@@ -31,8 +31,18 @@ func pointerTo(base *Type) *Type {
 	return &Type{Kind: TY_PTR, Base: base}
 }
 
+func arrayOf(base *Type, size int) *Type {
+	return &Type{Kind: TY_ARRAY, Base: base, ArrSz: size}
+}
+
 func sizeOf(ty *Type) int {
-	return 1
+	if ty.Kind == TY_INT || ty.Kind == TY_PTR {
+		return 8
+	}
+	if ty.Kind != TY_ARRAY {
+		panic("invalid type")
+	}
+	return sizeOf(ty.Base) * ty.ArrSz
 }
 
 func (e *errWriter) visit(node *Node) {
@@ -67,23 +77,18 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Var.Ty
 		return
 	case ND_ADD:
-		if node.Rhs.Ty.Kind == TY_PTR {
+		if node.Rhs.Ty.Base != nil {
 			tmp := node.Lhs
 			node.Lhs = node.Rhs
 			node.Rhs = tmp
 		}
-		if node.Rhs.Ty.Kind == TY_PTR {
+		if node.Rhs.Ty.Base != nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer arithmetic operands"))
 		}
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_SUB:
-		if node.Rhs.Ty.Kind == TY_PTR {
-			tmp := node.Lhs
-			node.Lhs = node.Rhs
-			node.Rhs = tmp
-		}
-		if node.Rhs.Ty.Kind == TY_PTR {
+		if node.Rhs.Ty.Base != nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer arithmetic operands"))
 		}
 		node.Ty = node.Lhs.Ty
@@ -92,18 +97,26 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_ADDR:
+		if node.Lhs.Ty.Kind == TY_ARRAY {
+			node.Ty = pointerTo(node.Lhs.Ty.Base)
+			return
+		}
 		node.Ty = pointerTo(node.Lhs.Ty)
 		return
 	case ND_DEREF:
-		if node.Lhs.Ty.Kind != TY_PTR {
+		// fmt.Printf("node: %#v\n'%s'\n\n", node, node.Tok.Str)
+		// fmt.Printf("node.Lhs: %#v\n'%s'\n\n", node.Lhs, node.Lhs.Tok.Str)
+		// fmt.Printf("node.Lhs.Var: %#v\n\n", node.Lhs.Var)
+		if node.Lhs.Ty.Base == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
+			return
 		}
 		node.Ty = node.Lhs.Ty.Base
 		return
 	}
 }
 
-func addType(prog *Function) {
+func addType(prog *Function) error {
 	e := &errWriter{}
 
 	for fn := prog; fn != nil; fn = fn.Next {
@@ -111,4 +124,5 @@ func addType(prog *Function) {
 			e.visit(node)
 		}
 	}
+	return e.err
 }

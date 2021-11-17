@@ -14,27 +14,27 @@ type VarList struct {
 }
 
 const (
-	ND_ADD       NodeKind = iota // +
-	ND_SUB                       // -
-	ND_MUL                       // *
-	ND_DIV                       // /
-	ND_EQ                        // ==
-	ND_NE                        // !=
-	ND_LT                        // <
-	ND_LE                        // <=
-	ND_ASSIGN                    // = , ":=" is unimplememted
-	ND_ADDR                      // unary &
-	ND_DEREF                     // urary *
-	ND_RETURN                    // "return"
-	ND_IF                        // "if"
-	ND_WHILE                     // "for" instead of "while"
-	ND_FOR                       // "for"
-	ND_BLOCK                     // { ... }
-	ND_FUNCALL                   // Function call
-	ND_EXPR_STMT                 // Expression statement
-	ND_VAR                       // Variables
-	ND_NUM                       // Integer
-	ND_NULL                      // Empty statement
+	ND_ADD       NodeKind = iota // 0: +
+	ND_SUB                       // 1: -
+	ND_MUL                       // 2: *
+	ND_DIV                       // 3: /
+	ND_EQ                        // 4: ==
+	ND_NE                        // 5: !=
+	ND_LT                        // 6: <
+	ND_LE                        // 7: <=
+	ND_ASSIGN                    // 8: =
+	ND_VAR                       // 9: local variables
+	ND_NUM                       // 10: integer
+	ND_RETURN                    // 11: 'return'
+	ND_IF                        // 12: "if"
+	ND_WHILE                     // 13: "while"
+	ND_FOR                       // 14: "for"
+	ND_BLOCK                     // 15: {...}
+	ND_FUNCALL                   // 16: function call
+	ND_ADDR                      // 17: unary &
+	ND_DEREF                     // 18: unary *
+	ND_EXPR_STMT                 // 19: expression statement
+	ND_NULL                      // 20: empty statement
 )
 
 // define AST node
@@ -150,11 +150,50 @@ func basetype() *Type {
 	return ty
 }
 
-// param = ident basetype
-func readFuncParam() *VarList {
-	vl := &VarList{}
-	name := expectIdent()
+func findBase() (*Type, *Token) {
+	tok := token
+	for peek("*") == nil && peek("int") == nil {
+		token = token.Next
+	}
 	ty := basetype()
+	t := token
+	token = tok
+	return ty, t
+}
+
+func readArr(base *Type) *Type {
+	if consume("[") == nil {
+		return base
+	}
+	sz := expectNumber()
+	expect("]")
+	base = readArr(base)
+	return arrayOf(base, int(sz))
+}
+
+func readTypePreffix() *Type {
+	if peek("[") == nil {
+		return basetype()
+	}
+
+	base, t := findBase()
+	arrTy := readArr(base)
+	token = t
+	return arrTy
+}
+
+// param = ident basetype
+// e.g.
+//  x int
+//  x *int
+//  x **int
+//  x [3]int
+//  x [3]*int
+//  x [2]**int
+func readFuncParam() *VarList {
+	name := expectIdent()
+	ty := readTypePreffix()
+	vl := &VarList{}
 	vl.Var = pushVar(name, ty)
 	return vl
 }
@@ -203,9 +242,8 @@ func function() *Function {
 // declaration = "var" ident basetype ("=" expr)
 func declaration() *Node {
 	tok := token
-	expect("var")
 	name := expectIdent()
-	ty := basetype()
+	ty := readTypePreffix()
 	v := pushVar(name, ty)
 
 	if consume(";") != nil {
@@ -312,7 +350,7 @@ func stmt() *Node {
 		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
 	}
 
-	if t := peek("var"); t != nil {
+	if t := consume("var"); t != nil {
 		return declaration()
 	}
 
