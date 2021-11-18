@@ -190,6 +190,28 @@ func TestCompile(t *testing.T) {
 	}
 }
 
+// func TestStmt(t *testing.T) {
+// 	filename = "test"
+// 	userInput = []rune("var z *int\n**z")
+// 	var err error
+// 	token, err = tokenize()
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	printTokens()
+
+// 	head := &Node{}
+// 	cur := head
+// 	for !atEof() {
+// 		cur.Next = stmt()
+// 		cur = cur.Next
+// 	}
+// 	n := head.Next
+
+// 	t.Logf("node: %#v\n\nlocals.Var: %#v\n\n%#v\n", n, locals.Var, locals.Var.Ty)
+// 	walkInOrder(n)
+// }
+
 func TestIsSpace(t *testing.T) {
 	cases := map[string]struct {
 		in   rune

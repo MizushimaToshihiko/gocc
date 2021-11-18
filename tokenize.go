@@ -69,8 +69,8 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 	}
 
 	// Show found lines along with file name and line number.
-	res := fmt.Sprintf("%s:%d: ", filename, lineNum)
-	indent := len(res)
+	res := fmt.Sprintf("\n%s:\n%d: ", filename, lineNum)
+	indent := len(res) - len(filename)
 	res += fmt.Sprintf("%.*s\n", end-line, string(userInput[line:end]))
 
 	// Point the error location with "^" and display the error message.
