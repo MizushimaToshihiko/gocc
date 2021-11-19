@@ -103,6 +103,20 @@ var cases = map[string]testcase{
 	"68": {4, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+4)=4\n\treturn *(*(x+1)+1)\n}"},
 	"69": {5, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+5)=5\n\treturn *(*(x+1)+2)\n}"},
 	"70": {6, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\t*(y+6)=6\n\treturn **(x+2)\n}"},
+
+	"71": {3, "func main() int {\n\tvar x [3]int\n\t*x=3\n\tx[1]=4\n\tx[2]=5\n\treturn *x\n}"},
+	"72": {4, "func main() int {\n\tvar x [3]int\n\t*x=3\n\tx[1]=4\n\tx[2]=5\n\treturn *(x+1)\n}"},
+	"73": {5, "func main() int {\n\tvar x [3]int\n\t*x=3\n\tx[1]=4\n\tx[2]=5\n\treturn *(x+2)\n}"},
+	"74": {5, "func main() int {\n\tvar x [3]int\n\t*x=3\n\tx[1]=4\n\tx[2]=5\n\treturn *(x+2)\n}"},
+	"75": {5, "func main() int {\n\tvar x [3]int\n\t*x=3\n\tx[1]=4\n\t2[x]=5\n\treturn *(x+2)\n}"},
+
+	"76": {0, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[0]=0\n\treturn x[0][0]\n}"},
+	"77": {1, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[1]=1\n\treturn x[0][1]\n}"},
+	"78": {2, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[2]=2\n\treturn x[0][2]\n}"},
+	"79": {3, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[3]=3\n\treturn x[1][0]\n}"},
+	"80": {4, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[4]=4\n\treturn x[1][1]\n}"},
+	"81": {5, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[5]=5\n\treturn x[1][2]\n}"},
+	"82": {6, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[6]=6\n\treturn x[2][0]\n}"},
 }
 
 var tmp2 string = `int ret3() { return 3; }
