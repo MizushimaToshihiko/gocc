@@ -1,0 +1,23 @@
+func assert(want int, ac int, code *byte) int {
+  if want == ac {
+    printf("%s => %d\n", code, ac)
+    return 0
+  } else {
+    printf("%s => %d expeted but got %d\n", code, want, ac)
+    exit(1)
+  }
+}
+
+func main() {
+  assert(0, 0, "0")
+  assert(42, 42, "42")
+  assert(5, 5, "5")
+  assert(41, 12 + 34 - 5, "12 + 34 - 5")
+  assert(15, 5*(9-6), "5*(9-6)")
+  assert(4, (3+5)/2, "(3+5)/2")
+  assert(-10, -10, "-10")
+  assert(10,- -10, "- -10")
+  assert(10, - - +10, "- - +10")
+
+  // assert(3, { var a int\na=3\na }, "var a int\na=3\na")
+}

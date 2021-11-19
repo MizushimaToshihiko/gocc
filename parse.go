@@ -280,7 +280,9 @@ func function() *Function {
 	fn := &Function{Name: expectIdent()}
 	expect("(")
 	fn.Params = readFuncParams()
-	basetype()
+	if isTypename() {
+		basetype()
+	}
 	expect("{")
 
 	head := &Node{}
@@ -418,7 +420,7 @@ func stmt() *Node {
 		}
 		scope = sc
 
-		expect(";")
+		consume(";")
 		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
 	}
 

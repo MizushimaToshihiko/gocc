@@ -10,7 +10,7 @@ import (
 var headTok *Token
 
 func printTokens() {
-	fmt.Print("# Tokens:\n")
+	fmt.Print("# Tokens:\n# ")
 	tok := headTok.Next
 	// var kind string
 	for tok.Next != nil {

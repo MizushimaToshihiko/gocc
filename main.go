@@ -55,7 +55,7 @@ func compile(arg string, w io.Writer) error {
 	// }
 
 	var err error
-	userInput = []rune(arg)
+	userInput, err = readFile(arg)
 	if err != nil {
 		return err
 	}
