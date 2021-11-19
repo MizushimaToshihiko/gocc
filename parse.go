@@ -81,16 +81,11 @@ type Node struct {
 
 var locals *VarList
 var globals *VarList
+var scope *VarList
 
-// Find a local variable by name.
+// findVar finds a variable by name.
 func findVar(tok *Token) *Var {
-	for vl := locals; vl != nil; vl = vl.Next {
-		if vl.Var.Name == tok.Str {
-			return vl.Var
-		}
-	}
-
-	for vl := globals; vl != nil; vl = vl.Next {
+	for vl := scope; vl != nil; vl = vl.Next {
 		if len(vl.Var.Name) == tok.Len && tok.Str == vl.Var.Name {
 			return vl.Var
 		}
@@ -131,14 +126,18 @@ func newVar(v *Var, tok *Token) *Node {
 func pushVar(name string, ty *Type, isLocal bool) *Var {
 	v := &Var{Name: name, Ty: ty, IsLocal: isLocal}
 
+	var vl *VarList
 	if isLocal {
-		vl := &VarList{Var: v, Next: locals}
+		vl = &VarList{Var: v, Next: locals}
 		locals = vl
-		return vl.Var
+	} else {
+		vl = &VarList{Var: v, Next: globals}
+		globals = vl
 	}
 
-	vl := &VarList{Var: v, Next: globals}
-	globals = vl
+	sc := &VarList{Var: v, Next: scope}
+	scope = sc
+
 	return vl.Var
 }
 
@@ -412,10 +411,13 @@ func stmt() *Node {
 		head := Node{}
 		cur := &head
 
+		sc := scope
 		for consume("}") == nil {
 			cur.Next = stmt()
 			cur = cur.Next
 		}
+		scope = sc
+
 		expect(";")
 		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
 	}
