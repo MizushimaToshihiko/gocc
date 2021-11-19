@@ -270,7 +270,14 @@ func (c *codeWriter) emitData(prog *Program) {
 
 	for vl := prog.Globs; vl != nil; vl = vl.Next {
 		c.printf("%s:\n", vl.Var.Name)
-		c.printf("	.zero %d\n", sizeOf(vl.Var.Ty))
+		if vl.Var.Conts == nil {
+			c.printf("	.zero %d\n", sizeOf(vl.Var.Ty))
+			continue
+		}
+
+		for i := 0; i < vl.Var.ContLen; i++ {
+			c.printf("	.byte %d\n", vl.Var.Conts[i])
+		}
 	}
 }
 

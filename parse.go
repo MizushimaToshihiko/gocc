@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type NodeKind int
 
 type Var struct {
@@ -7,8 +9,12 @@ type Var struct {
 	Ty      *Type  // Type
 	IsLocal bool   // local or global
 
-	// local variables
+	// Local variables
 	Offset int // Offset from RBP
+
+	// Global variables
+	Conts   []rune
+	ContLen int
 }
 
 type VarList struct {
@@ -134,6 +140,15 @@ func pushVar(name string, ty *Type, isLocal bool) *Var {
 	vl := &VarList{Var: v, Next: globals}
 	globals = vl
 	return vl.Var
+}
+
+// for newLabel function
+var cnt int
+
+func newLabel() string {
+	res := fmt.Sprintf(".L.data.%d", cnt)
+	cnt++
+	return res
 }
 
 type Function struct {
@@ -588,8 +603,17 @@ func primary() *Node {
 		return newVar(v, t)
 	}
 
-	// or must be integer
 	t := token
+	if t.Kind == TK_STR {
+		token = token.Next
+
+		ty := arrayOf(charType(), t.ContLen)
+		v := pushVar(newLabel(), ty, false)
+		v.Conts = t.Contents
+		v.ContLen = t.ContLen
+		return newVar(v, t)
+	}
+
 	if t.Kind != TK_NUM {
 		panic("\n" + errorTok(t, "expected expression"))
 	}

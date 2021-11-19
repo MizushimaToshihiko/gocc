@@ -130,6 +130,11 @@ var cases = map[string]testcase{
 	"91": {2, "func main() int {\n\tvar x byte=1\n\tvar y byte=2\n\treturn y\n}"},
 
 	"92": {1, "func main() int {\n\treturn sub_char(7, 3, 3)\n}\nfunc sub_char(a byte, b byte, c byte) int {\n\treturn a-b-c\n}"},
+
+	"93": {97, "func main() int {\n\treturn \"abc\"[0]\n}"},
+	"94": {98, "func main() int {\n\treturn \"abc\"[1]\n}"},
+	"95": {99, "func main() int {\n\treturn \"abc\"[2]\n}"},
+	"96": {0, "func main() int {\n\treturn \"abc\"[3]\n}"},
 }
 
 var tmp2 string = `int ret3() { return 3; }
