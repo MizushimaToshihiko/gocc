@@ -212,7 +212,7 @@ func startsWithReserved(p string) string {
 		"break", "continue", "goto", "switch", "case", "default",
 		"true", "false",
 		"nil",
-		"int", "int64", "uint8", "bool", "rune"}
+		"int", "byte", "int64", "uint8", "bool", "rune"}
 	// unimplemented:
 	// "chan", "const", "defer", "fallthrough", "interface", "map", "package", "range", "select"
 	// "int32","bool", "byte", "complex64", "complex128", "error",

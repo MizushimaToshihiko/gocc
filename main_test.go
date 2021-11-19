@@ -124,6 +124,12 @@ var cases = map[string]testcase{
 	"86": {1, "var x [4]int\nfunc main() int {\n\tx[0]=0\n\tx[1]=1\n\tx[2]=2\n\tx[3]=3\n\treturn x[1]\n}"},
 	"87": {2, "var x [4]int\nfunc main() int {\n\tx[0]=0\n\tx[1]=1\n\tx[2]=2\n\tx[3]=3\n\treturn x[2]\n}"},
 	"88": {3, "var x [4]int\nfunc main() int {\n\tx[0]=0\n\tx[1]=1\n\tx[2]=2\n\tx[3]=3\n\treturn x[3]\n}"},
+
+	"89": {1, "func main() int {\n\tvar x byte=1\n\treturn x\n}"},
+	"90": {1, "func main() int {\n\tvar x byte=1\n\tvar y byte=2\n\treturn x\n}"},
+	"91": {2, "func main() int {\n\tvar x byte=1\n\tvar y byte=2\n\treturn y\n}"},
+
+	"92": {1, "func main() int {\n\treturn sub_char(7, 3, 3)\n}\nfunc sub_char(a byte, b byte, c byte) int {\n\treturn a-b-c\n}"},
 }
 
 var tmp2 string = `int ret3() { return 3; }

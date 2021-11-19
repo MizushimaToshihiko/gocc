@@ -173,11 +173,22 @@ func program() *Program {
 
 // basetype = "*"* ("int" | "byte")
 func basetype() *Type {
-	ty := intType()
+	nPtr := 0
 	for consume("*") != nil {
+		nPtr++
+	}
+
+	var ty *Type
+	if consume("byte") != nil {
+		ty = charType()
+	} else {
+		expect("int")
+		ty = intType()
+	}
+
+	for i := 0; i < nPtr; i++ {
 		ty = pointerTo(ty)
 	}
-	expect("int")
 	return ty
 }
 

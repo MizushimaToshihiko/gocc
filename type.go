@@ -24,8 +24,16 @@ type Type struct {
 	ArrSz int // Array size
 }
 
+func newType(kind TypeKind) *Type {
+	return &Type{Kind: kind}
+}
+
+func charType() *Type {
+	return newType(TY_BYTE)
+}
+
 func intType() *Type {
-	return &Type{Kind: TY_INT}
+	return newType(TY_INT)
 }
 
 func pointerTo(base *Type) *Type {
@@ -37,13 +45,17 @@ func arrayOf(base *Type, size int) *Type {
 }
 
 func sizeOf(ty *Type) int {
-	if ty.Kind == TY_INT || ty.Kind == TY_PTR {
+	switch ty.Kind {
+	case TY_BYTE:
+		return 1
+	case TY_INT, TY_PTR:
 		return 8
+	default:
+		if ty.Kind != TY_ARRAY {
+			panic("invalid type")
+		}
+		return sizeOf(ty.Base) * ty.ArrSz
 	}
-	if ty.Kind != TY_ARRAY {
-		panic("invalid type")
-	}
-	return sizeOf(ty.Base) * ty.ArrSz
 }
 
 func (e *errWriter) visit(node *Node) {
