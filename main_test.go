@@ -185,43 +185,6 @@ func TestCompile(t *testing.T) {
 	t.Logf("\noutput:\n%s", string(b))
 }
 
-// func TestGlobalVar(t *testing.T) {
-// 	userInput = []rune("var x [2]int\n")
-// 	var err error
-// 	token, err = tokenize()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	globalVar()
-// 	t.Logf("globals: %#v\n", globals)
-// 	t.Logf("globals.Var: %#v\n", globals.Var)
-// 	t.Logf("globals.Var.Ty: %#v\n", globals.Var.Ty)
-// 	t.Logf("globals.Var.Ty.Base: %#v\n", globals.Var.Ty.Base)
-// }
-
-// func TestStmt(t *testing.T) {
-// 	filename = "test"
-// 	userInput = []rune("var z *int\n**z")
-// 	var err error
-// 	token, err = tokenize()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	printTokens()
-
-// 	head := &Node{}
-// 	cur := head
-// 	for !atEof() {
-// 		cur.Next = stmt()
-// 		cur = cur.Next
-// 	}
-// 	n := head.Next
-
-// 	t.Logf("node: %#v\n\nlocals.Var: %#v\n\n%#v\n", n, locals.Var, locals.Var.Ty)
-// 	walkInOrder(n)
-// }
-
 func TestIsSpace(t *testing.T) {
 	cases := map[string]struct {
 		in   rune

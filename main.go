@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -50,9 +51,9 @@ func compile(arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
 
-	// if !exists(arg) {
-	// 	return fmt.Errorf("compile(): err: %s: %v", arg, os.ErrNotExist)
-	// }
+	if !exists(arg) {
+		return fmt.Errorf("compile(): err: %s: %v", arg, os.ErrNotExist)
+	}
 
 	var err error
 	userInput, err = readFile(arg)
@@ -67,7 +68,7 @@ func compile(arg string, w io.Writer) error {
 		return err
 	}
 
-	printTokens()
+	// printTokens()
 	prog := program()
 	err = addType(prog)
 	if err != nil {
