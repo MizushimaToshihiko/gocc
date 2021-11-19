@@ -117,6 +117,13 @@ var cases = map[string]testcase{
 	"80": {4, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[4]=4\n\treturn x[1][1]\n}"},
 	"81": {5, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[5]=5\n\treturn x[1][2]\n}"},
 	"82": {6, "func main() int {\n\tvar x [2][3]int\n\tvar y *int=x\n\ty[6]=6\n\treturn x[2][0]\n}"},
+
+	"83": {0, "var x int\nfunc main() int {\n\treturn x\n}"},
+	"84": {3, "var x int\nfunc main() int {\n\tx=3\n\treturn x\n}"},
+	"85": {0, "var x [4]int\nfunc main() int {\n\tx[0]=0\n\tx[1]=1\n\tx[2]=2\n\tx[3]=3\n\treturn x[0]\n}"},
+	"86": {1, "var x [4]int\nfunc main() int {\n\tx[0]=0\n\tx[1]=1\n\tx[2]=2\n\tx[3]=3\n\treturn x[1]\n}"},
+	"87": {2, "var x [4]int\nfunc main() int {\n\tx[0]=0\n\tx[1]=1\n\tx[2]=2\n\tx[3]=3\n\treturn x[2]\n}"},
+	"88": {3, "var x [4]int\nfunc main() int {\n\tx[0]=0\n\tx[1]=1\n\tx[2]=2\n\tx[3]=3\n\treturn x[3]\n}"},
 }
 
 var tmp2 string = `int ret3() { return 3; }
@@ -203,6 +210,21 @@ func TestCompile(t *testing.T) {
 		})
 	}
 }
+
+// func TestGlobalVar(t *testing.T) {
+// 	userInput = []rune("var x [2]int\n")
+// 	var err error
+// 	token, err = tokenize()
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+
+// 	globalVar()
+// 	t.Logf("globals: %#v\n", globals)
+// 	t.Logf("globals.Var: %#v\n", globals.Var)
+// 	t.Logf("globals.Var.Ty: %#v\n", globals.Var.Ty)
+// 	t.Logf("globals.Var.Ty.Base: %#v\n", globals.Var.Ty.Base)
+// }
 
 // func TestStmt(t *testing.T) {
 // 	filename = "test"

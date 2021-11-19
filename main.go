@@ -42,6 +42,10 @@ func exists(name string) bool {
 	return !os.IsNotExist(err)
 }
 
+func alignTo(n, align int) int {
+	return (n + align - 1) & ^(align - 1)
+}
+
 func compile(arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
@@ -71,50 +75,20 @@ func compile(arg string, w io.Writer) error {
 	}
 
 	// Assign offsets to local variables
-	for fn := prog; fn != nil; fn = fn.Next {
+	for fn := prog.Fns; fn != nil; fn = fn.Next {
 		offset := 0
 		for vl := fn.Locals; vl != nil; vl = vl.Next {
 			offset += sizeOf(vl.Var.Ty)
 			vl.Var.Offset = offset
 		}
-		prog.StackSz = offset
+		fn.StackSz = alignTo(offset, 8)
 
 		// for n := node; n != nil; n = n.Next {
 		// 	walkInOrder(n)
 		// }
 	}
 
-	return codegen(prog, w) // make the asm code, down on the AST
-	/*
-		// the parsed result is in 'prog'
-		prog := program()
-		// add 'Type' to ASTs
-		err = addType(prog)
-		if err != nil {
-			return err
-		}
-
-		// assign offsets to local variables.
-		for fn := prog.Fns; fn != nil; fn = fn.Next {
-			offset := 0
-			for vl := fn.Locals; vl != nil; vl = vl.Next {
-				offset = alignTo(offset, vl.Var.Ty.Align)
-				offset += sizeOf(vl.Var.Ty, vl.Var.Tok)
-				vl.Var.Offset = offset
-			}
-			fn.StackSz = alignTo(offset, 8)
-		}
-
-		// // walk in-order
-		// for _, n := range code {
-		// 	walkInOrder(n)
-		// }
-		// // walk pre order
-		// for _, n := range code {
-		// 	walkPreOrder(n)
-		// }
-
-		return codeGen(w, prog) */
+	return codegen(w, prog) // make the asm code, down on the AST
 }
 
 func main() {

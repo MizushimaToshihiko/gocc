@@ -3,14 +3,22 @@ package main
 type NodeKind int
 
 type Var struct {
-	Name   string // Variable name
-	Ty     *Type  // Type
-	Offset int    // Offset from RBP
+	Name    string // Variable name
+	Ty      *Type  // Type
+	IsLocal bool   // local or global
+
+	// local variables
+	Offset int // Offset from RBP
 }
 
 type VarList struct {
 	Next *VarList
 	Var  *Var
+}
+
+type Program struct {
+	Globs *VarList  // global variables
+	Fns   *Function // functions
 }
 
 const (
@@ -66,11 +74,18 @@ type Node struct {
 }
 
 var locals *VarList
+var globals *VarList
 
 // Find a local variable by name.
 func findVar(tok *Token) *Var {
 	for vl := locals; vl != nil; vl = vl.Next {
 		if vl.Var.Name == tok.Str {
+			return vl.Var
+		}
+	}
+
+	for vl := globals; vl != nil; vl = vl.Next {
+		if len(vl.Var.Name) == tok.Len && tok.Str == vl.Var.Name {
 			return vl.Var
 		}
 	}
@@ -107,11 +122,17 @@ func newVar(v *Var, tok *Token) *Node {
 	return &Node{Kind: ND_VAR, Tok: tok, Var: v}
 }
 
-func pushVar(name string, ty *Type) *Var {
-	v := &Var{Name: name, Ty: ty}
+func pushVar(name string, ty *Type, isLocal bool) *Var {
+	v := &Var{Name: name, Ty: ty, IsLocal: isLocal}
 
-	vl := &VarList{Var: v, Next: locals}
-	locals = vl
+	if isLocal {
+		vl := &VarList{Var: v, Next: locals}
+		locals = vl
+		return vl.Var
+	}
+
+	vl := &VarList{Var: v, Next: globals}
+	globals = vl
 	return vl.Var
 }
 
@@ -125,22 +146,32 @@ type Function struct {
 	StackSz int
 }
 
-// program = function*
-func program() *Function {
+func isFunction() bool {
+	return peek("func") != nil
+}
+
+// program = (global-var | function)*
+func program() *Program {
 	// printCurTok()
 	// printCalledFunc()
 
 	head := &Function{}
 	cur := head
+	globals = nil
 
 	for !atEof() {
-		cur.Next = function()
-		cur = cur.Next
+		if isFunction() {
+			cur.Next = function()
+			cur = cur.Next
+		} else {
+			globalVar()
+		}
 	}
-	return head.Next
+
+	return &Program{Globs: globals, Fns: head.Next}
 }
 
-// basetype = "*"* "int"
+// basetype = "*"* ("int" | "byte")
 func basetype() *Type {
 	ty := intType()
 	for consume("*") != nil {
@@ -152,7 +183,7 @@ func basetype() *Type {
 
 func findBase() (*Type, *Token) {
 	tok := token
-	for peek("*") == nil && peek("int") == nil {
+	for peek("*") == nil && !isTypename() {
 		token = token.Next
 	}
 	ty := basetype()
@@ -194,7 +225,7 @@ func readFuncParam() *VarList {
 	name := expectIdent()
 	ty := readTypePreffix()
 	vl := &VarList{}
-	vl.Var = pushVar(name, ty)
+	vl.Var = pushVar(name, ty, true)
 	return vl
 }
 
@@ -239,12 +270,21 @@ func function() *Function {
 	return fn
 }
 
+// global-var = "var" ident ("[" num "]")*basetype
+func globalVar() {
+	expect("var")
+	name := expectIdent()
+	ty := readTypePreffix()
+	expect(";")
+	pushVar(name, ty, false)
+}
+
 // declaration = "var" ident basetype ("=" expr)
 func declaration() *Node {
 	tok := token
 	name := expectIdent()
 	ty := readTypePreffix()
-	v := pushVar(name, ty)
+	v := pushVar(name, ty, true)
 
 	if consume(";") != nil {
 		return newNode(ND_NULL, tok)
@@ -261,6 +301,10 @@ func declaration() *Node {
 func readExprStmt() *Node {
 	t := token
 	return newUnary(ND_EXPR_STMT, expr(), t)
+}
+
+func isTypename() bool {
+	return peek("byte") != nil || peek("int") != nil
 }
 
 func isForClause() bool {

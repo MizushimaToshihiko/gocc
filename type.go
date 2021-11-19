@@ -12,7 +12,8 @@ type errWriter struct {
 }
 
 const (
-	TY_INT TypeKind = iota
+	TY_BYTE TypeKind = iota // char type
+	TY_INT
 	TY_PTR
 	TY_ARRAY
 )
@@ -113,10 +114,10 @@ func (e *errWriter) visit(node *Node) {
 	}
 }
 
-func addType(prog *Function) error {
+func addType(prog *Program) error {
 	e := &errWriter{}
 
-	for fn := prog; fn != nil; fn = fn.Next {
+	for fn := prog.Fns; fn != nil; fn = fn.Next {
 		for node := fn.Node; node != nil; node = node.Next {
 			e.visit(node)
 		}

@@ -20,7 +20,8 @@ func (c *codeWriter) printf(frmt string, a ...interface{}) {
 	_, c.err = fmt.Fprintf(c.w, frmt, a...)
 }
 
-var argreg []string = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
+var argreg1 = []string{"dil", "sil", "dl", "cl", "r8b", "r9b"}
+var argreg8 = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 
 var labelseq int
 var funcname string
@@ -29,9 +30,14 @@ var funcname string
 func (c *codeWriter) genAddr(node *Node) {
 	switch node.Kind {
 	case ND_VAR:
-		c.printf("	lea rax, [rbp-%d]\n", node.Var.Offset)
-		c.printf("	push rax\n")
+		if node.Var.IsLocal {
+			c.printf("	lea rax, [rbp-%d]\n", node.Var.Offset)
+			c.printf("	push rax\n")
+			return
+		}
+		c.printf("	push offset %s\n", node.Var.Name)
 		return
+
 	case ND_DEREF:
 		c.gen(node.Lhs)
 		return
@@ -47,16 +53,24 @@ func (c *codeWriter) genLval(node *Node) {
 	c.genAddr(node)
 }
 
-func (c *codeWriter) load() {
+func (c *codeWriter) load(ty *Type) {
 	c.printf("	pop rax\n")
-	c.printf("	mov rax, [rax]\n")
+	if sizeOf(ty) == 1 {
+		c.printf("	movsx rax, byte ptr [rax]\n")
+	} else {
+		c.printf("	mov rax, [rax]\n")
+	}
 	c.printf("	push rax\n")
 }
 
-func (c *codeWriter) store() {
+func (c *codeWriter) store(ty *Type) {
 	c.printf("	pop rdi\n")
 	c.printf("	pop rax\n")
-	c.printf("	mov [rax], rdi\n")
+	if sizeOf(ty) == 1 {
+		c.printf("	mov [rax], dil\n")
+	} else {
+		c.printf("	mov [rax], rdi\n")
+	}
 	c.printf("	push rdi\n")
 }
 
@@ -78,13 +92,13 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	case ND_VAR:
 		c.genAddr(node)
 		if node.Ty.Kind != TY_ARRAY {
-			c.load()
+			c.load(node.Ty)
 		}
 		return
 	case ND_ASSIGN:
 		c.genLval(node.Lhs)
 		c.gen(node.Rhs)
-		c.store()
+		c.store(node.Ty)
 		return
 	case ND_ADDR:
 		c.genAddr(node.Lhs)
@@ -92,7 +106,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	case ND_DEREF:
 		c.gen(node.Lhs)
 		if node.Ty.Kind != TY_ARRAY {
-			c.load()
+			c.load(node.Ty)
 		}
 		return
 	case ND_IF:
@@ -162,7 +176,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		}
 
 		for i := nargs - 1; i >= 0; i-- {
-			c.printf("	pop %s\n", argreg[i])
+			c.printf("	pop %s\n", argreg8[i])
 		}
 
 		// We need to align RSP to a 16 byte boundary before
@@ -235,12 +249,39 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	return
 }
 
-func codegen(prog *Function, w io.Writer) error {
-	c := &codeWriter{w: w}
-	// output the former 3 lines of the assembly
-	c.printf(".intel_syntax noprefix\n")
+func (c *codeWriter) loadArg(v *Var, idx int) {
+	sz := sizeOf(v.Ty)
+	if sz == 1 {
+		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg1[idx])
+	} else {
+		if sz != 8 {
+			c.err = fmt.Errorf("invalid size")
+		}
+		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg8[idx])
+	}
+}
 
-	for fn := prog; fn != nil; fn = fn.Next {
+func (c *codeWriter) emitData(prog *Program) {
+	if c.err != nil {
+		return
+	}
+
+	c.printf(".data\n")
+
+	for vl := prog.Globs; vl != nil; vl = vl.Next {
+		c.printf("%s:\n", vl.Var.Name)
+		c.printf("	.zero %d\n", sizeOf(vl.Var.Ty))
+	}
+}
+
+func (c *codeWriter) emitText(prog *Program) {
+	if c.err != nil {
+		return
+	}
+
+	c.printf(".text\n")
+
+	for fn := prog.Fns; fn != nil; fn = fn.Next {
 		c.printf(".globl %s\n", fn.Name)
 		c.printf("%s:\n", fn.Name)
 		funcname = fn.Name
@@ -248,12 +289,12 @@ func codegen(prog *Function, w io.Writer) error {
 		// Prologue
 		c.printf("	push rbp\n")
 		c.printf("	mov rbp, rsp\n")
-		c.printf("	sub rsp, %d\n", prog.StackSz)
+		c.printf("	sub rsp, %d\n", fn.StackSz)
 
 		// Push arguments to the stack
 		i := 0
 		for vl := fn.Params; vl != nil; vl = vl.Next {
-			c.printf("	mov [rbp-%d], %s\n", vl.Var.Offset, argreg[i])
+			c.loadArg(vl.Var, i)
 			i++
 		}
 
@@ -268,5 +309,14 @@ func codegen(prog *Function, w io.Writer) error {
 		c.printf("	pop rbp\n")
 		c.printf("	ret\n")
 	}
+}
+
+func codegen(w io.Writer, prog *Program) error {
+	c := &codeWriter{w: w}
+
+	c.printf(".intel_syntax noprefix\n")
+	c.emitData(prog)
+	c.emitText(prog)
+
 	return c.err
 }
