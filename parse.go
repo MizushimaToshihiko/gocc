@@ -184,16 +184,16 @@ func program() *Program {
 			cur = cur.Next
 		} else if peek("var") != nil {
 			globalVar()
-		} else if consume("type") != nil {
-			name := expectIdent()
-			pushVar(name, structDecl(), false)
+			// } else if consume("type") != nil {
+			// 	name := expectIdent()
+			// 	pushVar(name, structDecl(), false)
 		}
 	}
 
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
-// basetype = "*"* ("byte" | "int" | ident)
+// basetype = "*"* ("byte" | "int" | struct-decl)
 func basetype() *Type {
 	nPtr := 0
 	for consume("*") != nil {
@@ -210,7 +210,7 @@ func basetype() *Type {
 	} else if consume("int") != nil {
 		ty = intType()
 	} else if consumeIdent() != nil { // struct type
-		// ty = structDecl()
+		ty = structDecl()
 	}
 
 	for i := 0; i < nPtr; i++ {
@@ -276,6 +276,7 @@ func structDecl() *Type {
 	return ty
 }
 
+// struct-member = ident basetype
 func structMem() *Member {
 	mem := &Member{Ty: readTypePreffix(), Name: expectIdent()}
 	expect(";")
@@ -341,7 +342,7 @@ func function() *Function {
 	return fn
 }
 
-// global-var = "var" ident ("[" num "]")*basetype
+// global-var = "var" ident ("[" num "]")* basetype
 func globalVar() {
 	expect("var")
 	name := expectIdent()
@@ -468,7 +469,7 @@ func stmt() *Node {
 		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
 	}
 
-	if t := consume("var"); t != nil {
+	if consume("var") != nil || consume("type") != nil {
 		return declaration()
 	}
 

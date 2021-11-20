@@ -384,18 +384,18 @@ func f101() int {
 	return x
 }
 
-type x struct {
-	int a
-	int b
-}
 f102() int {
+	type x struct {
+		int a
+		int b
+	}
 	x.a=1
 	x.b=2
 	return x.a
 }
 
 func main() {
-	// assert(0, 0, "0")
+	assert(0, 0, "0")
 	// assert(42, 42, "42")
 	// assert(5, 5, "5")
 	// assert(41, 12+34-5, "12 + 34 - 5")
@@ -524,7 +524,7 @@ func main() {
 	// assert(2, f100(), "func f100() int {\n\tvar x int=2\n\t{\n\t\tvar x int=3\n\t}\n\t{\n\t\tvar y int=4\n\t\treturn x\n\t}\n}")
 	// assert(3, f101(), "func f101() int {\n\tvar x int=2\n\t{\n\t\tx=3\n\t}\n\treturn x\n}")
 	
-	assert(1, f102(), "type x struct {\n\tint a\n\tint b\n}\nf102() int {\n\tx.a=1\n\tx.b=2\n\treturn x.a\n}")
+	// assert(1, f102(), "type x struct {\n\tint a\n\tint b\n}\nf102() int {\n\tx.a=1\n\tx.b=2\n\treturn x.a\n}")
 
 	printf("OK\n")
 	return 0
