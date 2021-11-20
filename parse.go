@@ -37,18 +37,19 @@ const (
 	ND_LT                        // 6: <
 	ND_LE                        // 7: <=
 	ND_ASSIGN                    // 8: =
-	ND_VAR                       // 9: local variables
-	ND_NUM                       // 10: integer
-	ND_RETURN                    // 11: 'return'
-	ND_IF                        // 12: "if"
-	ND_WHILE                     // 13: "while"
-	ND_FOR                       // 14: "for"
-	ND_BLOCK                     // 15: {...}
-	ND_FUNCALL                   // 16: function call
-	ND_ADDR                      // 17: unary &
-	ND_DEREF                     // 18: unary *
-	ND_EXPR_STMT                 // 19: expression statement
-	ND_NULL                      // 20: empty statement
+	ND_MEMBER                    // 9: . (struct menber access)
+	ND_VAR                       // 10: local variables
+	ND_NUM                       // 11: integer
+	ND_RETURN                    // 12: 'return'
+	ND_IF                        // 13: "if"
+	ND_WHILE                     // 14: "while"
+	ND_FOR                       // 15: "for"
+	ND_BLOCK                     // 16: {...}
+	ND_FUNCALL                   // 17: function call
+	ND_ADDR                      // 18: unary &
+	ND_DEREF                     // 19: unary *
+	ND_EXPR_STMT                 // 20: expression statement
+	ND_NULL                      // 21: empty statement
 )
 
 // define AST node
@@ -70,6 +71,10 @@ type Node struct {
 
 	// Block
 	Body *Node
+
+	// Struct member access
+	MemName string
+	Mem     *Member
 
 	// Function call
 	FuncName string
@@ -177,15 +182,18 @@ func program() *Program {
 		if isFunction() {
 			cur.Next = function()
 			cur = cur.Next
-		} else {
+		} else if peek("var") != nil {
 			globalVar()
+		} else if consume("type") != nil {
+			name := expectIdent()
+			pushVar(name, structDecl(), false)
 		}
 	}
 
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
-// basetype = "*"* ("int" | "byte")
+// basetype = "*"* ("byte" | "int" | ident)
 func basetype() *Type {
 	nPtr := 0
 	for consume("*") != nil {
@@ -193,11 +201,16 @@ func basetype() *Type {
 	}
 
 	var ty *Type
+	if !isTypename() {
+		panic(errorTok(token, "typename expected"))
+	}
+
 	if consume("byte") != nil {
 		ty = charType()
-	} else {
-		expect("int")
+	} else if consume("int") != nil {
 		ty = intType()
+	} else if consumeIdent() != nil { // struct type
+		// ty = structDecl()
 	}
 
 	for i := 0; i < nPtr; i++ {
@@ -236,6 +249,37 @@ func readTypePreffix() *Type {
 	arrTy := readArr(base)
 	token = t
 	return arrTy
+}
+
+// struct-decl = "type" ident "{" struct-member "}"
+func structDecl() *Type {
+	expect("struct")
+	expect("{")
+
+	head := &Member{}
+	cur := head
+
+	for consume("}") == nil {
+		cur.Next = structMem()
+		cur = cur.Next
+	}
+
+	ty := &Type{Kind: TY_STRUCT, Mems: head.Next}
+
+	// Assign offsets within the struct to members.
+	offset := 0
+	for mem := ty.Mems; mem != nil; mem = mem.Next {
+		mem.Offset = offset
+		offset += sizeOf(mem.Ty)
+	}
+
+	return ty
+}
+
+func structMem() *Member {
+	mem := &Member{Ty: readTypePreffix(), Name: expectIdent()}
+	expect(";")
+	return mem
 }
 
 // param = ident basetype
@@ -331,7 +375,7 @@ func readExprStmt() *Node {
 }
 
 func isTypename() bool {
-	return peek("byte") != nil || peek("int") != nil
+	return peek("byte") != nil || peek("int") != nil || peek("struct") != nil
 }
 
 func isForClause() bool {
@@ -553,15 +597,22 @@ func unary() *Node {
 func postfix() *Node {
 	node := primary()
 
-	t := consume("[")
-	for ; t != nil; t = consume("[") {
+	for {
+		if t := consume("["); t != nil {
+			// x[y] is short for *(x+y)
+			exp := newBinary(ND_ADD, node, expr(), t)
+			expect("]")
+			node = newUnary(ND_DEREF, exp, t)
+			continue
+		}
 
-		// x[y] is short for *(x+y)
-		exp := newBinary(ND_ADD, node, expr(), t)
-		expect("]")
-		node = newUnary(ND_DEREF, exp, t)
+		if t := consume("."); t != nil {
+			node := newUnary(ND_MEMBER, node, t)
+			node.MemName = expectIdent()
+			continue
+		}
+		return node
 	}
-	return node
 }
 
 // func-args = "(" (assign ("," assign)*)? ")"

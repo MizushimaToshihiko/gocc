@@ -41,6 +41,12 @@ func (c *codeWriter) genAddr(node *Node) {
 	case ND_DEREF:
 		c.gen(node.Lhs)
 		return
+	case ND_MEMBER:
+		c.genAddr(node.Lhs)
+		c.printf("	pop rax\n")
+		c.printf("	add rax, %d\n", node.Mem.Offset)
+		c.printf("	push rax\n")
+		return
 	}
 
 	c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
@@ -89,7 +95,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.gen(node.Lhs)
 		c.printf("	add rsp, 8\n")
 		return
-	case ND_VAR:
+	case ND_VAR, ND_MEMBER:
 		c.genAddr(node)
 		if node.Ty.Kind != TY_ARRAY {
 			c.load(node.Ty)

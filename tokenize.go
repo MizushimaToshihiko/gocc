@@ -355,9 +355,10 @@ func isTermOfProd(cur *Token) bool {
 					cur.Str == "continue" ||
 					cur.Str == "fallthrough" ||
 					cur.Str == "return" ||
-					cur.Str == "int" ||
 					cur.Str == "++" ||
 					cur.Str == "--" ||
+					cur.Str == "int" ||
+					cur.Str == "byte" ||
 					strings.Contains(")]}", cur.Str)))
 	}
 	return false
