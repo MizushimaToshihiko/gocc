@@ -28,6 +28,10 @@ var funcname string
 
 // Pushes the given node's address to the stack
 func (c *codeWriter) genAddr(node *Node) {
+	if c.err != nil {
+		return
+	}
+
 	switch node.Kind {
 	case ND_VAR:
 		if node.Var.IsLocal {
@@ -53,6 +57,10 @@ func (c *codeWriter) genAddr(node *Node) {
 }
 
 func (c *codeWriter) genLval(node *Node) {
+	if c.err != nil {
+		return
+	}
+
 	if node.Ty.Kind == TY_ARRAY {
 		c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
 	}
@@ -60,6 +68,10 @@ func (c *codeWriter) genLval(node *Node) {
 }
 
 func (c *codeWriter) load(ty *Type) {
+	if c.err != nil {
+		return
+	}
+
 	c.printf("	pop rax\n")
 	if sizeOf(ty) == 1 {
 		c.printf("	movsx rax, byte ptr [rax]\n")
@@ -70,6 +82,10 @@ func (c *codeWriter) load(ty *Type) {
 }
 
 func (c *codeWriter) store(ty *Type) {
+	if c.err != nil {
+		return
+	}
+
 	c.printf("	pop rdi\n")
 	c.printf("	pop rax\n")
 	if sizeOf(ty) == 1 {
@@ -256,6 +272,10 @@ func (c *codeWriter) gen(node *Node) (err error) {
 }
 
 func (c *codeWriter) loadArg(v *Var, idx int) {
+	if c.err != nil {
+		return
+	}
+
 	sz := sizeOf(v.Ty)
 	if sz == 1 {
 		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg1[idx])

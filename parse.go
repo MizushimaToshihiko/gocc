@@ -129,6 +129,9 @@ func newVar(v *Var, tok *Token) *Node {
 }
 
 func pushVar(name string, ty *Type, isLocal bool) *Var {
+	// printCurTok()
+	// printCalledFunc()
+
 	v := &Var{Name: name, Ty: ty, IsLocal: isLocal}
 
 	var vl *VarList
@@ -166,6 +169,9 @@ type Function struct {
 }
 
 func isFunction() bool {
+	// printCurTok()
+	// printCalledFunc()
+
 	return peek("func") != nil
 }
 
@@ -182,7 +188,7 @@ func program() *Program {
 		if isFunction() {
 			cur.Next = function()
 			cur = cur.Next
-		} else if peek("var") != nil {
+		} else {
 			globalVar()
 			// } else if consume("type") != nil {
 			// 	name := expectIdent()
@@ -193,23 +199,26 @@ func program() *Program {
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
-// basetype = "*"* ("byte" | "int" | struct-decl)
+// basetype = "*"* ("byte" | "int" | "type" ident struct-decl)
 func basetype() *Type {
+	// printCurTok()
+	// printCalledFunc()
+
 	nPtr := 0
 	for consume("*") != nil {
 		nPtr++
 	}
 
-	var ty *Type
 	if !isTypename() {
 		panic(errorTok(token, "typename expected"))
 	}
 
+	var ty *Type
 	if consume("byte") != nil {
 		ty = charType()
 	} else if consume("int") != nil {
 		ty = intType()
-	} else if consumeIdent() != nil { // struct type
+	} else if peek("struct") != nil { // struct type
 		ty = structDecl()
 	}
 
@@ -220,6 +229,9 @@ func basetype() *Type {
 }
 
 func findBase() (*Type, *Token) {
+	// printCurTok()
+	// printCalledFunc()
+
 	tok := token
 	for peek("*") == nil && !isTypename() {
 		token = token.Next
@@ -231,6 +243,9 @@ func findBase() (*Type, *Token) {
 }
 
 func readArr(base *Type) *Type {
+	// printCurTok()
+	// printCalledFunc()
+
 	if consume("[") == nil {
 		return base
 	}
@@ -241,6 +256,9 @@ func readArr(base *Type) *Type {
 }
 
 func readTypePreffix() *Type {
+	// printCurTok()
+	// printCalledFunc()
+
 	if peek("[") == nil {
 		return basetype()
 	}
@@ -251,8 +269,11 @@ func readTypePreffix() *Type {
 	return arrTy
 }
 
-// struct-decl = "type" ident "{" struct-member "}"
+// struct-decl = "struct" "{" struct-member "}"
 func structDecl() *Type {
+	// printCurTok()
+	// printCalledFunc()
+
 	expect("struct")
 	expect("{")
 
@@ -278,7 +299,10 @@ func structDecl() *Type {
 
 // struct-member = ident basetype
 func structMem() *Member {
-	mem := &Member{Ty: readTypePreffix(), Name: expectIdent()}
+	// printCurTok()
+	// printCalledFunc()
+
+	mem := &Member{Name: expectIdent(), Ty: readTypePreffix()}
 	expect(";")
 	return mem
 }
@@ -292,6 +316,9 @@ func structMem() *Member {
 //  x [3]*int
 //  x [2]**int
 func readFuncParam() *VarList {
+	// printCurTok()
+	// printCalledFunc()
+
 	name := expectIdent()
 	ty := readTypePreffix()
 	vl := &VarList{}
@@ -301,6 +328,9 @@ func readFuncParam() *VarList {
 
 // params = ident ("," ident)*
 func readFuncParams() *VarList {
+	// printCurTok()
+	// printCalledFunc()
+
 	if consume(")") != nil {
 		return nil
 	}
@@ -319,6 +349,9 @@ func readFuncParams() *VarList {
 
 // function = "func" ident basetype "(" params? ")" "{" stmt "}"
 func function() *Function {
+	// printCurTok()
+	// printCalledFunc()
+
 	locals = nil
 
 	expect("func")
@@ -344,6 +377,9 @@ func function() *Function {
 
 // global-var = "var" ident ("[" num "]")* basetype
 func globalVar() {
+	// printCurTok()
+	// printCalledFunc()
+
 	expect("var")
 	name := expectIdent()
 	ty := readTypePreffix()
@@ -353,6 +389,9 @@ func globalVar() {
 
 // declaration = "var" ident basetype ("=" expr)
 func declaration() *Node {
+	// printCurTok()
+	// printCalledFunc()
+
 	tok := token
 	name := expectIdent()
 	ty := readTypePreffix()
@@ -371,15 +410,24 @@ func declaration() *Node {
 }
 
 func readExprStmt() *Node {
+	// printCurTok()
+	// printCalledFunc()
+
 	t := token
 	return newUnary(ND_EXPR_STMT, expr(), t)
 }
 
 func isTypename() bool {
+	// printCurTok()
+	// printCalledFunc()
+
 	return peek("byte") != nil || peek("int") != nil || peek("struct") != nil
 }
 
 func isForClause() bool {
+	// printCurTok()
+	// printCalledFunc()
+
 	tok := token
 
 	for peek("{") == nil {
@@ -594,8 +642,11 @@ func unary() *Node {
 	return postfix()
 }
 
-// postfix = primary ("[" expr "]")*
+// postfix = primary ("[" expr "]" | "." ident)*
 func postfix() *Node {
+	// printCurTok()
+	// printCalledFunc()
+
 	node := primary()
 
 	for {
@@ -618,6 +669,9 @@ func postfix() *Node {
 
 // func-args = "(" (assign ("," assign)*)? ")"
 func funcArgs() *Node {
+	// printCurTok()
+	// printCalledFunc()
+
 	if consume(")") != nil {
 		return nil
 	}
