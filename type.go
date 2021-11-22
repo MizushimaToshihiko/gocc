@@ -21,6 +21,7 @@ const (
 
 type Type struct {
 	Kind  TypeKind
+	Align int
 	Base  *Type
 	ArrSz int // Array size
 	Mems  *Member
@@ -33,24 +34,28 @@ type Member struct {
 	Offset int
 }
 
-func newType(kind TypeKind) *Type {
-	return &Type{Kind: kind}
+func alignTo(n, align int) int {
+	return (n + align - 1) & ^(align - 1)
+}
+
+func newType(kind TypeKind, align int) *Type {
+	return &Type{Kind: kind, Align: align}
 }
 
 func charType() *Type {
-	return newType(TY_BYTE)
+	return newType(TY_BYTE, 1)
 }
 
 func intType() *Type {
-	return newType(TY_INT)
+	return newType(TY_INT, 8)
 }
 
 func pointerTo(base *Type) *Type {
-	return &Type{Kind: TY_PTR, Base: base}
+	return &Type{Kind: TY_PTR, Base: base, Align: 8}
 }
 
 func arrayOf(base *Type, size int) *Type {
-	return &Type{Kind: TY_ARRAY, Base: base, ArrSz: size}
+	return &Type{Kind: TY_ARRAY, Align: base.Align, Base: base, ArrSz: size}
 }
 
 func sizeOf(ty *Type) int {
@@ -66,7 +71,8 @@ func sizeOf(ty *Type) int {
 		for mem.Next != nil {
 			mem = mem.Next
 		}
-		return mem.Offset + sizeOf(mem.Ty)
+		end := mem.Offset + sizeOf(mem.Ty)
+		return alignTo(end, ty.Align)
 	default:
 		panic("invalid type")
 	}

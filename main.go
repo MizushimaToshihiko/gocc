@@ -43,10 +43,6 @@ func exists(name string) bool {
 	return !os.IsNotExist(err)
 }
 
-func alignTo(n, align int) int {
-	return (n + align - 1) & ^(align - 1)
-}
-
 func compile(arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
