@@ -210,11 +210,15 @@ func program() *Program {
 		if isFunction() {
 			cur.Next = function()
 			cur = cur.Next
-		} else {
+		} else if consume("var") != nil {
 			globalVar()
-			// } else if consume("type") != nil {
-			// 	name := expectIdent()
-			// 	pushVar(name, structDecl(), false)
+		} else if consume("type") != nil {
+			name := expectIdent()
+			ty := readTypePreffix()
+			pushScope(name).TyDef = ty
+			expect(";")
+		} else {
+			panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
 		}
 	}
 
@@ -413,14 +417,10 @@ func globalVar() {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume("var") != nil {
-		name := expectIdent()
-		ty := readTypePreffix()
-		expect(";")
-		pushVar(name, ty, false)
-		return
-	}
-	panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
+	name := expectIdent()
+	ty := readTypePreffix()
+	expect(";")
+	pushVar(name, ty, false)
 }
 
 // declaration = "var" ident ("[" num "]")* basetype ("=" expr)
