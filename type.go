@@ -142,6 +142,7 @@ func (e *errWriter) visit(node *Node) {
 		node.Mem = findMember(node.Lhs.Ty, node.MemName)
 		if node.Mem == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "specified member does not exist"))
+			return
 		}
 		node.Ty = node.Mem.Ty
 		return

@@ -384,6 +384,7 @@ func f101() int {
 	return x
 }
 
+// 今の時点では構造体名がそのまま変数になる
 func f102() int {
 	type x struct {
 		a int
@@ -393,6 +394,95 @@ func f102() int {
 	x.b = 2
 	return x.a
 }
+
+type x103 struct {
+	a int
+	b int
+}
+func f103() int {
+	x103.a=1
+	x103.b=2
+	return x103.a
+}
+func f104() int {
+	x103.a=1
+	x103.b=2
+	return x103.b
+}
+type x105 struct {
+	a byte
+	b int
+	c byte
+}
+func f105() int {
+	x105.a=1
+	x105.b=2
+	x105.c=3
+	return x105.a
+}
+func f106() int {
+	x105.a=1
+	x105.b=2
+	x105.c=3
+	return x105.b
+}
+func f107() int {
+	x105.a=1
+	x105.b=2
+	x105.c=3
+	return x105.c
+}
+
+type x108 [3]struct{
+	a int
+	b int
+}
+func f108() int {
+	var p *int = &x108
+	p[0] = 0
+	return x108[0].a
+}
+func f109() int {
+	var p *int = &x108
+	p[1] = 1
+	return x108[0].b
+}
+func f110() int {
+	var p *int = &x108
+	p[2] = 2
+	return x108[1].a
+}
+func f111() int {
+	var p *int = &x108
+	p[3] = 3
+	return x108[1].b
+}
+
+type x112 struct {
+	a [3]int
+	b [5]int
+}
+func f112() int {
+	var p *int=&x112
+	x112.a[0]=6
+	return p[0]
+}
+func f113() int {
+	var p *int=&x112
+	x112.b[0]=7
+	return p[3]
+}
+
+type x114 struct {
+	a struct {
+		b int
+	}
+}
+func f114() int {
+	x114.a.b = 6
+	return x114.a.b
+}
+
 
 func main() {
 	assert(0, 0, "0")
@@ -525,6 +615,20 @@ func main() {
 	assert(3, f101(), "func f101() int {\n\tvar x int=2\n\t{\n\t\tx=3\n\t}\n\treturn x\n}")
 
 	assert(1, f102(), "func f102() int {\n\ttype x struct {\n\t\tint a\n\t\tint b\n\t}\n\tx.a = 1\n\tx.b = 2\n\treturn x.a\n}")
+
+	assert(1, f103(), "type x103 struct {\n\ta int\n\tb int\n}\nfunc f103() int {\n\tx.a=1\n\tx.b=2\n\treturn x.a\n}")
+	assert(2, f104(), "type x103 struct {\n\ta int\n\tb int\n}\nfunc f103() int {\n\tx.a=1\n\tx.b=2\n\treturn x.b\n}")
+	assert(1, f105(), "type x105 struct {\n\ta type\n\tb int\n\tc byte\n\t}\nfunc f105() int {\n\tx.a=1\n\tx.b=2\n\tx.c=3\n\treturn x.a\n}")
+	assert(2, f106(), "type x106 struct {\n\ta type\n\tb int\n\tc byte\n\t}\nfunc f106() int {\n\tx.a=1\n\tx.b=2\n\tx.c=3\n\treturn x.b\n}")
+	assert(3, f107(), "type x107 struct {\n\ta type\n\tb int\n\tc byte\n\t}\nfunc f107() int {\n\tx.a=1\n\tx.b=2\n\tx.c=3\n\treturn x.c\n}")
+	
+	assert(6, f112(), "type x112 struct {\n\ta [3]int\n\tb [5]int\n}\nfunc f112 int {\n\tp *int=&x\n\tx.a[0]=6\n\treturn p[0]\n}")
+	assert(7, f113(), "type x112 struct {\n\ta [3]int\n\tb [5]int\n}\nfunc f113 int {\n\tp *int=&x108\n\tx018.b[7]=7\n\treturn p[3]\n}")
+	assert(6, f114(), "type x114 struct {\n\t type a struct{\n\t\tb int\n\t}\n}\nfunc f114 int {\n\tx110.a.b=6\n\treturn x110.a.b\n}")
+	assert(0, f108(), "type x [3]struct {\n\ta int\n\tb int\n}\nfunc f108() int {\n\tp *int=x\n\tp[0]=0\n\treturn x[0].a\n}")
+	assert(1, f109(), "type x [3]struct {\n\ta int\n\tb int\n}\nfunc f109() int {\n\tp *int=x\n\tp[1]=1\n\treturn x[0].b\n}")
+	assert(2, f110(), "type x [3]struct {\n\ta int\n\tb int\n}\nfunc f110() int {\n\tp *int=x\n\tp[2]=2\n\treturn x[1].a\n}")
+	assert(3, f111(), "type x [3]struct {\n\ta int\n\tb int\n}\nfunc f111() int {var p*int=x\n\tp[3]=3\n\t return x[1].b\n}");
 
 	printf("OK\n")
 	return 0

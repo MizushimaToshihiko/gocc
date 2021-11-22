@@ -376,15 +376,19 @@ func function() *Function {
 }
 
 // global-var = "var" ident ("[" num "]")* basetype
+//            | "type" ident struxt-decl
 func globalVar() {
 	// printCurTok()
 	// printCalledFunc()
 
-	expect("var")
-	name := expectIdent()
-	ty := readTypePreffix()
-	expect(";")
-	pushVar(name, ty, false)
+	if consume("var") != nil || consume("type") != nil {
+		name := expectIdent()
+		ty := readTypePreffix()
+		expect(";")
+		pushVar(name, ty, false)
+		return
+	}
+	panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
 }
 
 // declaration = "var" ident basetype ("=" expr)
