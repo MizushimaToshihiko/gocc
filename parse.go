@@ -659,8 +659,10 @@ func postfix() *Node {
 		}
 
 		if t := consume("."); t != nil {
-			node := newUnary(ND_MEMBER, node, t)
+			node = newUnary(ND_MEMBER, node, t)
 			node.MemName = expectIdent()
+			// fmt.Printf("postfix(): node: %#v\n%s\n\n", node, node.Tok.Str)
+			// fmt.Printf("postfix(): node.Lhs: %#v\n%s\n\n", node.Lhs, node.Lhs.Tok.Str)
 			continue
 		}
 		return node

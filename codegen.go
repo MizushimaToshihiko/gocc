@@ -41,7 +41,6 @@ func (c *codeWriter) genAddr(node *Node) {
 		}
 		c.printf("	push offset %s\n", node.Var.Name)
 		return
-
 	case ND_DEREF:
 		c.gen(node.Lhs)
 		return
@@ -51,9 +50,10 @@ func (c *codeWriter) genAddr(node *Node) {
 		c.printf("	add rax, %d\n", node.Mem.Offset)
 		c.printf("	push rax\n")
 		return
+	default:
+		c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
 	}
 
-	c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
 }
 
 func (c *codeWriter) genLval(node *Node) {

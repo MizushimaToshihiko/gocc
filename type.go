@@ -61,15 +61,14 @@ func sizeOf(ty *Type) int {
 		return 8
 	case TY_ARRAY:
 		return sizeOf(ty.Base) * ty.ArrSz
-	default:
-		if ty.Kind != TY_STRUCT {
-			panic("invalid type")
-		}
+	case TY_STRUCT:
 		mem := ty.Mems
 		for mem.Next != nil {
 			mem = mem.Next
 		}
 		return mem.Offset + sizeOf(mem.Ty)
+	default:
+		panic("invalid type")
 	}
 }
 
@@ -141,7 +140,7 @@ func (e *errWriter) visit(node *Node) {
 			e.err = fmt.Errorf(errorTok(node.Tok, "not a struct"))
 		}
 		node.Mem = findMember(node.Lhs.Ty, node.MemName)
-		if node.Mem != nil {
+		if node.Mem == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "specified member does not exist"))
 		}
 		node.Ty = node.Mem.Ty
@@ -156,7 +155,6 @@ func (e *errWriter) visit(node *Node) {
 	case ND_DEREF:
 		if node.Lhs.Ty.Base == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
-			return
 		}
 		node.Ty = node.Lhs.Ty.Base
 		return
