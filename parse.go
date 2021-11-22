@@ -2,7 +2,13 @@ package main
 
 import "fmt"
 
-type NodeKind int
+// Scope for local variables, global variables or typedefs
+type VarScope struct {
+	Next  *VarScope
+	Name  string
+	Var   *Var
+	TyDef *Type
+}
 
 type Var struct {
 	Name    string // Variable name
@@ -26,6 +32,8 @@ type Program struct {
 	Globs *VarList  // global variables
 	Fns   *Function // functions
 }
+
+type NodeKind int
 
 const (
 	ND_ADD       NodeKind = iota // 0: +
@@ -86,13 +94,14 @@ type Node struct {
 
 var locals *VarList
 var globals *VarList
-var scope *VarList
 
-// findVar finds a variable by name.
-func findVar(tok *Token) *Var {
-	for vl := scope; vl != nil; vl = vl.Next {
-		if len(vl.Var.Name) == tok.Len && tok.Str == vl.Var.Name {
-			return vl.Var
+var varScope *VarScope
+
+// findVar finds a variable or a typedef by name.
+func findVar(tok *Token) *VarScope {
+	for sc := varScope; sc != nil; sc = sc.Next {
+		if len(sc.Name) == tok.Len && tok.Str == sc.Name {
+			return sc
 		}
 	}
 	return nil
@@ -128,6 +137,12 @@ func newVar(v *Var, tok *Token) *Node {
 	return &Node{Kind: ND_VAR, Tok: tok, Var: v}
 }
 
+func pushScope(name string) *VarScope {
+	sc := &VarScope{Name: name, Next: varScope}
+	varScope = sc
+	return sc
+}
+
 func pushVar(name string, ty *Type, isLocal bool) *Var {
 	// printCurTok()
 	// printCalledFunc()
@@ -143,10 +158,17 @@ func pushVar(name string, ty *Type, isLocal bool) *Var {
 		globals = vl
 	}
 
-	sc := &VarList{Var: v, Next: scope}
-	scope = sc
-
+	pushScope(name).Var = v
 	return vl.Var
+}
+
+func findTyDef(tok *Token) *Type {
+	if tok.Kind == TK_IDENT {
+		if sc := findVar(token); sc != nil {
+			return sc.TyDef
+		}
+	}
+	return nil
 }
 
 // for newLabel function
@@ -199,7 +221,7 @@ func program() *Program {
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
-// basetype = "*"* ("byte" | "int" | "type" ident struct-decl)
+// basetype = "*"* ("byte" | "int" | struct-decl | typedef-name)
 func basetype() *Type {
 	// printCurTok()
 	// printCalledFunc()
@@ -220,6 +242,11 @@ func basetype() *Type {
 		ty = intType()
 	} else if peek("struct") != nil { // struct type
 		ty = structDecl()
+	} else {
+		ty = findVar(consumeIdent()).TyDef
+	}
+	if ty == nil {
+		panic("\n" + errorTok(token, "'ty' is nil"))
 	}
 
 	for i := 0; i < nPtr; i++ {
@@ -381,12 +408,12 @@ func function() *Function {
 }
 
 // global-var = "var" ident ("[" num "]")* basetype
-//            | "type" ident struxt-decl
+//
 func globalVar() {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume("var") != nil || consume("type") != nil {
+	if consume("var") != nil {
 		name := expectIdent()
 		ty := readTypePreffix()
 		expect(";")
@@ -396,7 +423,7 @@ func globalVar() {
 	panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
 }
 
-// declaration = "var" ident basetype ("=" expr)
+// declaration = "var" ident ("[" num "]")* basetype ("=" expr)
 func declaration() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -430,7 +457,10 @@ func isTypename() bool {
 	// printCurTok()
 	// printCalledFunc()
 
-	return peek("byte") != nil || peek("int") != nil || peek("struct") != nil
+	return peek("byte") != nil ||
+		peek("int") != nil ||
+		peek("struct") != nil ||
+		findTyDef(token) != nil
 }
 
 func isForClause() bool {
@@ -454,6 +484,7 @@ func isForClause() bool {
 //      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
 //      | for-stmt
 //      | "{" stmt* "}"
+//      | "type" ident ("[" num "]")* basetype ";"
 //      | declaration
 //      | expr ";"
 // for-stmt = "for" [ condition ] block .
@@ -515,19 +546,27 @@ func stmt() *Node {
 		head := Node{}
 		cur := &head
 
-		sc := scope
+		sc := varScope
 		for consume("}") == nil {
 			cur.Next = stmt()
 			cur = cur.Next
 		}
-		scope = sc
+		varScope = sc
 
 		consume(";")
 		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
 	}
 
-	if consume("var") != nil || consume("type") != nil {
+	if consume("var") != nil {
 		return declaration()
+	}
+
+	if t := consume("type"); t != nil {
+		name := expectIdent()
+		ty := readTypePreffix()
+		expect(";")
+		pushScope(name).TyDef = ty
+		return newNode(ND_NULL, t)
 	}
 
 	node := readExprStmt()
@@ -717,11 +756,11 @@ func primary() *Node {
 			return &Node{Kind: ND_FUNCALL, Tok: t, FuncName: t.Str, Args: funcArgs()}
 		}
 
-		v := findVar(t)
-		if v == nil {
-			panic("\n" + errorTok(t, "undifined variable"))
+		sc := findVar(t)
+		if sc != nil && sc.Var != nil {
+			return newVar(sc.Var, t)
 		}
-		return newVar(v, t)
+		panic("\n" + errorTok(t, "undifined variable"))
 	}
 
 	t := token
