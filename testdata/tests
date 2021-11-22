@@ -483,6 +483,21 @@ func f114() int {
 	return x114.a.b
 }
 
+func f115() int {
+	var x int
+	var y byte
+	var a int = &x
+	var b int = &y
+	return b - a
+}
+
+func f116() int {
+	var x byte
+	var y int
+	var a int = &x
+	var b int = &y
+	return b - a
+}
 
 func main() {
 	assert(0, 0, "0")
@@ -629,6 +644,10 @@ func main() {
 	assert(1, f109(), "type x [3]struct {\n\ta int\n\tb int\n}\nfunc f109() int {\n\tp *int=x\n\tp[1]=1\n\treturn x[0].b\n}")
 	assert(2, f110(), "type x [3]struct {\n\ta int\n\tb int\n}\nfunc f110() int {\n\tp *int=x\n\tp[2]=2\n\treturn x[1].a\n}")
 	assert(3, f111(), "type x [3]struct {\n\ta int\n\tb int\n}\nfunc f111() int {var p*int=x\n\tp[3]=3\n\t return x[1].b\n}");
+
+	assert(15, f115(), "func f115() int {\n\tvar x int\n\tvar y byte\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
+	
+	assert(1, f116(), "func f116() int {\n\tvar x byte\n\tvar y int\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
 
 	printf("OK\n")
 	return 0
