@@ -650,7 +650,7 @@ func main() {
 	// 	assert(1, f116(), "func f116() int {\n\tvar x byte\n\tvar y int\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
 
 	// 	printf("OK\n")
-	// 	return 0
+	return 0
 }
 
 // func fib(x int) int {
