@@ -540,6 +540,102 @@ func f120() int {
 	x.a = 2
 	return x.a
 }
+func f121 () int {
+	var x int
+	return sizeof(x)
+}
+func f122() int {
+	var x int
+	return sizeof x
+}
+func f123() int {
+	var x [4]int
+	return sizeof(x)
+}
+func f124() int {
+	var x [3][4]int
+	return sizeof(x)
+}
+func f125() int {
+	var x [3][4]int
+	return sizeof(*x)
+}
+func f126() int {
+	var x [3][4]int
+	return sizeof(**x)
+}
+func f127() int {
+	var x [3][4]int
+	return sizeof(**x) + 1
+}
+func f128() int {
+	var x [3][4]int
+	return sizeof **x + 1
+}
+func f129() int {
+	var x [3][4]int
+	return sizeof(**x + 1)
+}
+
+func f130() int {
+	type X struct {
+		a int
+	}
+	var x X
+	return sizeof(x)
+}
+func f131() int {
+	type X struct {
+		a int
+		b int
+	}
+	var x X
+	return sizeof(x)
+}
+func f132() int {
+	type X struct {
+		a [3]int
+	}
+	var x X
+	return sizeof(x)
+}
+func f133() int {
+	type X struct {
+		a int
+	}
+	var x [4]X
+	return sizeof(x)
+}
+func f134() int {
+	type X struct {
+		a [3]int
+	}
+	var x [2]X
+	return sizeof(x)
+}
+func f135() int {
+	type X struct {
+		a byte
+		b int
+	}
+	var x X
+	return sizeof(x)
+}
+func f136() int {
+	type X struct {
+		a int
+		b byte
+	}
+	var x X
+	return sizeof(x)
+}
+func f137() int {
+	var x int
+	var y byte
+	var a int = &x
+	var b int = &y
+	return b - a
+}
 
 func main() {
 	assert(0, 0, "0")
@@ -690,7 +786,7 @@ func main() {
 	assert(2, f110(), "type x108 [3]struct {\n\ta int\n\tb int\n}\nfunc f110() int {\n\tvar x x108\n\tp *int=x\n\tp[2]=2\n\treturn x[1].a\n}")
 	assert(3, f111(), "type x108 [3]struct {\n\ta int\n\tb int\n}\nfunc f111() int {\n\tvar x x108\n\tvar p*int=x\n\tp[3]=3\n\t return x[1].b\n}")
 
-	assert(15, f115(), "func f115() int {\n\tvar x int\n\tvar y byte\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
+	assert(7, f115(), "func f115() int {\n\tvar x int\n\tvar y byte\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
 
 	assert(1, f116(), "func f116() int {\n\tvar x byte\n\tvar y int\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
 
@@ -699,6 +795,30 @@ func main() {
 	assert(1, f118(), "type t118 struct {\n\ta int\n}\nfunc f118() int{\n\tvar x t118\n\tx.a = 1\n\treturn x.a\n}")
 	assert(1, f119(), "type t119 int\nfunc f119() int{\n\tvar t110 t119 = 1\n\treturn t\n}")
 	assert(2, f120(), "type t120 struct {\n\ta int\n}\nfunc f120(){\n\t{\n\t\ttype t120 int\n\t}\n\tvar x t120\n\tx.a = 2\n\treturn x.a\n}")
+
+	assert(4, f121(), "var x int\nreturn sizeof(x)")
+	assert(4, f122(), "var x int\nreturn sizeof x")
+
+	assert(16, f123(), "var x [4]int\nreturn sizeof(x)")
+
+	assert(48, f124(), "var x [3][4]int\nreturn sizeof(x)")
+	assert(16, f125(), "var x [3][4]int\nreturn sizeof(*x)")
+	assert(4, f126(), "var x [3][4]int\nreturn sizeof(**x)")
+	assert(5, f127(), "var x [3][4]int\nreturn sizeof(**x) + 1")
+	assert(5, f128(), "var x [3][4]int\nreturn sizeof **x + 1")
+	assert(4, f129(), "var x [3][4]int\nreturn sizeof(**x + 1)")
+
+	assert(4, sizeof(g1), "sizeof(g1)")
+	assert(16, sizeof(g2), "sizeof(g2)")
+
+	assert(4, f130(), "type X struct {\n\ta int\n}\nvar x X\nreturn sizeof(x)")
+	assert(8, f131(), "type X struct {\n\ta int\n\tb int\n}\nvar x X\nreturn sizeof(x)")
+	assert(12, f132(), "type X struct {\n\ta [3]int\n}\nvar x X\nreturn sizeof(x)")
+	assert(16, f133(), "type X struct {\n\ta int\n}\nvar x [4]X\nreturn sizeof(x)")
+	assert(24, f134(), "type X struct {\n\ta [3]int\n}\n var x [2]X\nreturn sizeof(x)")
+	assert(8, f135(), "type X struct {\n\ta byte\n\tb int\n}\nvar x X\nreturn sizeof(x)")
+	assert(8, f136(), "type X struct {\n\ta int\n\tb byte\n}\n var x X\nreturn sizeof(x)")
+	assert(7, f137(), "var x int\nvar y byte\nvar a int=&x\nvar b int=&y\nreturn b - a")
 
 	printf("OK\n")
 	return 0

@@ -47,7 +47,7 @@ func charType() *Type {
 }
 
 func intType() *Type {
-	return newType(TY_INT, 8)
+	return newType(TY_INT, 4)
 }
 
 func pointerTo(base *Type) *Type {
@@ -62,7 +62,9 @@ func sizeOf(ty *Type) int {
 	switch ty.Kind {
 	case TY_BYTE:
 		return 1
-	case TY_INT, TY_PTR:
+	case TY_INT:
+		return 4
+	case TY_PTR:
 		return 8
 	case TY_ARRAY:
 		return sizeOf(ty.Base) * ty.ArrSz
@@ -164,6 +166,12 @@ func (e *errWriter) visit(node *Node) {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
 		}
 		node.Ty = node.Lhs.Ty.Base
+		return
+	case ND_SIZEOF:
+		node.Kind = ND_NUM
+		node.Ty = intType()
+		node.Val = int64(sizeOf(node.Lhs.Ty))
+		node.Lhs = nil
 		return
 	}
 }

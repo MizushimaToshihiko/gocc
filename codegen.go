@@ -21,6 +21,7 @@ func (c *codeWriter) printf(frmt string, a ...interface{}) {
 }
 
 var argreg1 = []string{"dil", "sil", "dl", "cl", "r8b", "r9b"}
+var argreg4 = []string{"edi", "esi", "edx", "ecx", "r8d", "r9d"}
 var argreg8 = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 
 var labelseq int
@@ -73,11 +74,18 @@ func (c *codeWriter) load(ty *Type) {
 	}
 
 	c.printf("	pop rax\n")
-	if sizeOf(ty) == 1 {
+	sz := sizeOf(ty)
+	if sz == 1 {
 		c.printf("	movsx rax, byte ptr [rax]\n")
-	} else {
+	} else if sz == 4 {
+		c.printf("	movsxd rax, dword ptr [rax]\n")
+	} else if sz == 8 {
 		c.printf("	mov rax, [rax]\n")
+	} else {
+		c.err = fmt.Errorf("invalid size")
+		return
 	}
+
 	c.printf("	push rax\n")
 }
 
@@ -88,11 +96,18 @@ func (c *codeWriter) store(ty *Type) {
 
 	c.printf("	pop rdi\n")
 	c.printf("	pop rax\n")
-	if sizeOf(ty) == 1 {
+
+	sz := sizeOf(ty)
+	if sz == 1 {
 		c.printf("	mov [rax], dil\n")
-	} else {
+	} else if sz == 4 {
+		c.printf("	mov [rax], edi\n")
+	} else if sz == 8 {
 		c.printf("	mov [rax], rdi\n")
+	} else {
+		c.err = fmt.Errorf("invalid size")
 	}
+
 	c.printf("	push rdi\n")
 }
 
@@ -279,11 +294,12 @@ func (c *codeWriter) loadArg(v *Var, idx int) {
 	sz := sizeOf(v.Ty)
 	if sz == 1 {
 		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg1[idx])
-	} else {
-		if sz != 8 {
-			c.err = fmt.Errorf("invalid size")
-		}
+	} else if sz == 4 {
+		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg4[idx])
+	} else if sz == 8 {
 		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg8[idx])
+	} else {
+		c.err = fmt.Errorf("invalid size")
 	}
 }
 
