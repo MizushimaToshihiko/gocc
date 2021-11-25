@@ -673,7 +673,11 @@ func f141() int {
 	return sizeof(x)
 }
 
-func main() {
+func g1Prt() *int {
+	return &g1
+}
+
+func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
 	assert(5, 5, "5")
@@ -864,6 +868,8 @@ func main() {
 
 	assert(1, subShort(7, 3, 3), "subShort(7, 3, 3)")
 	assert(1, subLong(7, 3, 3), "subLong(7, 3, 3)")
+
+	assert(3, *g1Ptr(), "*g1Ptr()")
 
 	printf("OK\n")
 	return 0

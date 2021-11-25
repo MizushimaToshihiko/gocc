@@ -226,31 +226,45 @@ func program() *Program {
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
-// type-specifier = builtin-type | struct-decl | typedef-name |
+// type-specifier = "*"* builtin-type | struct-decl | typedef-name |
 // builtin-type = "byte"| "int16" | "int" | "int64"
 func typeSpecifier() *Type {
 	// printCurTok()
 	// printCalledFunc()
 
+	nPtr := 0
+	for consume("*") != nil {
+		nPtr++
+	}
+
 	if !isTypename() {
 		panic(errorTok(token, "typename expected"))
 	}
 
+	var ty *Type
 	if consume("byte") != nil {
-		return charType()
+		ty = charType()
 	} else if consume("int16") != nil {
-		return shortType()
+		ty = shortType()
 	} else if consume("int") != nil {
-		return intType()
+		ty = intType()
 	} else if consume("int64") != nil {
-		return longType()
+		ty = longType()
 	} else if peek("struct") != nil { // struct type
-		return structDecl()
+		ty = structDecl()
+	} else {
+		ty = findVar(consumeIdent()).TyDef
 	}
-	return findVar(consumeIdent()).TyDef
-}
+	if ty == nil {
+		panic("\n" + errorTok(token, "'ty' is nil"))
+	}
 
-// declarator =
+	for i := 0; i < nPtr; i++ {
+		ty = pointerTo(ty)
+	}
+
+	return ty
+}
 
 func findBase() (*Type, *Token) {
 	// printCurTok()
@@ -260,7 +274,7 @@ func findBase() (*Type, *Token) {
 	for peek("*") == nil && !isTypename() {
 		token = token.Next
 	}
-	ty := basetype()
+	ty := typeSpecifier()
 	t := token
 	token = tok
 	return ty, t
@@ -285,7 +299,7 @@ func readTypePreffix() *Type {
 	// printCalledFunc()
 
 	if peek("[") == nil {
-		return basetype()
+		return typeSpecifier()
 	}
 
 	base, t := findBase()
@@ -327,7 +341,7 @@ func structDecl() *Type {
 	return ty
 }
 
-// struct-member = ident type-prefix basetype
+// struct-member = ident type-prefix type-specifier
 func structMem() *Member {
 	// printCurTok()
 	// printCalledFunc()
@@ -337,7 +351,7 @@ func structMem() *Member {
 	return mem
 }
 
-// param = ident type-prefix basetype
+// param = ident type-prefix type-specifier
 // e.g.
 //  x int
 //  x *int
@@ -377,7 +391,7 @@ func readFuncParams() *VarList {
 	return head
 }
 
-// function = "func" ident "(" params? ")" type-prefix basetype "{" stmt "}"
+// function = "func" ident "(" params? ")" type-prefix type-specifier "{" stmt "}"
 func function() *Function {
 	// printCurTok()
 	// printCalledFunc()
@@ -385,14 +399,17 @@ func function() *Function {
 	locals = nil
 
 	expect("func")
+	// Construct a function object
 	fn := &Function{Name: expectIdent()}
 	expect("(")
 	fn.Params = readFuncParams()
-	if isTypename() {
-		basetype()
-	}
+	ty := typeSpecifier()
+
+	// Add a function type to the scope
+	pushVar(fn.Name, funcType(ty), false)
 	expect("{")
 
+	// Read function body
 	head := &Node{}
 	cur := head
 	for consume("}") == nil {
@@ -752,7 +769,23 @@ func primary() *Node {
 
 	if t := consumeIdent(); t != nil {
 		if consume("(") != nil {
-			return &Node{Kind: ND_FUNCALL, Tok: t, FuncName: t.Str, Args: funcArgs()}
+			node := &Node{
+				Kind:     ND_FUNCALL,
+				Tok:      t,
+				FuncName: t.Str,
+				Args:     funcArgs(),
+			}
+
+			sc := findVar(t)
+			if sc != nil {
+				if sc.Var == nil || sc.Var.Ty.Kind != TY_FUNC {
+					panic("\n" + errorTok(t, "not a function"))
+				}
+				node.Ty = sc.Var.Ty.RetTy
+			} else {
+				node.Ty = intType()
+			}
+			return node
 		}
 
 		sc := findVar(t)
