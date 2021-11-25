@@ -637,6 +637,42 @@ func f137() int {
 	return b - a
 }
 
+func subShort(a int16, b int16, c int16) int {
+	return a - b - c
+}
+
+func subLong(a int64, b int64, c int64) int {
+	return a - b - c
+}
+
+func f138() int {
+	var x int16
+	return sizeof(x)
+}
+
+func f139() int {
+	type X struct {
+		a byte
+		b int16
+	}
+	var x X
+	return sizeof(x)
+}
+
+func f140() int {
+	var x int64
+	return sizeof(x)
+}
+
+func f141() int {
+	type X struct {
+		a byte
+		b int64
+	}
+	var x X
+	return sizeof(x)
+}
+
 func main() {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -819,6 +855,15 @@ func main() {
 	assert(8, f135(), "type X struct {\n\ta byte\n\tb int\n}\nvar x X\nreturn sizeof(x)")
 	assert(8, f136(), "type X struct {\n\ta int\n\tb byte\n}\n var x X\nreturn sizeof(x)")
 	assert(7, f137(), "var x int\nvar y byte\nvar a int=&x\nvar b int=&y\nreturn b - a")
+
+	assert(2, f138(), "var x int64\nreturn sizeof(x)")
+	assert(4, f139(), "type X struct {\n\ta byte\n\tb int16\n}\nvar x X\nreturn sizeof(x)")
+
+	assert(8, f140(), "var x int64\nreturn sizeof(x)")
+	assert(16, f141(), "type X struct {\n\ta byte\n\tb int64\n}\nvar x X\nreturn sizeof(x)")
+
+	assert(1, subShort(7, 3, 3), "subShort(7, 3, 3)")
+	assert(1, subLong(7, 3, 3), "subLong(7, 3, 3)")
 
 	printf("OK\n")
 	return 0

@@ -13,7 +13,9 @@ type errWriter struct {
 
 const (
 	TY_BYTE TypeKind = iota // char type
+	TY_SHORT
 	TY_INT
+	TY_LONG
 	TY_PTR
 	TY_ARRAY
 	TY_STRUCT
@@ -46,8 +48,16 @@ func charType() *Type {
 	return newType(TY_BYTE, 1)
 }
 
+func shortType() *Type {
+	return newType(TY_SHORT, 2)
+}
+
 func intType() *Type {
 	return newType(TY_INT, 4)
+}
+
+func longType() *Type {
+	return newType(TY_LONG, 8)
 }
 
 func pointerTo(base *Type) *Type {
@@ -62,9 +72,11 @@ func sizeOf(ty *Type) int {
 	switch ty.Kind {
 	case TY_BYTE:
 		return 1
+	case TY_SHORT:
+		return 2
 	case TY_INT:
 		return 4
-	case TY_PTR:
+	case TY_PTR, TY_LONG:
 		return 8
 	case TY_ARRAY:
 		return sizeOf(ty.Base) * ty.ArrSz

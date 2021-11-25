@@ -205,14 +205,43 @@ func startsWith(p, q string) bool {
 	return len(p) >= len(q) && p[:len(q)] == q
 }
 
+func startsWithTypeName(p string) string {
+	var tyName = []string{"int16", "int64", "int", "uint8", "byte", "bool", "rune"}
+
+	for _, k := range tyName {
+		if startsWith(p, k) {
+			return k
+		}
+	}
+	return ""
+}
+
+func startsWithTermKw(p string) string {
+	var term = []string{"break", "continue", "fallthrough", "return", "++", "--"}
+
+	for _, k := range term {
+		if startsWith(p, k) {
+			return k
+		}
+	}
+	return ""
+}
+
 func startsWithReserved(p string) string {
 	// reserved words
+	if k := startsWithTypeName(p); k != "" {
+		return k
+	}
+
+	if k := startsWithTermKw(p); k != "" {
+		return k
+	}
+
 	kw := []string{
-		"return", "if", "else", "for", "type", "var", "func", "struct",
-		"break", "continue", "goto", "switch", "case", "default",
+		"if", "else", "for", "type", "var", "func", "struct",
+		"goto", "switch", "case", "default",
 		"true", "false",
-		"nil",
-		"int", "byte", "int64", "uint8", "bool", "rune"}
+		"nil"}
 	// unimplemented:
 	// "chan", "const", "defer", "fallthrough", "interface", "map", "package", "range", "select"
 	// "int32","bool", "byte", "complex64", "complex128", "error",
@@ -351,14 +380,8 @@ func isTermOfProd(cur *Token) bool {
 			cur.Kind == TK_NUM ||
 			cur.Kind == TK_STR ||
 			(cur.Kind == TK_RESERVED &&
-				(cur.Str == "break" ||
-					cur.Str == "continue" ||
-					cur.Str == "fallthrough" ||
-					cur.Str == "return" ||
-					cur.Str == "++" ||
-					cur.Str == "--" ||
-					cur.Str == "int" ||
-					cur.Str == "byte" ||
+				(startsWithTermKw(cur.Str) != "" ||
+					startsWithTypeName(cur.Str) != "" ||
 					strings.Contains(")]}", cur.Str)))
 	}
 	return false

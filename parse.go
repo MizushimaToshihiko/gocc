@@ -226,7 +226,8 @@ func program() *Program {
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
-// basetype = "*"* ("byte" | "int" | struct-decl | typedef-name)
+// basetype = "*"* type
+// type = "byte"| "int16"  | "int" | "int64" | struct-decl | typedef-name |
 func basetype() *Type {
 	// printCurTok()
 	// printCalledFunc()
@@ -243,8 +244,12 @@ func basetype() *Type {
 	var ty *Type
 	if consume("byte") != nil {
 		ty = charType()
+	} else if consume("int16") != nil {
+		ty = shortType()
 	} else if consume("int") != nil {
 		ty = intType()
+	} else if consume("int64") != nil {
+		ty = longType()
 	} else if peek("struct") != nil { // struct type
 		ty = structDecl()
 	} else {
@@ -363,7 +368,7 @@ func readFuncParam() *VarList {
 	return vl
 }
 
-// params = ident ("," ident)*
+// params = param ("," param)*
 func readFuncParams() *VarList {
 	// printCurTok()
 	// printCalledFunc()
@@ -458,8 +463,8 @@ func isTypename() bool {
 	// printCurTok()
 	// printCalledFunc()
 
-	return peek("byte") != nil ||
-		peek("int") != nil ||
+	return peek("byte") != nil || peek("int16") != nil ||
+		peek("int") != nil || peek("int64") != nil ||
 		peek("struct") != nil ||
 		findTyDef(token) != nil
 }
