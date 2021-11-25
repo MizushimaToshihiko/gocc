@@ -226,44 +226,31 @@ func program() *Program {
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
-// basetype = "*"* type
-// type = "byte"| "int16"  | "int" | "int64" | struct-decl | typedef-name |
-func basetype() *Type {
+// type-specifier = builtin-type | struct-decl | typedef-name |
+// builtin-type = "byte"| "int16" | "int" | "int64"
+func typeSpecifier() *Type {
 	// printCurTok()
 	// printCalledFunc()
-
-	nPtr := 0
-	for consume("*") != nil {
-		nPtr++
-	}
 
 	if !isTypename() {
 		panic(errorTok(token, "typename expected"))
 	}
 
-	var ty *Type
 	if consume("byte") != nil {
-		ty = charType()
+		return charType()
 	} else if consume("int16") != nil {
-		ty = shortType()
+		return shortType()
 	} else if consume("int") != nil {
-		ty = intType()
+		return intType()
 	} else if consume("int64") != nil {
-		ty = longType()
+		return longType()
 	} else if peek("struct") != nil { // struct type
-		ty = structDecl()
-	} else {
-		ty = findVar(consumeIdent()).TyDef
+		return structDecl()
 	}
-	if ty == nil {
-		panic("\n" + errorTok(token, "'ty' is nil"))
-	}
-
-	for i := 0; i < nPtr; i++ {
-		ty = pointerTo(ty)
-	}
-	return ty
+	return findVar(consumeIdent()).TyDef
 }
+
+// declarator =
 
 func findBase() (*Type, *Token) {
 	// printCurTok()
@@ -292,6 +279,7 @@ func readArr(base *Type) *Type {
 	return arrayOf(base, int(sz))
 }
 
+// type-prefix = ("[" num "]")*
 func readTypePreffix() *Type {
 	// printCurTok()
 	// printCalledFunc()
@@ -339,7 +327,7 @@ func structDecl() *Type {
 	return ty
 }
 
-// struct-member = ident basetype
+// struct-member = ident type-prefix basetype
 func structMem() *Member {
 	// printCurTok()
 	// printCalledFunc()
@@ -349,7 +337,7 @@ func structMem() *Member {
 	return mem
 }
 
-// param = ident basetype
+// param = ident type-prefix basetype
 // e.g.
 //  x int
 //  x *int
@@ -389,7 +377,7 @@ func readFuncParams() *VarList {
 	return head
 }
 
-// function = "func" ident basetype "(" params? ")" "{" stmt "}"
+// function = "func" ident "(" params? ")" type-prefix basetype "{" stmt "}"
 func function() *Function {
 	// printCurTok()
 	// printCalledFunc()
@@ -417,7 +405,7 @@ func function() *Function {
 	return fn
 }
 
-// global-var = "var" ident ("[" num "]")* basetype
+// global-var = "var" ident type-prefix basetype
 //
 func globalVar() {
 	// printCurTok()
@@ -429,7 +417,7 @@ func globalVar() {
 	pushVar(name, ty, false)
 }
 
-// declaration = "var" ident ("[" num "]")* basetype ("=" expr)
+// declaration = "var" ident type-orefix basetype ("=" expr)
 func declaration() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -490,7 +478,7 @@ func isForClause() bool {
 //      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
 //      | for-stmt
 //      | "{" stmt* "}"
-//      | "type" ident ("[" num "]")* basetype ";"
+//      | "type" ident type-prefix basetype ";"
 //      | declaration
 //      | expr ";"
 // for-stmt = "for" [ condition ] block .
@@ -588,6 +576,7 @@ func expr() *Node {
 	return assign()
 }
 
+// assign = equality ("=" assign)?
 func assign() *Node {
 	// printCurTok()
 	// printCalledFunc()

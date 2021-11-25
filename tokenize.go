@@ -206,7 +206,7 @@ func startsWith(p, q string) bool {
 }
 
 func startsWithTypeName(p string) string {
-	var tyName = []string{"int16", "int64", "int", "uint8", "byte", "bool", "rune"}
+	var tyName = []string{"int16", "int64", "int", "uint8", "byte", "bool", "rune"} // <-順番が大事、intとint16ではint16が先
 
 	for _, k := range tyName {
 		if startsWith(p, k) {

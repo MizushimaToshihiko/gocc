@@ -19,14 +19,16 @@ const (
 	TY_PTR
 	TY_ARRAY
 	TY_STRUCT
+	TY_FUNC
 )
 
 type Type struct {
 	Kind  TypeKind
-	Align int
-	Base  *Type
-	ArrSz int // Array size
-	Mems  *Member
+	Align int     // alignment
+	Base  *Type   // pointer or array
+	ArrSz int     // Array size
+	Mems  *Member // struct
+	RetTy *Type   // function
 }
 
 type Member struct {
@@ -58,6 +60,10 @@ func intType() *Type {
 
 func longType() *Type {
 	return newType(TY_LONG, 8)
+}
+
+func funcType(retTy *Type) *Type {
+	return &Type{Kind: TY_FUNC, Align: 1, RetTy: retTy}
 }
 
 func pointerTo(base *Type) *Type {
