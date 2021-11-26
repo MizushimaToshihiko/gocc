@@ -154,13 +154,13 @@ func pushVar(name string, ty *Type, isLocal bool) *Var {
 	if isLocal {
 		vl = &VarList{Var: v, Next: locals}
 		locals = vl
-	} else {
+	} else if ty.Kind != TY_FUNC {
 		vl = &VarList{Var: v, Next: globals}
 		globals = vl
 	}
 
 	pushScope(name).Var = v
-	return vl.Var
+	return v
 }
 
 func findTyDef(tok *Token) *Type {
@@ -423,7 +423,6 @@ func function() *Function {
 }
 
 // global-var = "var" ident type-prefix basetype
-//
 func globalVar() {
 	// printCurTok()
 	// printCalledFunc()
