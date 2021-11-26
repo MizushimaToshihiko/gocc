@@ -5,6 +5,12 @@ import (
 	"runtime"
 )
 
+func assert(b bool, m string) {
+	if !b {
+		panic(m)
+	}
+}
+
 // for printTokens function, the pointer of the head token
 // stored in 'headTok'.
 var headTok *Token

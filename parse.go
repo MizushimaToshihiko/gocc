@@ -252,11 +252,12 @@ func typeSpecifier() *Type {
 		ty = longType()
 	} else if peek("struct") != nil { // struct type
 		ty = structDecl()
-	} else {
-		ty = findVar(consumeIdent()).TyDef
+	} else if t := consumeIdent(); t != nil {
+		ty = findVar(t).TyDef
 	}
+
 	if ty == nil {
-		panic("\n" + errorTok(token, "'ty' is nil"))
+		ty = voidType()
 	}
 
 	for i := 0; i < nPtr; i++ {
@@ -293,7 +294,7 @@ func readArr(base *Type) *Type {
 	return arrayOf(base, int(sz))
 }
 
-// type-prefix = ("[" num "]")*
+// type-preffix = ("[" num "]")*
 func readTypePreffix() *Type {
 	// printCurTok()
 	// printCalledFunc()
@@ -433,7 +434,7 @@ func globalVar() {
 	pushVar(name, ty, false)
 }
 
-// declaration = "var" ident type-orefix basetype ("=" expr)
+// declaration = "var" ident type-prefix type-specifier ("=" expr)
 func declaration() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -441,8 +442,10 @@ func declaration() *Node {
 	tok := token
 	name := expectIdent()
 	ty := readTypePreffix()
-	v := pushVar(name, ty, true)
 
+	assert(ty.Kind != TY_VOID, "\n"+errorTok(tok, "variable declared void"))
+
+	v := pushVar(name, ty, true)
 	if consume(";") != nil {
 		return newNode(ND_NULL, tok)
 	}

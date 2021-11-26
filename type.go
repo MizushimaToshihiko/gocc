@@ -12,11 +12,12 @@ type errWriter struct {
 }
 
 const (
-	TY_BYTE TypeKind = iota // char type
-	TY_SHORT
-	TY_INT
-	TY_LONG
-	TY_PTR
+	TY_VOID  TypeKind = iota // void type
+	TY_BYTE                  // char type
+	TY_SHORT                 // int16 type
+	TY_INT                   // int32 type
+	TY_LONG                  // int64 type
+	TY_PTR                   // pointer type
 	TY_ARRAY
 	TY_STRUCT
 	TY_FUNC
@@ -44,6 +45,10 @@ func alignTo(n, align int) int {
 
 func newType(kind TypeKind, align int) *Type {
 	return &Type{Kind: kind, Align: align}
+}
+
+func voidType() *Type {
+	return newType(TY_VOID, 1)
 }
 
 func charType() *Type {
@@ -75,6 +80,8 @@ func arrayOf(base *Type, size int) *Type {
 }
 
 func sizeOf(ty *Type) int {
+	assert(ty.Kind != TY_VOID, "invalid void type")
+
 	switch ty.Kind {
 	case TY_BYTE:
 		return 1
@@ -99,9 +106,8 @@ func sizeOf(ty *Type) int {
 }
 
 func findMember(ty *Type, name string) *Member {
-	if ty.Kind != TY_STRUCT {
-		panic("invalid type")
-	}
+	assert(ty.Kind == TY_STRUCT, "invalid type")
+
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
 		if mem.Name == name {
 			return mem
@@ -184,6 +190,9 @@ func (e *errWriter) visit(node *Node) {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
 		}
 		node.Ty = node.Lhs.Ty.Base
+		if node.Ty.Kind == TY_VOID {
+			e.err = fmt.Errorf(errorTok(node.Tok, "dereference a void pointer"))
+		}
 		return
 	case ND_SIZEOF:
 		node.Kind = ND_NUM
