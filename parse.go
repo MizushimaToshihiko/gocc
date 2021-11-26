@@ -227,7 +227,7 @@ func program() *Program {
 }
 
 // type-specifier = "*"* builtin-type | struct-decl | typedef-name |
-// builtin-type = "byte"| "int16" | "int" | "int64"
+// builtin-type = void | "bool" | "byte"| "int16" | "int" | "int64"
 func typeSpecifier() *Type {
 	// printCurTok()
 	// printCalledFunc()
@@ -244,6 +244,8 @@ func typeSpecifier() *Type {
 	var ty *Type
 	if consume("byte") != nil {
 		ty = charType()
+	} else if consume("bool") != nil {
+		ty = boolType()
 	} else if consume("int16") != nil {
 		ty = shortType()
 	} else if consume("int") != nil {
@@ -470,9 +472,9 @@ func isTypename() bool {
 	// printCurTok()
 	// printCalledFunc()
 
-	return peek("byte") != nil || peek("int16") != nil ||
-		peek("int") != nil || peek("int64") != nil ||
-		peek("struct") != nil ||
+	return peek("byte") != nil || peek("bool") != nil ||
+		peek("int16") != nil || peek("int") != nil ||
+		peek("int64") != nil || peek("struct") != nil ||
 		findTyDef(token) != nil
 }
 

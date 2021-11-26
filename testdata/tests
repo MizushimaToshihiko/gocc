@@ -1,11 +1,11 @@
 var g1 int
 var g2 [4]int
 
-func assert(want int, ac int, code *byte) int {
+func assert(want int64, ac int64, code *byte) int {
 	if want == ac {
-		printf("%s => %d\n", code, ac)
+		printf("%s => %ld\n", code, ac)
 	} else {
-		printf("%s => %d expeted but got %d\n", code, want, ac)
+		printf("%s => %ld expeted but got %ld\n", code, want, ac)
 		exit(1)
 	}
 }
@@ -682,6 +682,21 @@ func f141() int {
 // 	return *g1Ptr()
 // }
 
+func f143() bool {
+	var x bool = 0
+	return x
+}
+
+func f144() bool {
+	var x bool = 1
+	return x
+}
+
+func f145() bool {
+	var x bool = 2
+	return x
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -875,6 +890,14 @@ func main() int {
 
 	// I'm not sure.
 	// assert(3, f142(), "return *g1Ptr()")
+
+	assert(0, f143(), "var x bool = 0\nreturn x")
+	assert(1, f144(), "var x bool = 1\nreturn x")
+	assert(1, f145(), "var x bool = 2\nreturn x")
+
+	assert(4, sizeof(0), "sizeof(0)")
+	assert(4294967297, 4294967297, "4294967297")
+	assert(8, sizeof(4294967297), "sizeof(4294967297)")
 
 	printf("OK\n")
 	return 0

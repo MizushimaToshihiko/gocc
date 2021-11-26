@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 type TypeKind int
 
@@ -13,6 +16,7 @@ type errWriter struct {
 
 const (
 	TY_VOID  TypeKind = iota // void type
+	TY_BOOL                  // bool type
 	TY_BYTE                  // char type
 	TY_SHORT                 // int16 type
 	TY_INT                   // int32 type
@@ -51,6 +55,10 @@ func voidType() *Type {
 	return newType(TY_VOID, 1)
 }
 
+func boolType() *Type {
+	return newType(TY_BOOL, 1)
+}
+
 func charType() *Type {
 	return newType(TY_BYTE, 1)
 }
@@ -83,7 +91,7 @@ func sizeOf(ty *Type) int {
 	assert(ty.Kind != TY_VOID, "invalid void type")
 
 	switch ty.Kind {
-	case TY_BYTE:
+	case TY_BYTE, TY_BOOL:
 		return 1
 	case TY_SHORT:
 		return 2
@@ -141,8 +149,15 @@ func (e *errWriter) visit(node *Node) {
 	}
 
 	switch node.Kind {
-	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE, ND_NUM:
+	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE:
 		node.Ty = intType()
+		return
+	case ND_NUM:
+		if node.Val <= int64(math.MaxInt32) {
+			node.Ty = intType()
+			return
+		}
+		node.Ty = longType()
 		return
 	case ND_VAR:
 		node.Ty = node.Var.Ty

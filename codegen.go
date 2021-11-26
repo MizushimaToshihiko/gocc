@@ -6,6 +6,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"math"
 )
 
 type codeWriter struct {
@@ -100,6 +101,12 @@ func (c *codeWriter) store(ty *Type) {
 	c.printf("	pop rdi\n")
 	c.printf("	pop rax\n")
 
+	if ty.Kind == TY_BOOL {
+		c.printf("	cmp rdi, 0\n")
+		c.printf("	setne dil\n")
+		c.printf("	movzb rdi, dil\n")
+	}
+
 	switch sizeOf(ty) {
 	case 1:
 		c.printf("	mov [rax], dil\n")
@@ -125,7 +132,12 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	case ND_NULL:
 		return
 	case ND_NUM:
-		c.printf("	push %d\n", node.Val)
+		if node.Val <= int64(math.MaxInt32) {
+			c.printf("	push %d\n", node.Val)
+		} else {
+			c.printf("	movabs rax, %d\n", node.Val)
+			c.printf("	push rax\n")
+		}
 		return
 	case ND_EXPR_STMT:
 		c.gen(node.Lhs)
