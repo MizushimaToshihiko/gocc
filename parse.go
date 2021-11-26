@@ -57,8 +57,9 @@ const (
 	ND_ADDR                      // 18: unary &
 	ND_DEREF                     // 19: unary *
 	ND_EXPR_STMT                 // 20: expression statement
-	ND_NULL                      // 21: empty statement
-	ND_SIZEOF                    // 22: "sizeof"
+	ND_CAST                      // 21: type cast
+	ND_NULL                      // 22: empty statement
+	ND_SIZEOF                    // 23: "sizeof"
 )
 
 // define AST node
@@ -667,7 +668,7 @@ func add() *Node {
 	}
 }
 
-// mul = unary ("*" unary | "/" unary)*
+// mul = cast ("*" cast | "/" cast)*
 func mul() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -676,12 +677,24 @@ func mul() *Node {
 
 	for {
 		if t := consume("*"); t != nil {
-			node = newBinary(ND_MUL, node, unary(), t)
+			node = newBinary(ND_MUL, node, cast(), t)
 		} else if t := consume("/"); t != nil {
-			node = newBinary(ND_DIV, node, unary(), t)
+			node = newBinary(ND_DIV, node, cast(), t)
 		} else {
 			return node
 		}
+	}
+}
+
+// cast = type-name "(" cast | unary ")"
+func cast() *Node {
+
+	if isTypename() {
+		ty := readTypePreffix()
+		expect("(")
+		node := newUnary(ND_CAST, cast(), token)
+		node.Ty = ty
+		return node
 	}
 }
 
