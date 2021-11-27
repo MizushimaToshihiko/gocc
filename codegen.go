@@ -123,6 +123,29 @@ func (c *codeWriter) store(ty *Type) {
 	c.printf("	push rdi\n")
 }
 
+func (c *codeWriter) trancate(ty *Type) {
+	if c.err != nil {
+		return
+	}
+
+	c.printf("	pop rax\n")
+
+	if ty.Kind == TY_BOOL {
+		c.printf("	cmp rax, 0\n")
+		c.printf("	setne al\n")
+	}
+
+	switch sizeOf(ty) {
+	case 1:
+		c.printf("	movsx rax, al\n")
+	case 2:
+		c.printf("	movsx rax, ax\n")
+	case 4:
+		c.printf("	movsxd rax, eax\n")
+	}
+	c.printf("	push rax\n")
+}
+
 func (c *codeWriter) gen(node *Node) (err error) {
 	if c.err != nil {
 		return
@@ -256,6 +279,10 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.gen(node.Lhs)
 		c.printf("	pop rax\n")
 		c.printf("	jmp .Lreturn.%s\n", funcname)
+		return
+	case ND_CAST:
+		c.gen(node.Lhs)
+		c.trancate(node.Ty)
 		return
 	}
 

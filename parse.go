@@ -673,7 +673,7 @@ func mul() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := unary()
+	node := cast()
 
 	for {
 		if t := consume("*"); t != nil {
@@ -686,7 +686,7 @@ func mul() *Node {
 	}
 }
 
-// cast = type-name "(" cast | unary ")"
+// cast = type-name "(" cast ")" | unary
 func cast() *Node {
 
 	if isTypename() {
@@ -694,11 +694,14 @@ func cast() *Node {
 		expect("(")
 		node := newUnary(ND_CAST, cast(), token)
 		node.Ty = ty
+		expect(")")
 		return node
 	}
+
+	return unary()
 }
 
-// unary   = ("+" | "-" | "*" | "&")? unary
+// unary   = ("+" | "-" | "*" | "&")? cast
 //         | "sizeof" unary
 //         | postfix
 func unary() *Node {
@@ -706,19 +709,19 @@ func unary() *Node {
 	// printCalledFunc()
 
 	if t := consumeSizeof(); t != nil {
-		return newUnary(ND_SIZEOF, unary(), t)
+		return newUnary(ND_SIZEOF, cast(), t)
 	}
 	if t := consume("+"); t != nil {
-		return unary()
+		return cast()
 	}
 	if t := consume("-"); t != nil {
-		return newBinary(ND_SUB, newNum(0, t), unary(), t)
+		return newBinary(ND_SUB, newNum(0, t), cast(), t)
 	}
 	if t := consume("&"); t != nil {
-		return newUnary(ND_ADDR, unary(), t)
+		return newUnary(ND_ADDR, cast(), t)
 	}
 	if t := consume("*"); t != nil {
-		return newUnary(ND_DEREF, unary(), t)
+		return newUnary(ND_DEREF, cast(), t)
 	}
 	return postfix()
 }

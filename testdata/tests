@@ -899,6 +899,9 @@ func main() int {
 	assert(4294967297, 4294967297, "4294967297")
 	assert(8, sizeof(4294967297), "sizeof(4294967297)")
 
+	assert(131585, int(8590066177), "int(8590066177)")
+	assert(513, int16(8590066177), "int16(8590066177)")
+	
 	printf("OK\n")
 	return 0
 }
