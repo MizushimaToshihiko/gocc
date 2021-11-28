@@ -914,7 +914,9 @@ func main() int {
 	assert(0, bool(byte(256)), "bool(byte(256))")
 	assert(1, int64(1), "int64(1)")
 
-	assert(97, 'a', "'a'")
+  assert(97, 'a', "'a'")
+  assert(10, '\n', "\'\\n\'")
+
 	printf("OK\n")
 	return 0
 }
