@@ -437,21 +437,26 @@ func globalVar() {
 	pushVar(name, ty, false)
 }
 
-// declaration = "var" ident type-prefix type-specifier ("=" expr)
+// declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl(unimplemented)
+// VarDecl = "var" ident type-prefix type-specifier ("=" expr)
+// VarSpec = ident-list (type-preffix type-specifier [ "=" expr-list ] | "=" expr-list)
+// ShortVarDecl = "var" ident "=" expr => unimplemented
+//              | ident ":=" expr => unimplemented
 func declaration() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
+	expect("var")
+	var v *Var
 	tok := token
 	name := expectIdent()
 	ty := readTypePreffix()
-
 	assert(ty.Kind != TY_VOID, "\n"+errorTok(tok, "variable declared void"))
-
-	v := pushVar(name, ty, true)
+	v = pushVar(name, ty, true)
 	if consume(";") != nil {
 		return newNode(ND_NULL, tok)
 	}
+	// ここでShortVarDecl("var" ident = expr)の場合はty==nilでvがpushVarされていない状態 => unimplemented
 
 	expect("=")
 	lhs := newVar(v, tok)
@@ -459,6 +464,8 @@ func declaration() *Node {
 	expect(";")
 	node := newBinary(ND_ASSIGN, lhs, rhs, tok)
 	return newUnary(ND_EXPR_STMT, node, tok)
+
+	// ShortVarDecl(ident ":=" expr)の場合=> unimplemented
 }
 
 func readExprStmt() *Node {
@@ -499,11 +506,13 @@ func isForClause() bool {
 // stmt = "return" expr ";"
 //      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
 //      | for-stmt
+//      | for-clause
 //      | "{" stmt* "}"
 //      | "type" ident type-prefix basetype ";"
 //      | declaration
 //      | expr ";"
 // for-stmt = "for" [ condition ] block .
+// for-clause = "for" (expr? ";" | declaration) condition ";" expr? block
 // condition = expr .
 // block = "{" stmt-list "};" .
 // stmt-list = { stmt ";" } .
@@ -528,7 +537,7 @@ func stmt() *Node {
 	}
 
 	if t := consume("for"); t != nil {
-		if !isForClause() {
+		if !isForClause() { // for for-stmt
 			node := newNode(ND_WHILE, t)
 			if peek("{") == nil {
 				node.Cond = expr()
@@ -539,7 +548,7 @@ func stmt() *Node {
 			node.Then = stmt()
 			return node
 
-		} else {
+		} else { // for for-clause
 			node := newNode(ND_FOR, t)
 			if consume(";") == nil {
 				node.Init = readExprStmt()
@@ -573,7 +582,7 @@ func stmt() *Node {
 		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
 	}
 
-	if consume("var") != nil {
+	if peek("var") != nil {
 		return declaration()
 	}
 

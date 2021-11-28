@@ -704,6 +704,10 @@ func f145() bool {
 // 	return *int(*y)
 // }
 
+func charFn() byte {
+	return 257
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -917,6 +921,7 @@ func main() int {
   assert(97, 'a', "'a'")
   assert(10, '\n', "\'\\n\'")
 
+	assert(1, charFn(), "charFn()")
 	printf("OK\n")
 	return 0
 }

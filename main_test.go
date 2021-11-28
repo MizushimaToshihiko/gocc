@@ -152,7 +152,9 @@ type testcase struct {
 
 func TestCompile(t *testing.T) {
 
-	asm, err := os.Create("testdata/asm.s")
+	var asm *os.File
+	var err error
+	asm, err = os.Create("testdata/asm.s")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,11 +164,12 @@ func TestCompile(t *testing.T) {
 		}
 	}()
 
-	if err := compile("testdata/tests", asm); err != nil {
+	if err = compile("testdata/tests", asm); err != nil {
 		t.Fatal(err)
 	}
 
-	b, err := exec.Command(
+	var b []byte
+	b, err = exec.Command(
 		"gcc",
 		"-static",
 		"-g",
