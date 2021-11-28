@@ -60,6 +60,7 @@ const (
 	ND_CAST                      // 21: type cast
 	ND_NULL                      // 22: empty statement
 	ND_SIZEOF                    // 23: "sizeof"
+	ND_COMMA                     // 24: comma
 )
 
 // define AST node
@@ -447,23 +448,53 @@ func declaration() *Node {
 	// printCalledFunc()
 
 	expect("var")
-	var v *Var
 	tok := token
-	name := expectIdent()
+
+	var nameSl []string
+	nameSl = append(nameSl, expectIdent())
+	for consume(",") != nil {
+		nameSl = append(nameSl, expectIdent())
+	}
 	ty := readTypePreffix()
 	assert(ty.Kind != TY_VOID, "\n"+errorTok(tok, "variable declared void"))
-	v = pushVar(name, ty, true)
+	var varSl []*Var
+	for _, n := range nameSl {
+		varSl = append(varSl, pushVar(n, ty, true))
+	}
+	assert(len(varSl) == len(nameSl), "number of vars and identfiers missmatch")
 	if consume(";") != nil {
 		return newNode(ND_NULL, tok)
 	}
 	// ここでShortVarDecl("var" ident = expr)の場合はty==nilでvがpushVarされていない状態 => unimplemented
 
 	expect("=")
-	lhs := newVar(v, tok)
-	rhs := expr()
+
+	head := &Node{}
+	cur := head
+
+	numCMMA := 0
+	for _, v := range varSl {
+		numCMMA++
+		lhs := newVar(v, tok)
+		rhs := expr()
+		node := newBinary(ND_ASSIGN, lhs, rhs, tok)
+		cur.Next = newUnary(ND_EXPR_STMT, node, tok)
+		if consume(",") != nil {
+			cur = cur.Next
+			continue
+		}
+		break
+	}
+
+	if numCMMA != len(varSl) {
+		panic("\n" + errorTok(tok,
+			"assignment missmatch: %d variabels but %d values",
+			len(varSl),
+			numCMMA))
+	}
+
 	expect(";")
-	node := newBinary(ND_ASSIGN, lhs, rhs, tok)
-	return newUnary(ND_EXPR_STMT, node, tok)
+	return head.Next
 
 	// ShortVarDecl(ident ":=" expr)の場合=> unimplemented
 }

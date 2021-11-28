@@ -708,6 +708,11 @@ func charFn() byte {
 	return 257
 }
 
+func f147() int {
+	var x, y, z, a, b, c int = 1, 2, 3, 4, 5, 6
+	return x + y + z + a + b + c
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -922,6 +927,9 @@ func main() int {
   assert(10, '\n', "\'\\n\'")
 
 	assert(1, charFn(), "charFn()")
+
+	assert(21, f147(), "var x,y,z,a,b,c int = 1,2,3,4,5,6\nreturn x+y+z+a+b+c")
+
 	printf("OK\n")
 	return 0
 }
