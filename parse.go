@@ -477,8 +477,8 @@ func declaration() *Node {
 		numCMMA++
 		lhs := newVar(v, tok)
 		rhs := expr()
-		node := newBinary(ND_ASSIGN, lhs, rhs, tok)
-		cur.Next = newUnary(ND_EXPR_STMT, node, tok)
+		cur.Next = newBinary(ND_ASSIGN, lhs, rhs, tok)
+		// cur.Next = newUnary(ND_EXPR_STMT, node, tok)
 		if consume(",") != nil {
 			cur = cur.Next
 			continue
