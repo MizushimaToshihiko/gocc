@@ -155,9 +155,9 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	case ND_NULL:
 		return
 	case ND_NUM:
-		if node.Val <= int64(math.MaxInt32) {
+		if node.Val <= int64(math.MaxInt32) { // node.Val is int32
 			c.printf("	push %d\n", node.Val)
-		} else {
+		} else { // node.Val is int64
 			c.printf("	movabs rax, %d\n", node.Val)
 			c.printf("	push rax\n")
 		}

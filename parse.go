@@ -478,6 +478,9 @@ func declaration() *Node {
 		lhs := newVar(v, tok)
 		rhs := expr()
 		cur.Next = newBinary(ND_ASSIGN, lhs, rhs, tok)
+		// fmt.Printf("token: %#v\n", token)
+		fmt.Printf("lhs: %#v\nlhs.Var: %#v\nlhs.Ty: %#v\n\n", lhs, lhs.Var, lhs.Var.Ty)
+		fmt.Printf("rhs: %#v\n\n", rhs)
 		// cur.Next = newUnary(ND_EXPR_STMT, node, tok)
 		if consume(",") != nil {
 			cur = cur.Next
