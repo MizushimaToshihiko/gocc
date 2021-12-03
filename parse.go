@@ -450,18 +450,11 @@ func declaration() *Node {
 	expect("var")
 	tok := token
 
-	var nameSl []string
-	nameSl = append(nameSl, expectIdent())
-	for consume(",") != nil {
-		nameSl = append(nameSl, expectIdent())
-	}
+	name := expectIdent()
 	ty := readTypePreffix()
 	assert(ty.Kind != TY_VOID, "\n"+errorTok(tok, "variable declared void"))
-	var varSl []*Var
-	for _, n := range nameSl {
-		varSl = append(varSl, pushVar(n, ty, true))
-	}
-	assert(len(varSl) == len(nameSl), "number of vars and identfiers missmatch")
+
+	v := pushVar(name, ty, true)
 	if consume(";") != nil {
 		return newNode(ND_NULL, tok)
 	}
@@ -469,37 +462,12 @@ func declaration() *Node {
 
 	expect("=")
 
-	head := &Node{}
-	cur := head
-
-	numCMMA := 0
-	for _, v := range varSl {
-		numCMMA++
-		lhs := newVar(v, tok)
-		rhs := expr()
-		cur.Next = newBinary(ND_ASSIGN, lhs, rhs, tok)
-		// fmt.Printf("token: %#v\n", token)
-		fmt.Printf("lhs: %#v\nlhs.Var: %#v\nlhs.Ty: %#v\n\n", lhs, lhs.Var, lhs.Var.Ty)
-		fmt.Printf("rhs: %#v\n\n", rhs)
-		// cur.Next = newUnary(ND_EXPR_STMT, node, tok)
-		if consume(",") != nil {
-			cur = cur.Next
-			continue
-		}
-		break
-	}
-
-	if numCMMA != len(varSl) {
-		panic("\n" + errorTok(tok,
-			"assignment missmatch: %d variabels but %d values",
-			len(varSl),
-			numCMMA))
-	}
+	lhs := newVar(v, tok)
+	rhs := expr()
+	node := newBinary(ND_ASSIGN, lhs, rhs, tok)
 
 	expect(";")
-	return head.Next
-
-	// ShortVarDecl(ident ":=" expr)の場合=> unimplemented
+	return newUnary(ND_EXPR_STMT, node, tok)
 }
 
 func readExprStmt() *Node {
