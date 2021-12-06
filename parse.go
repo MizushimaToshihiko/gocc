@@ -61,6 +61,8 @@ const (
 	ND_NULL                      // 22: empty statement
 	ND_SIZEOF                    // 23: "sizeof"
 	ND_COMMA                     // 24: comma
+	ND_INC                       // 25: post ++
+	ND_DEC                       // 26: post --
 )
 
 // define AST node
@@ -596,6 +598,27 @@ func stmt() *Node {
 		return newNode(ND_NULL, t)
 	}
 
+	tok := token
+	if consumeIdent() != nil {
+		if t := consume("++"); t != nil {
+			token = tok
+			node := postfix()
+			t = consume("++")
+			node = newUnary(ND_INC, node, t)
+			expect(";")
+			return node
+		}
+		if t := consume("--"); t != nil {
+			token = tok
+			node := postfix()
+			t = consume("--")
+			node = newUnary(ND_DEC, node, t)
+			expect(";")
+			return node
+		}
+		token = tok
+	}
+
 	node := readExprStmt()
 	expect(";")
 	return node
@@ -737,7 +760,7 @@ func unary() *Node {
 	return postfix()
 }
 
-// postfix = primary ("[" expr "]" | "." ident)*
+// postfix = primary ("[" expr "]" | "." ident | "++" | "--")*
 func postfix() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -756,10 +779,9 @@ func postfix() *Node {
 		if t := consume("."); t != nil {
 			node = newUnary(ND_MEMBER, node, t)
 			node.MemName = expectIdent()
-			// fmt.Printf("postfix(): node: %#v\n%s\n\n", node, node.Tok.Str)
-			// fmt.Printf("postfix(): node.Lhs: %#v\n%s\n\n", node.Lhs, node.Lhs.Tok.Str)
 			continue
 		}
+
 		return node
 	}
 }

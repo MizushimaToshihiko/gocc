@@ -146,6 +146,28 @@ func (c *codeWriter) trancate(ty *Type) {
 	c.printf("	push rax\n")
 }
 
+func (c *codeWriter) inc(ty *Type) {
+	c.printf("	pop rax\n")
+	if ty.Base != nil {
+		c.printf("	add rax, %d\n", sizeOf(ty.Base))
+		c.printf("	push rax\n")
+		return
+	}
+	c.printf("	add rax, 1\n")
+	c.printf("	push rax\n")
+}
+
+func (c *codeWriter) dec(ty *Type) {
+	c.printf("	pop rax\n")
+	if ty.Base != nil {
+		c.printf("	sub rax, %d\n", sizeOf(ty.Base))
+		c.printf("	push rax\n")
+		return
+	}
+	c.printf("	sub rax, 1\n")
+	c.printf("	push rax\n")
+}
+
 func (c *codeWriter) gen(node *Node) (err error) {
 	if c.err != nil {
 		return
@@ -176,6 +198,22 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.genLval(node.Lhs)
 		c.gen(node.Rhs)
 		c.store(node.Ty)
+		return
+	case ND_INC:
+		c.genLval(node.Lhs)
+		c.printf("	push [rsp]\n")
+		c.load(node.Ty)
+		c.inc(node.Ty)
+		c.store(node.Ty)
+		c.dec(node.Ty)
+		return
+	case ND_DEC:
+		c.genLval(node.Lhs)
+		c.printf("	push [rsp]\n")
+		c.load(node.Ty)
+		c.dec(node.Ty)
+		c.store(node.Ty)
+		c.inc(node.Ty)
 		return
 	case ND_ADDR:
 		c.genAddr(node.Lhs)

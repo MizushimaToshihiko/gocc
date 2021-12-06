@@ -735,6 +735,18 @@ func charFn() byte {
 // 	return x + y + z + a + b + c
 // }
 
+func f149() int {
+	var i int = 2
+	i++
+	return i
+}
+
+func f150() int {
+	var i int = 2
+	i--
+	return i
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -953,6 +965,9 @@ func main() int {
 	// I will postpone it.
 	// assert(21, f148(), "var x int\nvar y int\nvar z int\nvar a int\nvar b int\nvar c int\nreturn  x+y+z+a+b+c")
 	// assert(21, f147(), "var x,y,z,a,b,c int = 1,2,3,4,5,6\nreturn x+y+z+a+b+c")
+
+	assert(3, f149(), "f149:\nvar i int = 2\ni++\nreturn i")
+	assert(1, f150(), "f150:\nvar i int = 2\ni--\nreturn i")
 
 	printf("OK\n")
 	return 0
