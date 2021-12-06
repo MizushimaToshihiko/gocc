@@ -63,6 +63,10 @@ const (
 	ND_COMMA                     // 24: comma
 	ND_INC                       // 25: post ++
 	ND_DEC                       // 26: post --
+	ND_A_ADD                     // 27: +=
+	ND_A_SUB                     // 28: -=
+	ND_A_MUL                     // 29: *=
+	ND_A_DIV                     // 30: /=
 )
 
 // define AST node
@@ -598,20 +602,17 @@ func stmt() *Node {
 		return newNode(ND_NULL, t)
 	}
 
+	// post increment, or post decrement
 	tok := token
 	if consumeIdent() != nil {
+		token = tok
+		node := postfix()
 		if t := consume("++"); t != nil {
-			token = tok
-			node := postfix()
-			t = consume("++")
 			node = newUnary(ND_INC, node, t)
 			expect(";")
 			return node
 		}
 		if t := consume("--"); t != nil {
-			token = tok
-			node := postfix()
-			t = consume("--")
 			node = newUnary(ND_DEC, node, t)
 			expect(";")
 			return node
@@ -632,7 +633,8 @@ func expr() *Node {
 	return assign()
 }
 
-// assign = equality ("=" assign)?
+// assign = equality (assign-op assign)?
+// assign-op = "=" | "+=" | "-=" | "*=" | "/="
 func assign() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -640,6 +642,14 @@ func assign() *Node {
 	node := equality()
 	if t := consume("="); t != nil {
 		node = newBinary(ND_ASSIGN, node, assign(), t)
+	} else if t := consume("+="); t != nil {
+		node = newBinary(ND_A_ADD, node, assign(), t)
+	} else if t := consume("-="); t != nil {
+		node = newBinary(ND_A_SUB, node, assign(), t)
+	} else if t := consume("*="); t != nil {
+		node = newBinary(ND_A_MUL, node, assign(), t)
+	} else if t := consume("/="); t != nil {
+		node = newBinary(ND_A_DIV, node, assign(), t)
 	}
 	return node
 }
@@ -654,7 +664,7 @@ func equality() *Node {
 	for {
 		if t := consume("=="); t != nil {
 			node = newBinary(ND_EQ, node, relational(), t)
-		} else if consume("!=") != nil {
+		} else if t := consume("!="); t != nil {
 			node = newBinary(ND_NE, node, relational(), t)
 		} else {
 			return node

@@ -3,9 +3,9 @@ var g2 [4]int
 
 func assert(want int64, ac int64, code *byte) int {
 	if want == ac {
-		printf("%s => %ld\n", code, ac)
+		printf("\n%s => %ld\n", code, ac)
 	} else {
-		printf("%s => %ld expeted but got %ld\n", code, want, ac)
+		printf("\n%s => %ld expeted but got %ld\n", code, want, ac)
 		exit(1)
 	}
 }
@@ -747,6 +747,71 @@ func f150() int {
 	return i
 }
 
+func f151() int {
+	var a [3]int
+	a[0]=0
+	a[1]=1
+	a[2]=2
+	a[0]++
+	a[1]--
+	a[2]--
+	return a[0]+a[1]+a[2]
+}
+
+func f152() int {
+	type x struct {
+		y x114
+	}
+	var z [3]x
+	z[0].y.a.b = 6
+	z[0].y.a.b++
+	return z[0].y.a.b
+}
+
+func f153() int {
+	var i int = 2
+	i += 5
+	return i
+}
+
+func f154() int {
+	var i int = 2
+	return i+=5
+}
+
+func f155() int {
+	var i int=5
+	i-=2
+	return i
+}
+
+func f156() int {
+	var i int=5
+	return i-=2
+}
+
+func f157() int {
+	var i int=3
+	i*=2
+	return i
+}
+
+func f158() int {
+	var i int=3
+	return i*=2
+}
+
+func f159() int {
+	var i int=6
+	i/=2
+	return i
+}
+
+func f160() int {
+	var i int=6
+	return i/=2
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -968,8 +1033,19 @@ func main() int {
 
 	assert(3, f149(), "f149:\nvar i int = 2\ni++\nreturn i")
 	assert(1, f150(), "f150:\nvar i int = 2\ni--\nreturn i")
+	assert(2, f151(), "f151:\nvar a [3]int\na[0]=0\na[1]=1\na[2]=2\na[0]++\na[1]--\na[2]--\nreturn a[0]+a[1]+a[2]")
+	assert(7, f152(), "f152:\ntype x struct {\n\ty x114\n}\nvar z [3]x\nz[0].y.a.b = 6\nz[0].y.a.b++\nreturn z[0].y.a.b")
 
-	printf("OK\n")
+	assert(7, f153(), "f153:\nvar i int=2\ni+=5\nreturn i")
+	assert(7, f154(), "f154:\nvar i int=2\nreturn i+=5")
+	assert(3, f155(), "f155:\nvar i int=5\ni-=2\nreturn i")
+	assert(3, f156(), "f156:\nvar i int=5\nreturn i-=2")
+	assert(6, f157(), "f157:\nvar i int=3\ni*=2\nreturn i")
+	assert(6, f158(), "f158:\nvar i int=3\nreturn i*=2")
+	assert(3, f159(), "f159:\nvar i int=6\ni/=2\nreturn i")
+	assert(3, f160(), "f160:\nvar i int=6\nreturn i/=2")
+
+	printf("\nOK\n")
 	return 0
 }
 
