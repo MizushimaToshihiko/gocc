@@ -67,6 +67,7 @@ const (
 	ND_A_SUB                     // 28: -=
 	ND_A_MUL                     // 29: *=
 	ND_A_DIV                     // 30: /=
+	ND_NOT                       // 31: !
 )
 
 // define AST node
@@ -745,7 +746,7 @@ func cast() *Node {
 	return unary()
 }
 
-// unary   = ("+" | "-" | "*" | "&")? cast
+// unary   = ("+" | "-" | "*" | "&" | "!")? cast
 //         | "sizeof" unary
 //         | postfix
 func unary() *Node {
@@ -766,6 +767,9 @@ func unary() *Node {
 	}
 	if t := consume("*"); t != nil {
 		return newUnary(ND_DEREF, cast(), t)
+	}
+	if t := consume("!"); t != nil {
+		return newUnary(ND_NOT, cast(), t)
 	}
 	return postfix()
 }

@@ -1045,6 +1045,10 @@ func main() int {
 	assert(3, f159(), "f159:\nvar i int=6\ni/=2\nreturn i")
 	assert(3, f160(), "f160:\nvar i int=6\nreturn i/=2")
 
+	assert(0, !1, "!1")
+	assert(0, !2, "!2")
+	assert(1, !0, "!0")
+
 	printf("\nOK\n")
 	return 0
 }
