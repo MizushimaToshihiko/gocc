@@ -72,6 +72,8 @@ const (
 	ND_BITAND                    // 33: &
 	ND_BITOR                     // 34: |
 	ND_BITXOR                    // 35: ^
+	ND_LOGAND                    // 36: &&
+	ND_LOGOR                     // 37: ||
 )
 
 // define AST node
@@ -644,7 +646,7 @@ func assign() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := bitor()
+	node := logor()
 	if t := consume("="); t != nil {
 		node = newBinary(ND_ASSIGN, node, assign(), t)
 	} else if t := consume("+="); t != nil {
@@ -655,6 +657,28 @@ func assign() *Node {
 		node = newBinary(ND_A_MUL, node, assign(), t)
 	} else if t := consume("/="); t != nil {
 		node = newBinary(ND_A_DIV, node, assign(), t)
+	}
+	return node
+}
+
+// logor = logand ("||" logand)*
+func logor() *Node {
+	node := logand()
+	t := consume("||")
+	for t != nil {
+		node = newBinary(ND_LOGOR, node, logand(), t)
+		t = consume("||")
+	}
+	return node
+}
+
+// logand = bitor ("&&" bitor)*
+func logand() *Node {
+	node := bitor()
+	t := consume("&&")
+	for t != nil {
+		node = newBinary(ND_LOGAND, node, bitor(), t)
+		t = consume("&&")
 	}
 	return node
 }

@@ -267,6 +267,40 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.printf("	not rax\n")
 		c.printf("	push rax\n")
 		return
+	case ND_LOGAND:
+		seq := labelseq
+		labelseq++
+		c.gen(node.Lhs)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	je  .Lfalse%d\n", seq)
+		c.gen(node.Rhs)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	je  .Lfalse%d\n", seq)
+		c.printf("	push 1\n")
+		c.printf("	jmp  .Lend%d\n", seq)
+		c.printf(".Lfalse%d:\n", seq)
+		c.printf("	push 0\n")
+		c.printf(".Lend%d:\n", seq)
+		return
+	case ND_LOGOR:
+		seq := labelseq
+		labelseq++
+		c.gen(node.Lhs)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	jne  .Ltrue%d\n", seq)
+		c.gen(node.Rhs)
+		c.printf("	pop rax\n")
+		c.printf("	cmp rax, 0\n")
+		c.printf("	jne  .Ltrue%d\n", seq)
+		c.printf("	push 0\n")
+		c.printf("	jmp  .Lend%d\n", seq)
+		c.printf(".Ltrue%d:\n", seq)
+		c.printf("	push 1\n")
+		c.printf(".Lend%d:\n", seq)
+		return
 	case ND_IF:
 		seq := labelseq
 		labelseq++

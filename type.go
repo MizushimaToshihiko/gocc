@@ -149,7 +149,18 @@ func (e *errWriter) visit(node *Node) {
 	}
 
 	switch node.Kind {
-	case ND_MUL, ND_DIV, ND_BITAND, ND_BITOR, ND_BITXOR, ND_EQ, ND_NE, ND_LT, ND_LE, ND_NOT:
+	case ND_MUL,
+		ND_DIV,
+		ND_BITAND,
+		ND_BITOR,
+		ND_BITXOR,
+		ND_EQ,
+		ND_NE,
+		ND_LT,
+		ND_LE,
+		ND_NOT,
+		ND_LOGOR,
+		ND_LOGAND:
 		node.Ty = intType()
 		return
 	case ND_NUM:
