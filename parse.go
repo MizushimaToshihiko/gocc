@@ -74,6 +74,7 @@ const (
 	ND_BITXOR                    // 35: ^
 	ND_LOGAND                    // 36: &&
 	ND_LOGOR                     // 37: ||
+	ND_BREAK                     // 38: "break"
 )
 
 // define AST node
@@ -595,6 +596,11 @@ func stmt() *Node {
 
 		consume(";")
 		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
+	}
+
+	if t := consume("break"); t != nil {
+		expect(";")
+		return newNode(ND_BREAK, t)
 	}
 
 	if peek("var") != nil {
