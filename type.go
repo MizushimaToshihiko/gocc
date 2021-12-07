@@ -149,7 +149,7 @@ func (e *errWriter) visit(node *Node) {
 	}
 
 	switch node.Kind {
-	case ND_MUL, ND_DIV, ND_EQ, ND_NE, ND_LT, ND_LE, ND_NOT:
+	case ND_MUL, ND_DIV, ND_BITAND, ND_BITOR, ND_BITXOR, ND_EQ, ND_NE, ND_LT, ND_LE, ND_NOT:
 		node.Ty = intType()
 		return
 	case ND_NUM:
@@ -179,7 +179,7 @@ func (e *errWriter) visit(node *Node) {
 		}
 		node.Ty = node.Lhs.Ty
 		return
-	case ND_ASSIGN, ND_INC, ND_DEC, ND_A_ADD, ND_A_SUB, ND_A_MUL, ND_A_DIV:
+	case ND_ASSIGN, ND_INC, ND_DEC, ND_A_ADD, ND_A_SUB, ND_A_MUL, ND_A_DIV, ND_BITNOT:
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_MEMBER:

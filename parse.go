@@ -68,6 +68,10 @@ const (
 	ND_A_MUL                     // 29: *=
 	ND_A_DIV                     // 30: /=
 	ND_NOT                       // 31: !
+	ND_BITNOT                    // 32: unary ^
+	ND_BITAND                    // 33: &
+	ND_BITOR                     // 34: |
+	ND_BITXOR                    // 35: ^
 )
 
 // define AST node
@@ -634,13 +638,13 @@ func expr() *Node {
 	return assign()
 }
 
-// assign = equality (assign-op assign)?
+// assign = bitor (assign-op assign)?
 // assign-op = "=" | "+=" | "-=" | "*=" | "/="
 func assign() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := equality()
+	node := bitor()
 	if t := consume("="); t != nil {
 		node = newBinary(ND_ASSIGN, node, assign(), t)
 	} else if t := consume("+="); t != nil {
@@ -651,6 +655,39 @@ func assign() *Node {
 		node = newBinary(ND_A_MUL, node, assign(), t)
 	} else if t := consume("/="); t != nil {
 		node = newBinary(ND_A_DIV, node, assign(), t)
+	}
+	return node
+}
+
+// bitor = bitxor ("|" bitxor)*
+func bitor() *Node {
+	node := bitxor()
+	t := consume("|")
+	for t != nil {
+		node = newBinary(ND_BITOR, node, bitxor(), t)
+		t = consume("|")
+	}
+	return node
+}
+
+// bitxor = bitand ("^" bitand)*
+func bitxor() *Node {
+	node := bitand()
+	t := consume("^")
+	for t != nil {
+		node = newBinary(ND_BITXOR, node, bitxor(), t)
+		t = consume("^")
+	}
+	return node
+}
+
+// bitand = equality ("&" equality)*
+func bitand() *Node {
+	node := equality()
+	t := consume("&")
+	for t != nil {
+		node = newBinary(ND_BITAND, node, equality(), t)
+		t = consume("&")
 	}
 	return node
 }
@@ -770,6 +807,9 @@ func unary() *Node {
 	}
 	if t := consume("!"); t != nil {
 		return newUnary(ND_NOT, cast(), t)
+	}
+	if t := consume("^"); t != nil {
+		return newUnary(ND_BITNOT, cast(), t)
 	}
 	return postfix()
 }
