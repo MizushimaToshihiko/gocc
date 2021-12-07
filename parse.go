@@ -615,24 +615,6 @@ func stmt() *Node {
 		return newNode(ND_NULL, t)
 	}
 
-	// post increment, or post decrement
-	tok := token
-	if consumeIdent() != nil {
-		token = tok
-		node := postfix()
-		if t := consume("++"); t != nil {
-			node = newUnary(ND_INC, node, t)
-			expect(";")
-			return node
-		}
-		if t := consume("--"); t != nil {
-			node = newUnary(ND_DEC, node, t)
-			expect(";")
-			return node
-		}
-		token = tok
-	}
-
 	node := readExprStmt()
 	expect(";")
 	return node
@@ -863,6 +845,16 @@ func postfix() *Node {
 		if t := consume("."); t != nil {
 			node = newUnary(ND_MEMBER, node, t)
 			node.MemName = expectIdent()
+			continue
+		}
+
+		if t := consume("++"); t != nil {
+			node = newUnary(ND_INC, node, t)
+			continue
+		}
+
+		if t := consume("--"); t != nil {
+			node = newUnary(ND_DEC, node, t)
 			continue
 		}
 
