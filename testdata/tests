@@ -1086,7 +1086,7 @@ func main() int {
   assert(0, (2-2)&&5, "(2-2)&&5")
   assert(1, 1&&5, "1&&5")
 
-	assert(3, f161(), "")
+	assert(3, f161(), "f161:\nvar i int=0\nfor ;i<10;i++{\n\tif i == 3 {\n\t\tbreak\n\t}\n}\nreturn i")
 
 	printf("\nOK\n")
 	return 0

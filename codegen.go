@@ -362,7 +362,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 			c.gen(node.Inc)
 		}
 		c.printf("	jmp .Lbegin%d\n", seq)
-		c.printf(".L.beak.%d:\n", seq)
+		c.printf(".L.break.%d:\n", seq)
 
 		brkseq = brk
 		return
