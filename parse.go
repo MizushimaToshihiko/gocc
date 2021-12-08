@@ -269,11 +269,6 @@ func typeSpecifier() *Type {
 		nPtr++
 	}
 
-	if !isTypename() {
-		// panic(errorTok(token, "typename expected"))
-		return voidType()
-	}
-
 	var ty *Type
 	if consume("byte") != nil {
 		ty = charType()
