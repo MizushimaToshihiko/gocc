@@ -391,6 +391,13 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		}
 		c.printf("	jmp .L.continue.%d\n", contseq)
 		return
+	case ND_GOTO:
+		c.printf("	jmp .L.label.%s.%s\n", funcname, node.LblName)
+		return
+	case ND_LABEL:
+		c.printf(".L.label.%s.%s:\n", funcname, node.LblName)
+		c.gen(node.Lhs)
+		return
 	case ND_FUNCALL:
 		nargs := 0
 		for arg := node.Args; arg != nil; arg = arg.Next {

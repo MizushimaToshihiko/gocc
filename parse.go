@@ -76,6 +76,8 @@ const (
 	ND_LOGOR                     // 37: ||
 	ND_BREAK                     // 38: "break"
 	ND_CONTINUE                  // 39: "continue"
+	ND_GOTO                      // "goto"
+	ND_LABEL                     // Labeled statement
 )
 
 // define AST node
@@ -105,6 +107,9 @@ type Node struct {
 	// Function call
 	FuncName string
 	Args     *Node
+
+	// Goto or labeled statement
+	LblName string
 
 	Var *Var  // used if kind == ND_VAR
 	Val int64 // it would be used when kind is 'ND_NUM'
@@ -527,6 +532,8 @@ func isForClause() bool {
 //      | "{" stmt* "}"
 //      | "break" ";"
 //      | "continue" ";"
+//      | "goto" ident ";"
+//      | "ident ":" stmt
 //      | "type" ident type-prefix basetype ";"
 //      | declaration
 //      | expr ";"
@@ -609,6 +616,22 @@ func stmt() *Node {
 	if t := consume("continue"); t != nil {
 		expect(";")
 		return newNode(ND_CONTINUE, t)
+	}
+
+	if t := consume("goto"); t != nil {
+		node := newNode(ND_GOTO, t)
+		node.LblName = expectIdent()
+		expect(";")
+		return node
+	}
+
+	if t := consumeIdent(); t != nil {
+		if consume(":") != nil {
+			node := newUnary(ND_LABEL, stmt(), t)
+			node.LblName = t.Str
+			return node
+		}
+		token = t
 	}
 
 	if peek("var") != nil {

@@ -930,6 +930,42 @@ func f170() int {
 	return j
 }
 
+func f171() int {
+	var i int=0
+	goto a
+	a:
+		i++
+	b:
+		i++
+	c:
+		i++
+	return i
+}
+
+func f172() int {
+	var i int=0
+	goto e
+	d:
+		i++
+	e:
+		i++
+	f:
+		i++
+	return i
+}
+
+func f173() int {
+	var i int=0
+	goto i
+	g:
+		i++
+	h:
+		i++
+	i:
+		i++
+	return i
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -1205,6 +1241,10 @@ func main() int {
 	assert(11, f168(), "f168: var i int=0\nvar j int=0\nfor i++<10 {\n\tif i>5 {\n\t\tcontinue\n\t}\n\tj++\n}\nreturn i")
 	assert(5, f169(), "f169: var i int=0\nvar j int=0\nfor i++<10 {\n\tif i>5 {\n\t\tcontinue\n\t}\n\tj++\n}\nreturn j")
 	assert(11, f170(), "f170: var i int=0\nvar j int=0\nfor !i {\n\tfor j++!=10 {\n\t\tcontinue\n}\n\tbreak\n}\nreturn j")
+
+	assert(3, f171(), "f171:\nvar i int=0\ngoto a\na:\n\ti++\nb:\n\ti++\nc:\n\ti++\nreturn i")
+	assert(2, f172(), "f172:\nvar i int=0\ngoto e\nd:\n\ti++\ne:\n\ti++\nf:\n\ti++\nreturn i")
+	assert(1, f173(), "f173:\nvar i int=0\ngoto i\ng:\n\ti++\nh:\n\ti++\ni:\n\ti++\nreturn i")
 
 	printf("\nOK\n")
 	return 0
