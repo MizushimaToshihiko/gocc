@@ -76,10 +76,14 @@ const (
 	ND_LOGOR                     // 37: ||
 	ND_BREAK                     // 38: "break"
 	ND_CONTINUE                  // 39: "continue"
-	ND_GOTO                      // "goto"
-	ND_LABEL                     // Labeled statement
-	ND_SWITCH                    // "switch"
-	ND_CASE                      // "case"
+	ND_GOTO                      // 40: "goto"
+	ND_LABEL                     // 41: Labeled statement
+	ND_SWITCH                    // 42: "switch"
+	ND_CASE                      // 43: "case"
+	ND_SHL                       // 44: <<
+	ND_SHR                       // 45: >>
+	ND_A_SHL                     // <<=
+	ND_A_SHR                     // >>=
 )
 
 // define AST node
@@ -704,7 +708,7 @@ func expr() *Node {
 }
 
 // assign = bitor (assign-op assign)?
-// assign-op = "=" | "+=" | "-=" | "*=" | "/="
+// assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "<<=" | ">>="
 func assign() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -720,6 +724,10 @@ func assign() *Node {
 		node = newBinary(ND_A_MUL, node, assign(), t)
 	} else if t := consume("/="); t != nil {
 		node = newBinary(ND_A_DIV, node, assign(), t)
+	} else if t := consume("<<="); t != nil {
+		node = newBinary(ND_A_SHL, node, assign(), t)
+	} else if t := consume(">>="); t != nil {
+		node = newBinary(ND_A_SHR, node, assign(), t)
 	}
 	return node
 }
@@ -797,22 +805,37 @@ func equality() *Node {
 	}
 }
 
-// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+// relational = shift ("<" shift | "<=" shift | ">" shift | ">=" shift)*
 func relational() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := add()
+	node := shift()
 
 	for {
 		if t := consume("<"); t != nil {
-			node = newBinary(ND_LT, node, add(), t)
+			node = newBinary(ND_LT, node, shift(), t)
 		} else if t := consume("<="); t != nil {
-			node = newBinary(ND_LE, node, add(), t)
+			node = newBinary(ND_LE, node, shift(), t)
 		} else if t := consume(">"); t != nil {
-			node = newBinary(ND_LT, add(), node, t)
+			node = newBinary(ND_LT, shift(), node, t)
 		} else if t := consume(">="); t != nil {
-			node = newBinary(ND_LE, add(), node, t)
+			node = newBinary(ND_LE, shift(), node, t)
+		} else {
+			return node
+		}
+	}
+}
+
+// shift = add ("<<" add | ">>" add)*
+func shift() *Node {
+	node := add()
+
+	for {
+		if t := consume("<<"); t != nil {
+			node = newBinary(ND_SHL, node, add(), t)
+		} else if t := consume(">>"); t != nil {
+			node = newBinary(ND_SHR, node, add(), t)
 		} else {
 			return node
 		}
