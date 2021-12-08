@@ -26,7 +26,7 @@ var argreg2 = []string{"di", "si", "dx", "cx", "r8w", "r9w"}
 var argreg4 = []string{"edi", "esi", "edx", "ecx", "r8d", "r9d"}
 var argreg8 = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 
-var labelseq int
+var labelseq int = 1
 var brkseq int
 var contseq int
 var funcname string
@@ -373,6 +373,43 @@ func (c *codeWriter) gen(node *Node) (err error) {
 
 		brkseq = brk
 		contseq = cont
+		return
+	case ND_SWITCH:
+		seq := labelseq
+		labelseq++
+		brk := brkseq
+		brkseq = seq
+		node.CaseLbl = seq
+
+		c.gen(node.Cond)
+		c.printf("	pop rax\n")
+
+		for n := node.CaseNext; n != nil; n = n.CaseNext {
+			n.CaseLbl = labelseq
+			labelseq++
+			n.CaseEndLbl = seq
+			c.printf("	cmp rax, %d\n", n.Val)
+			c.printf("	je .L.case.%d\n", n.CaseLbl)
+		}
+
+		if node.DefCase != nil {
+			i := labelseq
+			labelseq++
+			node.DefCase.CaseEndLbl = seq
+			node.DefCase.CaseLbl = i
+			c.printf("	jmp .L.case.%d\n", i)
+		}
+
+		c.printf("	jmp .L.break.%d\n", seq)
+		c.gen(node.Then)
+		c.printf(".L.break.%d:\n", seq)
+
+		brkseq = brk
+		return
+	case ND_CASE:
+		c.printf(".L.case.%d:\n", node.CaseLbl)
+		c.gen(node.Lhs)
+		c.printf("	jmp .L.break.%d\n", node.CaseEndLbl)
 		return
 	case ND_BLOCK:
 		for n := node.Body; n != nil; n = n.Next {

@@ -78,6 +78,8 @@ const (
 	ND_CONTINUE                  // 39: "continue"
 	ND_GOTO                      // "goto"
 	ND_LABEL                     // Labeled statement
+	ND_SWITCH                    // "switch"
+	ND_CASE                      // "case"
 )
 
 // define AST node
@@ -111,6 +113,12 @@ type Node struct {
 	// Goto or labeled statement
 	LblName string
 
+	// Switch-cases
+	CaseNext   *Node
+	DefCase    *Node
+	CaseLbl    int
+	CaseEndLbl int
+
 	Var *Var  // used if kind == ND_VAR
 	Val int64 // it would be used when kind is 'ND_NUM'
 }
@@ -119,6 +127,8 @@ var locals *VarList
 var globals *VarList
 
 var varScope *VarScope
+
+var curSwitch *Node
 
 // findVar finds a variable or a typedef by name.
 func findVar(tok *Token) *VarScope {
@@ -527,6 +537,9 @@ func isForClause() bool {
 
 // stmt = "return" expr ";"
 //      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
+//      | "switch" "{" expr "}" stmt
+//      | "case" num ":" stmt
+//      | "default" ":" stmt
 //      | for-stmt
 //      | for-clause
 //      | "{" stmt* "}"
@@ -559,6 +572,41 @@ func stmt() *Node {
 		if consume("else") != nil {
 			node.Els = stmt()
 		}
+		return node
+	}
+
+	if t := consume("switch"); t != nil {
+		node := newNode(ND_SWITCH, t)
+		node.Cond = expr()
+
+		sw := curSwitch
+		curSwitch = node
+		node.Then = stmt()
+		curSwitch = sw
+		return node
+	}
+
+	if t := consume("case"); t != nil {
+		if curSwitch == nil {
+			panic("\n" + errorTok(t, "stray case"))
+		}
+		val := expectNumber()
+		expect(":")
+
+		node := newUnary(ND_CASE, stmt(), t)
+		node.Val = val
+		node.CaseNext = curSwitch.CaseNext
+		curSwitch.CaseNext = node
+		return node
+	}
+
+	if t := consume("default"); t != nil {
+		if curSwitch == nil {
+			panic("\n" + errorTok(t, "stray default"))
+		}
+		expect(":")
+		node := newUnary(ND_CASE, stmt(), t)
+		curSwitch.DefCase = node
 		return node
 	}
 
