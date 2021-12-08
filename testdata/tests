@@ -822,6 +822,42 @@ func f161() int {
 	return i
 }
 
+func f162() int {
+	var i int=0
+	for {
+		if i++ == 3 {
+			break
+		}
+	}
+	return i
+}
+
+func f163() int {
+	var i int=0
+	for ;i<10;i++ {
+		for {
+			break
+		}
+		if i == 3 {
+			break
+		}
+	}
+	return i
+}
+
+func f164() int {
+	var i int=0
+	for {
+		for {
+			break
+		}
+		if i++ == 3 {
+			break
+		}
+	}
+	return i
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -1087,6 +1123,9 @@ func main() int {
   assert(1, 1&&5, "1&&5")
 
 	assert(3, f161(), "f161:\nvar i int=0\nfor ;i<10;i++{\n\tif i == 3 {\n\t\tbreak\n\t}\n}\nreturn i")
+	assert(4, f162(), "f162:\nvar i int=0\nfor {\n\tif i++ == 3 {\n\t\tbreak\n\t}\n}\nreturn i")
+	assert(3, f163(), "f163:\nvar i int=0\nfor ;i<10;i++ {\n\tfor {\n\t\tbrea\n\t}\n\tif i == 3 {\n\t\tbreakt}\n}\nreturn i")
+	assert(4, f164(), "f164:\nvar i int=0\nfor {\n\tfor {\n\t\tbreak\n\t}\n\tif i++ == 3 {\n\t\tbreak\n\t}\n}\nreturn i")
 
 	printf("\nOK\n")
 	return 0

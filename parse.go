@@ -527,6 +527,7 @@ func isForClause() bool {
 //      | "type" ident type-prefix basetype ";"
 //      | declaration
 //      | expr ";"
+//      | "break" ";"
 // for-stmt = "for" [ condition ] block .
 // for-clause = "for" (expr? ";" | declaration) condition ";" expr? block
 // condition = expr .
