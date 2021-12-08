@@ -465,7 +465,9 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.printf(".Lend%d:\n", seq)
 		c.printf("	push rax\n")
 
-		c.trancate(node.Ty)
+		if node.Ty.Kind != TY_VOID {
+			c.trancate(node.Ty)
+		}
 		return
 	case ND_RETURN:
 		c.gen(node.Lhs)

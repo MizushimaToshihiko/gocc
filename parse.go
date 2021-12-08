@@ -270,7 +270,8 @@ func typeSpecifier() *Type {
 	}
 
 	if !isTypename() {
-		panic(errorTok(token, "typename expected"))
+		// panic(errorTok(token, "typename expected"))
+		return voidType()
 	}
 
 	var ty *Type

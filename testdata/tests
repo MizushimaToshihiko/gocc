@@ -1,7 +1,7 @@
 var g1 int
 var g2 [4]int
 
-func assert(want int64, ac int64, code *byte) int {
+func assert(want int64, ac int64, code *byte) {
 	if want == ac {
 		printf("\n%s => %ld\n", code, ac)
 	} else {
@@ -1039,6 +1039,8 @@ func f179() int {
 	return i
 }
 
+func voidFn() {}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -1325,6 +1327,8 @@ func main() int {
 	assert(0, f177(), "f177:\nvar i int=0\nswitch 3 {\ncase 0:\n\ti=5\ncase 1:\n\n\ti=6\ncase 2:\n\ti=7\n}\nreturn i")
 	assert(5, f178(), "f178:\nvar i int=0\nswitch 0 {\ncase 0:\n\ti=5\ndefault:\n\ti=7\n}\nreturn i")
 	assert(7, f179(), "f179:\nvar i int=0\nswitch 1 {\ncase 0:\n\ti=5\ndefault:\n\ti=7\n}\nreturn i")
+
+	voidFn()
 
 	printf("\nOK\n")
 	return 0
