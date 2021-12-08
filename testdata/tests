@@ -858,6 +858,78 @@ func f164() int {
 	return i
 }
 
+func f165() int {
+	var i int=0
+	var j int=0
+	for ;i<10;i++{
+		if i>5 {
+			continue
+		}
+		j++
+	}
+	return i
+}
+
+func f166() int {
+	var i int=0
+	var j int=0
+	for ;i<10;i++{
+		if i>5 {
+			continue
+		}
+		j++
+	}
+	return j
+}
+
+func f167() int {
+	var i int=0
+	var j int=0
+	for ;!i;{
+		for ;j!=10;j++ {
+			continue
+		}
+		break
+	}
+	return j
+}
+
+func f168() int {
+	var i int=0
+	var j int=0
+	for i++<10 {
+		if i>5 {
+			continue
+		}
+		j++
+	}
+	return i
+}
+
+func f169() int {
+	var i int=0
+	var j int=0
+	for i++<10 {
+		if i>5 {
+			continue
+		}
+		j++
+	}
+	return j
+}
+
+func f170() int {
+	var i int=0
+	var j int=0
+	for !i {
+		for j++!=10 {
+			continue
+		}
+		break
+	}
+	return j
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -1126,6 +1198,13 @@ func main() int {
 	assert(4, f162(), "f162:\nvar i int=0\nfor {\n\tif i++ == 3 {\n\t\tbreak\n\t}\n}\nreturn i")
 	assert(3, f163(), "f163:\nvar i int=0\nfor ;i<10;i++ {\n\tfor {\n\t\tbrea\n\t}\n\tif i == 3 {\n\t\tbreakt}\n}\nreturn i")
 	assert(4, f164(), "f164:\nvar i int=0\nfor {\n\tfor {\n\t\tbreak\n\t}\n\tif i++ == 3 {\n\t\tbreak\n\t}\n}\nreturn i")
+
+	assert(10, f165(), "f165: var i int=0\nvar j int=0\nfor ;i<10;i++{\n\tif i>5 {\n\t\tcontinue\n\t}\n\tj++\n}\nreturn i")
+	assert(6, f166(), "f166: var i int=0\nvar j int=0\nfor ;i<10;i++{\n\tif i>5 {\n\t\tcontinue\n\t}\n\tj++\n}\nreturn j")
+	assert(10, f167(), "f167: var i int=0\nvar j int=0\nfor ;!i{\n\tfor ;j!=10;j++ {\n\t\tcontinue\n\t}\n\tbreak\n}\nreturn j")
+	assert(11, f168(), "f168: var i int=0\nvar j int=0\nfor i++<10 {\n\tif i>5 {\n\t\tcontinue\n\t}\n\tj++\n}\nreturn i")
+	assert(5, f169(), "f169: var i int=0\nvar j int=0\nfor i++<10 {\n\tif i>5 {\n\t\tcontinue\n\t}\n\tj++\n}\nreturn j")
+	assert(11, f170(), "f170: var i int=0\nvar j int=0\nfor !i {\n\tfor j++!=10 {\n\t\tcontinue\n}\n\tbreak\n}\nreturn j")
 
 	printf("\nOK\n")
 	return 0

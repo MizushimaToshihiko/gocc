@@ -28,6 +28,7 @@ var argreg8 = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 
 var labelseq int
 var brkseq int
+var contseq int
 var funcname string
 
 // Pushes the given node's address to the stack
@@ -328,23 +329,28 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		seq := labelseq
 		labelseq++
 		brk := brkseq
+		cont := contseq
+		contseq = seq
 		brkseq = seq
 
-		c.printf(".Lbegin%d:\n", seq)
+		c.printf(".L.continue.%d:\n", seq)
 		c.gen(node.Cond)
 		c.printf("	pop rax\n")
 		c.printf("	cmp rax, 0\n")
 		c.printf("	je .L.break.%d\n", seq)
 		c.gen(node.Then)
-		c.printf("	jmp .Lbegin%d\n", seq)
+		c.printf("	jmp .L.continue.%d\n", seq)
 		c.printf(".L.break.%d:\n", seq)
 
 		brkseq = brk
+		contseq = cont
 		return
 	case ND_FOR:
 		seq := labelseq
 		labelseq++
 		brk := brkseq
+		cont := contseq
+		contseq = seq
 		brkseq = seq
 
 		if node.Init != nil {
@@ -358,6 +364,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 			c.printf("	je .L.break.%d\n", seq)
 		}
 		c.gen(node.Then)
+		c.printf(".L.continue.%d:\n", seq)
 		if node.Inc != nil {
 			c.gen(node.Inc)
 		}
@@ -365,6 +372,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.printf(".L.break.%d:\n", seq)
 
 		brkseq = brk
+		contseq = cont
 		return
 	case ND_BLOCK:
 		for n := node.Body; n != nil; n = n.Next {
@@ -376,6 +384,12 @@ func (c *codeWriter) gen(node *Node) (err error) {
 			c.err = fmt.Errorf(errorTok(node.Tok, "stray break"))
 		}
 		c.printf("	jmp .L.break.%d\n", brkseq)
+		return
+	case ND_CONTINUE:
+		if contseq == 0 {
+			c.err = fmt.Errorf(errorTok(node.Tok, "stray continue"))
+		}
+		c.printf("	jmp .L.continue.%d\n", contseq)
 		return
 	case ND_FUNCALL:
 		nargs := 0

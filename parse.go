@@ -75,6 +75,7 @@ const (
 	ND_LOGAND                    // 36: &&
 	ND_LOGOR                     // 37: ||
 	ND_BREAK                     // 38: "break"
+	ND_CONTINUE                  // 39: "continue"
 )
 
 // define AST node
@@ -524,10 +525,11 @@ func isForClause() bool {
 //      | for-stmt
 //      | for-clause
 //      | "{" stmt* "}"
+//      | "break" ";"
+//      | "continue" ";"
 //      | "type" ident type-prefix basetype ";"
 //      | declaration
 //      | expr ";"
-//      | "break" ";"
 // for-stmt = "for" [ condition ] block .
 // for-clause = "for" (expr? ";" | declaration) condition ";" expr? block
 // condition = expr .
@@ -602,6 +604,11 @@ func stmt() *Node {
 	if t := consume("break"); t != nil {
 		expect(";")
 		return newNode(ND_BREAK, t)
+	}
+
+	if t := consume("continue"); t != nil {
+		expect(";")
+		return newNode(ND_CONTINUE, t)
 	}
 
 	if peek("var") != nil {
