@@ -322,13 +322,13 @@ func readArr(base *Type) *Type {
 	if consume("[") == nil {
 		return base
 	}
-	sz := expectNumber()
+	sz := constExpr()
 	expect("]")
 	base = readArr(base)
 	return arrayOf(base, int(sz))
 }
 
-// type-preffix = ("[" num "]")*
+// type-preffix = ("[" const-expr "]")*
 func readTypePreffix() *Type {
 	// printCurTok()
 	// printCalledFunc()
@@ -538,7 +538,7 @@ func isForClause() bool {
 // stmt = "return" expr ";"
 //      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
 //      | "switch" "{" expr "}" stmt
-//      | "case" num ":" stmt
+//      | "case" const-expr ":" stmt
 //      | "default" ":" stmt
 //      | for-stmt
 //      | for-clause
@@ -590,7 +590,7 @@ func stmt() *Node {
 		if curSwitch == nil {
 			panic("\n" + errorTok(t, "stray case"))
 		}
-		val := expectNumber()
+		val := constExpr()
 		expect(":")
 
 		node := newUnary(ND_CASE, stmt(), t)
@@ -705,6 +705,75 @@ func expr() *Node {
 	// printCalledFunc()
 
 	return assign()
+}
+
+func eval(node *Node) int64 {
+	switch node.Kind {
+	case ND_ADD:
+		return eval(node.Lhs) + eval(node.Rhs)
+	case ND_SUB:
+		return eval(node.Lhs) - eval(node.Rhs)
+	case ND_MUL:
+		return eval(node.Lhs) * eval(node.Rhs)
+	case ND_DIV:
+		return eval(node.Lhs) / eval(node.Rhs)
+	case ND_BITAND:
+		return eval(node.Lhs) & eval(node.Rhs)
+	case ND_BITOR:
+		return eval(node.Lhs) | eval(node.Rhs)
+	case ND_BITXOR:
+		return eval(node.Lhs) ^ eval(node.Rhs)
+	case ND_SHL:
+		return eval(node.Lhs) << eval(node.Rhs)
+	case ND_SHR:
+		return eval(node.Lhs) >> eval(node.Rhs)
+	case ND_EQ:
+		if eval(node.Lhs) == eval(node.Rhs) {
+			return 1
+		}
+		return 0
+	case ND_NE:
+		if eval(node.Lhs) != eval(node.Rhs) {
+			return 1
+		}
+		return 0
+	case ND_LT:
+		if eval(node.Lhs) < eval(node.Rhs) {
+			return 1
+		}
+		return 0
+	case ND_LE:
+		if eval(node.Lhs) <= eval(node.Rhs) {
+			return 1
+		}
+		return 0
+	case ND_NOT:
+		if eval(node.Lhs) == 0 {
+			return 1
+		}
+		return 0
+	case ND_BITNOT:
+		return ^eval(node.Lhs)
+	case ND_LOGAND:
+		if eval(node.Lhs) != 0 && eval(node.Rhs) != 0 {
+			return 1
+		}
+		return 0
+	case ND_LOGOR:
+		if eval(node.Lhs) != 0 || eval(node.Rhs) != 0 {
+			return 1
+		}
+		return 0
+	case ND_NUM:
+		return node.Val
+	default:
+		panic("\n" + errorTok(node.Tok, "not a constant expression"))
+	}
+}
+
+// const-expr
+func constExpr() int64 {
+	return eval(logor())
 }
 
 // assign = bitor (assign-op assign)?

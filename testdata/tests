@@ -1071,6 +1071,20 @@ func f184() int {
 	return i
 }
 
+func f185() int {
+	var i int=0
+	switch 3 {
+	case 5-2+0*3:
+		i++
+	}
+	return i
+}
+
+func f186() int {
+	var x [1+1]int
+	return sizeof(x)
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -1371,6 +1385,9 @@ func main() int {
 	assert(2, f183(), "f183:\nvar i int=5\ni>>=1\nreturn i")
 	assert(-1, -1, "-1")
 	assert(-1, f184(), "f184:\nvar i int=-1\ni>>=1\nreturn i")
+
+	assert(1, f185(), "f185:\nvar i int=0\nswitch 3 {\ncase 5-2+0*3:\n\ti++\n}\nreturn i")
+	assert(8, f186(), "f186:\nvar x [1+1]int\nreturn sizeof(x)")
 
 	printf("\nOK\n")
 	return 0
