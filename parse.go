@@ -80,10 +80,14 @@ const (
 	ND_LOGOR                     // 37: ||
 	ND_BREAK                     // 38: "break"
 	ND_CONTINUE                  // 39: "continue"
-	ND_GOTO                      // "goto"
-	ND_LABEL                     // Labeled statement
-	ND_SWITCH                    // "switch"
-	ND_CASE                      // "case"
+	ND_GOTO                      // 40: "goto"
+	ND_LABEL                     // 41: Labeled statement
+	ND_SWITCH                    // 42: "switch"
+	ND_CASE                      // 43: "case"
+	ND_SHL                       // 44: <<
+	ND_SHR                       // 45: >>
+	ND_A_SHL                     // <<=
+	ND_A_SHR                     // >>=
 )
 
 // define AST node
@@ -322,13 +326,13 @@ func readArr(base *Type) *Type {
 	if consume("[") == nil {
 		return base
 	}
-	sz := expectNumber()
+	sz := constExpr()
 	expect("]")
 	base = readArr(base)
 	return arrayOf(base, int(sz))
 }
 
-// type-preffix = ("[" num "]")*
+// type-preffix = ("[" const-expr "]")*
 func readTypePreffix() *Type {
 	// printCurTok()
 	// printCalledFunc()
@@ -635,7 +639,7 @@ func isForClause() bool {
 // stmt = "return" expr ";"
 //      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
 //      | "switch" "{" expr "}" stmt
-//      | "case" num ":" stmt
+//      | "case" const-expr ":" stmt
 //      | "default" ":" stmt
 //      | for-stmt
 //      | for-clause
@@ -687,7 +691,7 @@ func stmt() *Node {
 		if curSwitch == nil {
 			panic("\n" + errorTok(t, "stray case"))
 		}
-		val := expectNumber()
+		val := constExpr()
 		expect(":")
 
 		node := newUnary(ND_CASE, stmt(), t)
@@ -804,8 +808,77 @@ func expr() *Node {
 	return assign()
 }
 
+func eval(node *Node) int64 {
+	switch node.Kind {
+	case ND_ADD:
+		return eval(node.Lhs) + eval(node.Rhs)
+	case ND_SUB:
+		return eval(node.Lhs) - eval(node.Rhs)
+	case ND_MUL:
+		return eval(node.Lhs) * eval(node.Rhs)
+	case ND_DIV:
+		return eval(node.Lhs) / eval(node.Rhs)
+	case ND_BITAND:
+		return eval(node.Lhs) & eval(node.Rhs)
+	case ND_BITOR:
+		return eval(node.Lhs) | eval(node.Rhs)
+	case ND_BITXOR:
+		return eval(node.Lhs) ^ eval(node.Rhs)
+	case ND_SHL:
+		return eval(node.Lhs) << eval(node.Rhs)
+	case ND_SHR:
+		return eval(node.Lhs) >> eval(node.Rhs)
+	case ND_EQ:
+		if eval(node.Lhs) == eval(node.Rhs) {
+			return 1
+		}
+		return 0
+	case ND_NE:
+		if eval(node.Lhs) != eval(node.Rhs) {
+			return 1
+		}
+		return 0
+	case ND_LT:
+		if eval(node.Lhs) < eval(node.Rhs) {
+			return 1
+		}
+		return 0
+	case ND_LE:
+		if eval(node.Lhs) <= eval(node.Rhs) {
+			return 1
+		}
+		return 0
+	case ND_NOT:
+		if eval(node.Lhs) == 0 {
+			return 1
+		}
+		return 0
+	case ND_BITNOT:
+		return ^eval(node.Lhs)
+	case ND_LOGAND:
+		if eval(node.Lhs) != 0 && eval(node.Rhs) != 0 {
+			return 1
+		}
+		return 0
+	case ND_LOGOR:
+		if eval(node.Lhs) != 0 || eval(node.Rhs) != 0 {
+			return 1
+		}
+		return 0
+	case ND_NUM:
+		return node.Val
+	default:
+		panic("\n" + errorTok(node.Tok, "not a constant expression"))
+	}
+}
+
+// const-expr
+func constExpr() int64 {
+	return eval(logor())
+}
+
 // assign = bitor (assign-op assign)?
-// assign-op = "=" | "+=" | "-=" | "*=" | "/="
+// assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "<<=" | ">>="
 func assign() *Node {
 	// printCurTok()
 	// printCalledFunc()
@@ -821,6 +894,10 @@ func assign() *Node {
 		node = newBinary(ND_A_MUL, node, assign(), t)
 	} else if t := consume("/="); t != nil {
 		node = newBinary(ND_A_DIV, node, assign(), t)
+	} else if t := consume("<<="); t != nil {
+		node = newBinary(ND_A_SHL, node, assign(), t)
+	} else if t := consume(">>="); t != nil {
+		node = newBinary(ND_A_SHR, node, assign(), t)
 	}
 	return node
 }
@@ -898,22 +975,37 @@ func equality() *Node {
 	}
 }
 
-// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+// relational = shift ("<" shift | "<=" shift | ">" shift | ">=" shift)*
 func relational() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := add()
+	node := shift()
 
 	for {
 		if t := consume("<"); t != nil {
-			node = newBinary(ND_LT, node, add(), t)
+			node = newBinary(ND_LT, node, shift(), t)
 		} else if t := consume("<="); t != nil {
-			node = newBinary(ND_LE, node, add(), t)
+			node = newBinary(ND_LE, node, shift(), t)
 		} else if t := consume(">"); t != nil {
-			node = newBinary(ND_LT, add(), node, t)
+			node = newBinary(ND_LT, shift(), node, t)
 		} else if t := consume(">="); t != nil {
-			node = newBinary(ND_LE, add(), node, t)
+			node = newBinary(ND_LE, shift(), node, t)
+		} else {
+			return node
+		}
+	}
+}
+
+// shift = add ("<<" add | ">>" add)*
+func shift() *Node {
+	node := add()
+
+	for {
+		if t := consume("<<"); t != nil {
+			node = newBinary(ND_SHL, node, add(), t)
+		} else if t := consume(">>"); t != nil {
+			node = newBinary(ND_SHR, node, add(), t)
 		} else {
 			return node
 		}

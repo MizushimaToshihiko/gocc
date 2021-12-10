@@ -190,7 +190,18 @@ func (e *errWriter) visit(node *Node) {
 		}
 		node.Ty = node.Lhs.Ty
 		return
-	case ND_ASSIGN, ND_INC, ND_DEC, ND_A_ADD, ND_A_SUB, ND_A_MUL, ND_A_DIV, ND_BITNOT:
+	case ND_ASSIGN,
+		ND_SHL,
+		ND_SHR,
+		ND_INC,
+		ND_DEC,
+		ND_A_ADD,
+		ND_A_SUB,
+		ND_A_MUL,
+		ND_A_DIV,
+		ND_A_SHL,
+		ND_A_SHR,
+		ND_BITNOT:
 		node.Ty = node.Lhs.Ty
 		return
 	case ND_MEMBER:
