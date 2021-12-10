@@ -587,9 +587,27 @@ func declaration() *Node {
 
 	expect("=")
 
-	ty2 := readTypePreffix()
-	if !isSameTy(ty, ty2) {
-		panic("\n" + errorTok(tok, "cannot assign"))
+	// "var" ident-1 type-preffix type-specifier "=" ident-2
+	// For example,
+	//   var y [2]int
+	//   y[0]=1
+	//   y[1]=2
+	//   var x [2]int = y
+	// I don't think about struct now.
+	tok2 := token
+	if t := consumeIdent(); t != nil {
+		if !isSameTy(findVar(t).Var.Ty, v.Ty) {
+			panic("\n" + errorTok(t, "different types cannot be assigned"))
+		}
+		token = tok2
+	} else if peek("[") != nil {
+		t := token
+		// For array.
+		// Ex: var x [2]int = [2]int{1,2}
+		ty2 := readTypePreffix()
+		if !isSameTy(v.Ty, ty2) {
+			panic("\n" + errorTok(t, "different types cannot be assigned"))
+		}
 	}
 
 	head := &Node{}
@@ -1204,7 +1222,7 @@ func primary() *Node {
 	}
 
 	if t.Kind != TK_NUM {
-		panic("\n" + errorTok(t, "expected expression"))
+		panic("\n" + errorTok(t, "expected expression: %s", t.Str))
 	}
 	return newNum(expectNumber(), t)
 }
