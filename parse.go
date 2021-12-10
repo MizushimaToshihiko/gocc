@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 // Scope for local variables, global variables or typedefs
 type VarScope struct {
@@ -13,6 +16,7 @@ type VarScope struct {
 type Var struct {
 	Name    string // Variable name
 	Ty      *Type  // Type
+	Tok     *Token // for error message
 	IsLocal bool   // local or global
 
 	// Local variables
@@ -176,11 +180,11 @@ func pushScope(name string) *VarScope {
 	return sc
 }
 
-func pushVar(name string, ty *Type, isLocal bool) *Var {
+func pushVar(name string, ty *Type, isLocal bool, tok *Token) *Var {
 	// printCurTok()
 	// printCalledFunc()
 
-	v := &Var{Name: name, Ty: ty, IsLocal: isLocal}
+	v := &Var{Name: name, Ty: ty, IsLocal: isLocal, Tok: tok}
 
 	var vl *VarList
 	if isLocal {
@@ -394,10 +398,11 @@ func readFuncParam() *VarList {
 	// printCurTok()
 	// printCalledFunc()
 
+	tok := token
 	name := expectIdent()
 	ty := readTypePreffix()
 	vl := &VarList{}
-	vl.Var = pushVar(name, ty, true)
+	vl.Var = pushVar(name, ty, true, tok)
 	return vl
 }
 
@@ -431,13 +436,14 @@ func function() *Function {
 
 	expect("func")
 	// Construct a function object
+	tok := token
 	fn := &Function{Name: expectIdent()}
 	expect("(")
 	fn.Params = readFuncParams()
 	ty := typeSpecifier()
 
 	// Add a function type to the scope
-	pushVar(fn.Name, funcType(ty), false)
+	pushVar(fn.Name, funcType(ty), false, tok)
 	expect("{")
 
 	// Read function body
@@ -453,15 +459,104 @@ func function() *Function {
 	return fn
 }
 
+// Initializer list can end with "}".
+// This function returns true if it looks like
+// we are at the end of an initializer list.
+func peekEnd() bool {
+	tok := token
+	ret := consume("}") != nil
+	token = tok
+	return ret
+}
+
+func expectEnd() {
+	expect("}")
+}
+
 // global-var = "var" ident type-prefix basetype
 func globalVar() {
 	// printCurTok()
 	// printCalledFunc()
 
+	tok := token
 	name := expectIdent()
 	ty := readTypePreffix()
 	expect(";")
-	pushVar(name, ty, false)
+	pushVar(name, ty, false, tok)
+}
+
+type Designator struct {
+	Next *Designator
+	Idx  int
+}
+
+// Creates a node for an array sccess. For example, if v represents
+// a variable x and desg represents indices 3 and 4, this function
+// returns a node representing x[3][4]
+func newDesgNode2(v *Var, desg *Designator) *Node {
+	tok := v.Tok
+	if desg == nil {
+		return newVar(v, tok)
+	}
+
+	node := newDesgNode2(v, desg.Next)
+	node = newBinary(ND_ADD, node, newNum(int64(desg.Idx), tok), tok)
+	return newUnary(ND_DEREF, node, tok)
+}
+
+func newDesgNode(v *Var, desg *Designator, rhs *Node) *Node {
+	lhs := newDesgNode2(v, desg)
+	node := newBinary(ND_ASSIGN, lhs, rhs, rhs.Tok)
+	return newUnary(ND_EXPR_STMT, node, rhs.Tok)
+}
+
+// lvar-initializer = assign
+//                  | "{" lvar-initializer ("," lvar-initializer)* "}"
+//
+// An initializer for a local variable is expanded to multiple
+// assignments. For example, this function creates the following
+// nodes for var x [2][3]int=[2][3]int{{1,2,3},{4,5,6}}.
+//
+// x[0][0]=1
+// x[0][1]=2
+// x[0][2]=3
+// x[1][0]=4
+// x[1][1]=5
+// x[1][2]=6
+func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
+	tok := consume("{")
+	if tok == nil {
+		cur.Next = newDesgNode(v, desg, assign())
+		return cur.Next
+	}
+
+	if ty.Kind == TY_ARRAY {
+		i := 0
+
+		for {
+			desg2 := &Designator{desg, i}
+			i++
+			cur = lvarInitializer(cur, v, ty.Base, desg2)
+			if peekEnd() || consume(",") == nil {
+				break
+			}
+		}
+
+		expectEnd()
+		return cur
+	}
+
+	panic("\n" + errorTok(tok, "invalid initializer"))
+}
+
+func isSameTy(ty1, ty2 *Type) bool {
+	if reflect.DeepEqual(ty1, ty2) {
+		if ty1 == nil && ty2 == nil {
+			return true
+		}
+		return isSameTy(ty1.Base, ty2.Base)
+	}
+	return false
 }
 
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl(unimplemented)
@@ -480,7 +575,7 @@ func declaration() *Node {
 	ty := readTypePreffix()
 	assert(ty.Kind != TY_VOID, "\n"+errorTok(tok, "variable declared void"))
 
-	v := pushVar(name, ty, true)
+	v := pushVar(name, ty, true, tok)
 	if consume(";") != nil {
 		return newNode(ND_NULL, tok)
 	}
@@ -488,12 +583,18 @@ func declaration() *Node {
 
 	expect("=")
 
-	lhs := newVar(v, tok)
-	rhs := expr()
-	node := newBinary(ND_ASSIGN, lhs, rhs, tok)
+	ty2 := readTypePreffix()
+	if !isSameTy(ty, ty2) {
+		panic("\n" + errorTok(tok, "cannot assign"))
+	}
 
+	head := &Node{}
+	lvarInitializer(head, v, v.Ty, nil)
 	expect(";")
-	return newUnary(ND_EXPR_STMT, node, tok)
+
+	node := newNode(ND_BLOCK, tok)
+	node.Body = head.Next
+	return node
 }
 
 func readExprStmt() *Node {
@@ -1004,7 +1105,7 @@ func primary() *Node {
 		token = token.Next
 
 		ty := arrayOf(charType(), t.ContLen)
-		v := pushVar(newLabel(), ty, false)
+		v := pushVar(newLabel(), ty, false, nil)
 		v.Conts = t.Contents
 		v.ContLen = t.ContLen
 		return newVar(v, t)
