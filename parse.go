@@ -594,13 +594,14 @@ func declaration() *Node {
 	//   y[1]=2
 	//   var x [2]int = y
 	// I don't think about struct now.
-	tok2 := token
-	if t := consumeIdent(); t != nil {
-		if !isSameTy(findVar(t).Var.Ty, v.Ty) {
-			panic("\n" + errorTok(t, "different types cannot be assigned"))
-		}
-		token = tok2
-	} else if peek("[") != nil {
+	// tok2 := token
+	// if t := consumeIdent(); t != nil {
+	// 	if !isSameTy(findVar(t).Var.Ty, v.Ty) {
+	// 		panic("\n" + errorTok(t, "different types cannot be assigned"))
+	// 	}
+	// 	token = tok2
+	// } else
+	if peek("[") != nil {
 		t := token
 		// For array.
 		// Ex: var x [2]int = [2]int{1,2}
