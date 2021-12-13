@@ -514,6 +514,20 @@ func newDesgNode(v *Var, desg *Designator, rhs *Node) *Node {
 	return newUnary(ND_EXPR_STMT, node, rhs.Tok)
 }
 
+func lvarInitZero(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
+	if ty.Kind == TY_ARRAY {
+		for i := 0; i < ty.ArrSz; i++ {
+			desg2 := &Designator{desg, i}
+			i++
+			cur = lvarInitZero(cur, v, ty.Base, desg2)
+		}
+		return cur
+	}
+
+	cur.Next = newDesgNode(v, desg, newNum(0, token))
+	return cur.Next
+}
+
 // lvar-initializer = assign
 //                  | "{" lvar-initializer ("," lvar-initializer)* "}"
 //
@@ -527,6 +541,9 @@ func newDesgNode(v *Var, desg *Designator, rhs *Node) *Node {
 // x[1][0]=4
 // x[1][1]=5
 // x[1][2]=6
+//
+// If an initializer list is shorter than an array, excess array
+// elements are initialized with 0.
 func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	tok := consume("{")
 	if tok == nil {
@@ -547,6 +564,13 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 		}
 
 		expectEnd()
+
+		// Set excess array elements to zero.
+		for i < ty.ArrSz {
+			desg2 := &Designator{desg, i}
+			i++
+			cur = lvarInitZero(cur, v, ty.Base, desg2)
+		}
 		return cur
 	}
 

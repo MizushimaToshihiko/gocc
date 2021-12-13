@@ -1102,6 +1102,51 @@ func f188() int {
 // // 	return x[1][1]
 // // }
 
+func f190() int {
+	var x [3]int = [3]int{1,2,3}
+	return x[0]
+}
+
+func f191() int {
+	var x [3]int = [3]int{1,2,3}
+	return x[1]
+}
+
+func f192() int {
+	var x [3]int = [3]int{1,2,3}
+	return x[2]
+}
+
+func f193() int {
+	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
+	return x[0][1]
+}
+
+func f194() int {
+	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
+	return x[1][0]
+}
+
+func f195() int {
+	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
+	return x[1][2]
+}
+
+func f196() int {
+	var x [2][3]int={{1,2}}
+	return x[0][1]
+}
+
+func f197() int {
+	var x [2][3]int={{1,2}}
+	return x[1][0]
+}
+
+func f198() int {
+	var x [2][3]int={{1,2}}
+	return x[1][2]
+}
+
 func main() int {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -1408,13 +1453,25 @@ func main() int {
 
 	assert(5, f188(), "f188:\nvar x [2][2]int = [2][2]int{{1, 2}, {4, 5}}\n	return x[1][1]")
 	
+	assert(1, f190(), "f190:\nvar x [3]int = [3]int{1,2,3}\nreturn x[0]")
+	assert(2, f191(), "f191:\nvar x [3]int = [3]int{1,2,3}\nreturn x[1]")
+	assert(3, f192(), "f192:\nvar x [3]int = [3]int{1,2,3}\nreturn x[2]")
+
+	assert(2, f193(), "f193:\nvar x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}\nreturn x[0][1]")
+	assert(4, f194(), "f194:\nvar x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}\nreturn x[1][0]")
+	assert(6, f195(), "f195:\nvar x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}\nreturn x[1][2]")
+
+	assert(2, f196(), "f196:\nvar x [2][3]int={{1,2}}\nreturn x[0][1]")
+	assert(0, f197(), "f197:\nvar x [2][3]int={{1,2}}\nreturn x[1][0]")
+	assert(0, f198(), "f198:\nvar x [2][3]int={{1,2}}\nreturn x[1][2]")
+
 	printf("\nOK\n")
 	return 0
 }
 
-// func fib(x int) int {
-// 	if x <= 1 {
-// 		return 1
-// 	}
-// 	return fib(x-1) + fib(x-2)
-// }
+func fib(x int) int {
+	if x <= 1 {
+		return 1
+	}
+	return fib(x-1) + fib(x-2)
+}
