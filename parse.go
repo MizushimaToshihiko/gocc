@@ -544,6 +544,9 @@ func lvarInitZero(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 //
 // If an initializer list is shorter than an array, excess array
 // elements are initialized with 0.
+//
+// A char array can be initialized by a string literal. For example,
+// `var x string="abc"`
 func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	tok := consume("{")
 	if tok == nil {
@@ -617,7 +620,7 @@ func declaration() *Node {
 	//   y[0]=1
 	//   y[1]=2
 	//   var x [2]int = y
-	// I don't think about struct now.
+	// cannot assign array variables to array variables now.
 	// tok2 := token
 	// if t := consumeIdent(); t != nil {
 	// 	if !isSameTy(findVar(t).Var.Ty, v.Ty) {
