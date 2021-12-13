@@ -92,3 +92,8 @@ func MerryXMas() {
   
  - FunctionBody -> BlockStmt -> DeclStmtのSpecメンバ -> x,yのValueSpecがスライスとして登録されている
  - このコンパイラでは、var x,y int = 1,2をparse.goの中でvar x int = 1; var y int = 2;としてfunction()内のstmtの後に繋げる -> declaration()とは別にvarspec()を作り、nodeをつなげたものをfunction()又はstmt()に返す?
+
+#### 配列変数から配列変数への代入
+- 現時点では配列から配列への代入ができない（not a lvalueエラーを出してしまう)
+- string変数からstring変数への代入も同様にできない。stringをbase typeがbyteの配列にしているため。
+- lvarInitializerを改良して実装すればいけるかも？

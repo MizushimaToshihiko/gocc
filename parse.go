@@ -86,8 +86,8 @@ const (
 	ND_CASE                      // 43: "case"
 	ND_SHL                       // 44: <<
 	ND_SHR                       // 45: >>
-	ND_A_SHL                     // <<=
-	ND_A_SHR                     // >>=
+	ND_A_SHL                     // 46: <<=
+	ND_A_SHR                     // 47: >>=
 )
 
 // define AST node
@@ -266,6 +266,10 @@ func program() *Program {
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
+func stringDecl() *Type {
+	return arrayOf(charType(), 0)
+}
+
 // type-specifier = "*"* builtin-type | struct-decl | typedef-name |
 // builtin-type = void | "bool" | "byte"| "int16" | "int" | "int64"
 func typeSpecifier() *Type {
@@ -280,6 +284,8 @@ func typeSpecifier() *Type {
 	var ty *Type
 	if consume("byte") != nil {
 		ty = charType()
+	} else if consume("string") != nil {
+		ty = stringDecl()
 	} else if consume("bool") != nil {
 		ty = boolType()
 	} else if consume("int16") != nil {
@@ -314,7 +320,7 @@ func findBase() (*Type, *Token) {
 		token = token.Next
 	}
 	ty := typeSpecifier()
-	t := token
+	t := token // どこまでtokenを読んだか
 	token = tok
 	return ty, t
 }
@@ -528,6 +534,29 @@ func lvarInitZero(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	return cur.Next
 }
 
+func stringAssign(cur *Node, v *Var, ty *Type, desg *Designator, tok *Token) *Node {
+	var length int = tok.ContLen
+	if ty.ArrSz != tok.ContLen {
+		ty.ArrSz = tok.ContLen
+	}
+	var i int
+	fmt.Printf("tok: %#v\n\n", tok)
+
+	for i = 0; i < length; i++ {
+		fmt.Println("i:", i)
+		desg2 := &Designator{desg, i}
+		rhs := newNum(int64(tok.Contents[i]), tok)
+		cur.Next = newDesgNode(v, desg2, rhs)
+		cur = cur.Next
+	}
+
+	for ; i < ty.ArrSz; i++ {
+		desg2 := &Designator{desg, i}
+		cur = lvarInitZero(cur, v, ty.Base, desg2)
+	}
+	return cur
+}
+
 // lvar-initializer = assign
 //                  | "{" lvar-initializer ("," lvar-initializer)* "}"
 //
@@ -548,6 +577,16 @@ func lvarInitZero(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 // A char array can be initialized by a string literal. For example,
 // `var x string="abc"`
 func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
+	if ty.Kind == TY_ARRAY && ty.Base.Kind == TY_BYTE &&
+		token.Kind == TK_STR {
+		// Initialize a char array with a string literal.
+		tok := token
+		token = token.Next
+
+		return stringAssign(cur, v, ty, desg, tok)
+	}
+
+	// Initialize array
 	tok := consume("{")
 	if tok == nil {
 		cur.Next = newDesgNode(v, desg, assign())
@@ -651,8 +690,8 @@ func readExprStmt() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	t := token
-	return newUnary(ND_EXPR_STMT, expr(), t)
+	// t := token
+	return expr()
 }
 
 func isTypename() bool {
@@ -923,7 +962,7 @@ func constExpr() int64 {
 	return eval(logor())
 }
 
-// assign = bitor (assign-op assign)?
+// assign = logor (assign-op assign)?
 // assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "<<=" | ">>="
 func assign() *Node {
 	// printCurTok()
@@ -931,7 +970,19 @@ func assign() *Node {
 
 	node := logor()
 	if t := consume("="); t != nil {
-		node = newBinary(ND_ASSIGN, node, assign(), t)
+		if token.Kind == TK_STR && node.Var.Ty.Kind == TY_ARRAY &&
+			node.Var.Ty.Base.Kind == TY_BYTE {
+			tok := token
+			token = token.Next
+			head := &Node{}
+			fmt.Printf("node: %s\n%#v\n\n", node.Tok.Str, node)
+			stringAssign(head, node.Var, node.Var.Ty, nil, tok)
+			n := newNode(ND_BLOCK, tok)
+			n.Body = head.Next
+			return n
+		} else {
+			node = newBinary(ND_ASSIGN, node, assign(), t)
+		}
 	} else if t := consume("+="); t != nil {
 		node = newBinary(ND_A_ADD, node, assign(), t)
 	} else if t := consume("-="); t != nil {
