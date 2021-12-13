@@ -540,10 +540,8 @@ func stringAssign(cur *Node, v *Var, ty *Type, desg *Designator, tok *Token) *No
 		ty.ArrSz = tok.ContLen
 	}
 	var i int
-	fmt.Printf("tok: %#v\n\n", tok)
 
 	for i = 0; i < length; i++ {
-		fmt.Println("i:", i)
 		desg2 := &Designator{desg, i}
 		rhs := newNum(int64(tok.Contents[i]), tok)
 		cur.Next = newDesgNode(v, desg2, rhs)
@@ -574,7 +572,7 @@ func stringAssign(cur *Node, v *Var, ty *Type, desg *Designator, tok *Token) *No
 // If an initializer list is shorter than an array, excess array
 // elements are initialized with 0.
 //
-// A char array can be initialized by a string literal. For example,
+// A string(char array) can be initialized by a string literal. For example,
 // `var x string="abc"`
 func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	if ty.Kind == TY_ARRAY && ty.Base.Kind == TY_BYTE &&
@@ -586,7 +584,7 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 		return stringAssign(cur, v, ty, desg, tok)
 	}
 
-	// Initialize array
+	// Initialize an array
 	tok := consume("{")
 	if tok == nil {
 		cur.Next = newDesgNode(v, desg, assign())
