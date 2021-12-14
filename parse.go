@@ -391,7 +391,12 @@ func structMem() *Member {
 	// printCurTok()
 	// printCalledFunc()
 
-	mem := &Member{Name: expectIdent(), Ty: readTypePreffix()}
+	tok := token
+	mem := &Member{
+		Name: expectIdent(),
+		Ty:   readTypePreffix(),
+		Tok:  tok,
+	}
 	expect(";")
 	return mem
 }
@@ -498,6 +503,7 @@ func globalVar() {
 type Designator struct {
 	Next *Designator
 	Idx  int
+	Mem  *Member
 }
 
 // Creates a node for an array sccess. For example, if v represents
@@ -510,6 +516,13 @@ func newDesgNode2(v *Var, desg *Designator) *Node {
 	}
 
 	node := newDesgNode2(v, desg.Next)
+
+	if desg.Mem != nil {
+		node = newUnary(ND_MEMBER, node, desg.Mem.Tok)
+		node.MemName = desg.Mem.Name
+		return node
+	}
+
 	node = newBinary(ND_ADD, node, newNum(int64(desg.Idx), tok), tok)
 	return newUnary(ND_DEREF, node, tok)
 }
@@ -523,7 +536,7 @@ func newDesgNode(v *Var, desg *Designator, rhs *Node) *Node {
 func lvarInitZero(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	if ty.Kind == TY_ARRAY {
 		for i := 0; i < ty.ArrSz; i++ {
-			desg2 := &Designator{desg, i}
+			desg2 := &Designator{desg, i, nil}
 			i++
 			cur = lvarInitZero(cur, v, ty.Base, desg2)
 		}
@@ -542,14 +555,14 @@ func stringAssign(cur *Node, v *Var, ty *Type, desg *Designator, tok *Token) *No
 	var i int
 
 	for i = 0; i < length; i++ {
-		desg2 := &Designator{desg, i}
+		desg2 := &Designator{desg, i, nil}
 		rhs := newNum(int64(tok.Contents[i]), tok)
 		cur.Next = newDesgNode(v, desg2, rhs)
 		cur = cur.Next
 	}
 
 	for ; i < ty.ArrSz; i++ {
-		desg2 := &Designator{desg, i}
+		desg2 := &Designator{desg, i, nil}
 		cur = lvarInitZero(cur, v, ty.Base, desg2)
 	}
 	return cur
@@ -569,6 +582,14 @@ func stringAssign(cur *Node, v *Var, ty *Type, desg *Designator, tok *Token) *No
 // x[1][1]=5
 // x[1][2]=6
 //
+// Struct members are initialized in declaration order. For example,
+// 'type x struct {
+// 	a int
+// 	b int
+// }
+// var x T = T{1, 2}'
+// sets x.a to 1 and x.b to 2.
+//
 // If an initializer list is shorter than an array, excess array
 // elements are initialized with 0.
 //
@@ -584,7 +605,7 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 		return stringAssign(cur, v, ty, desg, tok)
 	}
 
-	// Initialize an array
+	// Initialize an array or a struct
 	tok := consume("{")
 	if tok == nil {
 		cur.Next = newDesgNode(v, desg, assign())
@@ -595,7 +616,7 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 		i := 0
 
 		for {
-			desg2 := &Designator{desg, i}
+			desg2 := &Designator{desg, i, nil}
 			i++
 			cur = lvarInitializer(cur, v, ty.Base, desg2)
 			if peekEnd() || consume(",") == nil {
@@ -607,9 +628,31 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 
 		// Set excess array elements to zero.
 		for i < ty.ArrSz {
-			desg2 := &Designator{desg, i}
+			desg2 := &Designator{desg, i, nil}
 			i++
 			cur = lvarInitZero(cur, v, ty.Base, desg2)
+		}
+		return cur
+	}
+
+	if ty.Kind == TY_STRUCT {
+		mem := ty.Mems
+
+		for {
+			desg2 := &Designator{desg, 0, mem}
+			cur = lvarInitializer(cur, v, mem.Ty, desg2)
+			mem = mem.Next
+			if peekEnd() || consume(",") == nil {
+				break
+			}
+		}
+
+		expectEnd()
+
+		// Set excess struct elements to zero.
+		for ; mem != nil; mem = mem.Next {
+			desg2 := &Designator{desg, 0, mem}
+			cur = lvarInitZero(cur, v, mem.Ty, desg2)
 		}
 		return cur
 	}
@@ -651,26 +694,18 @@ func declaration() *Node {
 
 	expect("=")
 
-	// "var" ident-1 type-preffix type-specifier "=" ident-2
-	// For example,
-	//   var y [2]int
-	//   y[0]=1
-	//   y[1]=2
-	//   var x [2]int = y
 	// cannot assign array variables to array variables now.
-	// tok2 := token
-	// if t := consumeIdent(); t != nil {
-	// 	if !isSameTy(findVar(t).Var.Ty, v.Ty) {
-	// 		panic("\n" + errorTok(t, "different types cannot be assigned"))
-	// 	}
-	// 	token = tok2
-	// } else
-	if peek("[") != nil {
+	if t := peekIdent(); t != nil {
+		ty2 := readTypePreffix()
+		if !isSameTy(ty2, v.Ty) {
+			panic("\n" + errorTok(t, "different types cannot be assigned"))
+		}
+	} else if peek("[") != nil {
 		t := token
 		// For array.
 		// Ex: var x [2]int = [2]int{1,2}
 		ty2 := readTypePreffix()
-		if !isSameTy(v.Ty, ty2) {
+		if !isSameTy(ty2, v.Ty) {
 			panic("\n" + errorTok(t, "different types cannot be assigned"))
 		}
 	}
@@ -973,7 +1008,6 @@ func assign() *Node {
 			tok := token
 			token = token.Next
 			head := &Node{}
-			fmt.Printf("node: %s\n%#v\n\n", node.Tok.Str, node)
 			stringAssign(head, node.Var, node.Var.Ty, nil, tok)
 			n := newNode(ND_BLOCK, tok)
 			n.Body = head.Next

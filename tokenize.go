@@ -120,8 +120,16 @@ func peek(s string) *Token {
 	return token
 }
 
+// peekIdent returns the current token if it is an identifier
+func peekIdent() *Token {
+	if token.Kind != TK_IDENT {
+		return nil
+	}
+	return token
+}
+
 // consume returns token(pointer), if the current token is expected
-// symbol, the read position of token exceed one character.
+// symbol, the read position of token exceed one.
 func consume(s string) *Token {
 	// defer printCurTok()
 	if peek(s) == nil {
@@ -132,7 +140,8 @@ func consume(s string) *Token {
 	return t
 }
 
-// consumeIdent returns the current token if it is an identifier
+// consumeIdent returns the current token if it is an identifier,
+// and the read position of token exceed one.
 func consumeIdent() *Token {
 	// defer printCurTok()
 	if token.Kind != TK_IDENT {

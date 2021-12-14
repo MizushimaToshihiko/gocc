@@ -39,6 +39,7 @@ type Type struct {
 type Member struct {
 	Next   *Member
 	Ty     *Type
+	Tok    *Token
 	Name   string
 	Offset int
 }
@@ -226,6 +227,7 @@ func (e *errWriter) visit(node *Node) {
 		if node.Lhs.Ty.Base == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
 		}
+
 		node.Ty = node.Lhs.Ty.Base
 		if node.Ty.Kind == TY_VOID {
 			e.err = fmt.Errorf(errorTok(node.Tok, "dereference a void pointer"))
