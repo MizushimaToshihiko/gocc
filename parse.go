@@ -23,8 +23,7 @@ type Var struct {
 	Offset int // Offset from RBP
 
 	// Global variables
-	Conts   []rune
-	ContLen int
+	Init *Initializer
 }
 
 type VarList struct {
@@ -221,6 +220,20 @@ func newLabel() string {
 	return res
 }
 
+// Global variable initializer. Global variables can be initialized
+// either by a constant expression or a pointer to another global
+// variable.
+type Initializer struct {
+	Next *Initializer
+
+	// Constant expression
+	Sz  int
+	Val int64
+
+	// Reference to another global variable
+	Lbl string
+}
+
 type Function struct {
 	Next   *Function
 	Name   string
@@ -376,7 +389,7 @@ func structDecl() *Type {
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
 		offset = alignTo(offset, mem.Ty.Align)
 		mem.Offset = offset
-		offset += sizeOf(mem.Ty)
+		offset += sizeOf(mem.Ty, mem.Tok)
 
 		if ty.Align < mem.Ty.Align {
 			ty.Align = mem.Ty.Align
@@ -488,7 +501,46 @@ func expectEnd() {
 	expect("}")
 }
 
-// global-var = "var" ident type-prefix basetype
+func newInitVal(cur *Initializer, sz int, val int) *Initializer {
+	init := &Initializer{Sz: sz, Val: int64(val)}
+	cur.Next = init
+	return init
+}
+
+func newInitLabel(cur *Initializer, label string) *Initializer {
+	init := &Initializer{Lbl: label}
+	cur.Next = init
+	return init
+}
+
+func gvarInitString(p []rune, len int) *Initializer {
+	head := &Initializer{}
+	cur := head
+	for i := 0; i < len; i++ {
+		cur = newInitVal(cur, 1, int(p[i]))
+	}
+	return head.Next
+}
+
+func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
+	tok := token
+	expr := logor()
+
+	if expr.Kind == ND_ADDR {
+		if expr.Lhs.Kind != ND_VAR {
+			panic("\n" + errorTok(tok, "invalid initializer"))
+		}
+		return newInitLabel(cur, expr.Lhs.Var.Name)
+	}
+
+	if expr.Kind == ND_VAR && expr.Var.Ty.Kind == TY_ARRAY {
+		return newInitLabel(cur, expr.Var.Name)
+	}
+
+	return newInitVal(cur, sizeOf(ty, token), int(eval(expr)))
+}
+
+// global-var = "var" ident type-prefix type-suffix ("=" gvar-initializer)? ";"
 func globalVar() {
 	// printCurTok()
 	// printCalledFunc()
@@ -496,8 +548,16 @@ func globalVar() {
 	tok := token
 	name := expectIdent()
 	ty := readTypePreffix()
+
+	v := pushVar(name, ty, false, tok)
+	pushScope(name).Var = v
+
+	if consume("=") != nil {
+		head := &Initializer{}
+		gvarInitializer(head, ty)
+		v.Init = head.Next
+	}
 	expect(";")
-	pushVar(name, ty, false, tok)
 }
 
 type Designator struct {
@@ -1327,8 +1387,7 @@ func primary() *Node {
 
 		ty := arrayOf(charType(), t.ContLen)
 		v := pushVar(newLabel(), ty, false, nil)
-		v.Conts = t.Contents
-		v.ContLen = t.ContLen
+		v.Init = gvarInitString(t.Contents, t.ContLen)
 		return newVar(v, t)
 	}
 

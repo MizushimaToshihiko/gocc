@@ -78,7 +78,7 @@ func (c *codeWriter) load(ty *Type) {
 	}
 
 	c.printf("	pop rax\n")
-	switch sizeOf(ty) {
+	switch sizeOf(ty, nil) {
 	case 1:
 		c.printf("	movsx rax, byte ptr [rax]\n")
 	case 2:
@@ -109,7 +109,7 @@ func (c *codeWriter) store(ty *Type) {
 		c.printf("	movzb rdi, dil\n")
 	}
 
-	switch sizeOf(ty) {
+	switch sizeOf(ty, nil) {
 	case 1:
 		c.printf("	mov [rax], dil\n")
 	case 2:
@@ -137,7 +137,7 @@ func (c *codeWriter) trancate(ty *Type) {
 		c.printf("	setne al\n")
 	}
 
-	switch sizeOf(ty) {
+	switch sizeOf(ty, nil) {
 	case 1:
 		c.printf("	movsx rax, al\n")
 	case 2:
@@ -148,10 +148,10 @@ func (c *codeWriter) trancate(ty *Type) {
 	c.printf("	push rax\n")
 }
 
-func (c *codeWriter) inc(ty *Type) {
+func (c *codeWriter) inc(node *Node) {
 	c.printf("	pop rax\n")
-	if ty.Base != nil {
-		c.printf("	add rax, %d\n", sizeOf(ty.Base))
+	if node.Ty.Base != nil {
+		c.printf("	add rax, %d\n", sizeOf(node.Ty.Base, node.Tok))
 		c.printf("	push rax\n")
 		return
 	}
@@ -159,10 +159,10 @@ func (c *codeWriter) inc(ty *Type) {
 	c.printf("	push rax\n")
 }
 
-func (c *codeWriter) dec(ty *Type) {
+func (c *codeWriter) dec(node *Node) {
 	c.printf("	pop rax\n")
-	if ty.Base != nil {
-		c.printf("	sub rax, %d\n", sizeOf(ty.Base))
+	if node.Ty.Base != nil {
+		c.printf("	sub rax, %d\n", sizeOf(node.Ty.Base, node.Tok))
 		c.printf("	push rax\n")
 		return
 	}
@@ -205,17 +205,17 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		c.genLval(node.Lhs)
 		c.printf("	push [rsp]\n")
 		c.load(node.Ty)
-		c.inc(node.Ty)
+		c.inc(node)
 		c.store(node.Ty)
-		c.dec(node.Ty)
+		c.dec(node)
 		return
 	case ND_DEC:
 		c.genLval(node.Lhs)
 		c.printf("	push [rsp]\n")
 		c.load(node.Ty)
-		c.dec(node.Ty)
+		c.dec(node)
 		c.store(node.Ty)
-		c.inc(node.Ty)
+		c.inc(node)
 		return
 	case ND_A_ADD, ND_A_SUB, ND_A_MUL, ND_A_DIV, ND_A_SHL, ND_A_SHR:
 		c.genLval(node.Lhs)
@@ -228,12 +228,12 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		switch node.Kind {
 		case ND_A_ADD:
 			if node.Ty.Base != nil {
-				c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base))
+				c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base, node.Tok))
 			}
 			c.printf("	add rax, rdi\n")
 		case ND_A_SUB:
 			if node.Ty.Base != nil {
-				c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base))
+				c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base, node.Tok))
 			}
 			c.printf("	sub rax, rdi\n")
 		case ND_A_MUL:
@@ -495,12 +495,12 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	switch node.Kind {
 	case ND_ADD:
 		if node.Ty.Base != nil {
-			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base))
+			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base, node.Tok))
 		}
 		c.printf("	add rax, rdi\n")
 	case ND_SUB:
 		if node.Ty.Base != nil {
-			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base))
+			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base, node.Tok))
 		}
 		c.printf("	sub rax, rdi\n")
 	case ND_MUL:
@@ -547,7 +547,7 @@ func (c *codeWriter) loadArg(v *Var, idx int) {
 		return
 	}
 
-	switch sizeOf(v.Ty) {
+	switch sizeOf(v.Ty, v.Tok) {
 	case 1:
 		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg1[idx])
 	case 2:
@@ -570,13 +570,23 @@ func (c *codeWriter) emitData(prog *Program) {
 
 	for vl := prog.Globs; vl != nil; vl = vl.Next {
 		c.printf("%s:\n", vl.Var.Name)
-		if vl.Var.Conts == nil {
-			c.printf("	.zero %d\n", sizeOf(vl.Var.Ty))
+
+		if vl.Var.Init == nil {
+			c.printf("	.zero %d\n", sizeOf(vl.Var.Ty, vl.Var.Tok))
 			continue
 		}
 
-		for i := 0; i < vl.Var.ContLen; i++ {
-			c.printf("	.byte %d\n", vl.Var.Conts[i])
+		for init := vl.Var.Init; init != nil; init = init.Next {
+			if init.Lbl != "" {
+				c.printf("	.quad %s\n", init.Lbl)
+				continue
+			}
+
+			if init.Sz == 1 {
+				c.printf("	.byte %d\n", init.Val)
+			} else {
+				c.printf("	.%dbyte %d\n", init.Sz, init.Val)
+			}
 		}
 	}
 }

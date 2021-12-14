@@ -88,7 +88,7 @@ func arrayOf(base *Type, size int) *Type {
 	return &Type{Kind: TY_ARRAY, Align: base.Align, Base: base, ArrSz: size}
 }
 
-func sizeOf(ty *Type) int {
+func sizeOf(ty *Type, tok *Token) int {
 	assert(ty.Kind != TY_VOID, "invalid void type")
 
 	switch ty.Kind {
@@ -101,13 +101,13 @@ func sizeOf(ty *Type) int {
 	case TY_PTR, TY_LONG:
 		return 8
 	case TY_ARRAY:
-		return sizeOf(ty.Base) * ty.ArrSz
+		return sizeOf(ty.Base, tok) * ty.ArrSz
 	case TY_STRUCT:
 		mem := ty.Mems
 		for mem.Next != nil {
 			mem = mem.Next
 		}
-		end := mem.Offset + sizeOf(mem.Ty)
+		end := mem.Offset + sizeOf(mem.Ty, mem.Tok)
 		return alignTo(end, ty.Align)
 	default:
 		panic("invalid type")
@@ -236,7 +236,7 @@ func (e *errWriter) visit(node *Node) {
 	case ND_SIZEOF:
 		node.Kind = ND_NUM
 		node.Ty = intType()
-		node.Val = int64(sizeOf(node.Lhs.Ty))
+		node.Val = int64(sizeOf(node.Lhs.Ty, node.Tok))
 		node.Lhs = nil
 		return
 	}
