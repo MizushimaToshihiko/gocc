@@ -244,13 +244,6 @@ type Function struct {
 	StackSz int
 }
 
-func isFunction() bool {
-	// printCurTok()
-	// printCalledFunc()
-
-	return peek("func") != nil
-}
-
 // program = (global-var | function)*
 func program() *Program {
 	// printCurTok()
@@ -261,7 +254,7 @@ func program() *Program {
 	globals = nil
 
 	for !atEof() {
-		if isFunction() {
+		if consume("func") != nil {
 			cur.Next = function()
 			cur = cur.Next
 		} else if consume("var") != nil {
@@ -462,7 +455,6 @@ func function() *Function {
 
 	locals = nil
 
-	expect("func")
 	// Construct a function object
 	tok := token
 	fn := &Function{Name: expectIdent()}
@@ -513,6 +505,13 @@ func newInitLabel(cur *Initializer, label string) *Initializer {
 	return init
 }
 
+func newInitZero(cur *Initializer, nbytes int) *Initializer {
+	for i := 0; i < nbytes; i++ {
+		cur = newInitVal(cur, 1, 0)
+	}
+	return cur
+}
+
 func gvarInitString(p []rune, len int) *Initializer {
 	head := &Initializer{}
 	cur := head
@@ -522,8 +521,75 @@ func gvarInitString(p []rune, len int) *Initializer {
 	return head.Next
 }
 
+func emitStructPadding(cur *Initializer, parent *Type, mem *Member) *Initializer {
+	end := mem.Offset + sizeOf(mem.Ty, token)
+
+	padding := sizeOf(parent, token) - end
+	if mem.Next != nil {
+		padding = mem.Next.Offset - end
+	}
+
+	if padding != 0 {
+		cur = newInitZero(cur, padding)
+	}
+	return cur
+}
+
 func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
+	// printCalledFunc()
+	// printCurTok()
+
 	tok := token
+
+	if consume("{") != nil {
+		if ty.Kind == TY_ARRAY {
+			var i int
+
+			for {
+				cur = gvarInitializer(cur, ty.Base)
+				i++
+				if peekEnd() || consume(",") == nil {
+					break
+				}
+			}
+
+			expectEnd()
+
+			// Set excess array elements to zero.
+			if i < ty.ArrSz {
+				cur = newInitZero(cur, sizeOf(ty.Base, tok)*(ty.ArrSz-i))
+			}
+
+			return cur
+		}
+
+		if ty.Kind == TY_STRUCT {
+			mem := ty.Mems
+
+			for {
+				cur = gvarInitializer(cur, mem.Ty)
+				cur = emitStructPadding(cur, ty, mem)
+				mem = mem.Next
+				if peekEnd() || consume(",") == nil {
+					break
+				}
+			}
+
+			expectEnd()
+
+			// Set excess struct elements to zero.
+			if mem != nil {
+				sz := sizeOf(ty, tok) - mem.Offset
+				if sz != 0 {
+					cur = newInitZero(cur, sz)
+				}
+			}
+			return cur
+		}
+
+		panic("\n" + errorTok(tok, "invalid initializer"))
+	}
+
 	expr := logor()
 
 	if expr.Kind == ND_ADDR {
@@ -541,9 +607,16 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 }
 
 // global-var = "var" ident type-prefix type-suffix ("=" gvar-initializer)? ";"
+//
+// For example,
+// var x int = 6
+// var x *int = &y
+// var x string = "abc"
+// var x [2]int = [2]int{1,2}
+// var x T(typedef) = T{1,2}
 func globalVar() {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok()
+	printCalledFunc()
 
 	tok := token
 	name := expectIdent()
@@ -553,10 +626,30 @@ func globalVar() {
 	pushScope(name).Var = v
 
 	if consume("=") != nil {
+		if t := peekIdent(); t != nil {
+			// For typedef.
+			// Ex: var x T = T{1,2}
+			ty2 := readTypePreffix()
+			if !isSameTy(ty2, v.Ty) {
+				panic("\n" + errorTok(t, "different types cannot be assigned"))
+			}
+		} else if peek("[") != nil {
+			t := token
+			// For array.
+			// Ex: var x [2]int = [2]int{1,2}
+			ty2 := readTypePreffix()
+			if !isSameTy(ty2, v.Ty) {
+				panic("\n" + errorTok(t, "different types cannot be assigned"))
+			}
+		}
+
+		// fmt.Printf("ty: %#v\n\n", ty)
+
 		head := &Initializer{}
 		gvarInitializer(head, ty)
 		v.Init = head.Next
 	}
+
 	expect(";")
 }
 

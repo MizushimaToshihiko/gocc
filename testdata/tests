@@ -7,6 +7,13 @@ var g5 int = 5
 var g6 int64 = 6
 var g7 *int = &g5
 var g8 string = "abc"
+var g9 [3]int = [3]int{0, 1, 2}
+// var g10 [2]string = [2]string{"foo", "bar"}
+// type T_g11 struct {
+// 	a byte
+// 	b int
+// }
+// var g11 [2]T_g11 = [2]T_g11{{1,2},{3,4}}
 
 func assert(want int64, ac int64, code *byte) {
 	if want == ac {
@@ -1628,6 +1635,10 @@ func main() int {
 	assert(0, strcmp(f213(), "abc"), "strcmp(f213(),\"abc\")")
 	assert(0, strcmp(f214(), "abc"), "strcmp(f214(), \"abc\")")
 	assert(0, strcmp(g8, "abc"), "strcmp(g8, \"abc\")")
+
+	assert(0, g9[0], "g9[0]")
+  assert(1, g9[1], "g9[1]")
+  assert(2, g9[2], "g9[2]")
 
 	printf("\nOK\n")
 	return 0
