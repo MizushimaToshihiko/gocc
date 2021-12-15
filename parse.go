@@ -648,8 +648,6 @@ func globalVar() {
 		v.Init = head.Next
 	}
 
-	printCurTok()
-
 	expect(";")
 }
 
