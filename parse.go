@@ -49,7 +49,7 @@ const (
 	ND_LE                        // 7: <=
 	ND_ASSIGN                    // 8: =
 	ND_MEMBER                    // 9: . (struct menber access)
-	ND_VAR                       // 10: local variables
+	ND_VAR                       // 10: variables
 	ND_NUM                       // 11: integer
 	ND_RETURN                    // 12: 'return'
 	ND_IF                        // 13: "if"
@@ -280,7 +280,7 @@ func program() *Program {
 }
 
 func stringDecl() *Type {
-	return arrayOf(charType(), 0)
+	return pointerTo(charType())
 }
 
 // type-specifier = "*"* builtin-type | struct-decl | typedef-name |
