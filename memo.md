@@ -95,5 +95,4 @@ func MerryXMas() {
 
 #### 配列変数から配列変数への代入
 - 現時点では配列から配列への代入ができない（not a lvalueエラーを出してしまう)
-- string変数からstring変数への代入も同様にできない。stringをbase typeがbyteの配列にしているため。
-- lvarInitializerを改良して実装すればいけるかも？
+- string変数からstring変数への代入も同様にできない。stringをbase typeがbyteの配列にしているため。⇒string型をarrayType()からpointerTo()にしたら通った。
