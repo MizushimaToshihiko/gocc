@@ -1275,6 +1275,12 @@ func assert(want int64, ac int64, code *byte) {
 // 	return x[1].b
 // }
 
+func f213() string {
+	var x string
+	x = "abc"
+	return x
+}
+
 func main() int {
 	// assert(0, 0, "0")
 	// assert(42, 42, "42")
@@ -1615,6 +1621,7 @@ func main() int {
 	// assert(5, g5, "g5")
 	// assert(6, g6, "g6")
 	// assert(5, *g7, "*g7")
+	assert(0, strcmp(f213(), "abc"), "strcmp(f213(),\"abc\")")
 	assert(0, strcmp(g8, "abc"), "strcmp(g8, \"abc\")")
 
 	printf("\nOK\n")
