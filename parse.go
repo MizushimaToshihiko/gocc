@@ -643,12 +643,12 @@ func globalVar() {
 			}
 		}
 
-		// fmt.Printf("ty: %#v\n\n", ty)
-
 		head := &Initializer{}
 		gvarInitializer(head, ty)
 		v.Init = head.Next
 	}
+
+	printCurTok()
 
 	expect(";")
 }
@@ -887,6 +887,7 @@ func isTypename() bool {
 	return peek("byte") != nil || peek("bool") != nil ||
 		peek("int16") != nil || peek("int") != nil ||
 		peek("int64") != nil || peek("struct") != nil ||
+		peek("string") != nil ||
 		findTyDef(token) != nil
 }
 

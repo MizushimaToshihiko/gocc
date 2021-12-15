@@ -64,7 +64,7 @@ func compile(arg string, w io.Writer) error {
 		return err
 	}
 
-	// printTokens()
+	printTokens()
 	prog := program()
 	err = addType(prog)
 	if err != nil {
