@@ -489,8 +489,13 @@ func peekEnd() bool {
 	return ret
 }
 
-func expectEnd() {
-	expect("}")
+func consumeEnd() bool {
+	tok := token
+	if consume("}") != nil {
+		return true
+	}
+	token = tok
+	return false
 }
 
 func newInitVal(cur *Initializer, sz int, val int) *Initializer {
@@ -548,16 +553,19 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 		expect("{")
 		if ty.Kind == TY_ARRAY {
 			var i int
+			limit := ty.ArrSz
 
 			for {
 				cur = gvarInitializer(cur, ty.Base)
 				i++
-				if peekEnd() || consume(",") == nil {
+				if i >= limit || peekEnd() || consume(",") == nil {
 					break
 				}
 			}
 
-			expectEnd()
+			if !consumeEnd() {
+				panic("\n" + errorTok(token, "array index %d out of bounds [0:%d]", i, limit))
+			}
 
 			// Set excess array elements to zero.
 			if i < ty.ArrSz {
@@ -574,12 +582,14 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 				cur = gvarInitializer(cur, mem.Ty)
 				cur = emitStructPadding(cur, ty, mem)
 				mem = mem.Next
-				if peekEnd() || consume(",") == nil {
+				if mem == nil || peekEnd() || consume(",") == nil {
 					break
 				}
 			}
 
-			expectEnd()
+			if !consumeEnd() {
+				panic("\n" + errorTok(token, "too many values"))
+			}
 
 			// Set excess struct elements to zero.
 			if mem != nil {
@@ -757,17 +767,20 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	tok := consume("{")
 	if ty.Kind == TY_ARRAY {
 		i := 0
+		limit := ty.ArrSz
 
 		for {
 			desg2 := &Designator{desg, i, nil}
 			i++
 			cur = lvarInitializer(cur, v, ty.Base, desg2)
-			if peekEnd() || consume(",") == nil {
+			if i >= limit || peekEnd() || consume(",") == nil {
 				break
 			}
 		}
 
-		expectEnd()
+		if !consumeEnd() {
+			panic("\n" + errorTok(token, "array index %d out of bounds [0:%d]", i, limit))
+		}
 
 		// Set excess array elements to zero.
 		for i < ty.ArrSz {
@@ -785,12 +798,14 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 			desg2 := &Designator{desg, 0, mem}
 			cur = lvarInitializer(cur, v, mem.Ty, desg2)
 			mem = mem.Next
-			if peekEnd() || consume(",") == nil {
+			if mem == nil || peekEnd() || consume(",") == nil {
 				break
 			}
 		}
 
-		expectEnd()
+		if !consumeEnd() {
+			panic("\n" + errorTok(token, "too many values"))
+		}
 
 		// Set excess struct elements to zero.
 		for ; mem != nil; mem = mem.Next {
