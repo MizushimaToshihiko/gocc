@@ -235,9 +235,10 @@ type Initializer struct {
 }
 
 type Function struct {
-	Next   *Function
-	Name   string
-	Params *VarList
+	Next     *Function
+	Name     string
+	Params   *VarList
+	IsStatic bool
 
 	Node    *Node
 	Locals  *VarList
@@ -484,14 +485,14 @@ func function() *Function {
 // we are at the end of an initializer list.
 func peekEnd() bool {
 	tok := token
-	ret := consume("}") != nil
+	ret := (consume("}") != nil) || (consume(",") != nil && consume("}") != nil)
 	token = tok
 	return ret
 }
 
 func consumeEnd() bool {
 	tok := token
-	if consume("}") != nil {
+	if (consume("}") != nil) || (consume(",") != nil && consume("}") != nil) {
 		return true
 	}
 	token = tok
