@@ -620,6 +620,11 @@ func (c *codeWriter) emitText(prog *Program) {
 			c.gen(n)
 		}
 
+		// 'main' function returns implicitly 0.
+		if fn.Name == "main" {
+			c.printf("	mov rax, 0\n")
+		}
+
 		// Epilogue
 		c.printf(".Lreturn.%s:\n", funcname)
 		c.printf("	mov rsp, rbp\n")

@@ -1303,7 +1303,7 @@ func f214() string {
 	return g8
 }
 
-func main() int {
+func main() {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
 	assert(5, 5, "5")
@@ -1674,7 +1674,6 @@ func main() int {
 	assert(4, g12_1[1].a[1], "g12_1[1].a[1]")
 
 	printf("\nOK\n")
-	return 0
 }
 
 func fib(x int) int {
