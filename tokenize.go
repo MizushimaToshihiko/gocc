@@ -5,7 +5,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -93,16 +92,6 @@ func errorTok(tok *Token, formt string, ap ...interface{}) string {
 		"\n"
 }
 
-func warnTok(tok *Token, frmt string, ap ...string) {
-	var errStr string
-	if tok != nil {
-		errStr += errorAt(tok.Loc, frmt, ap)
-	} else {
-		errStr += fmt.Sprintf(frmt, ap) + "\n"
-	}
-	fmt.Fprint(os.Stderr, errStr)
-}
-
 // strNdUp function returns the []rune terminates with '\0'
 func strNdUp(b []rune, len int) []rune {
 	res := make([]rune, len)
@@ -115,14 +104,6 @@ func strNdUp(b []rune, len int) []rune {
 func peek(s string) *Token {
 	if token.Kind != TK_RESERVED ||
 		token.Str != s {
-		return nil
-	}
-	return token
-}
-
-// peekIdent returns the current token if it is an identifier
-func peekIdent() *Token {
-	if token.Kind != TK_IDENT {
 		return nil
 	}
 	return token

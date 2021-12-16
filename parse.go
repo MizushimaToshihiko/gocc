@@ -546,62 +546,74 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 
 	tok := token
 
-	if ty2 := readTypePreffix(); ty2.Kind != TY_VOID {
-		if !isSameTy(ty, ty2) {
-			panic("\n" + errorTok(tok, "connot assign"))
-		}
-		expect("{")
-		if ty.Kind == TY_ARRAY {
-			var i int
-			limit := ty.ArrSz
+	ty2 := readTypePreffix()
+	// if neither type-preffix nor ty-specifier, and "tok" is string literal
+	if ty2.Kind == TY_VOID && tok.Kind == TK_STR {
+		ty2 = stringDecl()
+	}
 
-			for {
-				cur = gvarInitializer(cur, ty.Base)
-				i++
-				if i >= limit || peekEnd() || consume(",") == nil {
-					break
-				}
-			}
+	if ty2.Kind != TY_VOID && !isSameTy(ty, ty2) {
+		panic("\n" + errorTok(tok,
+			"connot use \"%s\" (type %s) as type %s in assignment", tok.Str, ty2.Kind, ty.Kind))
+	}
 
-			if !consumeEnd() {
-				panic("\n" + errorTok(token, "array index %d out of bounds [0:%d]", i, limit))
-			}
+	if ty.Kind == TY_ARRAY {
 
-			// Set excess array elements to zero.
-			if i < ty.ArrSz {
-				cur = newInitZero(cur, sizeOf(ty.Base, tok)*(ty.ArrSz-i))
-			}
-
-			return cur
+		if consume("{") == nil {
+			panic("\n" + errorTok(tok, "invalid initializer"))
 		}
 
-		if ty.Kind == TY_STRUCT {
-			mem := ty.Mems
+		var i int
+		limit := ty.ArrSz
 
-			for {
-				cur = gvarInitializer(cur, mem.Ty)
-				cur = emitStructPadding(cur, ty, mem)
-				mem = mem.Next
-				if mem == nil || peekEnd() || consume(",") == nil {
-					break
-				}
+		for {
+			cur = gvarInitializer(cur, ty.Base)
+			i++
+			if i >= limit || peekEnd() || consume(",") == nil {
+				break
 			}
-
-			if !consumeEnd() {
-				panic("\n" + errorTok(token, "too many values"))
-			}
-
-			// Set excess struct elements to zero.
-			if mem != nil {
-				sz := sizeOf(ty, tok) - mem.Offset
-				if sz != 0 {
-					cur = newInitZero(cur, sz)
-				}
-			}
-			return cur
 		}
 
-		panic("\n" + errorTok(tok, "invalid initializer"))
+		if !consumeEnd() {
+			panic("\n" + errorTok(token, "array index %d out of bounds [0:%d]", i, limit))
+		}
+
+		// Set excess array elements to zero.
+		if i < ty.ArrSz {
+			cur = newInitZero(cur, sizeOf(ty.Base, tok)*(ty.ArrSz-i))
+		}
+
+		return cur
+	}
+
+	if ty.Kind == TY_STRUCT {
+		if consume("{") == nil {
+			panic("\n" + errorTok(tok, "invalid initializer"))
+		}
+
+		mem := ty.Mems
+
+		for {
+			cur = gvarInitializer(cur, mem.Ty)
+			cur = emitStructPadding(cur, ty, mem)
+			mem = mem.Next
+			if mem == nil || peekEnd() || consume(",") == nil {
+				break
+			}
+		}
+
+		if !consumeEnd() {
+			panic("\n" + errorTok(token, "too many values"))
+		}
+
+		// Set excess struct elements to zero.
+		if mem != nil {
+			sz := sizeOf(ty, tok) - mem.Offset
+			if sz != 0 {
+				cur = newInitZero(cur, sz)
+			}
+		}
+		return cur
 	}
 
 	expr := logor()
@@ -743,26 +755,27 @@ func stringAssign(cur *Node, v *Var, ty *Type, desg *Designator, tok *Token) *No
 // A string(char array) can be initialized by a string literal. For example,
 // `var x string="abc"`
 func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
-	if ty.Kind == TY_ARRAY && ty.Base.Kind == TY_BYTE &&
-		token.Kind == TK_STR {
-		// Initialize a char array with a string literal.
-		tok := token
-		token = token.Next
-
-		return stringAssign(cur, v, ty, desg, tok)
-	}
+	// Initialize a char array with a string literal.
+	// => unnecessary
 
 	// Initialize an array or a struct
 	tok2 := token
 	ty2 := readTypePreffix()
-	if ty2.Kind == TY_VOID {
+	// if neither type-preffix nor ty-specifier, and "tok" is string literal
+	if ty2.Kind == TY_VOID && tok2.Kind == TK_STR {
+		ty2 = stringDecl()
+	}
+
+	if ty2.Kind != TY_VOID && !isSameTy(ty, ty2) {
+		panic("\n" + errorTok(tok2,
+			"connot use \"%s\" (type %s) as type %s in assignment", tok2.Str, ty2.Kind, ty.Kind))
+	}
+
+	if ty2.Kind != TY_STRUCT && ty2.Kind != TY_ARRAY {
 		cur.Next = newDesgNode(v, desg, assign())
 		return cur.Next
 	}
 
-	if !isSameTy(ty, ty2) {
-		panic("\n" + errorTok(tok2, "connot assign"))
-	}
 	expect("{")
 	tok := consume("{")
 	if ty.Kind == TY_ARRAY {

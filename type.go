@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-type TypeKind int
+type TypeKind string
 
 // errWriter is struct for error handling
 // it's based on:
@@ -15,16 +15,16 @@ type errWriter struct {
 }
 
 const (
-	TY_VOID  TypeKind = iota // void type
-	TY_BOOL                  // bool type
-	TY_BYTE                  // char type
-	TY_SHORT                 // int16 type
-	TY_INT                   // int32 type
-	TY_LONG                  // int64 type
-	TY_PTR                   // pointer type
-	TY_ARRAY
-	TY_STRUCT
-	TY_FUNC
+	TY_VOID   = "void"    // void type
+	TY_BOOL   = "bool"    // bool type
+	TY_BYTE   = "byte"    // char type
+	TY_SHORT  = "int16"   // int16 type
+	TY_INT    = "int"     // int32 type
+	TY_LONG   = "int64"   // int64 type
+	TY_PTR    = "pointer" // pointer type
+	TY_ARRAY  = "array"
+	TY_STRUCT = "struct"
+	TY_FUNC   = "func"
 )
 
 type Type struct {
