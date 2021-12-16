@@ -3,7 +3,7 @@
 # [Choice] Ubuntu version: hirsute, bionic, focal
 ARG VARIANT="focal"
 FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
-
+WORKDIR /root/
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 #     && apt-get -y install --no-install-recommends <your-package-list-here>
@@ -20,9 +20,9 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 
 FROM mcr.microsoft.com/vscode/devcontainers/go:1.17
 
-WORKDIR /go/src/github.com/MizushimaToshihiko/9cc
+WORKDIR /go/src/github.com/MizushimaToshihiko/gocc
 
-COPY . ./
+COPY --from=0 /root/ ./
 
 # Golang 環境構築(任意)
 RUN go get golang.org/x/tools/gopls \
