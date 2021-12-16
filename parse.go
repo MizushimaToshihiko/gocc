@@ -615,8 +615,8 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 // var x [2]int = [2]int{1,2}
 // var x T(typedef) = T{1,2}
 func globalVar() {
-	printCurTok()
-	printCalledFunc()
+	// printCurTok()
+	// printCalledFunc()
 
 	tok := token
 	name := expectIdent()
