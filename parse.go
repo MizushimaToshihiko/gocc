@@ -541,7 +541,11 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 
 	tok := token
 
-	if consume("{") != nil {
+	if ty2 := readTypePreffix(); ty2.Kind != TY_VOID {
+		if !isSameTy(ty, ty2) {
+			panic("\n" + errorTok(tok, "connot assign"))
+		}
+		expect("{")
 		if ty.Kind == TY_ARRAY {
 			var i int
 
@@ -623,26 +627,8 @@ func globalVar() {
 	ty := readTypePreffix()
 
 	v := pushVar(name, ty, false, tok)
-	pushScope(name).Var = v
 
 	if consume("=") != nil {
-		if t := peekIdent(); t != nil {
-			// For typedef.
-			// Ex: var x T = T{1,2}
-			ty2 := readTypePreffix()
-			if !isSameTy(ty2, v.Ty) {
-				panic("\n" + errorTok(t, "different types cannot be assigned"))
-			}
-		} else if peek("[") != nil {
-			t := token
-			// For array.
-			// Ex: var x [2]int = [2]int{1,2}
-			ty2 := readTypePreffix()
-			if !isSameTy(ty2, v.Ty) {
-				panic("\n" + errorTok(t, "different types cannot be assigned"))
-			}
-		}
-
 		head := &Initializer{}
 		gvarInitializer(head, ty)
 		v.Init = head.Next
@@ -757,12 +743,18 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	}
 
 	// Initialize an array or a struct
-	tok := consume("{")
-	if tok == nil {
+	tok2 := token
+	ty2 := readTypePreffix()
+	if ty2.Kind == TY_VOID {
 		cur.Next = newDesgNode(v, desg, assign())
 		return cur.Next
 	}
 
+	if !isSameTy(ty, ty2) {
+		panic("\n" + errorTok(tok2, "connot assign"))
+	}
+	expect("{")
+	tok := consume("{")
 	if ty.Kind == TY_ARRAY {
 		i := 0
 
@@ -846,21 +838,6 @@ func declaration() *Node {
 	expect("=")
 
 	// cannot assign array variables to array variables now.
-	if t := peekIdent(); t != nil {
-		ty2 := readTypePreffix()
-		if !isSameTy(ty2, v.Ty) {
-			panic("\n" + errorTok(t, "different types cannot be assigned"))
-		}
-	} else if peek("[") != nil {
-		t := token
-		// For array.
-		// Ex: var x [2]int = [2]int{1,2}
-		ty2 := readTypePreffix()
-		if !isSameTy(ty2, v.Ty) {
-			panic("\n" + errorTok(t, "different types cannot be assigned"))
-		}
-	}
-
 	head := &Node{}
 	lvarInitializer(head, v, v.Ty, nil)
 	expect(";")

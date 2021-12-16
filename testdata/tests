@@ -15,13 +15,13 @@ type T_g11 struct {
 	b int
 }
 
-var g11 [2]T_g11 = [2]T_g11{{1, 2}, {3, 4}}
+var g11 [2]T_g11 = [2]T_g11{T_g11{1, 2}, T_g11{3, 4}}
 
 type T_g12 struct {
 	a [2]int
 }
 
-var g12 [2]T_g12 = [2]T_g12{{{1,2}}, {{3,4}}}
+var g12 [2]T_g12 = [2]T_g12{T_g12{[2]int{1,2}}, T_g12{[2]int{3,4}}}
 
 func assert(want int64, ac int64, code *byte) {
 	if want == ac {
@@ -1114,7 +1114,7 @@ func f186() int {
 // }
 
 func f188() int {
-	var x [2][2]int = [2][2]int{{1, 2}, {4, 5}}
+	var x [2][2]int = [2][2]int{[2]int{1, 2}, [2]int{4, 5}}
 	return x[1][1]
 }
 
@@ -1140,32 +1140,32 @@ func f192() int {
 }
 
 func f193() int {
-	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
+	var x [2][3]int = [2][3]int{[3]int{1,2,3},[3]int{4,5,6}}
 	return x[0][1]
 }
 
 func f194() int {
-	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
+	var x [2][3]int = [2][3]int{[3]int{1,2,3},[3]int{4,5,6}}
 	return x[1][0]
 }
 
 func f195() int {
-	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
+	var x [2][3]int = [2][3]int{[3]int{1,2,3},[3]int{4,5,6}}
 	return x[1][2]
 }
 
 func f196() int {
-	var x [2][3]int={{1,2}}
+	var x [2][3]int = [2][3]int{[3]int{1, 2}}
 	return x[0][1]
 }
 
 func f197() int {
-	var x [2][3]int={{1,2}}
+	var x [2][3]int=[2][3]int{[3]int{1, 2}}
 	return x[1][0]
 }
 
 func f198() int {
-	var x [2][3]int={{1,2}}
+	var x [2][3]int=[2][3]int{[3]int{1, 2}}
 	return x[1][2]
 }
 
@@ -1259,7 +1259,7 @@ func f209() int {
 		a int
 		b int
 	}
-	var x [2]T = [2]T{{1,2},{3,4}}
+	var x [2]T = [2]T{T{1,2},T{3,4}}
 	return x[0].a
 }
 
@@ -1268,7 +1268,7 @@ func f210() int {
 		a int
 		b int
 	}
-	var x [2]T = [2]T{{1,2},{3,4}}
+	var x [2]T = [2]T{T{1,2},T{3,4}}
 	return x[0].b
 }
 
@@ -1277,7 +1277,7 @@ func f211() int {
 		a int
 		b int
 	}
-	var x [2]T = [2]T{{1,2},{3,4}}
+	var x [2]T = [2]T{T{1,2},T{3,4}}
 	return x[1].a
 }
 
@@ -1286,7 +1286,7 @@ func f212() int {
 		a int
 		b int
 	}
-	var x [2]T = [2]T{{1,2},{3,4}}
+	var x [2]T = [2]T{T{1,2},T{3,4}}
 	return x[1].b
 }
 

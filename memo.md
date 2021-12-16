@@ -96,3 +96,42 @@ func MerryXMas() {
 #### 配列変数から配列変数への代入
 - 現時点では配列から配列への代入ができない（not a lvalueエラーを出してしまう)
 - string変数からstring変数への代入も同様にできない。stringをbase typeがbyteの配列にしているため。⇒string型をarrayType()からpointerTo()にしたら通った。
+
+#### 型が違うので代入できないエラーを返す関数の書きかけ
+ - typedefの名前の取得が現時点でできない為
+ ```Go
+ package main
+
+import (
+	"errors"
+	"strconv"
+)
+
+// cannotAssignArr: ty1は代入される方の変数の型、ty2は代入する方の変数の型
+func cannotAssignArrErr(ty1, ty2 *Type, tok *Token) error {
+	var retTy1, retTy2 string = typeStr(ty1, tok), typeStr(ty2, tok)
+
+	return errors.New(errorTok(tok,
+		"cannot use %s {...} (type %s) as Type %s in array literal",
+		retTy2,
+		retTy2,
+		retTy1))
+}
+
+func typeStr(ty *Type, tok *Token) string {
+	var retTy string
+	// make retTy1
+	switch ty.Kind {
+	case TY_ARRAY:
+		retTy += "[" + strconv.Itoa(ty.ArrSz) + "]"
+		for ty.Base != nil {
+			retTy += typeStr(ty.Base, tok)
+		}
+	case TY_STRUCT:
+		if findTyDef(tok) != nil {
+			retTy += tok.Str
+		}
+	}
+	return retTy
+}
+``` 
