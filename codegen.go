@@ -566,15 +566,16 @@ func (c *codeWriter) emitData(prog *Program) {
 		return
 	}
 
-	c.printf(".data\n")
-
 	for vl := prog.Globs; vl != nil; vl = vl.Next {
-		c.printf("%s:\n", vl.Var.Name)
-
 		if vl.Var.Init == nil {
+			c.printf("	.bss\n")
+			c.printf("%s:\n", vl.Var.Name)
 			c.printf("	.zero %d\n", sizeOf(vl.Var.Ty, vl.Var.Tok))
 			continue
 		}
+
+		c.printf(".data\n")
+		c.printf("%s:\n", vl.Var.Name)
 
 		for init := vl.Var.Init; init != nil; init = init.Next {
 			if init.Lbl != "" {
