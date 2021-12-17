@@ -1,11 +1,49 @@
 
-#### 【後回し】
- - Allow for-loops to define local  variables  
-   => 型推論が終わってから, for-clauseのinitではShortVarDeclしか記載できない為
+### チラ裏的なもの
+#### 【後回し】※順不同
+ - Allow for-loops to define local variables  
+   => 型推論が終わってから, for-clauseのinitではShortVarDeclしか記載できない為  
+ - 型推論  
+   "var x = expr"とか、"x := expr"とか
+ - RangeClause  
+   "for x := range X"みたいなもの
+ - 配列の宣言で"[...]int{1,2,3}"みたいなもの
+ - 定数宣言
+ - map型
+ - slice
+ - Typeに型の名前を持たせて、pointer型とstring型を外面上は別物にする
+ - 関数戻り値の型チェック(type checkingというのかな)
+ - goroutineは無理かな？
+ - package
+    - main package
+ - import
+ - built-in functions
+    - new
+    - make
+    - len
+    - println
+    - cap
+    - append(slice)
+    - copy(slice)
+    - panic
+    - recover
+ - "switch 変数 {"とか"switch 型 {"とか
+ - blank identifiers => "_"
+ - bool型でtrueやfalseを使用できるように
+ - float
+ - complex(複素数) いる?
+ - rune(int32のエイリアス)
+ - rune literal => tokenizerのchar literalを変更する?
+ - method set(メソッド集合)
+ - 構造体埋め込みでメソッド集合も埋め込む
+ - interface
+ - クロージャ
+ - gc
+ 
 
 #### 【VarSpecの追加について】
  - EBNF:VarSpec = ident-list (type-preffix type-specifier [ "=" expr-list ] | "=" expr-list)
- ```Go:test01.go
+ ```Go
 package main
 
 func MerryXMas() {
