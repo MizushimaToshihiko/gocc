@@ -339,8 +339,12 @@ func readArr(base *Type) *Type {
 	if consume("[") == nil {
 		return base
 	}
-	sz := constExpr()
-	expect("]")
+	var sz int64
+	if consume("]") == nil {
+		sz = constExpr()
+		expect("]")
+	}
+	fmt.Printf("token.Str: %s\n\n", token.Str)
 	base = readArr(base)
 	return arrayOf(base, int(sz))
 }
@@ -461,7 +465,8 @@ func function() *Function {
 	fn := &Function{Name: expectIdent()}
 	expect("(")
 	fn.Params = readFuncParams()
-	ty := typeSpecifier()
+	ty := readTypePreffix()
+	fmt.Printf("ty: %#v\n\n", ty)
 
 	// Add a function type to the scope
 	pushVar(fn.Name, funcType(ty), false, tok)

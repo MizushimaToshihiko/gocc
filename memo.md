@@ -3,6 +3,8 @@
 #### 【後回し】※順不同
  - Allow for-loops to define local variables  
    => 型推論が終わってから, for-clauseのinitではShortVarDeclしか記載できない為  
+ - Add flexible array member  
+   => とりあえず今のところはsiliceを長さ0の配列としている。後でsliceを定義してparse出来るようにする
  - 型推論  
    "var x = expr"とか、"x := expr"とか
  - RangeClause  

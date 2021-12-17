@@ -567,6 +567,9 @@ func (c *codeWriter) emitData(prog *Program) {
 	}
 
 	for vl := prog.Globs; vl != nil; vl = vl.Next {
+		c.printf("	.globl %s\n", vl.Var.Name)
+		c.printf("	.align %d\n", vl.Var.Ty.Align)
+
 		if vl.Var.Init == nil {
 			c.printf("	.bss\n")
 			c.printf("%s:\n", vl.Var.Name)
@@ -574,7 +577,7 @@ func (c *codeWriter) emitData(prog *Program) {
 			continue
 		}
 
-		c.printf(".data\n")
+		c.printf("	.data\n")
 		c.printf("%s:\n", vl.Var.Name)
 
 		for init := vl.Var.Init; init != nil; init = init.Next {

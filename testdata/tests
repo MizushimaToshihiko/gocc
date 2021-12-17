@@ -26,6 +26,8 @@ var g12 [2]T_g12 = [2]T_g12{T_g12{[2]int{1,2}}, T_g12{[2]int{3,4}}}
 
 var g12_1 [2]T_g12 = [2]T_g12{T_g12{[2]int{1,2,}}, T_g12{[2]int{3,4,},}}
 
+var g12_2 []int
+
 func assert(want int64, ac int64, code *byte) {
 	if want == ac {
 		printf("\n%s => %ld\n", code, ac)
@@ -1303,6 +1305,11 @@ func f214() string {
 	return g8
 }
 
+func f215() []byte {
+	var x []byte
+	return x
+}
+
 func main() {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -1672,6 +1679,9 @@ func main() {
 	assert(2, g12_1[0].a[1], "g12_1[0].a[1]")
 	assert(3, g12_1[1].a[0], "g12_1[1].a[0]")
 	assert(4, g12_1[1].a[1], "g12_1[1].a[1]")
+
+	assert(0, sizeof(g12_2), "sizeof(g12_2)")
+	assert(0, sizeof(f215()), "f215:\nvar x []byte\nreturn x")
 
 	printf("\nOK\n")
 }
