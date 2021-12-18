@@ -7,6 +7,8 @@
    => とりあえず今のところはsiliceを長さ0の配列としている。後でsliceを定義してparse出来るようにする
  - 型推論  
    "var x = expr"とか、"x := expr"とか
+ - initializerでの型名省略
+   "var x [2]T = [2]T{T{1,2},T{3,4}}"を"var x [2]T = [2]T{{1,2},{3,4}}"で可とする
  - RangeClause  
    "for x := range X"みたいなもの
  - 配列の宣言で"[...]int{1,2,3}"みたいなもの
