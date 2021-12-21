@@ -5,6 +5,10 @@
    => 型推論が終わってから, for-clauseのinitではShortVarDeclしか記載できない為  
  - Add flexible array member  
    => とりあえず今のところはsiliceを長さ0の配列としている。後でsliceを定義してparse出来るようにする
+ - tokenizer変更
+   公式のtoken packageに合わせてVARトークンやFUNCトークンを作り、FUNCトークンの子としてFUNC内のstatementをtokenizeする <= parseしやすくなるかもしれないので
+ - parseの順番を変える
+   現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var, type, func(変数スコープ登録のみ)のparseの後にfunc内部のparseを行うように変更
  - 型推論  
    "var x = expr"とか、"x := expr"とか
  - initializerでの型名省略
