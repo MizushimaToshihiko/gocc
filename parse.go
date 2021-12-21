@@ -344,7 +344,6 @@ func readArr(base *Type) *Type {
 		sz = constExpr()
 		expect("]")
 	}
-	fmt.Printf("token.Str: %s\n\n", token.Str)
 	base = readArr(base)
 	return arrayOf(base, int(sz))
 }
@@ -466,7 +465,6 @@ func function() *Function {
 	expect("(")
 	fn.Params = readFuncParams()
 	ty := readTypePreffix()
-	fmt.Printf("ty: %#v\n\n", ty)
 
 	// Add a function type to the scope
 	pushVar(fn.Name, funcType(ty), false, tok)
@@ -1081,12 +1079,21 @@ func stmt() *Node {
 	return node
 }
 
-// expr       = assign
+// expr       = assign ("," assign)*
 func expr() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	return assign()
+	node := assign()
+	for {
+		if t := consume(","); t != nil {
+			node = newUnary(ND_EXPR_STMT, node, node.Tok)
+			node = newBinary(ND_COMMA, node, assign(), t)
+			continue
+		}
+		break
+	}
+	return node
 }
 
 func eval(node *Node) int64 {
