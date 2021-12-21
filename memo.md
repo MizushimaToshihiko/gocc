@@ -8,7 +8,7 @@
  - tokenizer変更
    公式のtoken packageに合わせてVARトークンやFUNCトークンを作り、FUNCトークンの子としてFUNC内のstatementをtokenizeする <= parseしやすくなるかもしれないので
  - parseの順番を変える
-   現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var, type, func(変数スコープ登録のみ)のparseの後にfunc内部のparseを行うように変更
+   現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化), func(変数スコープ登録のみ)のparseの後にfunc内部のparseを行うように変更
  - 型推論  
    "var x = expr"とか、"x := expr"とか
  - initializerでの型名省略
