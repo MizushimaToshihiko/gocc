@@ -205,6 +205,9 @@ func (e *errWriter) visit(node *Node) {
 		ND_BITNOT:
 		node.Ty = node.Lhs.Ty
 		return
+	case ND_COMMA:
+		node.Ty = node.Rhs.Ty
+		return
 	case ND_MEMBER:
 		if node.Lhs.Ty.Kind != TY_STRUCT {
 			e.err = fmt.Errorf(errorTok(node.Tok, "not a struct"))

@@ -58,7 +58,7 @@ func addx(x *int, y int) int {
 	return *x + y
 }
 
-func subChar(a byte, b byte, c byte) int {
+func subChar(a byte, b byte, c byte) byte {
 	return a - b - c
 }
 
@@ -1310,6 +1310,13 @@ func f215() []byte {
 	return x
 }
 
+func f216() int {
+	var x int
+	var y int
+	x=1,y=2
+	return x+y
+}
+
 func main() {
 	assert(0, 0, "0")
 	assert(42, 42, "42")
@@ -1682,6 +1689,8 @@ func main() {
 
 	assert(0, sizeof(g12_2), "sizeof(g12_2)")
 	assert(0, sizeof(f215()), "f215:\nvar x []byte\nreturn x")
+
+	assert(3, f216(), "f216\nvar x int\nvar y int\nx=1,y=2\nreturn x+y")
 
 	printf("\nOK\n")
 }
