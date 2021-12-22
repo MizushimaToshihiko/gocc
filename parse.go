@@ -762,22 +762,25 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	// Initialize a char array with a string literal.
 	// => unnecessary
 
-	// Initialize an array or a struct
-	tok2 := token
-	ty2 := readTypePreffix()
-	// if neither type-preffix nor ty-specifier, and "tok" is string literal
-	if ty2.Kind == TY_VOID && tok2.Kind == TK_STR {
-		ty2 = stringDecl()
-	}
+	if peek("{") == nil {
+		// Initialize an array or a struct
+		tok2 := token
+		ty2 := readTypePreffix()
+		// if neither type-preffix nor ty-specifier, and "tok" is string literal
+		if ty2.Kind == TY_VOID && tok2.Kind == TK_STR {
+			ty2 = stringDecl()
+		}
 
-	if ty2.Kind != TY_VOID && !isSameTy(ty, ty2) {
-		panic("\n" + errorTok(tok2,
-			"connot use \"%s\" (type %s) as type %s in assignment", tok2.Str, ty2.Kind, ty.Kind))
-	}
+		if ty2.Kind != TY_VOID && !isSameTy(ty, ty2) {
+			panic("\n" + errorTok(tok2,
+				"connot use \"%s\" (type %s) as type %s in assignment", tok2.Str, ty2.Kind, ty.Kind))
+		}
 
-	if ty2.Kind != TY_STRUCT && ty2.Kind != TY_ARRAY {
-		cur.Next = newDesgNode(v, desg, assign())
-		return cur.Next
+		// If the right side is neither TY_STRUCT nor TY_ARRAY.
+		if ty2.Kind != TY_STRUCT && ty2.Kind != TY_ARRAY {
+			cur.Next = newDesgNode(v, desg, assign())
+			return cur.Next
+		}
 	}
 
 	expect("{")
