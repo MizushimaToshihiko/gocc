@@ -522,21 +522,21 @@ func f114() int {
 	return x.a.b
 }
 
-func f115() int {
-	var x int
-	var y byte
-	var a int = &x
-	var b int = &y
-	return b - a
-}
+// func f115() int {
+// 	var x int
+// 	var y byte
+// 	var a *int = &x
+// 	var b *int = &y
+// 	return b - a
+// }
 
-func f116() int {
-	var x byte
-	var y int
-	var a int = &x
-	var b int = &y
-	return b - a
-}
+// func f116() int {
+// 	var x byte
+// 	var y int
+// 	var a *int = &x
+// 	var b *int = &y
+// 	return b - a
+// }
 
 type t117 int
 func f117() int {
@@ -656,13 +656,14 @@ func f136() int {
 	var x X
 	return sizeof(x)
 }
-func f137() int {
-	var x int
-	var y byte
-	var a int = &x
-	var b int = &y
-	return b - a
-}
+
+// func f137() int {
+// 	var x int
+// 	var y byte
+// 	var a *int = &x
+// 	var b *int = &y
+// 	return b - a
+// }
 
 func subShort(a int16, b int16, c int16) int {
 	return a - b - c
@@ -1125,10 +1126,10 @@ func f188() int {
 }
 
 // // error occurs
-// // func f189() int {
-// // 	var x [2][2]int = [2][3]int{{1, 2, 3}, {4, 5, 6}}
-// // 	return x[1][1]
-// // }
+// func f189() int {
+// 	var x [2][3]int = [2][3]int{{1, 2, 3}, {4, 5, 6}}
+// 	return x[1][1]
+// }
 
 func f190() int {
 	var x [3]int = [3]int{1,2,3}
@@ -1318,10 +1319,10 @@ func f216() int {
 	return x+y
 }
 
-// func f217() int {
-// 	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
-// 	return x[1][2]
-// }
+func f217() int {
+	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
+	return x[1][2]
+}
 
 func main() {
 	assert(0, 0, "0")
@@ -1472,9 +1473,9 @@ func main() {
 	assert(2, f110(), "type x108 [3]struct {\n\ta int\n\tb int\n}\nfunc f110() int {\n\tvar x x108\n\tp *int=x\n\tp[2]=2\n\treturn x[1].a\n}")
 	assert(3, f111(), "type x108 [3]struct {\n\ta int\n\tb int\n}\nfunc f111() int {\n\tvar x x108\n\tvar p*int=x\n\tp[3]=3\n\t return x[1].b\n}")
 
-	assert(7, f115(), "func f115() int {\n\tvar x int\n\tvar y byte\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
+	// assert(7, f115(), "func f115() int {\n\tvar x int\n\tvar y byte\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
 
-	assert(1, f116(), "func f116() int {\n\tvar x byte\n\tvar y int\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
+	// assert(1, f116(), "func f116() int {\n\tvar x byte\n\tvar y int\n\tvar a int = &x\n\tvar b int = &y\n\treturn b - a\n}")
 
 	assert(1, f117(), "type t117 int\nfunc f117() int{\n\tvar x t = 1\n\treturn x\n}")
 	assert(1, f118(), "type t118 struct {\n\ta int\n}\nfunc f118() int{\n\tvar x t118\n\tx.a = 1\n\treturn x.a\n}")
@@ -1503,7 +1504,7 @@ func main() {
 	assert(24, f134(), "type X struct {\n\ta [3]int\n}\n var x [2]X\nreturn sizeof(x)")
 	assert(8, f135(), "type X struct {\n\ta byte\n\tb int\n}\nvar x X\nreturn sizeof(x)")
 	assert(8, f136(), "type X struct {\n\ta int\n\tb byte\n}\n var x X\nreturn sizeof(x)")
-	assert(7, f137(), "var x int\nvar y byte\nvar a int=&x\nvar b int=&y\nreturn b - a")
+	// assert(7, f137(), "var x int\nvar y byte\nvar a int=&x\nvar b int=&y\nreturn b - a")
 
 	assert(2, f138(), "var x int64\nreturn sizeof(x)")
 	assert(4, f139(), "type X struct {\n\ta byte\n\tb int16\n}\nvar x X\nreturn sizeof(x)")
@@ -1698,7 +1699,7 @@ func main() {
 
 	assert(3, f216(), "f216\nvar x int\nvar y int\nx=1,y=2\nreturn x+y")
 
-	// assert(6, f217(), "f217:\nvar x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}\nreturn x[1][2]"))
+	assert(6, f217(), "f217:\nvar x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}\nreturn x[1][2]")
 
 	printf("\nOK\n")
 }
