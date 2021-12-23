@@ -273,10 +273,6 @@ func program() *Program {
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
-func stringDecl() *Type {
-	return pointerTo(charType())
-}
-
 // type-specifier = "*"* builtin-type | struct-decl | typedef-name |
 // builtin-type = void | "bool" | "byte"| "int16" | "int" | "int64"
 func typeSpecifier() *Type {
@@ -292,7 +288,7 @@ func typeSpecifier() *Type {
 	if consume("byte") != nil {
 		ty = charType()
 	} else if consume("string") != nil {
-		ty = stringDecl()
+		ty = stringType()
 	} else if consume("bool") != nil {
 		ty = boolType()
 	} else if consume("int16") != nil {
@@ -553,12 +549,12 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 	ty2 := readTypePreffix()
 	// if neither type-preffix nor ty-specifier, and "tok" is string literal
 	if ty2.Kind == TY_VOID && tok.Kind == TK_STR {
-		ty2 = stringDecl()
+		ty2 = stringType()
 	}
 
 	if ty2.Kind != TY_VOID && !isSameTy(ty, ty2) {
 		panic("\n" + errorTok(tok,
-			"connot use \"%s\" (type %s) as type %s in assignment", tok.Str, ty2.Kind, ty.Kind))
+			"connot use \"%s\" (type %s) as type %s in assignment", tok.Str, ty2.Name, ty.Name))
 	}
 
 	if ty.Kind == TY_ARRAY {
@@ -762,25 +758,24 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	// Initialize a char array with a string literal.
 	// => unnecessary
 
-	if peek("{") == nil {
-		// Initialize an array or a struct
-		tok2 := token
-		ty2 := readTypePreffix()
-		// if neither type-preffix nor ty-specifier, and "tok" is string literal
-		if ty2.Kind == TY_VOID && tok2.Kind == TK_STR {
-			ty2 = stringDecl()
-		}
+	// Initialize an array or a struct
+	tok2 := token
+	ty2 := readTypePreffix()
+	fmt.Printf("ty2 1st: %#v\n\n", ty2)
+	fmt.Printf("tok2.Str: %s\n\n", tok2.Str)
+	// if neither type-preffix nor ty-specifier, and "tok" is string literal
+	if ty2.Kind == TY_VOID && tok2.Kind == TK_STR {
+		ty2 = stringType()
+	}
 
-		if ty2.Kind != TY_VOID && !isSameTy(ty, ty2) {
-			panic("\n" + errorTok(tok2,
-				"connot use \"%s\" (type %s) as type %s in assignment", tok2.Str, ty2.Kind, ty.Kind))
-		}
+	if ty2.Kind != TY_VOID && !isSameTy(ty, ty2) {
+		panic("\n" + errorTok(tok2,
+			"connot use \"%s\" (type %s) as type %s in assignment", tok2.Str, ty2.Name, ty.Name))
+	}
 
-		// If the right side is neither TY_STRUCT nor TY_ARRAY.
-		if ty2.Kind != TY_STRUCT && ty2.Kind != TY_ARRAY {
-			cur.Next = newDesgNode(v, desg, assign())
-			return cur.Next
-		}
+	if ty2.Kind != TY_STRUCT && ty2.Kind != TY_ARRAY {
+		cur.Next = newDesgNode(v, desg, assign())
+		return cur.Next
 	}
 
 	expect("{")
@@ -799,6 +794,9 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 		}
 
 		if !consumeEnd() {
+			fmt.Printf("ty: %#v\n\n", ty)
+			fmt.Printf("ty2: %#v\n\n", ty2)
+
 			panic("\n" + errorTok(token, "array index %d out of bounds [0:%d]", i, limit))
 		}
 

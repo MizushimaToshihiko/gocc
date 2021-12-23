@@ -1118,6 +1118,7 @@ func f186() int {
 // 	return x[0]
 // }
 
+// lvar-initializers
 func f188() int {
 	var x [2][2]int = [2][2]int{[2]int{1, 2}, [2]int{4, 5}}
 	return x[1][1]
@@ -1317,10 +1318,10 @@ func f216() int {
 	return x+y
 }
 
-func f217() int {
-	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
-	return x[1][2]
-}
+// func f217() int {
+// 	var x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}
+// 	return x[1][2]
+// }
 
 func main() {
 	assert(0, 0, "0")
@@ -1697,7 +1698,7 @@ func main() {
 
 	assert(3, f216(), "f216\nvar x int\nvar y int\nx=1,y=2\nreturn x+y")
 
-	assert(6, f217(), "f217:\nvar x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}\nreturn x[1][2]"))
+	// assert(6, f217(), "f217:\nvar x [2][3]int = [2][3]int{{1,2,3},{4,5,6}}\nreturn x[1][2]"))
 
 	printf("\nOK\n")
 }

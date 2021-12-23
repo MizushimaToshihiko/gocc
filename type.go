@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"math"
+	"strconv"
 )
 
-type TypeKind string
+type TypeKind int
 
 // errWriter is struct for error handling
 // it's based on:
@@ -15,20 +16,21 @@ type errWriter struct {
 }
 
 const (
-	TY_VOID   = "void"    // void type
-	TY_BOOL   = "bool"    // bool type
-	TY_BYTE   = "byte"    // char type
-	TY_SHORT  = "int16"   // int16 type
-	TY_INT    = "int"     // int32 type
-	TY_LONG   = "int64"   // int64 type
-	TY_PTR    = "pointer" // pointer type
-	TY_ARRAY  = "array"
-	TY_STRUCT = "struct"
-	TY_FUNC   = "func"
+	TY_VOID  TypeKind = iota // void type
+	TY_BOOL                  // bool type
+	TY_BYTE                  // char type
+	TY_SHORT                 // int16 type
+	TY_INT                   // int32 type
+	TY_LONG                  // int64 type
+	TY_PTR                   // pointer type
+	TY_ARRAY
+	TY_STRUCT
+	TY_FUNC
 )
 
 type Type struct {
 	Kind  TypeKind
+	Name  string
 	Align int     // alignment
 	Base  *Type   // pointer or array
 	ArrSz int     // Array size
@@ -48,44 +50,53 @@ func alignTo(n, align int) int {
 	return (n + align - 1) & ^(align - 1)
 }
 
-func newType(kind TypeKind, align int) *Type {
-	return &Type{Kind: kind, Align: align}
+func newType(kind TypeKind, align int, name string) *Type {
+	return &Type{Kind: kind, Align: align, Name: name}
 }
 
 func voidType() *Type {
-	return newType(TY_VOID, 1)
+	return newType(TY_VOID, 1, "void")
 }
 
 func boolType() *Type {
-	return newType(TY_BOOL, 1)
+	return newType(TY_BOOL, 1, "bool")
 }
 
 func charType() *Type {
-	return newType(TY_BYTE, 1)
+	return newType(TY_BYTE, 1, "byte")
 }
 
 func shortType() *Type {
-	return newType(TY_SHORT, 2)
+	return newType(TY_SHORT, 2, "int16")
 }
 
 func intType() *Type {
-	return newType(TY_INT, 4)
+	return newType(TY_INT, 4, "int")
 }
 
 func longType() *Type {
-	return newType(TY_LONG, 8)
+	return newType(TY_LONG, 8, "int64")
 }
 
 func funcType(retTy *Type) *Type {
-	return &Type{Kind: TY_FUNC, Align: 1, RetTy: retTy}
+	return &Type{Kind: TY_FUNC, Align: 1, RetTy: retTy, Name: "func"}
+}
+
+func stringType() *Type {
+	return &Type{Kind: TY_PTR, Base: charType(), Align: 8, Name: "string"}
 }
 
 func pointerTo(base *Type) *Type {
-	return &Type{Kind: TY_PTR, Base: base, Align: 8}
+	return &Type{Kind: TY_PTR, Base: base, Align: 8, Name: "pointer"}
 }
 
 func arrayOf(base *Type, size int) *Type {
-	return &Type{Kind: TY_ARRAY, Align: base.Align, Base: base, ArrSz: size}
+	return &Type{
+		Kind:  TY_ARRAY,
+		Align: base.Align,
+		Base:  base,
+		ArrSz: size,
+		Name:  "[" + strconv.Itoa(size) + "]" + base.Name}
 }
 
 func sizeOf(ty *Type, tok *Token) int {
