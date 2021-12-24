@@ -772,19 +772,21 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 				switch ty.Kind {
 				case TY_BYTE, TY_SHORT, TY_INT, TY_LONG, TY_BOOL:
 					ty2 = ty
-				default:
+				default: // TY_CHAR
 					ty2 = intType()
 				}
 			} else if consume("&") != nil || consume("*") != nil {
 				ty2 = pointerTo(findVar(consumeIdent()).Var.Ty)
 				token = t
+			} else {
+				ty2 = intType()
 			}
 		}
 
-		// if ty.Name != ty2.Name {
-		// 	panic("\n" + errorTok(token,
-		// 		"connot use \"%s\" (type %s) as type %s in assignment", token.Str, ty2.Name, ty.Name))
-		// }
+		if ty.Name != ty2.Name {
+			panic("\n" + errorTok(token,
+				"connot use \"%s\" (type %s) as type %s in assignment", token.Str, ty2.Name, ty.Name))
+		}
 	}
 
 	if ty.Kind != TY_STRUCT && ty.Kind != TY_ARRAY {
@@ -808,9 +810,6 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 		}
 
 		if !consumeEnd() {
-			fmt.Printf("!consumeEnd(): ty: %#v\n\n", ty)
-			fmt.Printf("!consumeEnd(): ty2: %#v\n\n", ty2)
-
 			panic("\n" + errorTok(token, "array index %d out of bounds [0:%d]", i, limit))
 		}
 
