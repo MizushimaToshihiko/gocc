@@ -545,16 +545,33 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 	// printCurTok()
 
 	tok := token
+	var ty2 *Type
 
-	ty2 := readTypePreffix()
-	// if neither type-preffix nor ty-specifier, and "tok" is string literal
-	if ty2.Kind == TY_VOID && tok.Kind == TK_STR {
-		ty2 = stringType()
-	}
+	if peek("{") == nil {
+		ty2 = readTypePreffix()
+		// if neither type-preffix nor ty-specifier, and "tok" is string literal
+		if ty2.Kind == TY_VOID {
+			if tok.Kind == TK_STR {
+				ty2 = stringType()
+			} else if token.Kind == TK_NUM {
+				switch ty.Kind {
+				case TY_BYTE, TY_SHORT, TY_INT, TY_LONG, TY_BOOL:
+					ty2 = ty
+				default: // TY_CHAR
+					ty2 = intType()
+				}
+			} else if consume("&") != nil || consume("*") != nil {
+				ty2 = pointerTo(findVar(consumeIdent()).Var.Ty)
+				token = tok
+			} else {
+				ty2 = intType()
+			}
+		}
 
-	if ty2.Kind != TY_VOID && !isSameTy(ty, ty2) {
-		panic("\n" + errorTok(tok,
-			"connot use \"%s\" (type %s) as type %s in assignment", tok.Str, ty2.Name, ty.Name))
+		if ty.Name != ty2.Name {
+			panic("\n" + errorTok(tok,
+				"connot use \"%s\" (type %s) as type %s in assignment", tok.Str, ty2.Name, ty.Name))
+		}
 	}
 
 	if ty.Kind == TY_ARRAY {
@@ -758,15 +775,14 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	// Initialize a char array with a string literal.
 	// => unnecessary
 
-	// Initialize an array or a struct
 	var ty2 *Type
 
 	t := token
-	// if neither type-preffix nor ty-specifier, and "tok" is string literal
 	if peek("{") == nil {
 		ty2 = readTypePreffix()
 		if ty2.Kind == TY_VOID {
 			if token.Kind == TK_STR {
+				// if neither type-preffix nor ty-specifier, and "tok" is string literal
 				ty2 = stringType()
 			} else if token.Kind == TK_NUM {
 				switch ty.Kind {
@@ -794,6 +810,7 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 		return cur.Next
 	}
 
+	// Initialize an array or a struct
 	tok := consume("{")
 	if ty.Kind == TY_ARRAY {
 		i := 0
