@@ -61,7 +61,7 @@ const (
 	ND_EXPR_STMT                 // 20: expression statement
 	ND_CAST                      // 21: type cast
 	ND_NULL                      // 22: empty statement
-	ND_SIZEOF                    // 23: "sizeof"
+	ND_SIZEOF                    // 23: "Sizeof"
 	ND_COMMA                     // 24: comma
 	ND_INC                       // 25: post ++
 	ND_DEC                       // 26: post --
@@ -1389,7 +1389,7 @@ func cast() *Node {
 }
 
 // unary   = ("+" | "-" | "*" | "&" | "!")? cast
-//         | "sizeof" unary
+//         | "Sizeof" unary
 //         | postfix
 func unary() *Node {
 	// printCurTok()
