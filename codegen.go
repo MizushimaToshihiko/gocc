@@ -39,12 +39,12 @@ func (c *codeWriter) genAddr(node *Node) {
 
 	switch node.Kind {
 	case ND_VAR:
-		if node.Var.IsLocal {
-			c.printf("	lea rax, [rbp-%d]\n", node.Var.Offset)
+		if node.Obj.IsLocal {
+			c.printf("	lea rax, [rbp-%d]\n", node.Obj.Offset)
 			c.printf("	push rax\n")
 			return
 		}
-		c.printf("	push offset %s\n", node.Var.Name)
+		c.printf("	push offset %s\n", node.Obj.Name)
 		return
 	case ND_DEREF:
 		c.gen(node.Lhs)
@@ -542,7 +542,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	return
 }
 
-func (c *codeWriter) loadArg(v *Var, idx int) {
+func (c *codeWriter) loadArg(v *Obj, idx int) {
 	if c.err != nil {
 		return
 	}
@@ -567,20 +567,20 @@ func (c *codeWriter) emitData(prog *Program) {
 	}
 
 	for vl := prog.Globs; vl != nil; vl = vl.Next {
-		c.printf("	.globl %s\n", vl.Var.Name)
-		c.printf("	.align %d\n", vl.Var.Ty.Align)
+		c.printf("	.globl %s\n", vl.Obj.Name)
+		c.printf("	.align %d\n", vl.Obj.Ty.Align)
 
-		if vl.Var.Init == nil {
+		if vl.Obj.Init == nil {
 			c.printf("	.bss\n")
-			c.printf("%s:\n", vl.Var.Name)
-			c.printf("	.zero %d\n", sizeOf(vl.Var.Ty, vl.Var.Tok))
+			c.printf("%s:\n", vl.Obj.Name)
+			c.printf("	.zero %d\n", sizeOf(vl.Obj.Ty, vl.Obj.Tok))
 			continue
 		}
 
 		c.printf("	.data\n")
-		c.printf("%s:\n", vl.Var.Name)
+		c.printf("%s:\n", vl.Obj.Name)
 
-		for init := vl.Var.Init; init != nil; init = init.Next {
+		for init := vl.Obj.Init; init != nil; init = init.Next {
 			if init.Lbl != "" {
 				c.printf("	.quad %s\n", init.Lbl)
 				continue
@@ -615,7 +615,7 @@ func (c *codeWriter) emitText(prog *Program) {
 		// Push arguments to the stack
 		i := 0
 		for vl := fn.Params; vl != nil; vl = vl.Next {
-			c.loadArg(vl.Var, i)
+			c.loadArg(vl.Obj, i)
 			i++
 		}
 

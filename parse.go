@@ -9,11 +9,11 @@ import (
 type VarScope struct {
 	Next  *VarScope
 	Name  string
-	Var   *Var
+	Obj   *Obj
 	TyDef *Type
 }
 
-type Var struct {
+type Obj struct {
 	Name    string // Variable name
 	Ty      *Type  // Type
 	Tok     *Token // for error message
@@ -28,7 +28,7 @@ type Var struct {
 
 type VarList struct {
 	Next *VarList
-	Var  *Var
+	Obj  *Obj
 }
 
 type Program struct {
@@ -126,7 +126,7 @@ type Node struct {
 	CaseLbl    int
 	CaseEndLbl int
 
-	Var *Var  // used if kind == ND_VAR
+	Obj *Obj  // used if kind == ND_VAR
 	Val int64 // it would be used when kind is 'ND_NUM'
 }
 
@@ -173,8 +173,8 @@ func newNum(val int64, tok *Token) *Node {
 	}
 }
 
-func newVar(v *Var, tok *Token) *Node {
-	return &Node{Kind: ND_VAR, Tok: tok, Var: v}
+func newVar(v *Obj, tok *Token) *Node {
+	return &Node{Kind: ND_VAR, Tok: tok, Obj: v}
 }
 
 func pushScope(name string) *VarScope {
@@ -183,22 +183,22 @@ func pushScope(name string) *VarScope {
 	return sc
 }
 
-func pushVar(name string, ty *Type, isLocal bool, tok *Token) *Var {
+func pushVar(name string, ty *Type, isLocal bool, tok *Token) *Obj {
 	// printCurTok()
 	// printCalledFunc()
 
-	v := &Var{Name: name, Ty: ty, IsLocal: isLocal, Tok: tok}
+	v := &Obj{Name: name, Ty: ty, IsLocal: isLocal, Tok: tok}
 
 	var vl *VarList
 	if isLocal {
-		vl = &VarList{Var: v, Next: locals}
+		vl = &VarList{Obj: v, Next: locals}
 		locals = vl
 	} else if ty.Kind != TY_FUNC {
-		vl = &VarList{Var: v, Next: globals}
+		vl = &VarList{Obj: v, Next: globals}
 		globals = vl
 	}
 
-	pushScope(name).Var = v
+	pushScope(name).Obj = v
 	return v
 }
 
@@ -423,7 +423,7 @@ func readFuncParam() *VarList {
 	name := expectIdent()
 	ty := readTypePreffix()
 	vl := &VarList{}
-	vl.Var = pushVar(name, ty, true, tok)
+	vl.Obj = pushVar(name, ty, true, tok)
 	return vl
 }
 
@@ -561,7 +561,7 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 					ty2 = intType()
 				}
 			} else if consume("&") != nil || consume("*") != nil {
-				ty2 = pointerTo(findVar(consumeIdent()).Var.Ty)
+				ty2 = pointerTo(findVar(consumeIdent()).Obj.Ty)
 				token = tok
 			} else {
 				ty2 = intType()
@@ -639,11 +639,11 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 		if expr.Lhs.Kind != ND_VAR {
 			panic("\n" + errorTok(tok, "invalid initializer"))
 		}
-		return newInitLabel(cur, expr.Lhs.Var.Name)
+		return newInitLabel(cur, expr.Lhs.Obj.Name)
 	}
 
-	if expr.Kind == ND_VAR && expr.Var.Ty.Kind == TY_ARRAY {
-		return newInitLabel(cur, expr.Var.Name)
+	if expr.Kind == ND_VAR && expr.Obj.Ty.Kind == TY_ARRAY {
+		return newInitLabel(cur, expr.Obj.Name)
 	}
 
 	return newInitVal(cur, sizeOf(ty, token), int(eval(expr)))
@@ -685,7 +685,7 @@ type Designator struct {
 // Creates a node for an array sccess. For example, if v represents
 // a variable x and desg represents indices 3 and 4, this function
 // returns a node representing x[3][4]
-func newDesgNode2(v *Var, desg *Designator) *Node {
+func newDesgNode2(v *Obj, desg *Designator) *Node {
 	tok := v.Tok
 	if desg == nil {
 		return newVar(v, tok)
@@ -703,13 +703,13 @@ func newDesgNode2(v *Var, desg *Designator) *Node {
 	return newUnary(ND_DEREF, node, tok)
 }
 
-func newDesgNode(v *Var, desg *Designator, rhs *Node) *Node {
+func newDesgNode(v *Obj, desg *Designator, rhs *Node) *Node {
 	lhs := newDesgNode2(v, desg)
 	node := newBinary(ND_ASSIGN, lhs, rhs, rhs.Tok)
 	return newUnary(ND_EXPR_STMT, node, rhs.Tok)
 }
 
-func lvarInitZero(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
+func lvarInitZero(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
 	if ty.Kind == TY_ARRAY {
 		for i := 0; i < ty.ArrSz; i++ {
 			desg2 := &Designator{desg, i, nil}
@@ -723,7 +723,7 @@ func lvarInitZero(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 	return cur.Next
 }
 
-func stringAssign(cur *Node, v *Var, ty *Type, desg *Designator, tok *Token) *Node {
+func stringAssign(cur *Node, v *Obj, ty *Type, desg *Designator, tok *Token) *Node {
 	var length int = tok.ContLen
 	if ty.ArrSz != tok.ContLen {
 		ty.ArrSz = tok.ContLen
@@ -771,7 +771,7 @@ func stringAssign(cur *Node, v *Var, ty *Type, desg *Designator, tok *Token) *No
 //
 // A string(char array) can be initialized by a string literal. For example,
 // `var x string="abc"`
-func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
+func lvarInitializer(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
 	// Initialize a char array with a string literal.
 	// => unnecessary
 
@@ -792,7 +792,7 @@ func lvarInitializer(cur *Node, v *Var, ty *Type, desg *Designator) *Node {
 					ty2 = intType()
 				}
 			} else if consume("&") != nil || consume("*") != nil {
-				ty2 = pointerTo(findVar(consumeIdent()).Var.Ty)
+				ty2 = pointerTo(findVar(consumeIdent()).Obj.Ty)
 				token = t
 			} else {
 				ty2 = intType()
@@ -1204,12 +1204,12 @@ func assign() *Node {
 
 	node := logor()
 	if t := consume("="); t != nil {
-		if token.Kind == TK_STR && node.Var.Ty.Kind == TY_ARRAY &&
-			node.Var.Ty.Base.Kind == TY_BYTE {
+		if token.Kind == TK_STR && node.Obj.Ty.Kind == TY_ARRAY &&
+			node.Obj.Ty.Base.Kind == TY_BYTE {
 			tok := token
 			token = token.Next
 			head := &Node{}
-			stringAssign(head, node.Var, node.Var.Ty, nil, tok)
+			stringAssign(head, node.Obj, node.Obj.Ty, nil, tok)
 			n := newNode(ND_BLOCK, tok)
 			n.Body = head.Next
 			return n
@@ -1505,10 +1505,10 @@ func primary() *Node {
 
 			sc := findVar(t)
 			if sc != nil {
-				if sc.Var == nil || sc.Var.Ty.Kind != TY_FUNC {
+				if sc.Obj == nil || sc.Obj.Ty.Kind != TY_FUNC {
 					panic("\n" + errorTok(t, "not a function"))
 				}
-				node.Ty = sc.Var.Ty.RetTy
+				node.Ty = sc.Obj.Ty.RetTy
 			} else {
 				node.Ty = intType()
 			}
@@ -1516,8 +1516,8 @@ func primary() *Node {
 		}
 
 		sc := findVar(t)
-		if sc != nil && sc.Var != nil {
-			return newVar(sc.Var, t)
+		if sc != nil && sc.Obj != nil {
+			return newVar(sc.Obj, t)
 		}
 		panic("\n" + errorTok(t, "undifined variable"))
 	}

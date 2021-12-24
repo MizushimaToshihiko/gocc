@@ -183,7 +183,7 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = longType()
 		return
 	case ND_VAR:
-		node.Ty = node.Var.Ty
+		node.Ty = node.Obj.Ty
 		return
 	case ND_ADD:
 		if node.Rhs.Ty.Base != nil {
