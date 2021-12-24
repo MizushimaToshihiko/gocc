@@ -12,14 +12,14 @@
  - 型推論  
    "var x = expr"とか、"x := expr"とか
  - ~~initializerでの型名省略
-   "var x [2]T = [2]T{T{1,2},T{3,4}}"を"var x [2]T = [2]T{{1,2},{3,4}}"で可とする~~
+   "var x [2]T = [2]T{T{1,2},T{3,4}}"を"var x [2]T = [2]T{{1,2},{3,4}}"で可とする~~反映済
  - RangeClause  
    "for x := range X"みたいなもの
  - 配列の宣言で"[...]int{1,2,3}"みたいなもの
  - 定数宣言
  - map型
  - slice
- - ~~Typeに型の名前を持たせて、pointer型とstring型を外面上は別物にする~~
+ - ~~Typeに型の名前を持たせて、pointer型とstring型を外面上は別物にする~~反映済
  - 関数戻り値の型チェック(type checking)
  - goroutineは無理かな？
  - package
