@@ -138,8 +138,8 @@ func consumeIdent() *Token {
 func consumeSizeof() *Token {
 
 	if token.Kind != TK_SIZEOF ||
-		token.Len != len("sizeof") ||
-		token.Str != "sizeof" {
+		token.Len != len("Sizeof") ||
+		token.Str != "Sizeof" {
 		return nil
 	}
 	t := token
@@ -428,10 +428,10 @@ func tokenize() (*Token, error) {
 			continue
 		}
 
-		// 'sizeof' keyword
-		if startsWith(string(userInput[curIdx:]), "sizeof") {
-			cur = newToken(TK_SIZEOF, cur, "sizeof", len("sizeof"))
-			curIdx += len("sizeof")
+		// 'Sizeof' keyword
+		if startsWith(string(userInput[curIdx:]), "Sizeof") {
+			cur = newToken(TK_SIZEOF, cur, "Sizeof", len("Sizeof"))
+			curIdx += len("Sizeof")
 			continue
 		}
 
