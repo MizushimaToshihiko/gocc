@@ -164,9 +164,9 @@ func inOrder(node *Node) {
 		}
 	case ND_VAR:
 		if isLeaf(node) {
-			fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], node.Var.Name)
+			fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], node.Obj.Name)
 		} else {
-			fmt.Printf(" '%s': %s ", ND[node.Kind], node.Var.Name)
+			fmt.Printf(" '%s': %s ", ND[node.Kind], node.Obj.Name)
 		}
 	case ND_RETURN:
 		if isLeaf(node) {
