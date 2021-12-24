@@ -2,7 +2,7 @@
 ### チラ裏的なもの
 #### 【後回し】※順不同
  - Allow for-loops to define local variables  
-   => 型推論が終わってから, for-clauseのinitではShortVarDeclしか記載できない為  
+   => 型推論が終わってから。for-clauseのinitではShortVarDeclしか記載できない為  
  - Add flexible array member  
    => とりあえず今のところはsiliceを長さ0の配列としている。後でsliceを定義してparse出来るようにする
  - tokenizer変更
@@ -11,16 +11,16 @@
    現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化), func(変数スコープ登録のみ)のparseの後にfunc内部のparseを行うように変更
  - 型推論  
    "var x = expr"とか、"x := expr"とか
- - initializerでの型名省略
-   "var x [2]T = [2]T{T{1,2},T{3,4}}"を"var x [2]T = [2]T{{1,2},{3,4}}"で可とする
+ - ~~initializerでの型名省略
+   "var x [2]T = [2]T{T{1,2},T{3,4}}"を"var x [2]T = [2]T{{1,2},{3,4}}"で可とする~~
  - RangeClause  
    "for x := range X"みたいなもの
  - 配列の宣言で"[...]int{1,2,3}"みたいなもの
  - 定数宣言
  - map型
  - slice
- - Typeに型の名前を持たせて、pointer型とstring型を外面上は別物にする
- - 関数戻り値の型チェック(type checkingというのかな)
+ - ~~Typeに型の名前を持たせて、pointer型とstring型を外面上は別物にする~~
+ - 関数戻り値の型チェック(type checking)
  - goroutineは無理かな？
  - package
     - main package
