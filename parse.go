@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 )
 
 // Scope for local variables, global variables or typedefs
@@ -273,8 +272,14 @@ func program() *Program {
 	return &Program{Globs: globals, Fns: head.Next}
 }
 
+// typeSpecifier returns a pointer of Type struct.
+// If the current tokens represents a typename,
+// it returns the Type struct with that typename.
+// Otherwise returns the Type struct with TY_VOID.
+//
 // type-specifier = "*"* builtin-type | struct-decl | typedef-name |
 // builtin-type = void | "bool" | "byte"| "int16" | "int" | "int64"
+//
 func typeSpecifier() *Type {
 	// printCurTok()
 	// printCalledFunc()
@@ -864,16 +869,6 @@ func lvarInitializer(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
 	}
 
 	panic("\n" + errorTok(tok, "invalid initializer"))
-}
-
-func isSameTy(ty1, ty2 *Type) bool {
-	if reflect.DeepEqual(ty1, ty2) {
-		if ty1 == nil && ty2 == nil {
-			return true
-		}
-		return isSameTy(ty1.Base, ty2.Base)
-	}
-	return false
 }
 
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl(unimplemented)
