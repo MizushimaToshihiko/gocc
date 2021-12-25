@@ -14,11 +14,12 @@ type codeWriter struct {
 	err error
 }
 
-func (c *codeWriter) printf(frmt string, a ...interface{}) {
+func (c *codeWriter) println(frmt string, a ...interface{}) {
 	if c.err != nil {
 		return
 	}
 	_, c.err = fmt.Fprintf(c.w, frmt, a...)
+	_, c.err = fmt.Fprintln(c.w)
 }
 
 var argreg1 = []string{"dil", "sil", "dl", "cl", "r8b", "r9b"}
@@ -40,20 +41,20 @@ func (c *codeWriter) genAddr(node *Node) {
 	switch node.Kind {
 	case ND_VAR:
 		if node.Obj.IsLocal {
-			c.printf("	lea rax, [rbp-%d]\n", node.Obj.Offset)
-			c.printf("	push rax\n")
+			c.println("	lea rax, [rbp-%d]", node.Obj.Offset)
+			c.println("	push rax")
 			return
 		}
-		c.printf("	push offset %s\n", node.Obj.Name)
+		c.println("	push offset %s", node.Obj.Name)
 		return
 	case ND_DEREF:
 		c.gen(node.Lhs)
 		return
 	case ND_MEMBER:
 		c.genAddr(node.Lhs)
-		c.printf("	pop rax\n")
-		c.printf("	add rax, %d\n", node.Mem.Offset)
-		c.printf("	push rax\n")
+		c.println("	pop rax")
+		c.println("	add rax, %d", node.Mem.Offset)
+		c.println("	push rax")
 		return
 	default:
 		c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
@@ -77,22 +78,22 @@ func (c *codeWriter) load(ty *Type) {
 		return
 	}
 
-	c.printf("	pop rax\n")
+	c.println("	pop rax")
 	switch sizeOf(ty, nil) {
 	case 1:
-		c.printf("	movsx rax, byte ptr [rax]\n")
+		c.println("	movsx rax, byte ptr [rax]")
 	case 2:
-		c.printf("	movsx rax, word ptr [rax]\n")
+		c.println("	movsx rax, word ptr [rax]")
 	case 4:
-		c.printf("	movsxd rax, dword ptr [rax]\n")
+		c.println("	movsxd rax, dword ptr [rax]")
 	case 8:
-		c.printf("	mov rax, [rax]\n")
+		c.println("	mov rax, [rax]")
 	default:
 		c.err = fmt.Errorf("invalid size")
 		return
 	}
 
-	c.printf("	push rax\n")
+	c.println("	push rax")
 }
 
 func (c *codeWriter) store(ty *Type) {
@@ -100,29 +101,29 @@ func (c *codeWriter) store(ty *Type) {
 		return
 	}
 
-	c.printf("	pop rdi\n")
-	c.printf("	pop rax\n")
+	c.println("	pop rdi")
+	c.println("	pop rax")
 
 	if ty.Kind == TY_BOOL {
-		c.printf("	cmp rdi, 0\n")
-		c.printf("	setne dil\n")
-		c.printf("	movzb rdi, dil\n")
+		c.println("	cmp rdi, 0")
+		c.println("	setne dil")
+		c.println("	movzb rdi, dil")
 	}
 
 	switch sizeOf(ty, nil) {
 	case 1:
-		c.printf("	mov [rax], dil\n")
+		c.println("	mov [rax], dil")
 	case 2:
-		c.printf("	mov [rax], di\n")
+		c.println("	mov [rax], di")
 	case 4:
-		c.printf("	mov [rax], edi\n")
+		c.println("	mov [rax], edi")
 	case 8:
-		c.printf("	mov [rax], rdi\n")
+		c.println("	mov [rax], rdi")
 	default:
 		c.err = fmt.Errorf("invalid size")
 	}
 
-	c.printf("	push rdi\n")
+	c.println("	push rdi")
 }
 
 func (c *codeWriter) trancate(ty *Type) {
@@ -130,44 +131,44 @@ func (c *codeWriter) trancate(ty *Type) {
 		return
 	}
 
-	c.printf("	pop rax\n")
+	c.println("	pop rax")
 
 	if ty.Kind == TY_BOOL {
-		c.printf("	cmp rax, 0\n")
-		c.printf("	setne al\n")
+		c.println("	cmp rax, 0")
+		c.println("	setne al")
 	}
 
 	switch sizeOf(ty, nil) {
 	case 1:
-		c.printf("	movsx rax, al\n")
+		c.println("	movsx rax, al")
 	case 2:
-		c.printf("	movsx rax, ax\n")
+		c.println("	movsx rax, ax")
 	case 4:
-		c.printf("	movsxd rax, eax\n")
+		c.println("	movsxd rax, eax")
 	}
-	c.printf("	push rax\n")
+	c.println("	push rax")
 }
 
 func (c *codeWriter) inc(node *Node) {
-	c.printf("	pop rax\n")
+	c.println("	pop rax")
 	if node.Ty.Base != nil {
-		c.printf("	add rax, %d\n", sizeOf(node.Ty.Base, node.Tok))
-		c.printf("	push rax\n")
+		c.println("	add rax, %d", sizeOf(node.Ty.Base, node.Tok))
+		c.println("	push rax")
 		return
 	}
-	c.printf("	add rax, 1\n")
-	c.printf("	push rax\n")
+	c.println("	add rax, 1")
+	c.println("	push rax")
 }
 
 func (c *codeWriter) dec(node *Node) {
-	c.printf("	pop rax\n")
+	c.println("	pop rax")
 	if node.Ty.Base != nil {
-		c.printf("	sub rax, %d\n", sizeOf(node.Ty.Base, node.Tok))
-		c.printf("	push rax\n")
+		c.println("	sub rax, %d", sizeOf(node.Ty.Base, node.Tok))
+		c.println("	push rax")
 		return
 	}
-	c.printf("	sub rax, 1\n")
-	c.printf("	push rax\n")
+	c.println("	sub rax, 1")
+	c.println("	push rax")
 }
 
 func (c *codeWriter) gen(node *Node) (err error) {
@@ -180,15 +181,15 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	case ND_NUM:
 		if node.Val <= int64(math.MaxInt32) { // node.Val is int32
-			c.printf("	push %d\n", node.Val)
+			c.println("	push %d", node.Val)
 		} else { // node.Val is int64
-			c.printf("	movabs rax, %d\n", node.Val)
-			c.printf("	push rax\n")
+			c.println("	movabs rax, %d", node.Val)
+			c.println("	push rax")
 		}
 		return
 	case ND_EXPR_STMT:
 		c.gen(node.Lhs)
-		c.printf("	add rsp, 8\n")
+		c.println("	add rsp, 8")
 		return
 	case ND_VAR, ND_MEMBER:
 		c.genAddr(node)
@@ -203,7 +204,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	case ND_INC:
 		c.genLval(node.Lhs)
-		c.printf("	push [rsp]\n")
+		c.println("	push [rsp]")
 		c.load(node.Ty)
 		c.inc(node)
 		c.store(node.Ty)
@@ -211,7 +212,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	case ND_DEC:
 		c.genLval(node.Lhs)
-		c.printf("	push [rsp]\n")
+		c.println("	push [rsp]")
 		c.load(node.Ty)
 		c.dec(node)
 		c.store(node.Ty)
@@ -219,37 +220,37 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	case ND_A_ADD, ND_A_SUB, ND_A_MUL, ND_A_DIV, ND_A_SHL, ND_A_SHR:
 		c.genLval(node.Lhs)
-		c.printf("	push [rsp]\n")
+		c.println("	push [rsp]")
 		c.load(node.Lhs.Ty)
 		c.gen(node.Rhs)
-		c.printf("	pop rdi\n")
-		c.printf("	pop rax\n")
+		c.println("	pop rdi")
+		c.println("	pop rax")
 
 		switch node.Kind {
 		case ND_A_ADD:
 			if node.Ty.Base != nil {
-				c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base, node.Tok))
+				c.println("	imul rdi, %d", sizeOf(node.Ty.Base, node.Tok))
 			}
-			c.printf("	add rax, rdi\n")
+			c.println("	add rax, rdi")
 		case ND_A_SUB:
 			if node.Ty.Base != nil {
-				c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base, node.Tok))
+				c.println("	imul rdi, %d", sizeOf(node.Ty.Base, node.Tok))
 			}
-			c.printf("	sub rax, rdi\n")
+			c.println("	sub rax, rdi")
 		case ND_A_MUL:
-			c.printf("	imul rax, rdi\n")
+			c.println("	imul rax, rdi")
 		case ND_A_DIV:
-			c.printf("	cqo\n")
-			c.printf("	idiv rdi\n")
+			c.println("	cqo")
+			c.println("	idiv rdi")
 		case ND_A_SHL:
-			c.printf("	mov cl, dil\n")
-			c.printf("	shl rax, cl\n")
+			c.println("	mov cl, dil")
+			c.println("	shl rax, cl")
 		case ND_A_SHR:
-			c.printf("	mov cl, dil\n")
-			c.printf("	sar rax, cl\n")
+			c.println("	mov cl, dil")
+			c.println("	sar rax, cl")
 		}
 
-		c.printf("	push rax\n")
+		c.println("	push rax")
 		c.store(node.Ty)
 		return
 	case ND_ADDR:
@@ -263,73 +264,73 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	case ND_NOT:
 		c.gen(node.Lhs)
-		c.printf("	pop rax\n")
-		c.printf("	cmp rax, 0\n")
-		c.printf("	sete al\n")
-		c.printf("	movzb rax, al\n")
-		c.printf("	push rax\n")
+		c.println("	pop rax")
+		c.println("	cmp rax, 0")
+		c.println("	sete al")
+		c.println("	movzb rax, al")
+		c.println("	push rax")
 		return
 	case ND_BITNOT:
 		c.gen(node.Lhs)
-		c.printf("	pop rax\n")
-		c.printf("	not rax\n")
-		c.printf("	push rax\n")
+		c.println("	pop rax")
+		c.println("	not rax")
+		c.println("	push rax")
 		return
 	case ND_LOGAND:
 		seq := labelseq
 		labelseq++
 		c.gen(node.Lhs)
-		c.printf("	pop rax\n")
-		c.printf("	cmp rax, 0\n")
-		c.printf("	je  .Lfalse%d\n", seq)
+		c.println("	pop rax")
+		c.println("	cmp rax, 0")
+		c.println("	je  .Lfalse%d", seq)
 		c.gen(node.Rhs)
-		c.printf("	pop rax\n")
-		c.printf("	cmp rax, 0\n")
-		c.printf("	je  .Lfalse%d\n", seq)
-		c.printf("	push 1\n")
-		c.printf("	jmp  .Lend%d\n", seq)
-		c.printf(".Lfalse%d:\n", seq)
-		c.printf("	push 0\n")
-		c.printf(".Lend%d:\n", seq)
+		c.println("	pop rax")
+		c.println("	cmp rax, 0")
+		c.println("	je  .Lfalse%d", seq)
+		c.println("	push 1")
+		c.println("	jmp  .Lend%d", seq)
+		c.println(".Lfalse%d:", seq)
+		c.println("	push 0")
+		c.println(".Lend%d:", seq)
 		return
 	case ND_LOGOR:
 		seq := labelseq
 		labelseq++
 		c.gen(node.Lhs)
-		c.printf("	pop rax\n")
-		c.printf("	cmp rax, 0\n")
-		c.printf("	jne  .Ltrue%d\n", seq)
+		c.println("	pop rax")
+		c.println("	cmp rax, 0")
+		c.println("	jne  .Ltrue%d", seq)
 		c.gen(node.Rhs)
-		c.printf("	pop rax\n")
-		c.printf("	cmp rax, 0\n")
-		c.printf("	jne  .Ltrue%d\n", seq)
-		c.printf("	push 0\n")
-		c.printf("	jmp  .Lend%d\n", seq)
-		c.printf(".Ltrue%d:\n", seq)
-		c.printf("	push 1\n")
-		c.printf(".Lend%d:\n", seq)
+		c.println("	pop rax")
+		c.println("	cmp rax, 0")
+		c.println("	jne  .Ltrue%d", seq)
+		c.println("	push 0")
+		c.println("	jmp  .Lend%d", seq)
+		c.println(".Ltrue%d:", seq)
+		c.println("	push 1")
+		c.println(".Lend%d:", seq)
 		return
 	case ND_IF:
 		seq := labelseq
 		labelseq++
 		if node.Els != nil {
 			c.gen(node.Cond)
-			c.printf("	pop rax\n")
-			c.printf("	cmp rax, 0\n")
-			c.printf("	je .Lelse%d\n", seq)
+			c.println("	pop rax")
+			c.println("	cmp rax, 0")
+			c.println("	je .Lelse%d", seq)
 			c.gen(node.Then)
-			c.printf("	jmp .Lend%d\n", seq)
-			c.printf(".Lelse%d:\n", seq)
+			c.println("	jmp .Lend%d", seq)
+			c.println(".Lelse%d:", seq)
 			c.gen(node.Els)
-			c.printf(".Lend%d:\n", seq)
+			c.println(".Lend%d:", seq)
 			return
 		}
 		c.gen(node.Cond)
-		c.printf("	pop rax\n")
-		c.printf("	cmp rax, 0\n")
-		c.printf("	je .Lend%d\n", seq)
+		c.println("	pop rax")
+		c.println("	cmp rax, 0")
+		c.println("	je .Lend%d", seq)
 		c.gen(node.Then)
-		c.printf(".Lend%d:\n", seq)
+		c.println(".Lend%d:", seq)
 		return
 	case ND_WHILE:
 		seq := labelseq
@@ -339,14 +340,14 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		contseq = seq
 		brkseq = seq
 
-		c.printf(".L.continue.%d:\n", seq)
+		c.println(".L.continue.%d:", seq)
 		c.gen(node.Cond)
-		c.printf("	pop rax\n")
-		c.printf("	cmp rax, 0\n")
-		c.printf("	je .L.break.%d\n", seq)
+		c.println("	pop rax")
+		c.println("	cmp rax, 0")
+		c.println("	je .L.break.%d", seq)
 		c.gen(node.Then)
-		c.printf("	jmp .L.continue.%d\n", seq)
-		c.printf(".L.break.%d:\n", seq)
+		c.println("	jmp .L.continue.%d", seq)
+		c.println(".L.break.%d:", seq)
 
 		brkseq = brk
 		contseq = cont
@@ -362,20 +363,20 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		if node.Init != nil {
 			c.gen(node.Init)
 		}
-		c.printf(".Lbegin%d:\n", seq)
+		c.println(".Lbegin%d:", seq)
 		if node.Cond != nil {
 			c.gen(node.Cond)
-			c.printf("	pop rax\n")
-			c.printf("	cmp rax, 0\n")
-			c.printf("	je .L.break.%d\n", seq)
+			c.println("	pop rax")
+			c.println("	cmp rax, 0")
+			c.println("	je .L.break.%d", seq)
 		}
 		c.gen(node.Then)
-		c.printf(".L.continue.%d:\n", seq)
+		c.println(".L.continue.%d:", seq)
 		if node.Inc != nil {
 			c.gen(node.Inc)
 		}
-		c.printf("	jmp .Lbegin%d\n", seq)
-		c.printf(".L.break.%d:\n", seq)
+		c.println("	jmp .Lbegin%d", seq)
+		c.println(".L.break.%d:", seq)
 
 		brkseq = brk
 		contseq = cont
@@ -388,14 +389,14 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		node.CaseLbl = seq
 
 		c.gen(node.Cond)
-		c.printf("	pop rax\n")
+		c.println("	pop rax")
 
 		for n := node.CaseNext; n != nil; n = n.CaseNext {
 			n.CaseLbl = labelseq
 			labelseq++
 			n.CaseEndLbl = seq
-			c.printf("	cmp rax, %d\n", n.Val)
-			c.printf("	je .L.case.%d\n", n.CaseLbl)
+			c.println("	cmp rax, %d", n.Val)
+			c.println("	je .L.case.%d", n.CaseLbl)
 		}
 
 		if node.DefCase != nil {
@@ -403,19 +404,19 @@ func (c *codeWriter) gen(node *Node) (err error) {
 			labelseq++
 			node.DefCase.CaseEndLbl = seq
 			node.DefCase.CaseLbl = i
-			c.printf("	jmp .L.case.%d\n", i)
+			c.println("	jmp .L.case.%d", i)
 		}
 
-		c.printf("	jmp .L.break.%d\n", seq)
+		c.println("	jmp .L.break.%d", seq)
 		c.gen(node.Then)
-		c.printf(".L.break.%d:\n", seq)
+		c.println(".L.break.%d:", seq)
 
 		brkseq = brk
 		return
 	case ND_CASE:
-		c.printf(".L.case.%d:\n", node.CaseLbl)
+		c.println(".L.case.%d:", node.CaseLbl)
 		c.gen(node.Lhs)
-		c.printf("	jmp .L.break.%d\n", node.CaseEndLbl)
+		c.println("	jmp .L.break.%d", node.CaseEndLbl)
 		return
 	case ND_BLOCK:
 		for n := node.Body; n != nil; n = n.Next {
@@ -426,19 +427,19 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		if brkseq == 0 {
 			c.err = fmt.Errorf(errorTok(node.Tok, "stray break"))
 		}
-		c.printf("	jmp .L.break.%d\n", brkseq)
+		c.println("	jmp .L.break.%d", brkseq)
 		return
 	case ND_CONTINUE:
 		if contseq == 0 {
 			c.err = fmt.Errorf(errorTok(node.Tok, "stray continue"))
 		}
-		c.printf("	jmp .L.continue.%d\n", contseq)
+		c.println("	jmp .L.continue.%d", contseq)
 		return
 	case ND_GOTO:
-		c.printf("	jmp .L.label.%s.%s\n", funcname, node.LblName)
+		c.println("	jmp .L.label.%s.%s", funcname, node.LblName)
 		return
 	case ND_LABEL:
-		c.printf(".L.label.%s.%s:\n", funcname, node.LblName)
+		c.println(".L.label.%s.%s:", funcname, node.LblName)
 		c.gen(node.Lhs)
 		return
 	case ND_FUNCALL:
@@ -449,7 +450,7 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		}
 
 		for i := nargs - 1; i >= 0; i-- {
-			c.printf("	pop %s\n", argreg8[i])
+			c.println("	pop %s", argreg8[i])
 		}
 
 		// We need to align RSP to a 16 byte boundary before
@@ -457,19 +458,19 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		// RAX is set to 0 for variadic function.
 		seq := labelseq
 		labelseq++
-		c.printf("	mov rax, rsp\n")
-		c.printf("	and rax, 15\n")
-		c.printf("	jnz .Lcall%d\n", seq)
-		c.printf("	mov rax, 0\n")
-		c.printf("	call %s\n", node.FuncName)
-		c.printf("	jmp .Lend%d\n", seq)
-		c.printf(".Lcall%d:\n", seq)
-		c.printf("	sub rsp, 8\n")
-		c.printf("	mov rax, 0\n")
-		c.printf("	call %s\n", node.FuncName)
-		c.printf("	add rsp, 8\n")
-		c.printf(".Lend%d:\n", seq)
-		c.printf("	push rax\n")
+		c.println("	mov rax, rsp")
+		c.println("	and rax, 15")
+		c.println("	jnz .Lcall%d", seq)
+		c.println("	mov rax, 0")
+		c.println("	call %s", node.FuncName)
+		c.println("	jmp .Lend%d", seq)
+		c.println(".Lcall%d:", seq)
+		c.println("	sub rsp, 8")
+		c.println("	mov rax, 0")
+		c.println("	call %s", node.FuncName)
+		c.println("	add rsp, 8")
+		c.println(".Lend%d:", seq)
+		c.println("	push rax")
 
 		if node.Ty.Kind != TY_VOID {
 			c.trancate(node.Ty)
@@ -477,8 +478,8 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	case ND_RETURN:
 		c.gen(node.Lhs)
-		c.printf("	pop rax\n")
-		c.printf("	jmp .Lreturn.%s\n", funcname)
+		c.println("	pop rax")
+		c.println("	jmp .Lreturn.%s", funcname)
 		return
 	case ND_CAST:
 		c.gen(node.Lhs)
@@ -489,56 +490,56 @@ func (c *codeWriter) gen(node *Node) (err error) {
 	c.gen(node.Lhs)
 	c.gen(node.Rhs)
 
-	c.printf("	pop rdi\n")
-	c.printf("	pop rax\n")
+	c.println("	pop rdi")
+	c.println("	pop rax")
 
 	switch node.Kind {
 	case ND_ADD:
 		if node.Ty.Base != nil {
-			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base, node.Tok))
+			c.println("	imul rdi, %d", sizeOf(node.Ty.Base, node.Tok))
 		}
-		c.printf("	add rax, rdi\n")
+		c.println("	add rax, rdi")
 	case ND_SUB:
 		if node.Ty.Base != nil {
-			c.printf("	imul rdi, %d\n", sizeOf(node.Ty.Base, node.Tok))
+			c.println("	imul rdi, %d", sizeOf(node.Ty.Base, node.Tok))
 		}
-		c.printf("	sub rax, rdi\n")
+		c.println("	sub rax, rdi")
 	case ND_MUL:
-		c.printf("	imul rax, rdi\n")
+		c.println("	imul rax, rdi")
 	case ND_DIV:
-		c.printf("	cqo\n")
-		c.printf("	idiv rdi\n")
+		c.println("	cqo")
+		c.println("	idiv rdi")
 	case ND_BITAND:
-		c.printf("	and rax, rdi\n")
+		c.println("	and rax, rdi")
 	case ND_BITOR:
-		c.printf("	or rax, rdi\n")
+		c.println("	or rax, rdi")
 	case ND_BITXOR:
-		c.printf("	xor rax, rdi\n")
+		c.println("	xor rax, rdi")
 	case ND_SHL:
-		c.printf("	mov cl, dil\n")
-		c.printf("	shl rax, cl\n")
+		c.println("	mov cl, dil")
+		c.println("	shl rax, cl")
 	case ND_SHR:
-		c.printf("	mov cl, dil\n")
-		c.printf("	sar rax, cl\n")
+		c.println("	mov cl, dil")
+		c.println("	sar rax, cl")
 	case ND_EQ:
-		c.printf("	cmp rax, rdi\n")
-		c.printf("	sete al\n")
-		c.printf("	movzb rax, al\n")
+		c.println("	cmp rax, rdi")
+		c.println("	sete al")
+		c.println("	movzb rax, al")
 	case ND_NE:
-		c.printf("	cmp rax, rdi\n")
-		c.printf("	setne al\n")
-		c.printf("	movzb rax, al\n")
+		c.println("	cmp rax, rdi")
+		c.println("	setne al")
+		c.println("	movzb rax, al")
 	case ND_LT:
-		c.printf("	cmp rax, rdi\n")
-		c.printf("	setl al\n")
-		c.printf("	movzb rax, al\n")
+		c.println("	cmp rax, rdi")
+		c.println("	setl al")
+		c.println("	movzb rax, al")
 	case ND_LE:
-		c.printf("	cmp rax, rdi\n")
-		c.printf("	setle al\n")
-		c.printf("	movzb rax, al\n")
+		c.println("	cmp rax, rdi")
+		c.println("	setle al")
+		c.println("	movzb rax, al")
 	}
 
-	c.printf("	push rax\n")
+	c.println("	push rax")
 	return
 }
 
@@ -549,13 +550,13 @@ func (c *codeWriter) loadArg(v *Obj, idx int) {
 
 	switch sizeOf(v.Ty, v.Tok) {
 	case 1:
-		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg1[idx])
+		c.println("	mov [rbp-%d], %s", v.Offset, argreg1[idx])
 	case 2:
-		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg2[idx])
+		c.println("	mov [rbp-%d], %s", v.Offset, argreg2[idx])
 	case 4:
-		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg4[idx])
+		c.println("	mov [rbp-%d], %s", v.Offset, argreg4[idx])
 	case 8:
-		c.printf("	mov [rbp-%d], %s\n", v.Offset, argreg8[idx])
+		c.println("	mov [rbp-%d], %s", v.Offset, argreg8[idx])
 	default:
 		c.err = fmt.Errorf("invalid size")
 	}
@@ -567,29 +568,29 @@ func (c *codeWriter) emitData(prog *Program) {
 	}
 
 	for vl := prog.Globs; vl != nil; vl = vl.Next {
-		c.printf("	.globl %s\n", vl.Obj.Name)
-		c.printf("	.align %d\n", vl.Obj.Ty.Align)
+		c.println("	.globl %s", vl.Obj.Name)
+		c.println("	.align %d", vl.Obj.Ty.Align)
 
 		if vl.Obj.Init == nil {
-			c.printf("	.bss\n")
-			c.printf("%s:\n", vl.Obj.Name)
-			c.printf("	.zero %d\n", sizeOf(vl.Obj.Ty, vl.Obj.Tok))
+			c.println("	.bss")
+			c.println("%s:", vl.Obj.Name)
+			c.println("	.zero %d", sizeOf(vl.Obj.Ty, vl.Obj.Tok))
 			continue
 		}
 
-		c.printf("	.data\n")
-		c.printf("%s:\n", vl.Obj.Name)
+		c.println("	.data")
+		c.println("%s:", vl.Obj.Name)
 
 		for init := vl.Obj.Init; init != nil; init = init.Next {
 			if init.Lbl != "" {
-				c.printf("	.quad %s\n", init.Lbl)
+				c.println("	.quad %s", init.Lbl)
 				continue
 			}
 
 			if init.Sz == 1 {
-				c.printf("	.byte %d\n", init.Val)
+				c.println("	.byte %d", init.Val)
 			} else {
-				c.printf("	.%dbyte %d\n", init.Sz, init.Val)
+				c.println("	.%dbyte %d", init.Sz, init.Val)
 			}
 		}
 	}
@@ -600,17 +601,17 @@ func (c *codeWriter) emitText(prog *Program) {
 		return
 	}
 
-	c.printf(".text\n")
+	c.println(".text")
 
 	for fn := prog.Fns; fn != nil; fn = fn.Next {
-		c.printf(".globl %s\n", fn.Name)
-		c.printf("%s:\n", fn.Name)
+		c.println(".globl %s", fn.Name)
+		c.println("%s:", fn.Name)
 		funcname = fn.Name
 
 		// Prologue
-		c.printf("	push rbp\n")
-		c.printf("	mov rbp, rsp\n")
-		c.printf("	sub rsp, %d\n", fn.StackSz)
+		c.println("	push rbp")
+		c.println("	mov rbp, rsp")
+		c.println("	sub rsp, %d", fn.StackSz)
 
 		// Push arguments to the stack
 		i := 0
@@ -626,21 +627,21 @@ func (c *codeWriter) emitText(prog *Program) {
 
 		// 'main' function returns implicitly 0.
 		if fn.Name == "main" {
-			c.printf("	mov rax, 0\n")
+			c.println("	mov rax, 0")
 		}
 
 		// Epilogue
-		c.printf(".Lreturn.%s:\n", funcname)
-		c.printf("	mov rsp, rbp\n")
-		c.printf("	pop rbp\n")
-		c.printf("	ret\n")
+		c.println(".Lreturn.%s:", funcname)
+		c.println("	mov rsp, rbp")
+		c.println("	pop rbp")
+		c.println("	ret")
 	}
 }
 
 func codegen(w io.Writer, prog *Program) error {
 	c := &codeWriter{w: w}
 
-	c.printf(".intel_syntax noprefix\n")
+	c.println(".intel_syntax noprefix")
 	c.emitData(prog)
 	c.emitText(prog)
 
