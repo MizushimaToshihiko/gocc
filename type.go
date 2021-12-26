@@ -47,7 +47,7 @@ type Member struct {
 }
 
 func alignTo(n, align int) int {
-	return (n + align - 1) & ^(align - 1)
+	return (n + align - 1) / align * align
 }
 
 func newType(kind TypeKind, align int, name string) *Type {
