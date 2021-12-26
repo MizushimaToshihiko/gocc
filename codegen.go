@@ -562,6 +562,19 @@ func (c *codeWriter) loadArg(v *Obj, idx int) {
 	}
 }
 
+// Assign offsets to local variables
+func (c *codeWriter) assignLvarOffsets(prog *Program) {
+	for fn := prog.Fns; fn != nil; fn = fn.Next {
+		offset := 0
+		for vl := fn.Locals; vl != nil; vl = vl.Next {
+			offset = alignTo(offset, vl.Obj.Ty.Align)
+			offset += sizeOf(vl.Obj.Ty, vl.Obj.Tok)
+			vl.Obj.Offset = offset
+		}
+		fn.StackSz = alignTo(offset, 8)
+	}
+}
+
 func (c *codeWriter) emitData(prog *Program) {
 	if c.err != nil {
 		return
@@ -642,6 +655,7 @@ func codegen(w io.Writer, prog *Program) error {
 	c := &codeWriter{w: w}
 
 	c.println(".intel_syntax noprefix")
+	c.assignLvarOffsets(prog)
 	c.emitData(prog)
 	c.emitText(prog)
 

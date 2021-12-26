@@ -72,19 +72,19 @@ func compile(arg string, w io.Writer) error {
 	}
 
 	// Assign offsets to local variables
-	for fn := prog.Fns; fn != nil; fn = fn.Next {
-		offset := 0
-		for vl := fn.Locals; vl != nil; vl = vl.Next {
-			offset = alignTo(offset, vl.Obj.Ty.Align)
-			offset += sizeOf(vl.Obj.Ty, vl.Obj.Tok)
-			vl.Obj.Offset = offset
-		}
-		fn.StackSz = alignTo(offset, 8)
+	// for fn := prog.Fns; fn != nil; fn = fn.Next {
+	// 	offset := 0
+	// 	for vl := fn.Locals; vl != nil; vl = vl.Next {
+	// 		offset = alignTo(offset, vl.Obj.Ty.Align)
+	// 		offset += sizeOf(vl.Obj.Ty, vl.Obj.Tok)
+	// 		vl.Obj.Offset = offset
+	// 	}
+	// 	fn.StackSz = alignTo(offset, 8)
 
-		// for n := node; n != nil; n = n.Next {
-		// 	walkInOrder(n)
-		// }
-	}
+	// for n := node; n != nil; n = n.Next {
+	// 	walkInOrder(n)
+	// }
+	// }
 
 	return codegen(w, prog) // make the asm code, down on the AST
 }
