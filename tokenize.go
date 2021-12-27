@@ -34,6 +34,8 @@ type Token struct {
 
 	Contents []rune // string literal contents including terminating '\0'
 	ContLen  int    // string literal length
+
+	LineNo int // Line number
 }
 
 // current token
@@ -388,6 +390,21 @@ func addSemiColn(cur *Token) *Token {
 	return cur
 }
 
+// Initialize lineinfo for all tokens.
+func addLineNumbers(tok *Token) {
+	var n int = 1
+
+	for i := 0; i < len(userInput); i++ {
+		if i == tok.Loc {
+			tok.LineNo = n
+			tok = tok.Next
+		}
+		if userInput[i] == '\n' {
+			n++
+		}
+	}
+}
+
 // tokenize inputted string 'userInput', and return new tokens.
 func tokenize() (*Token, error) {
 	var head Token
@@ -511,5 +528,6 @@ func tokenize() (*Token, error) {
 	}
 
 	newToken(TK_EOF, cur, "", 0)
+	addLineNumbers(head.Next)
 	return head.Next, nil
 }
