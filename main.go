@@ -76,6 +76,7 @@ func compile(arg string, w io.Writer) error {
 	// }
 	// }
 
+	fmt.Fprintf(w, ".file 1 \"%s\"\n", filename)
 	return codegen(w, prog) // make the asm code, down on the AST
 }
 

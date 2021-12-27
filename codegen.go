@@ -176,6 +176,8 @@ func (c *codeWriter) gen(node *Node) (err error) {
 		return
 	}
 
+	c.println("	.loc 1 %d", node.Tok.LineNo)
+
 	switch node.Kind {
 	case ND_NULL:
 		return
