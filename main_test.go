@@ -66,6 +66,7 @@ func TestGetTypeName(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			printTokens()
 			ty := readTypePreffix()
 
 			if ty.Name != c.want {
