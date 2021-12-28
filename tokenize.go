@@ -48,8 +48,11 @@ var userInput []rune
 var curIdx int
 
 // for error report
-// it's arguments are same as printf
-func errorAt(errIdx int, formt string, a ...interface{}) string {
+//
+// foo.go:
+// 10:x = y + 1;
+//        ^ <error message here>
+func verrorAt(lineNum, errIdx int, formt string, a ...interface{}) string {
 	// get the start and end of the line 'errIdx' exists
 	line := errIdx
 	for 0 < line && userInput[line-1] != rune('\n') {
@@ -59,14 +62,6 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 	end := errIdx
 	for end < len(userInput) && userInput[end] != rune('\n') {
 		end++
-	}
-
-	// Find out what line the found line is in the whole.
-	lineNum := 1
-	for i := 0; i < line; i++ {
-		if userInput[i] == rune('\n') {
-			lineNum++
-		}
 	}
 
 	// Show found lines along with file name and line number.
@@ -81,6 +76,19 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 		"^ " +
 		fmt.Sprintf(formt, a...) +
 		"\n"
+}
+
+// it's arguments are same as printf
+func errorAt(errIdx int, formt string, a ...interface{}) string {
+
+	// Find out what line the found line is in the whole.
+	lineNum := 1
+	for i := 0; i < len(userInput); i++ {
+		if userInput[i] == rune('\n') {
+			lineNum++
+		}
+	}
+	return verrorAt(lineNum, errIdx, formt, a...)
 }
 
 func errorTok(tok *Token, formt string, ap ...interface{}) string {
