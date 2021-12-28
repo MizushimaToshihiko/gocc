@@ -64,8 +64,8 @@ func verrorAt(lineNum, errIdx int, formt string, a ...interface{}) string {
 	}
 
 	// Show found lines along with file name and line number.
-	res := fmt.Sprintf("\n%s:\n%d: ", filename, lineNum)
-	indent := len(res) - (len(filename) + 1)
+	res := fmt.Sprintf("\n%s:%d: ", filename, lineNum)
+	indent := len(res)
 	res += fmt.Sprintf("%.*s\n", end-line, string(userInput[line:end]))
 
 	// Point the error location with "^" and display the error message.
@@ -93,7 +93,7 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 func errorTok(tok *Token, formt string, ap ...interface{}) string {
 	var errStr string
 	if tok != nil {
-		errStr += errorAt(tok.Loc, formt, ap...)
+		errStr += verrorAt(tok.LineNo, tok.Loc, formt, ap...)
 	}
 
 	return errStr
@@ -107,25 +107,31 @@ func strNdUp(b []rune, len int) []rune {
 	return res
 }
 
-// peek function returns the token, when the current token matches 's'.
-func peek(s string) *Token {
-	if token.Kind != TK_RESERVED ||
-		token.Str != s {
-		return nil
+// Consumes the current token if it matches 's'.
+func equal(tok *Token, s string) bool {
+	return tok.Str == s
+}
+
+// if the current token is an expected symbol, the read position
+// of token exceed one token.
+func skip(tok *Token, s string) *Token {
+	// defer printCurTok()
+	if !equal(tok, s) {
+		panic("\n" + errorTok(token, "'%s' expected", string(s)))
 	}
-	return token
+	return token.Next
 }
 
 // consume returns token(pointer), if the current token is expected
 // symbol, the read position of token exceed one.
-func consume(s string) *Token {
+func consume(rest **Token, tok *Token, s string) bool {
 	// defer printCurTok()
-	if peek(s) == nil {
-		return nil
+	if equal(tok, s) {
+		*rest = tok.Next
+		return true
 	}
-	t := token
-	token = token.Next
-	return t
+	*rest = tok
+	return false
 }
 
 // consumeIdent returns the current token if it is an identifier,
@@ -138,16 +144,6 @@ func consumeIdent() *Token {
 	t := token
 	token = token.Next
 	return t
-}
-
-// if the current token is an expected symbol, the read position
-// of token exceed one token.
-func expect(s string) {
-	// defer printCurTok()
-	if peek(s) == nil {
-		panic("\n" + errorTok(token, "'%s' expected", string(s)))
-	}
-	token = token.Next
 }
 
 // if next token is integer, the read position of token exceed one
@@ -237,7 +233,7 @@ func startsWithReserved(p string) string {
 	// "len", "make", "new", "panic", "print", "println", "real", "recover"
 
 	for _, k := range kw {
-		if startsWith(p, k) && len(p) >= len(k) && !isAlNum(rune(p[len(k)])) {
+		if startsWith(p, k) && len(p) >= len(k) && !isIdent2(rune(p[len(k)])) {
 			return k
 		}
 	}
@@ -262,17 +258,32 @@ func isDigit(op rune) bool {
 	return '0' <= op && op <= '9'
 }
 
-func isAlpha(c rune) bool {
+func isIdent1(c rune) bool {
 	return ('a' <= c && c <= 'z') ||
 		('A' <= c && c <= 'Z') ||
 		(c == '_')
 }
 
-func isAlNum(c rune) bool {
-	return isAlpha(c) || ('0' <= c && c <= '9')
+func isIdent2(c rune) bool {
+	return isIdent1(c) || isDigit(c)
+}
+
+func readDigit(cur *Token) (*Token, error) {
+	var sVal string
+	for ; curIdx < len(userInput) && isDigit(userInput[curIdx]); curIdx++ {
+		sVal += string(userInput[curIdx])
+	}
+	cur = newToken(TK_NUM, cur, sVal, len(sVal))
+	v, err := strconv.ParseInt(sVal, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	cur.Val = v
+	return cur, nil
 }
 
 func getEscapeChar(c rune) rune {
+
 	switch c {
 	case 'a':
 		return '\a'
@@ -455,9 +466,9 @@ func tokenize() (*Token, error) {
 
 		// identifier
 		// if 'userInput[cutIdx]' is alphabets, it makes a token of TK_IDENT type.
-		if isAlpha(userInput[curIdx]) {
+		if isIdent1(userInput[curIdx]) {
 			ident := make([]rune, 0, 20)
-			for ; curIdx < len(userInput) && isAlNum(userInput[curIdx]); curIdx++ {
+			for ; curIdx < len(userInput) && isIdent2(userInput[curIdx]); curIdx++ {
 				ident = append(ident, userInput[curIdx])
 			}
 			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
@@ -491,16 +502,11 @@ func tokenize() (*Token, error) {
 
 		// number
 		if isDigit(userInput[curIdx]) {
-			var sVal string
-			for ; curIdx < len(userInput) && isDigit(userInput[curIdx]); curIdx++ {
-				sVal += string(userInput[curIdx])
-			}
-			cur = newToken(TK_NUM, cur, sVal, len(sVal))
-			v, err := strconv.ParseInt(sVal, 10, 64)
+			var err error
+			cur, err = readDigit(cur)
 			if err != nil {
 				return nil, err
 			}
-			cur.Val = v
 			cur = addSemiColn(cur)
 			continue
 		}

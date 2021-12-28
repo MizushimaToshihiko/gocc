@@ -254,16 +254,16 @@ func program() *Program {
 	globals = nil
 
 	for !atEof() {
-		if consume("func") != nil {
+		if consume(&token, token, "func") {
 			cur.Next = function()
 			cur = cur.Next
-		} else if consume("var") != nil {
+		} else if consume(&token, token, "var") {
 			globalVar()
-		} else if consume("type") != nil {
+		} else if consume(&token, token, "type") {
 			name := expectIdent()
 			ty := readTypePreffix()
 			pushScope(name).TyDef = ty
-			expect(";")
+			token = skip(token, ";")
 		} else {
 			panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
 		}
@@ -285,24 +285,24 @@ func typeSpecifier() *Type {
 	// printCalledFunc()
 
 	nPtr := 0
-	for consume("*") != nil {
+	for consume(&token, token, "*") {
 		nPtr++
 	}
 
 	var ty *Type
-	if consume("byte") != nil {
+	if consume(&token, token, "byte") {
 		ty = charType()
-	} else if consume("string") != nil {
+	} else if consume(&token, token, "string") {
 		ty = stringType()
-	} else if consume("bool") != nil {
+	} else if consume(&token, token, "bool") {
 		ty = boolType()
-	} else if consume("int16") != nil {
+	} else if consume(&token, token, "int16") {
 		ty = shortType()
-	} else if consume("int") != nil {
+	} else if consume(&token, token, "int") {
 		ty = intType()
-	} else if consume("int64") != nil {
+	} else if consume(&token, token, "int64") {
 		ty = longType()
-	} else if peek("struct") != nil { // struct type
+	} else if equal(token, "struct") { // struct type
 		ty = structDecl()
 	} else if t := consumeIdent(); t != nil {
 		ty = findVar(t).TyDef
@@ -324,7 +324,7 @@ func findBase() (*Type, *Token) {
 	// printCalledFunc()
 
 	tok := token
-	for peek("*") == nil && !isTypename() {
+	for !equal(tok, "*") && !isTypename() {
 		token = token.Next
 	}
 	ty := typeSpecifier()
@@ -337,13 +337,13 @@ func readArr(base *Type) *Type {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume("[") == nil {
+	if !consume(&token, token, "[") {
 		return base
 	}
 	var sz int64
-	if consume("]") == nil {
+	if !consume(&token, token, "]") {
 		sz = constExpr()
-		expect("]")
+		token = skip(token, "]")
 	}
 	base = readArr(base)
 	return arrayOf(base, int(sz))
@@ -354,13 +354,14 @@ func readTypePreffix() *Type {
 	// printCurTok()
 	// printCalledFunc()
 
-	if peek("[") == nil {
+	if !equal(token, "[") {
 		return typeSpecifier()
 	}
 
 	base, t := findBase()
 	arrTy := readArr(base)
 	token = t
+
 	return arrTy
 }
 
@@ -369,13 +370,13 @@ func structDecl() *Type {
 	// printCurTok()
 	// printCalledFunc()
 
-	expect("struct")
-	expect("{")
+	token = skip(token, "struct")
+	token = skip(token, "{")
 
 	head := &Member{}
 	cur := head
 
-	for consume("}") == nil {
+	for !consume(&token, token, "}") {
 		cur.Next = structMem()
 		cur = cur.Next
 	}
@@ -408,7 +409,7 @@ func structMem() *Member {
 		Ty:   readTypePreffix(),
 		Tok:  tok,
 	}
-	expect(";")
+	token = skip(token, ";")
 	return mem
 }
 
@@ -437,15 +438,15 @@ func readFuncParams() *VarList {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume(")") != nil {
+	if consume(&token, token, ")") {
 		return nil
 	}
 
 	head := readFuncParam()
 	cur := head
 
-	for consume(")") == nil {
-		expect(",")
+	for !consume(&token, token, ")") {
+		token = skip(token, ",")
 		cur.Next = readFuncParam()
 		cur = cur.Next
 	}
@@ -463,22 +464,22 @@ func function() *Function {
 	// Construct a function object
 	tok := token
 	fn := &Function{Name: expectIdent()}
-	expect("(")
+	token = skip(token, "(")
 	fn.Params = readFuncParams()
 	ty := readTypePreffix()
 
 	// Add a function type to the scope
 	pushVar(fn.Name, funcType(ty), false, tok)
-	expect("{")
+	token = skip(token, "{")
 
 	// Read function body
 	head := &Node{}
 	cur := head
-	for consume("}") == nil {
+	for !consume(&token, token, "}") {
 		cur.Next = stmt()
 		cur = cur.Next
 	}
-	expect(";")
+	token = skip(token, ";")
 	fn.Node = head.Next
 	fn.Locals = locals
 	return fn
@@ -489,14 +490,14 @@ func function() *Function {
 // we are at the end of an initializer list.
 func peekEnd() bool {
 	tok := token
-	ret := (consume("}") != nil) || (consume(",") != nil && consume("}") != nil)
+	ret := consume(&token, token, "}") || (consume(&token, token, ",") && consume(&token, token, "}"))
 	token = tok
 	return ret
 }
 
 func consumeEnd() bool {
 	tok := token
-	if (consume("}") != nil) || (consume(",") != nil && consume("}") != nil) {
+	if consume(&token, token, "}") || (consume(&token, token, ",") && consume(&token, token, "}")) {
 		return true
 	}
 	token = tok
@@ -552,7 +553,7 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 	tok := token
 	var ty2 *Type
 
-	if peek("{") == nil {
+	if !equal(tok, "{") {
 		ty2 = readTypePreffix()
 		// if neither type-preffix nor ty-specifier, and "tok" is string literal
 		if ty2.Kind == TY_VOID {
@@ -565,7 +566,7 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 				default: // TY_CHAR
 					ty2 = intType()
 				}
-			} else if consume("&") != nil || consume("*") != nil {
+			} else if consume(&token, token, "&") || consume(&token, token, "*") {
 				ty2 = pointerTo(findVar(consumeIdent()).Obj.Ty)
 				token = tok
 			} else {
@@ -581,7 +582,7 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 
 	if ty.Kind == TY_ARRAY {
 
-		if consume("{") == nil {
+		if !consume(&token, token, "{") {
 			panic("\n" + errorTok(tok, "invalid initializer"))
 		}
 
@@ -591,7 +592,7 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 		for {
 			cur = gvarInitializer(cur, ty.Base)
 			i++
-			if i >= limit || peekEnd() || consume(",") == nil {
+			if i >= limit || peekEnd() || !consume(&token, token, ",") {
 				break
 			}
 		}
@@ -609,7 +610,7 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 	}
 
 	if ty.Kind == TY_STRUCT {
-		if consume("{") == nil {
+		if !consume(&token, token, "{") {
 			panic("\n" + errorTok(tok, "invalid initializer"))
 		}
 
@@ -619,7 +620,7 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 			cur = gvarInitializer(cur, mem.Ty)
 			cur = emitStructPadding(cur, ty, mem)
 			mem = mem.Next
-			if mem == nil || peekEnd() || consume(",") == nil {
+			if mem == nil || peekEnd() || !consume(&token, token, ",") {
 				break
 			}
 		}
@@ -672,13 +673,13 @@ func globalVar() {
 
 	v := pushVar(name, ty, false, tok)
 
-	if consume("=") != nil {
+	if consume(&token, token, "=") {
 		head := &Initializer{}
 		gvarInitializer(head, ty)
 		v.Init = head.Next
 	}
 
-	expect(";")
+	token = skip(token, ";")
 }
 
 type Designator struct {
@@ -783,7 +784,7 @@ func lvarInitializer(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
 	var ty2 *Type
 
 	t := token
-	if peek("{") == nil {
+	if !equal(t, "{") {
 		ty2 = readTypePreffix()
 		if ty2.Kind == TY_VOID {
 			if token.Kind == TK_STR {
@@ -796,7 +797,7 @@ func lvarInitializer(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
 				default: // TY_CHAR
 					ty2 = intType()
 				}
-			} else if consume("&") != nil || consume("*") != nil {
+			} else if consume(&token, token, "&") || consume(&token, token, "*") {
 				ty2 = pointerTo(findVar(consumeIdent()).Obj.Ty)
 				token = t
 			} else {
@@ -816,7 +817,8 @@ func lvarInitializer(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
 	}
 
 	// Initialize an array or a struct
-	tok := consume("{")
+	consume(&token, token, "{")
+	tok := token
 	if ty.Kind == TY_ARRAY {
 		i := 0
 		limit := ty.ArrSz
@@ -826,7 +828,7 @@ func lvarInitializer(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
 			desg2 := &Designator{desg, i, nil}
 			i++
 			cur = lvarInitializer(cur, v, ty.Base, desg2)
-			if i >= limit || peekEnd() || consume(",") == nil {
+			if i >= limit || peekEnd() || !consume(&token, token, ",") {
 				break
 			}
 		}
@@ -851,7 +853,7 @@ func lvarInitializer(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
 			desg2 := &Designator{desg, 0, mem}
 			cur = lvarInitializer(cur, v, mem.Ty, desg2)
 			mem = mem.Next
-			if mem == nil || peekEnd() || consume(",") == nil {
+			if mem == nil || peekEnd() || !consume(&token, token, ",") {
 				break
 			}
 		}
@@ -880,7 +882,7 @@ func declaration() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	expect("var")
+	token = skip(token, "var")
 	tok := token
 
 	name := expectIdent()
@@ -888,17 +890,17 @@ func declaration() *Node {
 	assert(ty.Kind != TY_VOID, "\n"+errorTok(tok, "variable declared void"))
 
 	v := pushVar(name, ty, true, tok)
-	if consume(";") != nil {
+	if consume(&token, token, ";") {
 		return newNode(ND_NULL, tok)
 	}
 	// ここでShortVarDecl("var" ident = expr)の場合はty==nilでvがpushVarされていない状態 => unimplemented
 
-	expect("=")
+	token = skip(token, "=")
 
 	// cannot assign array variables to array variables now.
 	head := &Node{}
 	lvarInitializer(head, v, v.Ty, nil)
-	expect(";")
+	token = skip(token, ";")
 
 	node := newNode(ND_BLOCK, tok)
 	node.Body = head.Next
@@ -917,10 +919,10 @@ func isTypename() bool {
 	// printCurTok()
 	// printCalledFunc()
 
-	return peek("byte") != nil || peek("bool") != nil ||
-		peek("int16") != nil || peek("int") != nil ||
-		peek("int64") != nil || peek("struct") != nil ||
-		peek("string") != nil ||
+	return equal(token, "byte") || equal(token, "bool") ||
+		equal(token, "int16") || equal(token, "int") ||
+		equal(token, "int64") || equal(token, "struct") ||
+		equal(token, "string") ||
 		findTyDef(token) != nil
 }
 
@@ -930,8 +932,8 @@ func isForClause() bool {
 
 	tok := token
 
-	for peek("{") == nil {
-		if peek(";") != nil {
+	for !equal(token, "{") {
+		if equal(token, ";") {
 			token = tok
 			return true
 		}
@@ -965,24 +967,24 @@ func stmt() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	if t := consume("return"); t != nil {
-		node := newUnary(ND_RETURN, expr(), t)
-		expect(";")
+	if consume(&token, token, "return") {
+		node := newUnary(ND_RETURN, expr(), token)
+		token = skip(token, ";")
 		return node
 	}
 
-	if t := consume("if"); t != nil {
-		node := newNode(ND_IF, t)
+	if consume(&token, token, "if") {
+		node := newNode(ND_IF, token)
 		node.Cond = expr()
 		node.Then = stmt()
-		if consume("else") != nil {
+		if consume(&token, token, "else") {
 			node.Els = stmt()
 		}
 		return node
 	}
 
-	if t := consume("switch"); t != nil {
-		node := newNode(ND_SWITCH, t)
+	if consume(&token, token, "switch") {
+		node := newNode(ND_SWITCH, token)
 		node.Cond = expr()
 
 		sw := curSwitch
@@ -992,53 +994,53 @@ func stmt() *Node {
 		return node
 	}
 
-	if t := consume("case"); t != nil {
+	if consume(&token, token, "case") {
 		if curSwitch == nil {
-			panic("\n" + errorTok(t, "stray case"))
+			panic("\n" + errorTok(token, "stray case"))
 		}
 		val := constExpr()
-		expect(":")
+		token = skip(token, ":")
 
-		node := newUnary(ND_CASE, stmt(), t)
+		node := newUnary(ND_CASE, stmt(), token)
 		node.Val = val
 		node.CaseNext = curSwitch.CaseNext
 		curSwitch.CaseNext = node
 		return node
 	}
 
-	if t := consume("default"); t != nil {
+	if consume(&token, token, "default") {
 		if curSwitch == nil {
-			panic("\n" + errorTok(t, "stray default"))
+			panic("\n" + errorTok(token, "stray default"))
 		}
-		expect(":")
-		node := newUnary(ND_CASE, stmt(), t)
+		token = skip(token, ":")
+		node := newUnary(ND_CASE, stmt(), token)
 		curSwitch.DefCase = node
 		return node
 	}
 
-	if t := consume("for"); t != nil {
+	if consume(&token, token, "for") {
 		if !isForClause() { // for for-stmt
-			node := newNode(ND_WHILE, t)
-			if peek("{") == nil {
+			node := newNode(ND_WHILE, token)
+			if !equal(token, "{") {
 				node.Cond = expr()
 			} else {
-				node.Cond = newNum(1, t)
+				node.Cond = newNum(1, token)
 			}
 
 			node.Then = stmt()
 			return node
 
 		} else { // for for-clause
-			node := newNode(ND_FOR, t)
-			if consume(";") == nil {
+			node := newNode(ND_FOR, token)
+			if !consume(&token, token, ";") {
 				node.Init = readExprStmt()
-				expect(";")
+				token = skip(token, ";")
 			}
-			if consume(";") == nil {
+			if !consume(&token, token, ";") {
 				node.Cond = expr()
-				expect(";")
+				token = skip(token, ";")
 			}
-			if peek("{") == nil {
+			if !equal(token, "{") {
 				node.Inc = readExprStmt()
 			}
 			node.Then = stmt()
@@ -1046,62 +1048,63 @@ func stmt() *Node {
 		}
 	}
 
-	if t := consume("{"); t != nil {
+	if consume(&token, token, "{") {
+		tok := token
 
 		head := Node{}
 		cur := &head
 
 		sc := varScope
-		for consume("}") == nil {
+		for !consume(&token, token, "}") {
 			cur.Next = stmt()
 			cur = cur.Next
 		}
 		varScope = sc
 
-		consume(";")
-		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: t}
+		consume(&token, token, ";")
+		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: tok}
 	}
 
-	if t := consume("break"); t != nil {
-		expect(";")
-		return newNode(ND_BREAK, t)
+	if consume(&token, token, "break") {
+		token = skip(token, ";")
+		return newNode(ND_BREAK, token)
 	}
 
-	if t := consume("continue"); t != nil {
-		expect(";")
-		return newNode(ND_CONTINUE, t)
+	if consume(&token, token, "continue") {
+		token = skip(token, ";")
+		return newNode(ND_CONTINUE, token)
 	}
 
-	if t := consume("goto"); t != nil {
-		node := newNode(ND_GOTO, t)
+	if consume(&token, token, "goto") {
+		node := newNode(ND_GOTO, token)
 		node.LblName = expectIdent()
-		expect(";")
+		token = skip(token, ";")
 		return node
 	}
 
 	if t := consumeIdent(); t != nil {
-		if consume(":") != nil {
-			node := newUnary(ND_LABEL, stmt(), t)
+		if consume(&token, token, ":") {
+			node := newUnary(ND_LABEL, stmt(), token)
 			node.LblName = t.Str
 			return node
 		}
 		token = t
 	}
 
-	if peek("var") != nil {
+	if equal(token, "var") {
 		return declaration()
 	}
 
-	if t := consume("type"); t != nil {
+	if consume(&token, token, "type") {
 		name := expectIdent()
 		ty := readTypePreffix()
-		expect(";")
+		token = skip(token, ";")
 		pushScope(name).TyDef = ty
-		return newNode(ND_NULL, t)
+		return newNode(ND_NULL, token)
 	}
 
 	node := readExprStmt()
-	expect(";")
+	token = skip(token, ";")
 	return node
 }
 
@@ -1112,9 +1115,9 @@ func expr() *Node {
 
 	node := assign()
 	for {
-		if t := consume(","); t != nil {
+		if consume(&token, token, ",") {
 			node = newUnary(ND_EXPR_STMT, node, node.Tok)
-			node = newBinary(ND_COMMA, node, assign(), t)
+			node = newBinary(ND_COMMA, node, assign(), token)
 			continue
 		}
 		break
@@ -1198,7 +1201,7 @@ func assign() *Node {
 	// printCalledFunc()
 
 	node := logor()
-	if t := consume("="); t != nil {
+	if consume(&token, token, "=") {
 		if token.Kind == TK_STR && node.Obj.Ty.Kind == TY_ARRAY &&
 			node.Obj.Ty.Base.Kind == TY_BYTE {
 			tok := token
@@ -1209,20 +1212,20 @@ func assign() *Node {
 			n.Body = head.Next
 			return n
 		} else {
-			node = newBinary(ND_ASSIGN, node, assign(), t)
+			node = newBinary(ND_ASSIGN, node, assign(), token)
 		}
-	} else if t := consume("+="); t != nil {
-		node = newBinary(ND_A_ADD, node, assign(), t)
-	} else if t := consume("-="); t != nil {
-		node = newBinary(ND_A_SUB, node, assign(), t)
-	} else if t := consume("*="); t != nil {
-		node = newBinary(ND_A_MUL, node, assign(), t)
-	} else if t := consume("/="); t != nil {
-		node = newBinary(ND_A_DIV, node, assign(), t)
-	} else if t := consume("<<="); t != nil {
-		node = newBinary(ND_A_SHL, node, assign(), t)
-	} else if t := consume(">>="); t != nil {
-		node = newBinary(ND_A_SHR, node, assign(), t)
+	} else if consume(&token, token, "+=") {
+		node = newBinary(ND_A_ADD, node, assign(), token)
+	} else if consume(&token, token, "-=") {
+		node = newBinary(ND_A_SUB, node, assign(), token)
+	} else if consume(&token, token, "*=") {
+		node = newBinary(ND_A_MUL, node, assign(), token)
+	} else if consume(&token, token, "/=") {
+		node = newBinary(ND_A_DIV, node, assign(), token)
+	} else if consume(&token, token, "<<=") {
+		node = newBinary(ND_A_SHL, node, assign(), token)
+	} else if consume(&token, token, ">>=") {
+		node = newBinary(ND_A_SHR, node, assign(), token)
 	}
 	return node
 }
@@ -1230,10 +1233,8 @@ func assign() *Node {
 // logor = logand ("||" logand)*
 func logor() *Node {
 	node := logand()
-	t := consume("||")
-	for t != nil {
-		node = newBinary(ND_LOGOR, node, logand(), t)
-		t = consume("||")
+	for consume(&token, token, "||") {
+		node = newBinary(ND_LOGOR, node, logand(), token)
 	}
 	return node
 }
@@ -1241,10 +1242,8 @@ func logor() *Node {
 // logand = bitor ("&&" bitor)*
 func logand() *Node {
 	node := bitor()
-	t := consume("&&")
-	for t != nil {
-		node = newBinary(ND_LOGAND, node, bitor(), t)
-		t = consume("&&")
+	for consume(&token, token, "&&") {
+		node = newBinary(ND_LOGAND, node, bitor(), token)
 	}
 	return node
 }
@@ -1252,10 +1251,8 @@ func logand() *Node {
 // bitor = bitxor ("|" bitxor)*
 func bitor() *Node {
 	node := bitxor()
-	t := consume("|")
-	for t != nil {
-		node = newBinary(ND_BITOR, node, bitxor(), t)
-		t = consume("|")
+	for consume(&token, token, "|") {
+		node = newBinary(ND_BITOR, node, bitxor(), token)
 	}
 	return node
 }
@@ -1263,10 +1260,8 @@ func bitor() *Node {
 // bitxor = bitand ("^" bitand)*
 func bitxor() *Node {
 	node := bitand()
-	t := consume("^")
-	for t != nil {
-		node = newBinary(ND_BITXOR, node, bitxor(), t)
-		t = consume("^")
+	for consume(&token, token, "^") {
+		node = newBinary(ND_BITXOR, node, bitxor(), token)
 	}
 	return node
 }
@@ -1274,10 +1269,8 @@ func bitxor() *Node {
 // bitand = equality ("&" equality)*
 func bitand() *Node {
 	node := equality()
-	t := consume("&")
-	for t != nil {
-		node = newBinary(ND_BITAND, node, equality(), t)
-		t = consume("&")
+	for consume(&token, token, "&") {
+		node = newBinary(ND_BITAND, node, equality(), token)
 	}
 	return node
 }
@@ -1290,10 +1283,10 @@ func equality() *Node {
 	node := relational()
 
 	for {
-		if t := consume("=="); t != nil {
-			node = newBinary(ND_EQ, node, relational(), t)
-		} else if t := consume("!="); t != nil {
-			node = newBinary(ND_NE, node, relational(), t)
+		if consume(&token, token, "==") {
+			node = newBinary(ND_EQ, node, relational(), token)
+		} else if consume(&token, token, "!=") {
+			node = newBinary(ND_NE, node, relational(), token)
 		} else {
 			return node
 		}
@@ -1308,14 +1301,14 @@ func relational() *Node {
 	node := shift()
 
 	for {
-		if t := consume("<"); t != nil {
-			node = newBinary(ND_LT, node, shift(), t)
-		} else if t := consume("<="); t != nil {
-			node = newBinary(ND_LE, node, shift(), t)
-		} else if t := consume(">"); t != nil {
-			node = newBinary(ND_LT, shift(), node, t)
-		} else if t := consume(">="); t != nil {
-			node = newBinary(ND_LE, shift(), node, t)
+		if consume(&token, token, "<") {
+			node = newBinary(ND_LT, node, shift(), token)
+		} else if consume(&token, token, "<=") {
+			node = newBinary(ND_LE, node, shift(), token)
+		} else if consume(&token, token, ">") {
+			node = newBinary(ND_LT, shift(), node, token)
+		} else if consume(&token, token, ">=") {
+			node = newBinary(ND_LE, shift(), node, token)
 		} else {
 			return node
 		}
@@ -1327,10 +1320,10 @@ func shift() *Node {
 	node := add()
 
 	for {
-		if t := consume("<<"); t != nil {
-			node = newBinary(ND_SHL, node, add(), t)
-		} else if t := consume(">>"); t != nil {
-			node = newBinary(ND_SHR, node, add(), t)
+		if consume(&token, token, "<<") {
+			node = newBinary(ND_SHL, node, add(), token)
+		} else if consume(&token, token, ">>") {
+			node = newBinary(ND_SHR, node, add(), token)
 		} else {
 			return node
 		}
@@ -1345,10 +1338,10 @@ func add() *Node {
 	node := mul()
 
 	for {
-		if t := consume("+"); t != nil {
-			node = newBinary(ND_ADD, node, mul(), t)
-		} else if t := consume("-"); t != nil {
-			node = newBinary(ND_SUB, node, mul(), t)
+		if consume(&token, token, "+") {
+			node = newBinary(ND_ADD, node, mul(), token)
+		} else if consume(&token, token, "-") {
+			node = newBinary(ND_SUB, node, mul(), token)
 		} else {
 			return node
 		}
@@ -1363,10 +1356,10 @@ func mul() *Node {
 	node := cast()
 
 	for {
-		if t := consume("*"); t != nil {
-			node = newBinary(ND_MUL, node, cast(), t)
-		} else if t := consume("/"); t != nil {
-			node = newBinary(ND_DIV, node, cast(), t)
+		if consume(&token, token, "*") {
+			node = newBinary(ND_MUL, node, cast(), token)
+		} else if consume(&token, token, "/") {
+			node = newBinary(ND_DIV, node, cast(), token)
 		} else {
 			return node
 		}
@@ -1378,10 +1371,10 @@ func cast() *Node {
 
 	if isTypename() {
 		ty := readTypePreffix()
-		expect("(")
+		token = skip(token, "(")
 		node := newUnary(ND_CAST, cast(), token)
 		node.Ty = ty
-		expect(")")
+		token = skip(token, ")")
 		return node
 	}
 
@@ -1395,26 +1388,26 @@ func unary() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	if t := consume("Sizeof"); t != nil {
-		return newUnary(ND_SIZEOF, cast(), t)
+	if consume(&token, token, "Sizeof") {
+		return newUnary(ND_SIZEOF, cast(), token)
 	}
-	if t := consume("+"); t != nil {
+	if consume(&token, token, "+") {
 		return cast()
 	}
-	if t := consume("-"); t != nil {
-		return newBinary(ND_SUB, newNum(0, t), cast(), t)
+	if consume(&token, token, "-") {
+		return newBinary(ND_SUB, newNum(0, token), cast(), token)
 	}
-	if t := consume("&"); t != nil {
-		return newUnary(ND_ADDR, cast(), t)
+	if consume(&token, token, "&") {
+		return newUnary(ND_ADDR, cast(), token)
 	}
-	if t := consume("*"); t != nil {
-		return newUnary(ND_DEREF, cast(), t)
+	if consume(&token, token, "*") {
+		return newUnary(ND_DEREF, cast(), token)
 	}
-	if t := consume("!"); t != nil {
-		return newUnary(ND_NOT, cast(), t)
+	if consume(&token, token, "!") {
+		return newUnary(ND_NOT, cast(), token)
 	}
-	if t := consume("^"); t != nil {
-		return newUnary(ND_BITNOT, cast(), t)
+	if consume(&token, token, "^") {
+		return newUnary(ND_BITNOT, cast(), token)
 	}
 	return postfix()
 }
@@ -1427,27 +1420,27 @@ func postfix() *Node {
 	node := primary()
 
 	for {
-		if t := consume("["); t != nil {
+		if consume(&token, token, "[") {
 			// x[y] is short for *(x+y)
-			exp := newBinary(ND_ADD, node, expr(), t)
-			expect("]")
-			node = newUnary(ND_DEREF, exp, t)
+			exp := newBinary(ND_ADD, node, expr(), token)
+			token = skip(token, "]")
+			node = newUnary(ND_DEREF, exp, token)
 			continue
 		}
 
-		if t := consume("."); t != nil {
-			node = newUnary(ND_MEMBER, node, t)
+		if consume(&token, token, ".") {
+			node = newUnary(ND_MEMBER, node, token)
 			node.MemName = expectIdent()
 			continue
 		}
 
-		if t := consume("++"); t != nil {
-			node = newUnary(ND_INC, node, t)
+		if consume(&token, token, "++") {
+			node = newUnary(ND_INC, node, token)
 			continue
 		}
 
-		if t := consume("--"); t != nil {
-			node = newUnary(ND_DEC, node, t)
+		if consume(&token, token, "--") {
+			node = newUnary(ND_DEC, node, token)
 			continue
 		}
 
@@ -1460,18 +1453,18 @@ func funcArgs() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume(")") != nil {
+	if consume(&token, token, ")") {
 		return nil
 	}
 
 	head := assign()
 	cur := head
 
-	for consume(",") != nil {
+	for consume(&token, token, ",") {
 		cur.Next = assign()
 		cur = cur.Next
 	}
-	expect(")")
+	token = skip(token, ")")
 	return head
 }
 
@@ -1483,14 +1476,14 @@ func primary() *Node {
 
 	// if the next token is '(', the program must be
 	// "(" expr ")"
-	if consume("(") != nil {
+	if consume(&token, token, "(") {
 		node := expr()
-		expect(")")
+		token = skip(token, ")")
 		return node
 	}
 
 	if t := consumeIdent(); t != nil {
-		if consume("(") != nil {
+		if consume(&token, token, "(") {
 			node := &Node{
 				Kind:     ND_FUNCALL,
 				Tok:      t,
