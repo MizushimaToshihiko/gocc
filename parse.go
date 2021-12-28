@@ -1395,7 +1395,7 @@ func unary() *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	if t := consumeSizeof(); t != nil {
+	if t := consume("Sizeof"); t != nil {
 		return newUnary(ND_SIZEOF, cast(), t)
 	}
 	if t := consume("+"); t != nil {

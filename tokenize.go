@@ -14,14 +14,13 @@ type TokenKind int
 
 const (
 	TK_RESERVED TokenKind = iota // 0: Reserved words(key words), operators, and puncturators
-	TK_SIZEOF                    // 1: 'sizeof' operator
-	TK_IDENT                     // 2: idenfier such as variables, function names
+	TK_IDENT                     // 1: idenfier such as variables, function names
 
 	// literals
-	TK_STR // 3: string literals
-	TK_NUM // 4: integer
+	TK_STR // 2: string literals
+	TK_NUM // 3: integer
 
-	TK_EOF // 5: the end of tokens
+	TK_EOF // 4: the end of tokens
 )
 
 type Token struct {
@@ -75,7 +74,7 @@ func verrorAt(lineNum, errIdx int, formt string, a ...interface{}) string {
 	return res + fmt.Sprintf("%*s", pos, " ") +
 		"^ " +
 		fmt.Sprintf(formt, a...) +
-		"\n"
+		"\n\n"
 }
 
 // it's arguments are same as printf
@@ -97,9 +96,7 @@ func errorTok(tok *Token, formt string, ap ...interface{}) string {
 		errStr += errorAt(tok.Loc, formt, ap...)
 	}
 
-	return errStr +
-		fmt.Sprintf(formt, ap...) +
-		"\n"
+	return errStr
 }
 
 // strNdUp function returns the []rune terminates with '\0'
@@ -136,20 +133,6 @@ func consume(s string) *Token {
 func consumeIdent() *Token {
 	// defer printCurTok()
 	if token.Kind != TK_IDENT {
-		return nil
-	}
-	t := token
-	token = token.Next
-	return t
-}
-
-// consumeSizeof returns the token(pointer) and proceed to the next token,
-//  if the current token is "sizeof".
-func consumeSizeof() *Token {
-
-	if token.Kind != TK_SIZEOF ||
-		token.Len != len("Sizeof") ||
-		token.Str != "Sizeof" {
 		return nil
 	}
 	t := token
@@ -243,12 +226,12 @@ func startsWithReserved(p string) string {
 		"if", "else", "for", "type", "var", "func", "struct",
 		"goto", "switch", "case", "default",
 		"true", "false",
-		"nil"}
+		"nil", "Sizeof"}
 	// unimplemented:
 	// "chan", "const", "defer", "fallthrough", "interface", "map", "package", "range", "select"
-	// "int32","bool", "byte", "complex64", "complex128", "error",
-	// "float32", "float64", "int8", "int16", "int32", "int64",
-	// "string", "uint", "uint16", "uint32", "uint64", "uintptr"
+	// "complex64", "complex128", "error",
+	// "float32", "float64", "int8",
+	// "uint", "uint16", "uint32", "uint64", "uintptr"
 	// "iota"
 	// "append", "cap", "close", "complex", "copy", "delete", "imag",
 	// "len", "make", "new", "panic", "print", "println", "real", "recover"
@@ -450,13 +433,6 @@ func tokenize() (*Token, error) {
 				)
 			}
 			curIdx += idx + 2
-			continue
-		}
-
-		// 'Sizeof' keyword
-		if startsWith(string(userInput[curIdx:]), "Sizeof") {
-			cur = newToken(TK_SIZEOF, cur, "Sizeof", len("Sizeof"))
-			curIdx += len("Sizeof")
 			continue
 		}
 
