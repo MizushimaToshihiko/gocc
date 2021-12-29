@@ -12,7 +12,9 @@ type VarScope struct {
 	TyDef *Type
 }
 
+// Variable or function
 type Obj struct {
+	Next    *Obj
 	Name    string // Variable name
 	Ty      *Type  // Type
 	Tok     *Token // for error message
@@ -21,8 +23,19 @@ type Obj struct {
 	// Local variables
 	Offset int // Offset from RBP
 
+	// Global variable or function
+	IsFunc bool
+	IsDef  bool
+
 	// Global variables
-	Init *Initializer
+	InitData string
+	Init     *Initializer
+
+	// Function
+	Params  *Obj
+	Body    *Node
+	Locals  *Obj
+	StackSz int
 }
 
 type VarList struct {
@@ -126,7 +139,7 @@ type Node struct {
 	CaseEndLbl int
 
 	Obj *Obj  // used if kind == ND_VAR
-	Val int64 // it would be used when kind is 'ND_NUM'
+	Val int64 // used if kind == ND_NUM
 }
 
 var locals *VarList
@@ -242,34 +255,6 @@ type Function struct {
 	Node    *Node
 	Locals  *VarList
 	StackSz int
-}
-
-// program = (global-var | function)*
-func program() *Program {
-	// printCurTok()
-	// printCalledFunc()
-
-	head := &Function{}
-	cur := head
-	globals = nil
-
-	for !atEof() {
-		if consume(&token, token, "func") {
-			cur.Next = function()
-			cur = cur.Next
-		} else if consume(&token, token, "var") {
-			globalVar()
-		} else if consume(&token, token, "type") {
-			name := expectIdent()
-			ty := readTypePreffix()
-			pushScope(name).TyDef = ty
-			token = skip(token, ";")
-		} else {
-			panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
-		}
-	}
-
-	return &Program{Globs: globals, Fns: head.Next}
 }
 
 // typeSpecifier returns a pointer of Type struct.
@@ -576,9 +561,10 @@ func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
 			}
 		}
 
-		if ty.Name != ty2.Name {
+		if ty.TyName != ty2.TyName {
 			panic("\n" + errorTok(tok,
-				"connot use \"%s\" (type %s) as type %s in assignment", tok.Str, ty2.Name, ty.Name))
+				"connot use \"%s\" (type %s) as type %s in assignment",
+				tok.Str, ty2.TyName, ty.TyName))
 		}
 	}
 
@@ -807,9 +793,10 @@ func lvarInitializer(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
 			}
 		}
 
-		if ty.Name != ty2.Name {
+		if ty.TyName != ty2.TyName {
 			panic("\n" + errorTok(token,
-				"connot use \"%s\" (type %s) as type %s in assignment", token.Str, ty2.Name, ty.Name))
+				"connot use \"%s\" (type %s) as type %s in assignment",
+				token.Str, ty2.TyName, ty.TyName))
 		}
 	}
 
@@ -1526,4 +1513,32 @@ func primary() *Node {
 		panic("\n" + errorTok(t, "expected expression: %s", t.Str))
 	}
 	return newNum(expectNumber(), t)
+}
+
+// program = (global-var | function)*
+func program() *Program {
+	// printCurTok()
+	// printCalledFunc()
+
+	head := &Function{}
+	cur := head
+	globals = nil
+
+	for !atEof() {
+		if consume(&token, token, "func") {
+			cur.Next = function()
+			cur = cur.Next
+		} else if consume(&token, token, "var") {
+			globalVar()
+		} else if consume(&token, token, "type") {
+			name := expectIdent()
+			ty := readTypePreffix()
+			pushScope(name).TyDef = ty
+			token = skip(token, ";")
+		} else {
+			panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
+		}
+	}
+
+	return &Program{Globs: globals, Fns: head.Next}
 }

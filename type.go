@@ -29,13 +29,21 @@ const (
 )
 
 type Type struct {
-	Kind  TypeKind
-	Name  string
-	Align int     // alignment
-	Base  *Type   // pointer or array
+	Kind   TypeKind
+	TyName string
+	Align  int   // alignment
+	Base   *Type // pointer or array
+
+	// Declaration
+	Name *Token
+
 	ArrSz int     // Array size
 	Mems  *Member // struct
-	RetTy *Type   // function
+
+	// function
+	RetTy  *Type
+	Params *Type
+	Next   *Type
 }
 
 type Member struct {
@@ -51,7 +59,7 @@ func alignTo(n, align int) int {
 }
 
 func newType(kind TypeKind, align int, name string) *Type {
-	return &Type{Kind: kind, Align: align, Name: name}
+	return &Type{Kind: kind, Align: align, TyName: name}
 }
 
 func voidType() *Type {
@@ -79,24 +87,24 @@ func longType() *Type {
 }
 
 func funcType(retTy *Type) *Type {
-	return &Type{Kind: TY_FUNC, Align: 1, RetTy: retTy, Name: "func"}
+	return &Type{Kind: TY_FUNC, Align: 1, RetTy: retTy, TyName: "func"}
 }
 
 func stringType() *Type {
-	return &Type{Kind: TY_PTR, Base: charType(), Align: 8, Name: "string"}
+	return &Type{Kind: TY_PTR, Base: charType(), Align: 8, TyName: "string"}
 }
 
 func pointerTo(base *Type) *Type {
-	return &Type{Kind: TY_PTR, Base: base, Align: 8, Name: "pointer"}
+	return &Type{Kind: TY_PTR, Base: base, Align: 8, TyName: "pointer"}
 }
 
 func arrayOf(base *Type, size int) *Type {
 	return &Type{
-		Kind:  TY_ARRAY,
-		Align: base.Align,
-		Base:  base,
-		ArrSz: size,
-		Name:  "[" + strconv.Itoa(size) + "]" + base.Name}
+		Kind:   TY_ARRAY,
+		Align:  base.Align,
+		Base:   base,
+		ArrSz:  size,
+		TyName: "[" + strconv.Itoa(size) + "]" + base.TyName}
 }
 
 func sizeOf(ty *Type, tok *Token) int {
