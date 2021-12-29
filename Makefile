@@ -11,13 +11,17 @@ SRCS=$(wildcard *.go)
 TEST_SRCS=$(wildcard testdata/*.go)
 TESTS=$(TEST_SRCS:.go=.exe)
 
-all: build test
+all: $(BINARY_NAME) test
 
 $(BINARY_NAME): $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
-test: $(SRCS)
-	$(GOTEST) $^ -cover -count 1 -timeout 600s
+testdata/%.exe: testdata/%.go
+	$(BINARY_NAME) -o testdata/$*.s $^
+	gcc -static -g -o $@ testdata/$*.s
+
+test: $(TESTS)
+	for i in $^; do echo $$i; ./$$i || exit 1; echo; done
 
 clean: 
 	$(GOCLEAN)
