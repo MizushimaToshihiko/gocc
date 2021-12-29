@@ -27,7 +27,7 @@ jobs:
             - "/go/pkg/mod"
       - run:
           name: Run tests
-          command: make test
+          command: make
       # - store_test_results:
       #     path: /tmp/test-reports
 
