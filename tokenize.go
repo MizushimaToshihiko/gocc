@@ -4,7 +4,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -410,7 +414,7 @@ func addLineNumbers(tok *Token) {
 }
 
 // tokenize inputted string 'userInput', and return new tokens.
-func tokenize() (*Token, error) {
+func tokenize(filename string) (*Token, error) {
 	var head Token
 	head.Next = nil
 	cur := &head
@@ -522,4 +526,41 @@ func tokenize() (*Token, error) {
 	newToken(TK_EOF, cur, "", 0)
 	addLineNumbers(head.Next)
 	return head.Next, nil
+}
+
+func readFile(path string) ([]rune, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	br := bufio.NewReader(f)
+
+	ret := make([]rune, 0, 1064)
+	for {
+		ru, sz, err := br.ReadRune()
+		if sz == 0 || err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, ru)
+	}
+	ret = append(ret, 0)
+	return ret, nil
+}
+
+func tokenizeFile(path string) (*Token, error) {
+	var err error
+	userInput, err = readFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return tokenize(path)
 }

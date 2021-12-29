@@ -22,7 +22,7 @@ func TestGetTypeName(t *testing.T) {
 			userInput = append([]rune(c.in), 0)
 			curIdx = 0
 			var err error
-			token, err = tokenize()
+			token, err = tokenize("")
 			if err != nil {
 				t.Fatal(err)
 			}

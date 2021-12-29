@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"io"
@@ -11,34 +10,6 @@ import (
 
 var optOut *os.File
 var inputPath string
-
-func readFile(path string) ([]rune, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	br := bufio.NewReader(f)
-
-	ret := make([]rune, 0, 1064)
-	for {
-		ru, sz, err := br.ReadRune()
-		if sz == 0 || err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		ret = append(ret, ru)
-	}
-	ret = append(ret, 0)
-	return ret, nil
-}
 
 func exists(name string) bool {
 	_, err := os.Stat(name)
@@ -54,13 +25,7 @@ func compile(arg string, w io.Writer) error {
 	}
 
 	var err error
-	userInput, err = readFile(arg)
-	if err != nil {
-		return err
-	}
-	curFilename = arg
-
-	token, err = tokenize()
+	token, err = tokenizeFile(arg)
 	if err != nil {
 		// printTokens()
 		return err
@@ -118,9 +83,6 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-
-	fmt.Println(inputPath)
-	fmt.Println(outpath)
 
 	if err := compile(inputPath, optOut); err != nil {
 		log.Fatal(err)
