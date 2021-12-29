@@ -1,4 +1,4 @@
-BINARY_NAME := bin/compiler
+BINARY_NAME := bin/gocc
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
@@ -8,9 +8,12 @@ GOFMT=$(GOCMD) fmt
 
 SRCS=$(wildcard *.go)
 
+TEST_SRCS=$(wildcard testdata/*.go)
+TESTS=$(TEST_SRCS:.go=.exe)
+
 all: build test
 
-build: $(SRCS)
+$(BINARY_NAME): $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
 test: $(SRCS)

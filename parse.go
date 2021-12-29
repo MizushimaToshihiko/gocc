@@ -490,14 +490,16 @@ func function() *Function {
 // we are at the end of an initializer list.
 func peekEnd() bool {
 	tok := token
-	ret := consume(&token, token, "}") || (consume(&token, token, ",") && consume(&token, token, "}"))
+	ret := consume(&token, token, "}") ||
+		(consume(&token, token, ",") && consume(&token, token, "}"))
 	token = tok
 	return ret
 }
 
 func consumeEnd() bool {
 	tok := token
-	if consume(&token, token, "}") || (consume(&token, token, ",") && consume(&token, token, "}")) {
+	if consume(&token, token, "}") ||
+		(consume(&token, token, ",") && consume(&token, token, "}")) {
 		return true
 	}
 	token = tok

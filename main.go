@@ -2,13 +2,15 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"os"
 )
 
-var filename string
+var optOut *os.File
+var inputPath string
 
 func readFile(path string) ([]rune, error) {
 	f, err := os.Open(path)
@@ -56,7 +58,7 @@ func compile(arg string, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	filename = arg
+	curFilename = arg
 
 	token, err = tokenize()
 	if err != nil {
@@ -76,16 +78,51 @@ func compile(arg string, w io.Writer) error {
 	// }
 	// }
 
-	fmt.Fprintf(w, ".file 1 \"%s\"\n", filename)
+	fmt.Fprintf(w, ".file 1 \"%s\"\n", curFilename)
 	return codegen(w, prog) // make the asm code, down on the AST
 }
 
+func usage(status int) {
+	fmt.Fprintf(os.Stderr, "gocc [ -o <path> ] <file>\n")
+	os.Exit(status)
+}
+
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("invalid number of arguments")
+	// setting log
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
+
+	var outpath string
+	flag.StringVar(&outpath, "o", "", "The output file name")
+	var help bool
+	flag.BoolVar(&help, "help", false, "Help")
+	flag.Parse()
+
+	if help {
+		usage(0)
 	}
 
-	if err := compile(os.Args[1], os.Stdout); err != nil {
+	if len(os.Args) < 2 {
+		fmt.Fprintln(os.Stderr, "no input files")
+		usage(1)
+	}
+
+	inputPath = flag.Args()[0]
+
+	var err error
+	if outpath == "" {
+		optOut = os.Stdout
+	} else {
+		optOut, err = os.Create(outpath)
+		if err != nil {
+			fmt.Println(inputPath)
+			log.Fatal(err)
+		}
+	}
+
+	fmt.Println(inputPath)
+	fmt.Println(outpath)
+
+	if err := compile(inputPath, optOut); err != nil {
 		log.Fatal(err)
 	}
 }

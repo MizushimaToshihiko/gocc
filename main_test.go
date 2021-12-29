@@ -20,7 +20,7 @@ func TestCompile(t *testing.T) {
 		}
 	}()
 
-	if err = compile("testdata/tests", asm); err != nil {
+	if err = compile("testdata/tests.go", asm); err != nil {
 		t.Fatal(err)
 	}
 
@@ -66,7 +66,6 @@ func TestGetTypeName(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			printTokens()
 			ty := readTypePreffix()
 
 			if ty.Name != c.want {
