@@ -37,6 +37,8 @@ type Token struct {
 	LineNo int // Line number
 }
 
+var curFilename string
+
 // current token
 var token *Token
 
@@ -64,7 +66,7 @@ func verrorAt(lineNum, errIdx int, formt string, a ...interface{}) string {
 	}
 
 	// Show found lines along with file name and line number.
-	res := fmt.Sprintf("\n%s:%d: ", filename, lineNum)
+	res := fmt.Sprintf("\n%s:%d: ", curFilename, lineNum)
 	indent := len(res)
 	res += fmt.Sprintf("%.*s\n", end-line, string(userInput[line:end]))
 
@@ -117,9 +119,9 @@ func equal(tok *Token, s string) bool {
 func skip(tok *Token, s string) *Token {
 	// defer printCurTok()
 	if !equal(tok, s) {
-		panic("\n" + errorTok(token, "'%s' expected", string(s)))
+		panic("\n" + errorTok(tok, "'%s' expected", string(s)))
 	}
-	return token.Next
+	return tok.Next
 }
 
 // consume returns token(pointer), if the current token is expected
