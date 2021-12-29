@@ -62,7 +62,7 @@ func compile(arg string, w io.Writer) error {
 
 	token, err = tokenize()
 	if err != nil {
-		printTokens()
+		// printTokens()
 		return err
 	}
 

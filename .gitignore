@@ -1,6 +1,6 @@
 bin/*
 testdata/*
-!testdata/tests*
+!testdata/tests.go
 !testdata/examples
 profile
 funcs
