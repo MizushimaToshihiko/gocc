@@ -32,8 +32,7 @@ func compile(arg string, w io.Writer) error {
 	}
 
 	// printTokens()
-	prog := program()
-	err = addType(prog)
+	prog := parse(token)
 	if err != nil {
 		return err
 	}

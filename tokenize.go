@@ -32,6 +32,7 @@ type Token struct {
 	Next *Token    // next
 	Val  int64     // if 'kind' is TK_NUM, it's integer
 	Loc  int       // the location in 'userInput'
+	Ty   *Type     // Used if TK_STR
 	Str  string    // token string
 	Len  int       // length of token
 
@@ -340,6 +341,7 @@ func readStringLiteral(cur *Token) (*Token, error) {
 	tok := newToken(TK_STR, cur, string(buf), len(buf))
 	tok.Contents = strNdUp(buf, len(buf))
 	tok.ContLen = len(buf) + 1
+	tok.Ty = arrayOf(ty_char, len(buf)+1)
 	curIdx++
 	return tok, nil
 }

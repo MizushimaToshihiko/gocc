@@ -29,13 +29,16 @@ const (
 )
 
 type Type struct {
-	Kind   TypeKind
-	TyName string
-	Align  int   // alignment
-	Base   *Type // pointer or array
+	Kind  TypeKind
+	Sz    int // Sizeof() value
+	Align int // alignment
+
+	Base *Type // pointer or array
 
 	// Declaration
 	Name *Token
+
+	TyName string
 
 	ArrSz int     // Array size
 	Mems  *Member // struct
@@ -51,39 +54,60 @@ type Member struct {
 	Ty     *Type
 	Tok    *Token
 	Name   string
+	Idx    int
 	Offset int
 }
+
+var ty_void *Type = &Type{Kind: TY_VOID, Sz: 1, Align: 1}
+var ty_bool *Type = &Type{Kind: TY_BOOL, Sz: 1, Align: 1}
+
+var ty_char *Type = &Type{Kind: TY_BYTE, Sz: 1, Align: 1}
+var ty_short *Type = &Type{Kind: TY_SHORT, Sz: 2, Align: 2}
+var ty_int *Type = &Type{Kind: TY_INT, Sz: 4, Align: 4}
+var ty_long *Type = &Type{Kind: TY_LONG, Sz: 8, Align: 8}
 
 func alignTo(n, align int) int {
 	return (n + align - 1) / align * align
 }
 
-func newType(kind TypeKind, align int, name string) *Type {
+func newType(kind TypeKind, size, align int, name string) *Type {
 	return &Type{Kind: kind, Align: align, TyName: name}
 }
 
+func isInteger(ty *Type) bool {
+	k := ty.Kind
+	return k == TY_BOOL || k == TY_BYTE || k == TY_SHORT ||
+		k == TY_INT || k == TY_LONG
+}
+
+func copyType(ty *Type) *Type {
+	ret := &Type{}
+	ret = ty
+	return ret
+}
+
 func voidType() *Type {
-	return newType(TY_VOID, 1, "void")
+	return newType(TY_VOID, 1, 1, "void")
 }
 
 func boolType() *Type {
-	return newType(TY_BOOL, 1, "bool")
+	return newType(TY_BOOL, 1, 1, "bool")
 }
 
 func charType() *Type {
-	return newType(TY_BYTE, 1, "byte")
+	return newType(TY_BYTE, 1, 1, "byte")
 }
 
 func shortType() *Type {
-	return newType(TY_SHORT, 2, "int16")
+	return newType(TY_SHORT, 2, 2, "int16")
 }
 
 func intType() *Type {
-	return newType(TY_INT, 4, "int")
+	return newType(TY_INT, 4, 4, "int")
 }
 
 func longType() *Type {
-	return newType(TY_LONG, 8, "int64")
+	return newType(TY_LONG, 8, 8, "int64")
 }
 
 func funcType(retTy *Type) *Type {
@@ -105,6 +129,10 @@ func arrayOf(base *Type, size int) *Type {
 		Base:   base,
 		ArrSz:  size,
 		TyName: "[" + strconv.Itoa(size) + "]" + base.TyName}
+}
+
+func structType() *Type {
+	return newType(TY_STRUCT, 0, 1, "struct")
 }
 
 func sizeOf(ty *Type, tok *Token) int {
@@ -144,12 +172,35 @@ func findMember(ty *Type, name string) *Member {
 	return nil
 }
 
+func getCommonType(ty1, ty2 *Type) *Type {
+	if ty1.Base != nil {
+		return pointerTo(ty1.Base)
+	}
+	if ty1.Sz == 8 || ty2.Sz == 8 {
+		return ty_long
+	}
+	return ty_int
+}
+
+// For many binary operators, we implicitly promote operands sp that
+// both operands have the same type. Any integral type smaller than
+// int is always promoted to int. If the type of one operand is larger
+// than the other's (e.g. "long" vs. "int"), the smaller operand will
+// be promoted to match with the other.
+//
+// This operation is called the "usual arithmetic conversion".
+func usualArithConv(lhs **Node, rhs **Node) {
+	ty := getCommonType((*lhs).Ty, (*rhs).Ty)
+	*lhs = newCast(*lhs, ty)
+	*rhs = newCast(*rhs, ty)
+}
+
 func (e *errWriter) visit(node *Node) {
 	if e.err != nil {
 		return
 	}
 
-	if node == nil {
+	if node == nil || node.Ty != nil {
 		return
 	}
 
@@ -213,14 +264,6 @@ func (e *errWriter) visit(node *Node) {
 	case ND_ASSIGN,
 		ND_SHL,
 		ND_SHR,
-		ND_INC,
-		ND_DEC,
-		ND_A_ADD,
-		ND_A_SUB,
-		ND_A_MUL,
-		ND_A_DIV,
-		ND_A_SHL,
-		ND_A_SHR,
 		ND_BITNOT:
 		node.Ty = node.Lhs.Ty
 		return
@@ -264,13 +307,8 @@ func (e *errWriter) visit(node *Node) {
 	}
 }
 
-func addType(prog *Program) error {
+func addType(node *Node) error {
 	e := &errWriter{}
-
-	for fn := prog.Fns; fn != nil; fn = fn.Next {
-		for node := fn.Node; node != nil; node = node.Next {
-			e.visit(node)
-		}
-	}
+	e.visit(node)
 	return e.err
 }

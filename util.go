@@ -11,6 +11,13 @@ func assert(b bool, m string) {
 	}
 }
 
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
 // for printTokens function, the pointer of the head token
 // stored in 'headTok'.
 var headTok *Token

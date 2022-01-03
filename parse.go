@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 // Scope for local variables, global variables or typedefs
@@ -10,6 +11,25 @@ type VarScope struct {
 	Name  string
 	Obj   *Obj
 	TyDef *Type
+}
+
+// Scope for struct tags.
+type TagScope struct {
+	Next *TagScope
+	Name string
+	Ty   *Type
+}
+
+type Scope struct {
+	Next *Scope
+
+	Vars *VarScope
+	Tags *TagScope
+}
+
+// Variable attributes typedef.
+type VarAttr struct {
+	IsTydef bool
 }
 
 // Variable or function
@@ -29,7 +49,7 @@ type Obj struct {
 
 	// Global variables
 	InitData string
-	Init     *Initializer
+	Rel      *Relocation
 
 	// Function
 	Params  *Obj
@@ -43,62 +63,51 @@ type VarList struct {
 	Obj  *Obj
 }
 
-type Program struct {
-	Globs *VarList  // global variables
-	Fns   *Function // functions
-}
-
 type NodeKind int
 
 const (
-	ND_ADD       NodeKind = iota // 0: +
-	ND_SUB                       // 1: -
-	ND_MUL                       // 2: *
-	ND_DIV                       // 3: /
-	ND_EQ                        // 4: ==
-	ND_NE                        // 5: !=
-	ND_LT                        // 6: <
-	ND_LE                        // 7: <=
-	ND_ASSIGN                    // 8: =
-	ND_MEMBER                    // 9: . (struct menber access)
-	ND_VAR                       // 10: variables
-	ND_NUM                       // 11: integer
-	ND_RETURN                    // 12: 'return'
-	ND_IF                        // 13: "if"
-	ND_WHILE                     // 14: "while"
-	ND_FOR                       // 15: "for"
-	ND_BLOCK                     // 16: {...}
-	ND_FUNCALL                   // 17: function call
-	ND_ADDR                      // 18: unary &
-	ND_DEREF                     // 19: unary *
-	ND_EXPR_STMT                 // 20: expression statement
-	ND_CAST                      // 21: type cast
-	ND_NULL                      // 22: empty statement
-	ND_SIZEOF                    // 23: "Sizeof"
-	ND_COMMA                     // 24: comma
-	ND_INC                       // 25: post ++
-	ND_DEC                       // 26: post --
-	ND_A_ADD                     // 27: +=
-	ND_A_SUB                     // 28: -=
-	ND_A_MUL                     // 29: *=
-	ND_A_DIV                     // 30: /=
-	ND_NOT                       // 31: !
-	ND_BITNOT                    // 32: unary ^
-	ND_BITAND                    // 33: &
-	ND_BITOR                     // 34: |
-	ND_BITXOR                    // 35: ^
-	ND_LOGAND                    // 36: &&
-	ND_LOGOR                     // 37: ||
-	ND_BREAK                     // 38: "break"
-	ND_CONTINUE                  // 39: "continue"
-	ND_GOTO                      // 40: "goto"
-	ND_LABEL                     // 41: Labeled statement
-	ND_SWITCH                    // 42: "switch"
-	ND_CASE                      // 43: "case"
-	ND_SHL                       // 44: <<
-	ND_SHR                       // 45: >>
-	ND_A_SHL                     // 46: <<=
-	ND_A_SHR                     // 47: >>=
+	ND_NULL_EXPR NodeKind = iota // Do nothing
+	ND_ADD                       // +
+	ND_SUB                       // -
+	ND_MUL                       // *
+	ND_DIV                       // /
+	ND_NEG                       // unary -
+	ND_MOD                       // %
+	ND_BITAND                    // &
+	ND_BITOR                     // |
+	ND_BITXOR                    // ^
+	ND_SHL                       // <<
+	ND_SHR                       // >>
+	ND_EQ                        // ==
+	ND_NE                        // !=
+	ND_LT                        // <
+	ND_LE                        // <=
+	ND_ASSIGN                    // =
+	ND_COND                      // ?:
+	ND_COMMA                     //
+	ND_MEMBER                    // . (struct member access)
+	ND_ADDR                      // unary &
+	ND_DEREF                     // unary *
+	ND_NOT                       // !
+	ND_BITNOT                    // ~
+	ND_LOGAND                    // &&
+	ND_LOGOR                     // ||
+	ND_RETURN                    // "return"
+	ND_IF                        // "if"
+	ND_FOR                       // "for" or "while"
+	ND_SWITCH                    // "switch"
+	ND_CASE                      // "case"
+	ND_BLOCK                     // { ... }
+	ND_GOTO                      // "goto"
+	ND_LABEL                     // Labeled statement
+	ND_FUNCALL                   // Function call
+	ND_EXPR_STMT                 // Expression statement
+	ND_STMT_EXPR                 // Statement expression
+	ND_VAR                       // Variable
+	ND_NUM                       // Integer
+	ND_CAST                      // Type cast
+	ND_MEMZERO                   // Zero-clear a stack variable
+	ND_SIZEOF                    // 'Sizeof'
 )
 
 // define AST node
@@ -118,6 +127,10 @@ type Node struct {
 	Init *Node
 	Inc  *Node
 
+	// "break" and "continue" labels
+	BrkLabel  string
+	ContLabel string
+
 	// Block
 	Body *Node
 
@@ -127,10 +140,13 @@ type Node struct {
 
 	// Function call
 	FuncName string
+	FuncTy   *Type
 	Args     *Node
 
 	// Goto or labeled statement
-	LblName string
+	Lbl       string
+	UniqueLbl string
+	GotoNext  *Node
 
 	// Switch-cases
 	CaseNext   *Node
@@ -142,18 +158,55 @@ type Node struct {
 	Val int64 // used if kind == ND_NUM
 }
 
-var locals *VarList
-var globals *VarList
+var locals *Obj
+var globals *Obj
 
 var varScope *VarScope
 
+var scope *Scope = &Scope{}
+
+// Points to the function object the parser is currently parsing.
+var curFn *Obj
+
+// Lists of all goto statements and labels in the current function.
+var gotos *Node
+var labels *Node
+
+// Current "goto" and "continue" jump targets.
+var brkLabel string
+var contLabel string
+
+// Points to a node representing a switch if we are parsing
+// a switch statement. Otherwise, nil
 var curSwitch *Node
+
+func enterScope() {
+	sc := &Scope{Next: scope}
+	scope = sc
+}
+
+func leaveScope() {
+	scope = scope.Next
+}
 
 // findVar finds a variable or a typedef by name.
 func findVar(tok *Token) *VarScope {
-	for sc := varScope; sc != nil; sc = sc.Next {
-		if len(sc.Name) == tok.Len && tok.Str == sc.Name {
-			return sc
+	for sc := scope; sc != nil; sc = sc.Next {
+		for sc2 := sc.Vars; sc2 != nil; sc2 = sc2.Next {
+			if equal(tok, sc2.Name) {
+				return sc2
+			}
+		}
+	}
+	return nil
+}
+
+func findTag(tok *Token) *Type {
+	for sc := scope; sc != nil; sc = sc.Next {
+		for sc2 := sc.Tags; sc2 != nil; sc2 = sc2.Next {
+			if equal(tok, sc2.Name) {
+				return sc2.Ty
+			}
 		}
 	}
 	return nil
@@ -185,33 +238,156 @@ func newNum(val int64, tok *Token) *Node {
 	}
 }
 
-func newVar(v *Obj, tok *Token) *Node {
+func newLong(val int64, tok *Token) *Node {
+	return &Node{
+		Kind: ND_NUM,
+		Tok:  tok,
+		Val:  val,
+		Ty:   ty_long,
+	}
+}
+
+func newVarNode(v *Obj, tok *Token) *Node {
 	return &Node{Kind: ND_VAR, Tok: tok, Obj: v}
 }
 
+func newCast(expr *Node, ty *Type) *Node {
+	addType(expr)
+
+	return &Node{
+		Kind: ND_CAST,
+		Tok:  expr.Tok,
+		Lhs:  expr,
+		Ty:   copyType(ty),
+	}
+}
+
 func pushScope(name string) *VarScope {
-	sc := &VarScope{Name: name, Next: varScope}
-	varScope = sc
+	sc := &VarScope{Name: name, Next: scope.Vars}
+	scope.Vars = sc
 	return sc
 }
 
-func pushVar(name string, ty *Type, isLocal bool, tok *Token) *Obj {
+// Global variable can be initialized either by a constant expression
+// or a pointer to another global variable. This struct represents the
+// latter.
+type Relocation struct {
+	Next   *Relocation
+	Offset int
+	Lbl    string
+	Addend int64
+}
+
+// This struct represents a variable initializer. Since initializers
+// can be nested (e.g. `var x [2][2]int = [2][2]int{[2]int{1,2},[2]int{3,4}}`),
+// this struct is a tree data structure.
+type Initializer struct {
+	Next *Initializer
+	Ty   *Type
+	Tok  *Token
+
+	// Constant expression
+	Sz  int
+	Val int64
+
+	// Reference to another global variable
+	Lbl string
+
+	// If it's not an aggregate type and an initializer,
+	// `expr` has an initialization expression.
+	Expr *Node
+
+	// If it's an initializer for an aggregete type (e.g. array or struct),
+	// `children` has initializers for its children.
+	Children []*Initializer
+}
+
+// For local variable initializer.
+type InitDesg struct {
+	Next *InitDesg
+	Idx  int
+	Mem  *Member
+	Var  *Obj
+}
+
+func newInitializer(ty *Type) *Initializer {
+	init := &Initializer{Ty: ty}
+
+	if ty.Kind == TY_ARRAY {
+		init.Children = make([]*Initializer, ty.ArrSz)
+		for i := 0; i < ty.ArrSz; i++ {
+			init.Children[i] = newInitializer(ty.Base)
+		}
+		return init
+	}
+
+	if ty.Kind == TY_STRUCT {
+		// Count the number of struct members
+		var l int
+		for mem := ty.Mems; mem != nil; mem = mem.Next {
+			l++
+		}
+
+		init.Children = make([]*Initializer, l)
+
+		for mem := ty.Mems; mem != nil; mem = mem.Next {
+			init.Children[mem.Idx] = newInitializer(mem.Ty)
+		}
+		return init
+	}
+
+	return init
+}
+
+func newVar(name string, ty *Type) *Obj {
 	// printCurTok()
 	// printCalledFunc()
 
-	v := &Obj{Name: name, Ty: ty, IsLocal: isLocal, Tok: tok}
-
-	var vl *VarList
-	if isLocal {
-		vl = &VarList{Obj: v, Next: locals}
-		locals = vl
-	} else if ty.Kind != TY_FUNC {
-		vl = &VarList{Obj: v, Next: globals}
-		globals = vl
-	}
-
+	v := &Obj{Name: name, Ty: ty}
 	pushScope(name).Obj = v
 	return v
+}
+
+func newLvar(name string, ty *Type) *Obj {
+	v := newVar(name, ty)
+	v.IsLocal = true
+	v.Next = locals
+	locals = v
+	return v
+}
+
+func newGvar(name string, ty *Type) *Obj {
+	v := newVar(name, ty)
+	v.IsLocal = false
+	v.Next = globals
+	globals = v
+	return v
+}
+
+// for newLabel function
+var cnt int
+
+func newUniqueName() string {
+	res := fmt.Sprintf(".L..%d", cnt)
+	cnt++
+	return res
+}
+
+func newAnonGvar(ty *Type) *Obj {
+	return newGvar(newUniqueName(), ty)
+}
+
+func newStringLiteral(p string, ty *Type) *Obj {
+	v := newAnonGvar(ty)
+	v.InitData = p
+	return v
+}
+
+func getIdent(tok *Token) string {
+	if tok.Kind != TK_IDENT {
+		errorTok(tok, "expected an identifier")
+	}
+	return string(strNdUp(tok.Contents, tok.Len))
 }
 
 func findTyDef(tok *Token) *Type {
@@ -223,38 +399,13 @@ func findTyDef(tok *Token) *Type {
 	return nil
 }
 
-// for newLabel function
-var cnt int
-
-func newLabel() string {
-	res := fmt.Sprintf(".L.data.%d", cnt)
-	cnt++
-	return res
-}
-
-// Global variable initializer. Global variables can be initialized
-// either by a constant expression or a pointer to another global
-// variable.
-type Initializer struct {
-	Next *Initializer
-
-	// Constant expression
-	Sz  int
-	Val int64
-
-	// Reference to another global variable
-	Lbl string
-}
-
-type Function struct {
-	Next     *Function
-	Name     string
-	Params   *VarList
-	IsStatic bool
-
-	Node    *Node
-	Locals  *VarList
-	StackSz int
+func pushTagScope(tok *Token, ty *Type) {
+	sc := &TagScope{
+		Name: string(strNdUp(tok.Contents, tok.Len)),
+		Ty:   ty,
+		Next: scope.Tags,
+	}
+	scope.Tags = sc
 }
 
 // typeSpecifier returns a pointer of Type struct.
@@ -263,142 +414,109 @@ type Function struct {
 // Otherwise returns the Type struct with TY_VOID.
 //
 // type-specifier = "*"* builtin-type | struct-decl | typedef-name |
-// builtin-type = void | "bool" | "byte"| "int16" | "int" | "int64"
+// builtin-type = void | "bool" | "byte"| "int16" | "int" | "int64" |
+//                "string"
 //
-func typeSpecifier() *Type {
+func declSpec(rest **Token, tok *Token) *Type {
 	// printCurTok()
 	// printCalledFunc()
 
 	nPtr := 0
-	for consume(&token, token, "*") {
+	for consume(&tok, tok, "*") {
 		nPtr++
 	}
 
 	var ty *Type
-	if consume(&token, token, "byte") {
-		ty = charType()
-	} else if consume(&token, token, "string") {
+	if equal(tok, "byte") {
+		ty = ty_char
+	} else if equal(tok, "string") {
 		ty = stringType()
-	} else if consume(&token, token, "bool") {
-		ty = boolType()
-	} else if consume(&token, token, "int16") {
-		ty = shortType()
-	} else if consume(&token, token, "int") {
-		ty = intType()
-	} else if consume(&token, token, "int64") {
-		ty = longType()
-	} else if equal(token, "struct") { // struct type
-		ty = structDecl()
-	} else if t := consumeIdent(); t != nil {
-		ty = findVar(t).TyDef
+	} else if equal(tok, "bool") {
+		ty = ty_bool
+	} else if equal(tok, "int16") {
+		ty = ty_short
+	} else if equal(tok, "int") {
+		ty = ty_int
+	} else if equal(tok, "int64") {
+		ty = ty_long
+	} else if equal(tok, "struct") { // struct type
+		ty = structDecl(&tok, tok.Next)
+	}
+
+	// Handle user-defined types.
+	ty2 := findTyDef(tok)
+	if ty2 != nil {
+		ty = ty2
 	}
 
 	if ty == nil {
-		ty = voidType()
+		ty = ty_void
 	}
 
 	for i := 0; i < nPtr; i++ {
 		ty = pointerTo(ty)
 	}
 
+	*rest = tok
 	return ty
 }
 
-func findBase() (*Type, *Token) {
+func findBase(rest **Token, tok *Token) (*Type, *Token) {
 	// printCurTok()
 	// printCalledFunc()
 
-	tok := token
-	for !equal(tok, "*") && !isTypename() {
-		token = token.Next
+	for !equal(tok, "*") && !isTypename(tok) {
+		tok = tok.Next
 	}
-	ty := typeSpecifier()
-	t := token // どこまでtokenを読んだか
-	token = tok
+	ty := declSpec(rest, tok)
+	t := tok // どこまでtokenを読んだか
 	return ty, t
 }
 
-func readArr(base *Type) *Type {
+func readArr(tok *Token, base *Type) *Type {
 	// printCurTok()
 	// printCalledFunc()
 
-	if !consume(&token, token, "[") {
+	if !consume(&tok, tok, "[") {
 		return base
 	}
 	var sz int64
-	if !consume(&token, token, "]") {
-		sz = constExpr()
-		token = skip(token, "]")
+	if !consume(&tok, tok, "]") {
+		sz = constExpr(&tok, tok)
+		tok = skip(tok, "]")
 	}
-	base = readArr(base)
+	base = readArr(tok, base)
 	return arrayOf(base, int(sz))
 }
 
 // type-preffix = ("[" const-expr "]")*
-func readTypePreffix() *Type {
+func readTypePreffix(rest **Token, tok *Token) *Type {
 	// printCurTok()
 	// printCalledFunc()
 
 	if !equal(token, "[") {
-		return typeSpecifier()
+		return declSpec(&tok, tok)
 	}
 
-	base, t := findBase()
-	arrTy := readArr(base)
-	token = t
+	base, t := findBase(&tok, tok)
+	arrTy := readArr(tok, base)
+	*rest = t
 
 	return arrTy
 }
 
-// struct-decl = "struct" "{" struct-member "}"
-func structDecl() *Type {
-	// printCurTok()
-	// printCalledFunc()
-
-	token = skip(token, "struct")
-	token = skip(token, "{")
-
-	head := &Member{}
-	cur := head
-
-	for !consume(&token, token, "}") {
-		cur.Next = structMem()
-		cur = cur.Next
+// declarator = ident (type-preffix)? declspec
+func declarator(rest **Token, tok *Token) *Type {
+	if tok.Kind != TK_IDENT {
+		panic("\n" + errorTok(tok, "expected a variable name"))
 	}
-
-	ty := &Type{Kind: TY_STRUCT, Mems: head.Next}
-
-	// Assign offsets within the struct to members.
-	offset := 0
-	for mem := ty.Mems; mem != nil; mem = mem.Next {
-		offset = alignTo(offset, mem.Ty.Align)
-		mem.Offset = offset
-		offset += sizeOf(mem.Ty, mem.Tok)
-
-		if ty.Align < mem.Ty.Align {
-			ty.Align = mem.Ty.Align
-		}
-	}
-
+	name := tok
+	ty := readTypePreffix(rest, tok.Next)
+	ty.Name = name
 	return ty
 }
 
-// struct-member = ident type-prefix type-specifier
-func structMem() *Member {
-	// printCurTok()
-	// printCalledFunc()
-
-	tok := token
-	mem := &Member{
-		Name: expectIdent(),
-		Ty:   readTypePreffix(),
-		Tok:  tok,
-	}
-	token = skip(token, ";")
-	return mem
-}
-
-// param = ident type-prefix type-specifier
+// param = declarator
 // e.g.
 //  x int
 //  x *int
@@ -406,88 +524,47 @@ func structMem() *Member {
 //  x [3]int
 //  x [3]*int
 //  x [2]**int
-func readFuncParam() *VarList {
-	// printCurTok()
-	// printCalledFunc()
-
-	tok := token
-	name := expectIdent()
-	ty := readTypePreffix()
-	vl := &VarList{}
-	vl.Obj = pushVar(name, ty, true, tok)
-	return vl
-}
-
 // params = param ("," param)*
-func readFuncParams() *VarList {
+func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume(&token, token, ")") {
-		return nil
-	}
-
-	head := readFuncParam()
+	head := &Type{}
 	cur := head
 
-	for !consume(&token, token, ")") {
-		token = skip(token, ",")
-		cur.Next = readFuncParam()
+	for !equal(tok, ")") {
+		if cur != head {
+			tok = skip(tok, ",")
+		}
+		ty2 := declarator(&tok, tok)
+
+		// "array of T" is converted tot "pointer to T" only in the parameter
+		// context. For example, *argv[] is converted to **argv by this.
+		if ty2.Kind == TY_ARRAY {
+			name := ty2.Name
+			ty2 = pointerTo(ty2.Base)
+			ty2.Name = name
+		}
+
+		cur.Next = copyType(ty2)
 		cur = cur.Next
 	}
 
-	return head
+	ty = funcType(ty)
+	return ty
 }
 
-// function = "func" ident "(" params? ")" type-prefix type-specifier "{" stmt "}"
-func function() *Function {
-	// printCurTok()
-	// printCalledFunc()
-
-	locals = nil
-
-	// Construct a function object
-	tok := token
-	fn := &Function{Name: expectIdent()}
-	token = skip(token, "(")
-	fn.Params = readFuncParams()
-	ty := readTypePreffix()
-
-	// Add a function type to the scope
-	pushVar(fn.Name, funcType(ty), false, tok)
-	token = skip(token, "{")
-
-	// Read function body
-	head := &Node{}
-	cur := head
-	for !consume(&token, token, "}") {
-		cur.Next = stmt()
-		cur = cur.Next
-	}
-	token = skip(token, ";")
-	fn.Node = head.Next
-	fn.Locals = locals
-	return fn
-}
-
-// Initializer list can end with "}".
-// This function returns true if it looks like
-// we are at the end of an initializer list.
-func peekEnd() bool {
-	tok := token
-	ret := consume(&token, token, "}") ||
-		(consume(&token, token, ",") && consume(&token, token, "}"))
-	token = tok
-	return ret
-}
-
-func consumeEnd() bool {
-	tok := token
-	if consume(&token, token, "}") ||
-		(consume(&token, token, ",") && consume(&token, token, "}")) {
+func consumeEnd(rest **Token, tok *Token) bool {
+	if equal(tok, "}") {
+		*rest = tok.Next
 		return true
 	}
-	token = tok
+
+	if equal(tok, ",") && equal(tok.Next, "}") {
+		*rest = tok.Next.Next
+		return true
+	}
+
 	return false
 }
 
@@ -533,141 +610,248 @@ func emitStructPadding(cur *Initializer, parent *Type, mem *Member) *Initializer
 	return cur
 }
 
-func gvarInitializer(cur *Initializer, ty *Type) *Initializer {
-	// printCalledFunc()
-	// printCurTok()
-
-	tok := token
-	var ty2 *Type
-
-	if !equal(tok, "{") {
-		ty2 = readTypePreffix()
-		// if neither type-preffix nor ty-specifier, and "tok" is string literal
-		if ty2.Kind == TY_VOID {
-			if tok.Kind == TK_STR {
-				ty2 = stringType()
-			} else if token.Kind == TK_NUM {
-				switch ty.Kind {
-				case TY_BYTE, TY_SHORT, TY_INT, TY_LONG, TY_BOOL:
-					ty2 = ty
-				default: // TY_CHAR
-					ty2 = intType()
-				}
-			} else if consume(&token, token, "&") || consume(&token, token, "*") {
-				ty2 = pointerTo(findVar(consumeIdent()).Obj.Ty)
-				token = tok
-			} else {
-				ty2 = intType()
-			}
-		}
-
-		if ty.TyName != ty2.TyName {
-			panic("\n" + errorTok(tok,
-				"connot use \"%s\" (type %s) as type %s in assignment",
-				tok.Str, ty2.TyName, ty.TyName))
-		}
+func skipExcessElement(tok *Token) *Token {
+	if equal(tok, "{") {
+		tok = skipExcessElement(tok.Next)
+		return skip(tok, "}")
 	}
 
+	assign(&tok, tok)
+	return tok
+}
+
+// string-initializer = string-literal
+func stringInitializer(rest **Token, tok *Token, init *Initializer) {
+	len := min(init.Ty.ArrSz, tok.Ty.ArrSz)
+	for i := 0; i < len; i++ {
+		init.Children[i].Expr = newNum(int64(tok.Str[i]), tok)
+	}
+	*rest = tok.Next
+}
+
+// array-initializer = (type-preffix)? decl-spec "{" initializer ("," initializer)* ","? "}"
+func arrayInitializer1(rest **Token, tok *Token, init *Initializer) {
+	tok = skip(tok, "{")
+
+	for i := 0; !consumeEnd(rest, tok); i++ {
+		if i > 0 {
+			tok = skip(tok, ",")
+		}
+
+		if i < init.Ty.ArrSz {
+			initializer2(&tok, tok, init.Children[i])
+		} else {
+			tok = skipExcessElement(tok)
+		}
+	}
+}
+
+// struct-initializer = "{" initializer ("," initializer)* ","? "}"
+func structInitializer1(rest **Token, tok *Token, init *Initializer) {
+	tok = skip(tok, "{")
+
+	mem := init.Ty.Mems
+
+	for !consumeEnd(rest, tok) {
+		if mem != init.Ty.Mems {
+			tok = skip(tok, ",")
+		}
+
+		if mem != nil {
+			initializer2(&tok, tok, init.Children[mem.Idx])
+			mem = mem.Next
+		} else {
+			tok = skipExcessElement(tok)
+		}
+	}
+}
+
+// initializer = string-initializer | array-initializer
+//             | struct-initializer
+//             | assign
+func initializer2(rest **Token, tok *Token, init *Initializer) {
+	if init.Ty.Kind == TY_ARRAY && tok.Kind == TK_STR {
+		stringInitializer(rest, tok, init)
+		return
+	}
+
+	if init.Ty.Kind == TY_ARRAY {
+		readTypePreffix(rest, tok) // discard the return value
+		arrayInitializer1(rest, tok, init)
+	}
+
+	if init.Ty.Kind == TY_STRUCT {
+		readTypePreffix(rest, tok) // discard the return value
+		structInitializer1(rest, tok, init)
+		return
+	}
+}
+
+func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer {
+	init := newInitializer(ty)
+	initializer2(rest, tok, init)
+
+	*newTy = init.Ty
+	return init
+}
+
+func initDesgExpr(desg *InitDesg, tok *Token) *Node {
+	if desg.Var != nil {
+		return newVarNode(desg.Var, tok)
+	}
+
+	if desg.Mem != nil {
+		node := newUnary(ND_MEMBER, initDesgExpr(desg.Next, tok), tok)
+		node.Mem = desg.Mem
+		return node
+	}
+
+	lhs := initDesgExpr(desg.Next, tok)
+	rhs := newNum(int64(desg.Idx), tok)
+	return newUnary(ND_DEREF, newAdd(lhs, rhs, tok), tok)
+}
+
+func createLvarInit(init *Initializer, ty *Type, desg *InitDesg, tok *Token) *Node {
 	if ty.Kind == TY_ARRAY {
-
-		if !consume(&token, token, "{") {
-			panic("\n" + errorTok(tok, "invalid initializer"))
+		node := newNode(ND_NULL_EXPR, tok)
+		for i := 0; i < ty.ArrSz; i++ {
+			desg2 := &InitDesg{Next: desg, Idx: i}
+			rhs := createLvarInit(init.Children[i], ty.Base, desg2, tok)
+			node = newBinary(ND_COMMA, node, rhs, tok)
 		}
+		return node
+	}
 
-		var i int
-		limit := ty.ArrSz
+	if ty.Kind == TY_STRUCT && init.Expr == nil {
+		node := newNode(ND_NULL_EXPR, tok)
 
-		for {
-			cur = gvarInitializer(cur, ty.Base)
-			i++
-			if i >= limit || peekEnd() || !consume(&token, token, ",") {
-				break
-			}
+		for mem := ty.Mems; mem != nil; mem = mem.Next {
+			desg2 := &InitDesg{Next: desg, Idx: 0, Mem: mem}
+			rhs := createLvarInit(init.Children[mem.Idx], mem.Ty, desg2, tok)
+			node = newBinary(ND_COMMA, node, rhs, tok)
 		}
+		return node
+	}
 
-		if !consumeEnd() {
-			panic("\n" + errorTok(token, "array index %d out of bounds [0:%d]", i, limit))
+	if init.Expr == nil {
+		return newNode(ND_NULL_EXPR, tok)
+	}
+
+	lhs := initDesgExpr(desg, tok)
+	return newBinary(ND_ASSIGN, lhs, init.Expr, tok)
+}
+
+// lvar-initializer = assign
+//                  | "{" lvar-initializer ("," lvar-initializer)* "}"
+//
+// An initializer for a local variable is expanded to multiple
+// assignments. For example, this function creates the following
+// nodes for var x [2][3]int=[2][3]int{{1,2,3},{4,5,6}}.
+//
+// x[0][0]=1
+// x[0][1]=2
+// x[0][2]=3
+// x[1][0]=4
+// x[1][1]=5
+// x[1][2]=6
+//
+// Struct members are initialized in declaration order. For example,
+// 'type x struct {
+// 	a int
+// 	b int
+// }
+// var x T = T{1, 2}'
+// sets x.a to 1 and x.b to 2.
+//
+// If an initializer list is shorter than an array, excess array
+// elements are initialized with 0.
+//
+// A string(char array) can be initialized by a string literal. For example,
+// `var x string="abc"`
+func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
+	// Initialize a char array with a string literal.
+	// => unnecessary
+
+	init := initializer(rest, tok, v.Ty, &v.Ty)
+	desg := &InitDesg{nil, 0, nil, v}
+
+	// If a partial initializer list is given, the standard requires
+	// that unspecified elements are set to 0. Here, we simply
+	// zero-inilialize the entire memory region of a variable defore
+	// initializing it with user-supplied values.
+	lhs := newNode(ND_MEMZERO, tok)
+	lhs.Obj = v
+
+	rhs := createLvarInit(init, v.Ty, desg, tok)
+	return newBinary(ND_COMMA, lhs, rhs, tok)
+}
+
+func writeBuf(buf *string, val int64, sz int) {
+	switch sz {
+	case 1:
+		*buf = strconv.Itoa(int(int8(val)))
+	case 2:
+		*buf = strconv.Itoa(int(int16(val)))
+	case 4:
+		*buf = strconv.Itoa(int(val))
+	case 8:
+		*buf = strconv.FormatInt(val, 10)
+	default:
+		panic("internal error")
+	}
+
+}
+
+func writeGvarData(cur *Relocation,
+	init *Initializer, ty *Type, buf *string, offset int) *Relocation {
+	if ty.Kind == TY_ARRAY {
+		sz := ty.Base.Sz
+		for i := 0; i < ty.ArrSz; i++ {
+			cur = writeGvarData(cur, init.Children[i], ty.Base, buf, offset+sz*i)
 		}
-
-		// Set excess array elements to zero.
-		if i < ty.ArrSz {
-			cur = newInitZero(cur, sizeOf(ty.Base, tok)*(ty.ArrSz-i))
-		}
-
 		return cur
 	}
 
 	if ty.Kind == TY_STRUCT {
-		if !consume(&token, token, "{") {
-			panic("\n" + errorTok(tok, "invalid initializer"))
-		}
-
-		mem := ty.Mems
-
-		for {
-			cur = gvarInitializer(cur, mem.Ty)
-			cur = emitStructPadding(cur, ty, mem)
-			mem = mem.Next
-			if mem == nil || peekEnd() || !consume(&token, token, ",") {
-				break
-			}
-		}
-
-		if !consumeEnd() {
-			panic("\n" + errorTok(token, "too many values"))
-		}
-
-		// Set excess struct elements to zero.
-		if mem != nil {
-			sz := sizeOf(ty, tok) - mem.Offset
-			if sz != 0 {
-				cur = newInitZero(cur, sz)
-			}
+		for mem := ty.Mems; mem != nil; mem = mem.Next {
+			cur = writeGvarData(cur, init.Children[mem.Idx], mem.Ty, buf,
+				offset+mem.Offset)
 		}
 		return cur
 	}
 
-	expr := logor()
-
-	if expr.Kind == ND_ADDR {
-		if expr.Lhs.Kind != ND_VAR {
-			panic("\n" + errorTok(tok, "invalid initializer"))
-		}
-		return newInitLabel(cur, expr.Lhs.Obj.Name)
+	if init.Expr == nil {
+		return cur
 	}
 
-	if expr.Kind == ND_VAR && expr.Obj.Ty.Kind == TY_ARRAY {
-		return newInitLabel(cur, expr.Obj.Name)
+	var label *string = nil
+	val := eval2(init.Expr, label)
+
+	if label == nil {
+		writeBuf(buf, val, ty.Sz)
+		return cur
 	}
 
-	return newInitVal(cur, sizeOf(ty, token), int(eval(expr)))
+	rel := &Relocation{
+		Offset: offset,
+		Lbl:    *label,
+		Addend: int64(val),
+	}
+	cur.Next = rel
+	return cur.Next
 }
 
-// global-var = "var" ident type-prefix type-suffix ("=" gvar-initializer)? ";"
-//
-// For example,
-// var x int = 6
-// var x *int = &y
-// var x string = "abc"
-// var x [2]int = [2]int{1,2}
-// var x T(typedef) = T{1,2}
-func globalVar() {
-	// printCurTok()
+func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	// printCalledFunc()
+	// printCurTok()
 
-	tok := token
-	name := expectIdent()
-	ty := readTypePreffix()
+	init := initializer(rest, tok, v.Ty, &v.Ty)
 
-	v := pushVar(name, ty, false, tok)
-
-	if consume(&token, token, "=") {
-		head := &Initializer{}
-		gvarInitializer(head, ty)
-		v.Init = head.Next
-	}
-
-	token = skip(token, ";")
+	head := &Relocation{}
+	var buf string
+	writeGvarData(head, init, v.Ty, &buf, 0)
+	v.InitData = buf
+	v.Rel = head.Next
 }
 
 type Designator struct {
@@ -682,7 +866,7 @@ type Designator struct {
 func newDesgNode2(v *Obj, desg *Designator) *Node {
 	tok := v.Tok
 	if desg == nil {
-		return newVar(v, tok)
+		return newVarNode(v, tok)
 	}
 
 	node := newDesgNode2(v, desg.Next)
@@ -738,197 +922,76 @@ func stringAssign(cur *Node, v *Obj, ty *Type, desg *Designator, tok *Token) *No
 	return cur
 }
 
-// lvar-initializer = assign
-//                  | "{" lvar-initializer ("," lvar-initializer)* "}"
-//
-// An initializer for a local variable is expanded to multiple
-// assignments. For example, this function creates the following
-// nodes for var x [2][3]int=[2][3]int{{1,2,3},{4,5,6}}.
-//
-// x[0][0]=1
-// x[0][1]=2
-// x[0][2]=3
-// x[1][0]=4
-// x[1][1]=5
-// x[1][2]=6
-//
-// Struct members are initialized in declaration order. For example,
-// 'type x struct {
-// 	a int
-// 	b int
-// }
-// var x T = T{1, 2}'
-// sets x.a to 1 and x.b to 2.
-//
-// If an initializer list is shorter than an array, excess array
-// elements are initialized with 0.
-//
-// A string(char array) can be initialized by a string literal. For example,
-// `var x string="abc"`
-func lvarInitializer(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
-	// Initialize a char array with a string literal.
-	// => unnecessary
-
-	var ty2 *Type
-
-	t := token
-	if !equal(t, "{") {
-		ty2 = readTypePreffix()
-		if ty2.Kind == TY_VOID {
-			if token.Kind == TK_STR {
-				// if neither type-preffix nor ty-specifier, and "tok" is string literal
-				ty2 = stringType()
-			} else if token.Kind == TK_NUM {
-				switch ty.Kind {
-				case TY_BYTE, TY_SHORT, TY_INT, TY_LONG, TY_BOOL:
-					ty2 = ty
-				default: // TY_CHAR
-					ty2 = intType()
-				}
-			} else if consume(&token, token, "&") || consume(&token, token, "*") {
-				ty2 = pointerTo(findVar(consumeIdent()).Obj.Ty)
-				token = t
-			} else {
-				ty2 = intType()
-			}
-		}
-
-		if ty.TyName != ty2.TyName {
-			panic("\n" + errorTok(token,
-				"connot use \"%s\" (type %s) as type %s in assignment",
-				token.Str, ty2.TyName, ty.TyName))
-		}
-	}
-
-	if ty.Kind != TY_STRUCT && ty.Kind != TY_ARRAY {
-		cur.Next = newDesgNode(v, desg, assign())
-		return cur.Next
-	}
-
-	// Initialize an array or a struct
-	consume(&token, token, "{")
-	tok := token
-	if ty.Kind == TY_ARRAY {
-		i := 0
-		limit := ty.ArrSz
-		// fmt.Printf("limit: %d\n\n", limit)
-
-		for {
-			desg2 := &Designator{desg, i, nil}
-			i++
-			cur = lvarInitializer(cur, v, ty.Base, desg2)
-			if i >= limit || peekEnd() || !consume(&token, token, ",") {
-				break
-			}
-		}
-
-		if !consumeEnd() {
-			panic("\n" + errorTok(token, "array index %d out of bounds [0:%d]", i, limit))
-		}
-
-		// Set excess array elements to zero.
-		for i < ty.ArrSz {
-			desg2 := &Designator{desg, i, nil}
-			i++
-			cur = lvarInitZero(cur, v, ty.Base, desg2)
-		}
-		return cur
-	}
-
-	if ty.Kind == TY_STRUCT {
-		mem := ty.Mems
-
-		for {
-			desg2 := &Designator{desg, 0, mem}
-			cur = lvarInitializer(cur, v, mem.Ty, desg2)
-			mem = mem.Next
-			if mem == nil || peekEnd() || !consume(&token, token, ",") {
-				break
-			}
-		}
-
-		if !consumeEnd() {
-			panic("\n" + errorTok(token, "too many values"))
-		}
-
-		// Set excess struct elements to zero.
-		for ; mem != nil; mem = mem.Next {
-			desg2 := &Designator{desg, 0, mem}
-			cur = lvarInitZero(cur, v, mem.Ty, desg2)
-		}
-		return cur
-	}
-
-	panic("\n" + errorTok(tok, "invalid initializer"))
-}
-
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl(unimplemented)
-// VarDecl = "var" ident type-prefix type-specifier ("=" expr)
+// VarDecl = "var" ident type-prefix declspec ("=" expr)
 // VarSpec = ident-list (type-preffix type-specifier [ "=" expr-list ] | "=" expr-list)
 // ShortVarDecl = "var" ident "=" expr => unimplemented
 //              | ident ":=" expr => unimplemented
-func declaration() *Node {
+func declaration(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	token = skip(token, "var")
-	tok := token
-
-	name := expectIdent()
-	ty := readTypePreffix()
-	assert(ty.Kind != TY_VOID, "\n"+errorTok(tok, "variable declared void"))
-
-	v := pushVar(name, ty, true, tok)
-	if consume(&token, token, ";") {
-		return newNode(ND_NULL, tok)
-	}
-	// ここでShortVarDecl("var" ident = expr)の場合はty==nilでvがpushVarされていない状態 => unimplemented
-
-	token = skip(token, "=")
-
-	// cannot assign array variables to array variables now.
 	head := &Node{}
-	lvarInitializer(head, v, v.Ty, nil)
-	token = skip(token, ";")
+	cur := head
+	var i int
+
+	for !equal(tok, ";") {
+		if i > 0 {
+			tok = skip(tok, ",")
+		}
+		i++
+		ty := declarator(&tok, tok)
+		if ty.Kind == TY_VOID {
+			panic("\n" + errorTok(tok, "variable declared void"))
+		}
+
+		v := newLvar(getIdent(ty.Name), ty)
+		if equal(tok, "=") {
+			expr := lvarInitializer(&tok, tok.Next, v)
+			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+			cur = cur.Next
+		}
+
+		if v.Ty.Sz < 0 {
+			panic("\n" + errorTok(ty.Name, "variable has incomplete type"))
+		}
+		if v.Ty.Kind == TY_VOID {
+			panic("\n" + errorTok(ty.Name, "variable declared void"))
+		}
+	}
 
 	node := newNode(ND_BLOCK, tok)
 	node.Body = head.Next
+	*rest = tok.Next
 	return node
 }
 
-func readExprStmt() *Node {
+func isTypename(tok *Token) bool {
 	// printCurTok()
 	// printCalledFunc()
 
-	// t := token
-	return expr()
-}
+	kw := []string{
+		"byte", "bool", "int16", "int", "int64", "struct", "string",
+	}
 
-func isTypename() bool {
-	// printCurTok()
-	// printCalledFunc()
-
-	return equal(token, "byte") || equal(token, "bool") ||
-		equal(token, "int16") || equal(token, "int") ||
-		equal(token, "int64") || equal(token, "struct") ||
-		equal(token, "string") ||
-		findTyDef(token) != nil
-}
-
-func isForClause() bool {
-	// printCurTok()
-	// printCalledFunc()
-
-	tok := token
-
-	for !equal(token, "{") {
-		if equal(token, ";") {
-			token = tok
+	for i := 0; i < len(kw); i++ {
+		if equal(tok, kw[i]) {
 			return true
 		}
-		token = token.Next
 	}
-	token = tok
+	return findTyDef(token) != nil
+}
+
+func isForClause(tok *Token) bool {
+	// printCurTok()
+	// printCalledFunc()
+
+	for !equal(tok, "{") {
+		if equal(tok, ";") {
+			return true
+		}
+		tok = tok.Next
+	}
 	return false
 }
 
@@ -952,178 +1015,249 @@ func isForClause() bool {
 // condition = expr .
 // block = "{" stmt-list "};" .
 // stmt-list = { stmt ";" } .
-func stmt() *Node {
+func stmt(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume(&token, token, "return") {
-		node := newUnary(ND_RETURN, expr(), token)
-		token = skip(token, ";")
+	if equal(tok, "return") {
+		node := newNode(ND_RETURN, tok)
+		exp := expr(&tok, tok.Next)
+		*rest = skip(token, ";")
+
+		addType(exp)
+		node.Lhs = newCast(exp, curFn.Ty.RetTy)
 		return node
 	}
 
-	if consume(&token, token, "if") {
-		node := newNode(ND_IF, token)
-		node.Cond = expr()
-		node.Then = stmt()
-		if consume(&token, token, "else") {
-			node.Els = stmt()
+	if equal(tok, "if") {
+		node := newNode(ND_IF, tok)
+		node.Cond = expr(&tok, tok)
+		node.Then = stmt(&tok, tok)
+		if equal(tok, "else") {
+			node.Els = stmt(&tok, tok.Next)
 		}
 		return node
 	}
 
-	if consume(&token, token, "switch") {
+	if equal(tok, "switch") {
 		node := newNode(ND_SWITCH, token)
-		node.Cond = expr()
+		node.Cond = expr(&tok, tok)
 
 		sw := curSwitch
 		curSwitch = node
-		node.Then = stmt()
+		node.Then = stmt(rest, tok)
 		curSwitch = sw
 		return node
 	}
 
-	if consume(&token, token, "case") {
+	if equal(tok, "case") {
 		if curSwitch == nil {
 			panic("\n" + errorTok(token, "stray case"))
 		}
-		val := constExpr()
+		node := newNode(ND_CASE, tok)
+		val := constExpr(&tok, tok.Next)
 		token = skip(token, ":")
-
-		node := newUnary(ND_CASE, stmt(), token)
+		node.Lbl = newUniqueName()
+		node.Lhs = stmt(rest, tok)
 		node.Val = val
 		node.CaseNext = curSwitch.CaseNext
 		curSwitch.CaseNext = node
 		return node
 	}
 
-	if consume(&token, token, "default") {
+	if equal(tok, "default") {
 		if curSwitch == nil {
 			panic("\n" + errorTok(token, "stray default"))
 		}
+		node := newNode(ND_CASE, tok)
 		token = skip(token, ":")
-		node := newUnary(ND_CASE, stmt(), token)
+		node.Lbl = newUniqueName()
+		node.Lhs = stmt(rest, tok)
 		curSwitch.DefCase = node
 		return node
 	}
 
-	if consume(&token, token, "for") {
-		if !isForClause() { // for for-stmt
-			node := newNode(ND_WHILE, token)
+	if equal(tok, "for") {
+		if !isForClause(tok) { // for for-stmt like 'while' statement
+			node := newNode(ND_FOR, tok)
 			if !equal(token, "{") {
-				node.Cond = expr()
+				node.Cond = expr(&tok, tok)
 			} else {
 				node.Cond = newNum(1, token)
 			}
+			tok = skip(tok, "{")
 
-			node.Then = stmt()
+			brk := brkLabel
+			cont := contLabel
+			node.BrkLabel = newUniqueName()
+			brkLabel = node.BrkLabel
+			node.ContLabel = newUniqueName()
+			contLabel = node.ContLabel
+
+			node.Then = stmt(rest, tok)
+
+			brkLabel = brk
+			contLabel = cont
 			return node
 
 		} else { // for for-clause
-			node := newNode(ND_FOR, token)
-			if !consume(&token, token, ";") {
-				node.Init = readExprStmt()
-				token = skip(token, ";")
+			node := newNode(ND_FOR, tok)
+			enterScope()
+			brk := brkLabel
+			cont := contLabel
+			node.BrkLabel = newUniqueName()
+			brkLabel = node.BrkLabel
+			node.ContLabel = newUniqueName()
+			contLabel = node.ContLabel
+
+			if !equal(tok, ";") {
+				node.Init = exprStmt(&tok, tok)
 			}
-			if !consume(&token, token, ";") {
-				node.Cond = expr()
-				token = skip(token, ";")
+			token = skip(token, ";")
+			if !equal(tok, ";") {
+				node.Cond = expr(&tok, tok)
 			}
+			token = skip(token, ";")
 			if !equal(token, "{") {
-				node.Inc = readExprStmt()
+				node.Inc = expr(&tok, tok)
 			}
-			node.Then = stmt()
+			token = skip(token, "{")
+
+			node.Then = stmt(rest, tok)
+
+			leaveScope()
+			brkLabel = brk
+			contLabel = cont
 			return node
 		}
 	}
 
-	if consume(&token, token, "{") {
-		tok := token
-
-		head := Node{}
-		cur := &head
-
-		sc := varScope
-		for !consume(&token, token, "}") {
-			cur.Next = stmt()
-			cur = cur.Next
-		}
-		varScope = sc
-
-		consume(&token, token, ";")
-		return &Node{Kind: ND_BLOCK, Body: head.Next, Tok: tok}
-	}
-
-	if consume(&token, token, "break") {
-		token = skip(token, ";")
-		return newNode(ND_BREAK, token)
-	}
-
-	if consume(&token, token, "continue") {
-		token = skip(token, ";")
-		return newNode(ND_CONTINUE, token)
-	}
-
-	if consume(&token, token, "goto") {
-		node := newNode(ND_GOTO, token)
-		node.LblName = expectIdent()
-		token = skip(token, ";")
+	if equal(tok, "goto") {
+		node := newNode(ND_GOTO, tok)
+		node.Lbl = getIdent(tok.Next)
+		node.GotoNext = gotos
+		gotos = node
+		*rest = skip(tok.Next.Next, ";")
 		return node
 	}
 
-	if t := consumeIdent(); t != nil {
-		if consume(&token, token, ":") {
-			node := newUnary(ND_LABEL, stmt(), token)
-			node.LblName = t.Str
-			return node
+	if consume(&token, token, "break") {
+		if brkLabel == "" {
+			panic("\n" + errorTok(tok, "stray break"))
 		}
-		token = t
+		node := newNode(ND_GOTO, tok)
+		node.UniqueLbl = brkLabel
+		*rest = skip(tok.Next, ";")
+		return node
 	}
 
-	if equal(token, "var") {
-		return declaration()
+	if equal(tok, "continue") {
+		if contLabel == "" {
+			panic("\n" + errorTok(tok, "stray continue"))
+		}
+		node := newNode(ND_GOTO, tok)
+		node.UniqueLbl = contLabel
+		*rest = skip(tok.Next, ";")
+		return node
 	}
 
-	if consume(&token, token, "type") {
-		name := expectIdent()
-		ty := readTypePreffix()
-		token = skip(token, ";")
-		pushScope(name).TyDef = ty
-		return newNode(ND_NULL, token)
+	// Labeled statement
+	if tok.Kind == TK_IDENT && equal(tok.Next, ":") {
+		node := newNode(ND_LABEL, tok)
+		node.Lbl = tok.Str
+		node.UniqueLbl = newUniqueName()
+		node.Lhs = stmt(rest, tok.Next.Next)
+		node.GotoNext = labels
+		labels = node
+		return node
 	}
 
-	node := readExprStmt()
-	token = skip(token, ";")
+	if equal(tok, "{") {
+		return compoundStmt(rest, tok.Next)
+	}
+
+	return exprStmt(rest, tok)
+}
+
+// compound-stmt = (typedef | declaration | stmt)* "}"
+func compoundStmt(rest **Token, tok *Token) *Node {
+	node := newNode(ND_BLOCK, tok)
+	head := &Node{}
+	cur := head
+
+	enterScope()
+
+	for !equal(tok, "}") {
+		if equal(token, "var") {
+			cur.Next = declaration(&tok, tok)
+			cur = cur.Next
+			addType(cur)
+			continue
+		}
+
+		if consume(&tok, tok, "type") {
+			tok = parseTypedef(tok)
+			tok = skip(tok, ";")
+			continue
+		}
+
+		cur.Next = stmt(&tok, tok)
+		cur = cur.Next
+		addType(cur)
+	}
+	leaveScope()
+
+	node.Body = head.Next
+	*rest = tok.Next
+	return node
+}
+
+// expr-stmt = expr? ";"
+func exprStmt(rest **Token, tok *Token) *Node {
+	if equal(tok, ";") {
+		*rest = tok.Next
+		return newNode(ND_BLOCK, tok)
+	}
+
+	node := newNode(ND_EXPR_STMT, tok)
+	node.Lhs = expr(&tok, tok)
+	*rest = skip(tok, ";")
 	return node
 }
 
 // expr       = assign ("," assign)*
-func expr() *Node {
+func expr(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := assign()
-	for {
-		if consume(&token, token, ",") {
-			node = newUnary(ND_EXPR_STMT, node, node.Tok)
-			node = newBinary(ND_COMMA, node, assign(), token)
-			continue
-		}
-		break
+	node := assign(&tok, tok)
+
+	if equal(tok, ",") {
+		return newBinary(ND_COMMA, node, expr(rest, tok.Next), tok)
 	}
 	return node
 }
 
 func eval(node *Node) int64 {
+	return eval2(node, nil)
+}
+
+func eval2(node *Node, label *string) int64 {
+	addType(node)
+
 	switch node.Kind {
 	case ND_ADD:
-		return eval(node.Lhs) + eval(node.Rhs)
+		return eval2(node.Lhs, label) + eval(node.Rhs)
 	case ND_SUB:
-		return eval(node.Lhs) - eval(node.Rhs)
+		return eval2(node.Lhs, label) - eval(node.Rhs)
 	case ND_MUL:
 		return eval(node.Lhs) * eval(node.Rhs)
 	case ND_DIV:
 		return eval(node.Lhs) / eval(node.Rhs)
+	case ND_NEG:
+		return -eval(node.Lhs)
+	case ND_MOD:
+		return eval(node.Lhs) % eval(node.Rhs)
 	case ND_BITAND:
 		return eval(node.Lhs) & eval(node.Rhs)
 	case ND_BITOR:
@@ -1154,6 +1288,13 @@ func eval(node *Node) int64 {
 			return 1
 		}
 		return 0
+	case ND_COND:
+		if eval(node.Cond) != 0 {
+			return eval2(node.Then, label)
+		}
+		return eval2(node.Els, label)
+	case ND_COMMA:
+		return eval2(node.Lhs, label)
 	case ND_NOT:
 		if eval(node.Lhs) == 0 {
 			return 1
@@ -1171,374 +1312,796 @@ func eval(node *Node) int64 {
 			return 1
 		}
 		return 0
+	case ND_CAST:
+		val := eval2(node.Lhs, label)
+		if isInteger(node.Ty) {
+			switch node.Ty.Sz {
+			case 1:
+				return int64(uint8(val))
+			case 2:
+				return int64(uint16(val))
+			case 4:
+				return int64(uint32(val))
+			}
+		}
+		return val
+	case ND_ADDR:
+		return evalRval(node.Lhs, label)
+	case ND_MEMBER:
+		if label == nil {
+			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+		}
+		if node.Obj.Ty.Kind != TY_ARRAY && node.Obj.Ty.Kind == TY_FUNC {
+			panic("\n" + errorTok(node.Tok, "invalid initializer"))
+		}
+		*label = node.Obj.Name
+		return 0
 	case ND_NUM:
 		return node.Val
 	default:
-		panic("\n" + errorTok(node.Tok, "not a constant expression"))
+		panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+	}
+}
+
+func evalRval(node *Node, label *string) int64 {
+	switch node.Kind {
+	case ND_VAR:
+		if node.Obj.IsLocal {
+			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+		}
+		*label = node.Obj.Name
+		return 0
+	case ND_DEREF:
+		return eval2(node.Lhs, label)
+	case ND_MEMBER:
+		return evalRval(node.Lhs, label) + int64(node.Mem.Offset)
+	default:
+		panic("\n" + errorTok(node.Tok, "invalid initializer"))
 	}
 }
 
 // const-expr
-func constExpr() int64 {
-	return eval(logor())
+func constExpr(rest **Token, tok *Token) int64 {
+	return eval(logor(rest, tok))
+}
+
+// Convert `A op= B` to `*tmp = *tmp op B`
+// where tmp is a fresh pointer variable.
+func toAssign(binary *Node) *Node {
+	addType(binary.Lhs)
+	addType(binary.Rhs)
+	tok := binary.Tok
+
+	v := newLvar("", pointerTo(binary.Lhs.Ty))
+
+	expr1 := newBinary(ND_ASSIGN, newVarNode(v, tok),
+		newUnary(ND_ADDR, binary.Lhs, tok), tok)
+
+	expr2 := newBinary(ND_ASSIGN,
+		newUnary(ND_DEREF, newVarNode(v, tok), tok),
+		newBinary(binary.Kind,
+			newUnary(ND_DEREF, newVarNode(v, tok), tok),
+			binary.Rhs,
+			tok),
+		tok)
+
+	return newBinary(ND_COMMA, expr1, expr2, tok)
 }
 
 // assign = logor (assign-op assign)?
 // assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "<<=" | ">>="
-func assign() *Node {
+func assign(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := logor()
-	if consume(&token, token, "=") {
-		if token.Kind == TK_STR && node.Obj.Ty.Kind == TY_ARRAY &&
-			node.Obj.Ty.Base.Kind == TY_BYTE {
-			tok := token
-			token = token.Next
-			head := &Node{}
-			stringAssign(head, node.Obj, node.Obj.Ty, nil, tok)
-			n := newNode(ND_BLOCK, tok)
-			n.Body = head.Next
-			return n
-		} else {
-			node = newBinary(ND_ASSIGN, node, assign(), token)
-		}
-	} else if consume(&token, token, "+=") {
-		node = newBinary(ND_A_ADD, node, assign(), token)
-	} else if consume(&token, token, "-=") {
-		node = newBinary(ND_A_SUB, node, assign(), token)
-	} else if consume(&token, token, "*=") {
-		node = newBinary(ND_A_MUL, node, assign(), token)
-	} else if consume(&token, token, "/=") {
-		node = newBinary(ND_A_DIV, node, assign(), token)
-	} else if consume(&token, token, "<<=") {
-		node = newBinary(ND_A_SHL, node, assign(), token)
-	} else if consume(&token, token, ">>=") {
-		node = newBinary(ND_A_SHR, node, assign(), token)
+	node := logor(&tok, tok)
+
+	if equal(tok, "=") {
+		return newBinary(ND_ASSIGN, node, assign(rest, tok.Next), tok)
 	}
+
+	if equal(tok, "+=") {
+		return toAssign(newAdd(node, assign(rest, tok.Next), tok))
+	}
+
+	if equal(tok, "-=") {
+		return toAssign(newSub(node, assign(rest, tok.Next), tok))
+	}
+
+	if equal(tok, "*=") {
+		return toAssign(newBinary(ND_MUL, node, assign(rest, tok.Next), tok))
+	}
+
+	if equal(tok, "/=") {
+		return toAssign(newBinary(ND_DIV, node, assign(rest, tok.Next), token))
+	}
+
+	if equal(tok, "%=") {
+		return toAssign(newBinary(ND_BITAND, node, assign(rest, tok.Next), tok))
+	}
+
+	if equal(tok, "|=") {
+		return toAssign(newBinary(ND_BITOR, node, assign(rest, tok.Next), tok))
+	}
+
+	if equal(tok, "^=") {
+		return toAssign(newBinary(ND_BITXOR, node, assign(rest, tok.Next), tok))
+	}
+
+	if equal(tok, "<<=") {
+		return toAssign(newBinary(ND_SHL, node, assign(rest, tok.Next), tok))
+	}
+
+	if equal(tok, ">>=") {
+		return toAssign(newBinary(ND_SHR, node, assign(rest, tok.Next), tok))
+	}
+
+	*rest = tok
 	return node
 }
 
 // logor = logand ("||" logand)*
-func logor() *Node {
-	node := logand()
-	for consume(&token, token, "||") {
-		node = newBinary(ND_LOGOR, node, logand(), token)
+func logor(rest **Token, tok *Token) *Node {
+	node := logand(&tok, tok)
+	for equal(tok, "||") {
+		start := tok
+		node = newBinary(ND_LOGOR, node, logand(&tok, tok.Next), start)
 	}
+	*rest = tok
 	return node
 }
 
 // logand = bitor ("&&" bitor)*
-func logand() *Node {
-	node := bitor()
-	for consume(&token, token, "&&") {
-		node = newBinary(ND_LOGAND, node, bitor(), token)
+func logand(rest **Token, tok *Token) *Node {
+	node := bitor(&tok, tok)
+	for equal(tok, "&&") {
+		start := tok
+		node = newBinary(ND_LOGAND, node, bitor(&tok, tok.Next), start)
 	}
+	*rest = tok
 	return node
 }
 
 // bitor = bitxor ("|" bitxor)*
-func bitor() *Node {
-	node := bitxor()
-	for consume(&token, token, "|") {
-		node = newBinary(ND_BITOR, node, bitxor(), token)
+func bitor(rest **Token, tok *Token) *Node {
+	node := bitxor(&tok, tok)
+	for equal(tok, "|") {
+		start := tok
+		node = newBinary(ND_BITOR, node, bitxor(&tok, tok.Next), start)
 	}
+	*rest = tok
 	return node
 }
 
 // bitxor = bitand ("^" bitand)*
-func bitxor() *Node {
-	node := bitand()
-	for consume(&token, token, "^") {
-		node = newBinary(ND_BITXOR, node, bitxor(), token)
+func bitxor(rest **Token, tok *Token) *Node {
+	node := bitand(&tok, tok)
+	for equal(tok, "^") {
+		start := tok
+		node = newBinary(ND_BITXOR, node, bitand(&tok, tok), start)
 	}
+	*rest = tok
 	return node
 }
 
 // bitand = equality ("&" equality)*
-func bitand() *Node {
-	node := equality()
-	for consume(&token, token, "&") {
-		node = newBinary(ND_BITAND, node, equality(), token)
+func bitand(rest **Token, tok *Token) *Node {
+	node := equality(&tok, tok)
+	for equal(tok, "&") {
+		start := tok
+		node = newBinary(ND_BITAND, node, equality(&tok, tok), start)
 	}
+	*rest = tok
 	return node
 }
 
 // equality   = relational ("==" relational | "!=" relational)*
-func equality() *Node {
+func equality(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := relational()
+	node := relational(&tok, tok)
 
 	for {
-		if consume(&token, token, "==") {
-			node = newBinary(ND_EQ, node, relational(), token)
-		} else if consume(&token, token, "!=") {
-			node = newBinary(ND_NE, node, relational(), token)
-		} else {
-			return node
+		start := tok
+
+		if equal(tok, "==") {
+			node = newBinary(ND_EQ, node, relational(&tok, tok.Next), start)
+			continue
 		}
+
+		if equal(tok, "!=") {
+			node = newBinary(ND_NE, node, relational(&tok, tok), start)
+			continue
+		}
+
+		*rest = tok
+		return node
 	}
 }
 
 // relational = shift ("<" shift | "<=" shift | ">" shift | ">=" shift)*
-func relational() *Node {
+func relational(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := shift()
+	node := shift(&tok, tok)
 
 	for {
-		if consume(&token, token, "<") {
-			node = newBinary(ND_LT, node, shift(), token)
-		} else if consume(&token, token, "<=") {
-			node = newBinary(ND_LE, node, shift(), token)
-		} else if consume(&token, token, ">") {
-			node = newBinary(ND_LT, shift(), node, token)
-		} else if consume(&token, token, ">=") {
-			node = newBinary(ND_LE, shift(), node, token)
-		} else {
-			return node
+		start := tok
+
+		if equal(tok, "<") {
+			node = newBinary(ND_LT, node, shift(&tok, tok.Next), start)
+			continue
 		}
+
+		if equal(tok, "<=") {
+			node = newBinary(ND_LE, node, shift(&tok, tok.Next), start)
+			continue
+		}
+
+		if equal(tok, ">") {
+			node = newBinary(ND_LT, shift(&tok, tok), node, start)
+			continue
+		}
+
+		if equal(tok, ">=") {
+			node = newBinary(ND_LE, shift(&tok, tok), node, start)
+			continue
+		}
+
+		*rest = tok
+		return node
 	}
 }
 
 // shift = add ("<<" add | ">>" add)*
-func shift() *Node {
-	node := add()
+func shift(rest **Token, tok *Token) *Node {
+	node := add(&tok, tok)
 
 	for {
+		start := tok
+
 		if consume(&token, token, "<<") {
-			node = newBinary(ND_SHL, node, add(), token)
-		} else if consume(&token, token, ">>") {
-			node = newBinary(ND_SHR, node, add(), token)
-		} else {
-			return node
+			node = newBinary(ND_SHL, node, add(&tok, tok.Next), start)
+			continue
 		}
+
+		if consume(&token, token, ">>") {
+			node = newBinary(ND_SHR, node, add(&tok, tok), start)
+			continue
+		}
+
+		*rest = tok
+		return node
 	}
 }
 
+// `+` operator is overloaded to perform the pointer arithmetic.
+// If p is a pointer, p+n add not n but sizeof(*p)*n to the value of p,
+// sothat p+n pointes to the location n elements (not bytes) ahead of p.
+// In other words, we need to scale an integer value before adding to a
+// pointer value. This function takes care of the scaling.
+// => that isn't supported in Go.
+func newAdd(lhs, rhs *Node, tok *Token) *Node {
+	addType(lhs)
+	addType(rhs)
+
+	// num + num
+	if isInteger(lhs.Ty) && isInteger(rhs.Ty) {
+		return newBinary(ND_ADD, lhs, rhs, tok)
+	}
+
+	if lhs.Ty.Base != nil && rhs.Ty.Base != nil {
+		panic("\n" + errorTok(tok, "invalid operands"))
+	}
+
+	// Canonicalize `num + ptr` to `ptr + num`.
+	if lhs.Ty.Base == nil && rhs.Ty.Base != nil {
+		tmp := lhs
+		lhs = rhs
+		rhs = tmp
+	}
+
+	// ptr + num
+	rhs = newBinary(ND_MUL, rhs, newLong(int64(lhs.Ty.Base.Sz), tok), tok)
+	return newBinary(ND_ADD, lhs, rhs, tok)
+}
+
+// Like `+`, `-` is overloaded for the pointer type.
+// => that isn't supported in Go.
+func newSub(lhs, rhs *Node, tok *Token) *Node {
+	addType(lhs)
+	addType(rhs)
+
+	// num - num
+	if isInteger(lhs.Ty) && isInteger(rhs.Ty) {
+		return newBinary(ND_SUB, lhs, rhs, tok)
+	}
+
+	// ptr - num
+	if lhs.Ty.Base != nil && isInteger(rhs.Ty) {
+		rhs = newBinary(ND_MUL, rhs, newLong(int64(lhs.Ty.Base.Sz), tok), tok)
+		addType(rhs)
+		node := newBinary(ND_SUB, lhs, rhs, tok)
+		node.Ty = lhs.Ty
+		return node
+	}
+
+	// ptr - ptr, which returns how many elements are between the two.
+	if lhs.Ty.Base != nil && rhs.Ty.Base != nil {
+		node := newBinary(ND_SUB, lhs, rhs, tok)
+		node.Ty = ty_int
+		return newBinary(ND_DIV, node, newNum(int64(lhs.Ty.Base.Sz), tok), tok)
+	}
+
+	panic("\n" + errorTok(tok, "invalud operands"))
+}
+
 // add        = mul ("+" mul | "-" mul)*
-func add() *Node {
+func add(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := mul()
+	node := mul(&tok, tok)
 
 	for {
-		if consume(&token, token, "+") {
-			node = newBinary(ND_ADD, node, mul(), token)
-		} else if consume(&token, token, "-") {
-			node = newBinary(ND_SUB, node, mul(), token)
-		} else {
-			return node
+		start := tok
+
+		if equal(tok, "+") {
+			node = newAdd(node, mul(&tok, tok.Next), start)
+			continue
 		}
+
+		if equal(tok, "-") {
+			node = newSub(node, mul(&tok, tok), start)
+			continue
+		}
+
+		*rest = tok
+		return node
 	}
 }
 
 // mul = cast ("*" cast | "/" cast)*
-func mul() *Node {
+func mul(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := cast()
+	node := cast(&tok, tok)
 
 	for {
-		if consume(&token, token, "*") {
-			node = newBinary(ND_MUL, node, cast(), token)
-		} else if consume(&token, token, "/") {
-			node = newBinary(ND_DIV, node, cast(), token)
-		} else {
-			return node
+		start := tok
+
+		if equal(tok, "*") {
+			node = newBinary(ND_MUL, node, cast(&tok, tok.Next), start)
+			continue
 		}
+
+		if equal(tok, "/") {
+			node = newBinary(ND_DIV, node, cast(&tok, tok), start)
+			continue
+		}
+
+		if equal(tok, "%") {
+			node = newBinary(ND_MOD, node, cast(&tok, tok), start)
+		}
+
+		*rest = tok
+		return node
 	}
 }
 
 // cast = type-name "(" cast ")" | unary
-func cast() *Node {
+func cast(rest **Token, tok *Token) *Node {
 
-	if isTypename() {
-		ty := readTypePreffix()
+	if isTypename(tok) {
+		start := tok
+		ty := readTypePreffix(&tok, tok)
 		token = skip(token, "(")
-		node := newUnary(ND_CAST, cast(), token)
-		node.Ty = ty
-		token = skip(token, ")")
+		node := newCast(cast(rest, tok), ty)
+		node.Tok = start
+		tok = skip(tok, ")")
 		return node
 	}
 
-	return unary()
+	return unary(rest, tok)
 }
 
 // unary   = ("+" | "-" | "*" | "&" | "!")? cast
 //         | "Sizeof" unary
 //         | postfix
-func unary() *Node {
+func unary(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	if consume(&token, token, "Sizeof") {
-		return newUnary(ND_SIZEOF, cast(), token)
+	if equal(tok, "Sizeof") {
+		return newUnary(ND_SIZEOF, cast(rest, tok.Next), tok)
 	}
-	if consume(&token, token, "+") {
-		return cast()
+	if equal(tok, "+") {
+		return cast(rest, tok.Next)
 	}
-	if consume(&token, token, "-") {
-		return newBinary(ND_SUB, newNum(0, token), cast(), token)
+
+	if equal(tok, "-") {
+		return newUnary(ND_NEG, cast(rest, tok.Next), tok)
 	}
-	if consume(&token, token, "&") {
-		return newUnary(ND_ADDR, cast(), token)
+
+	if equal(tok, "&") {
+		return newUnary(ND_ADDR, cast(rest, tok.Next), tok)
 	}
-	if consume(&token, token, "*") {
-		return newUnary(ND_DEREF, cast(), token)
+
+	if equal(tok, "*") {
+		return newUnary(ND_DEREF, cast(rest, tok.Next), tok)
 	}
-	if consume(&token, token, "!") {
-		return newUnary(ND_NOT, cast(), token)
+
+	if equal(tok, "!") {
+		return newUnary(ND_NOT, cast(rest, tok.Next), tok)
 	}
-	if consume(&token, token, "^") {
-		return newUnary(ND_BITNOT, cast(), token)
+
+	if equal(tok, "^") {
+		return newUnary(ND_BITNOT, cast(rest, tok.Next), tok)
 	}
-	return postfix()
+
+	return postfix(rest, tok)
+}
+
+// struct-member = ident type-prefix type-specifier
+func structMems(rest **Token, tok *Token, ty *Type) *Member {
+	// printCurTok()
+	// printCalledFunc()
+
+	head := &Member{}
+	cur := head
+	idx := 0
+
+	for !equal(tok, "}") {
+		first := true
+		for !consume(&tok, tok, ";") {
+			if !first {
+				tok = skip(tok, ",")
+			}
+			first = false
+
+			name := getIdent(tok)
+			memTy := readTypePreffix(&tok, tok)
+			mem := &Member{
+				Name: name,
+				Ty:   memTy,
+				Idx:  idx,
+			}
+			idx++
+			cur.Next = mem
+			cur = cur.Next
+		}
+	}
+
+	*rest = tok.Next
+	return head.Next
+}
+
+// struct-decl = "struct" "{" struct-member "}"
+func structDecl(rest **Token, tok *Token) *Type {
+	// printCurTok()
+	// printCalledFunc()
+
+	tok = skip(tok, "{")
+
+	// Construct a struct object.
+	ty := structType()
+	ty.Mems = structMems(rest, tok, ty)
+
+	// Assign offsers within the struct to members.
+	offset := 0
+	for mem := ty.Mems; mem != nil; mem = mem.Next {
+		offset = alignTo(offset, mem.Ty.Align)
+		mem.Offset = offset
+		offset += mem.Ty.Sz
+
+		if ty.Align < mem.Ty.Align {
+			ty.Align = mem.Ty.Align
+		}
+	}
+	ty.Sz = alignTo(offset, ty.Align)
+	return ty
+}
+
+func getStructMember(ty *Type, tok *Token) *Member {
+	for mem := ty.Mems; mem != nil; mem = mem.Next {
+		if mem.Name == tok.Str {
+			return mem
+		}
+	}
+	panic("\n" + errorTok(tok, "no such member"))
+}
+
+func structRef(lhs *Node, tok *Token) *Node {
+	addType(lhs)
+	if lhs.Ty.Kind != TY_STRUCT {
+		panic("\n" + errorTok(lhs.Tok, "not a struct"))
+	}
+
+	node := newUnary(ND_MEMBER, lhs, tok)
+	node.Mem = getStructMember(lhs.Ty, tok)
+	return node
+}
+
+// Convert A++ to `(typeof A)((A += 1) - 1)`
+func newIncDec(node *Node, tok *Token, addend int) *Node {
+	addType(node)
+	return newCast(newAdd(toAssign(newAdd(node, newNum(int64(addend), tok), tok)),
+		newNum(int64(addend)*-1, tok), tok),
+		node.Ty)
 }
 
 // postfix = primary ("[" expr "]" | "." ident | "++" | "--")*
-func postfix() *Node {
+func postfix(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	node := primary()
+	node := primary(&tok, tok)
 
 	for {
-		if consume(&token, token, "[") {
+		if equal(tok, "[") {
 			// x[y] is short for *(x+y)
-			exp := newBinary(ND_ADD, node, expr(), token)
-			token = skip(token, "]")
-			node = newUnary(ND_DEREF, exp, token)
+			start := tok
+			idx := expr(&tok, tok)
+			tok = skip(tok, "]")
+			node = newUnary(ND_DEREF, newAdd(node, idx, start), start)
 			continue
 		}
 
-		if consume(&token, token, ".") {
-			node = newUnary(ND_MEMBER, node, token)
-			node.MemName = expectIdent()
+		if equal(tok, ".") {
+			node = structRef(node, tok.Next)
+			tok = tok.Next.Next
 			continue
 		}
 
-		if consume(&token, token, "++") {
-			node = newUnary(ND_INC, node, token)
+		if equal(tok, "++") {
+			node = newIncDec(node, tok, 1)
+			tok = tok.Next
 			continue
 		}
 
-		if consume(&token, token, "--") {
-			node = newUnary(ND_DEC, node, token)
+		if equal(tok, "--") {
+			node = newIncDec(node, tok, -1)
+			tok = tok.Next
 			continue
 		}
 
+		*rest = tok
 		return node
 	}
 }
 
-// func-args = "(" (assign ("," assign)*)? ")"
-func funcArgs() *Node {
-	// printCurTok()
-	// printCalledFunc()
+// funcall = ident "(" (assign ("," assign)*)? ")"
+func funcall(rest **Token, tok *Token) *Node {
+	start := tok
+	tok = tok.Next.Next
 
-	if consume(&token, token, ")") {
-		return nil
+	sc := findVar(start)
+	if sc == nil {
+		panic("\n" + errorTok(start, "implicit declaration of a function"))
+	}
+	if sc.Obj == nil || sc.Obj.Ty.Kind != TY_FUNC {
+		panic("\n" + errorTok(start, "not a function"))
 	}
 
-	head := assign()
+	ty := sc.Obj.Ty
+	paramTy := ty.Params
+
+	head := &Node{}
 	cur := head
 
-	for consume(&token, token, ",") {
-		cur.Next = assign()
+	for !equal(tok, ")") {
+		if cur != head {
+			tok = skip(tok, ",")
+		}
+
+		arg := assign(&tok, tok)
+		addType(arg)
+
+		if paramTy != nil {
+			if paramTy.Kind == TY_STRUCT {
+				panic("\n" + errorTok(arg.Tok, "passing struct is not supported yet"))
+			}
+			arg = newCast(arg, paramTy)
+			paramTy = paramTy.Next
+		}
+
+		cur.Next = arg
 		cur = cur.Next
 	}
-	token = skip(token, ")")
-	return head
+
+	*rest = skip(tok, ")")
+
+	node := newNode(ND_FUNCALL, start)
+	node.FuncName = start.Str
+	node.FuncTy = ty
+	node.Ty = ty.RetTy
+	node.Args = head.Next
+	return node
 }
 
 // primary = "(" expr ")" | ident args? | num
 // args = "(" ")"
-func primary() *Node {
+func primary(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
 	// if the next token is '(', the program must be
 	// "(" expr ")"
-	if consume(&token, token, "(") {
-		node := expr()
-		token = skip(token, ")")
+	if equal(tok, "(") {
+		node := expr(&tok, tok.Next)
+		*rest = skip(tok, ")")
 		return node
 	}
 
-	if t := consumeIdent(); t != nil {
-		if consume(&token, token, "(") {
-			node := &Node{
-				Kind:     ND_FUNCALL,
-				Tok:      t,
-				FuncName: t.Str,
-				Args:     funcArgs(),
-			}
-
-			sc := findVar(t)
-			if sc != nil {
-				if sc.Obj == nil || sc.Obj.Ty.Kind != TY_FUNC {
-					panic("\n" + errorTok(t, "not a function"))
-				}
-				node.Ty = sc.Obj.Ty.RetTy
-			} else {
-				node.Ty = intType()
-			}
-			return node
+	if tok.Kind == TK_IDENT {
+		// Function call
+		if equal(tok, "(") {
+			return funcall(rest, tok)
 		}
 
-		sc := findVar(t)
-		if sc != nil && sc.Obj != nil {
-			return newVar(sc.Obj, t)
+		sc := findVar(tok)
+		if sc == nil {
+			panic("\n" + errorTok(tok, "undefined variable"))
 		}
-		panic("\n" + errorTok(t, "undifined variable"))
+
+		var node *Node
+		if sc.Obj != nil {
+			node = newVarNode(sc.Obj, tok)
+		}
+
+		*rest = tok.Next
+		return node
 	}
 
-	t := token
-	if t.Kind == TK_STR {
-		token = token.Next
-
-		ty := arrayOf(charType(), t.ContLen)
-		v := pushVar(newLabel(), ty, false, nil)
-		v.Init = gvarInitString(t.Contents, t.ContLen)
-		return newVar(v, t)
+	if tok.Kind == TK_STR {
+		v := newStringLiteral(tok.Str, tok.Ty)
+		*rest = tok.Next
+		return newVarNode(v, tok)
 	}
 
-	if t.Kind != TK_NUM {
-		panic("\n" + errorTok(t, "expected expression: %s", t.Str))
+	if tok.Kind != TK_NUM {
+		node := newNum(tok.Val, tok)
+		*rest = tok.Next
+		return node
 	}
-	return newNum(expectNumber(), t)
+
+	panic("\n" + errorTok(tok, "expected expression: %s", tok.Str))
 }
 
-// program = (global-var | function)*
-func program() *Program {
+// typedef = "type" ident (type-preffix)? decl-spec
+func parseTypedef(tok *Token) *Token {
+	first := true
+
+	for !consume(&tok, tok, ";") {
+		if !first {
+			tok = skip(tok, ",")
+		}
+		first = false
+
+		ty := declarator(&tok, tok)
+		pushScope(getIdent(ty.Name)).TyDef = ty
+	}
+	return tok
+}
+
+func createParamLvars(param *Type) {
+	if param != nil {
+		createParamLvars(param.Next)
+		newLvar(getIdent(param.Name), param)
+	}
+}
+
+// This function matches gotos with labels.
+//
+// We cannot resolve gotos as we parse a function because gotos
+// can refer a label that apears later in the function.
+// So, we need to do this after we parse the entire function.
+func resolveGotoLabels() {
+	for x := gotos; x != nil; x = x.GotoNext {
+		for y := labels; y != nil; y = y.GotoNext {
+			if x.Lbl == y.Lbl {
+				x.UniqueLbl = y.UniqueLbl
+				break
+			}
+		}
+
+		if x.UniqueLbl == "" {
+			panic("\n" + errorTok(x.Tok.Next, "use of undeclared label"))
+		}
+	}
+
+	labels = nil
+	gotos = nil
+}
+
+// function = "func" ident "(" params? ")" type-prefix type-specifier "{" stmt "}"
+func function(tok *Token) *Token {
 	// printCurTok()
 	// printCalledFunc()
 
-	head := &Function{}
-	cur := head
+	ty := declarator(&tok, tok)
+
+	fn := newGvar(getIdent(ty.Name), ty)
+	fn.IsFunc = true
+	fn.IsDef = !consume(&tok, tok, ";")
+
+	if !fn.IsDef {
+		return tok
+	}
+
+	curFn = fn
+	locals = nil
+	enterScope()
+	createParamLvars(ty.Params)
+	fn.Params = locals
+
+	tok = skip(tok, "{")
+	fn.Body = compoundStmt(&tok, tok)
+	fn.Locals = locals
+	leaveScope()
+	resolveGotoLabels()
+	return tok
+}
+
+// global-var = "var" ident type-prefix type-suffix ("=" gvar-initializer)? ";"
+//
+// For example,
+// var x int = 6
+// var x *int = &y
+// var x string = "abc"
+// var x [2]int = [2]int{1,2}
+// var x T(typedef) = T{1,2}
+func globalVar(tok *Token) *Token {
+	// printCurTok()
+	// printCalledFunc()
+
+	first := true
+	for !consume(&tok, tok, ";") {
+		if !first {
+			tok = skip(tok, ",")
+		}
+		first = false
+
+		ty := declarator(&tok, tok)
+		v := newGvar(getIdent(ty.Name), ty)
+		if equal(tok, "=") {
+			gvarInitializer(&tok, tok.Next, v)
+		}
+	}
+	return tok
+}
+
+// program = (global-var | function)*
+func parse(tok *Token) *Obj {
+	// printCurTok()
+	// printCalledFunc()
+
 	globals = nil
 
 	for !atEof() {
-		if consume(&token, token, "func") {
-			cur.Next = function()
-			cur = cur.Next
-		} else if consume(&token, token, "var") {
-			globalVar()
-		} else if consume(&token, token, "type") {
-			name := expectIdent()
-			ty := readTypePreffix()
-			pushScope(name).TyDef = ty
-			token = skip(token, ";")
-		} else {
-			panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
+
+		if consume(&tok, tok, "func") {
+			tok = function(tok)
+			continue
 		}
+
+		if consume(&tok, tok, "var") {
+			tok = globalVar(tok)
+			continue
+		}
+
+		if consume(&tok, tok, "type") {
+			tok = parseTypedef(tok)
+			tok = skip(tok, ";")
+			continue
+		}
+
+		panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
+
 	}
 
-	return &Program{Globs: globals, Fns: head.Next}
+	return globals
 }
