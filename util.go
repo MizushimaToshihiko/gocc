@@ -187,12 +187,12 @@ func inOrder(node *Node) {
 		} else {
 			fmt.Printf(" '%s': %s ", ND[node.Kind], "if")
 		}
-	case ND_WHILE:
-		if isLeaf(node) {
-			fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "for-stmt")
-		} else {
-			fmt.Printf(" '%s': %s ", ND[node.Kind], "for-stmt")
-		}
+	// case ND_WHILE:
+	// 	if isLeaf(node) {
+	// 		fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "for-stmt")
+	// 	} else {
+	// 		fmt.Printf(" '%s': %s ", ND[node.Kind], "for-stmt")
+	// 	}
 	case ND_FOR:
 		if isLeaf(node) {
 			fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "for-clause")
@@ -229,12 +229,12 @@ func inOrder(node *Node) {
 		} else {
 			fmt.Printf(" '%s': %s ", ND[node.Kind], "ExprStmt")
 		}
-	case ND_NULL:
-		if isLeaf(node) {
-			fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "NULL")
-		} else {
-			fmt.Printf(" '%s': %s ", ND[node.Kind], "NULL")
-		}
+		// case ND_NULL:
+		// 	if isLeaf(node) {
+		// 		fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "NULL")
+		// 	} else {
+		// 		fmt.Printf(" '%s': %s ", ND[node.Kind], "NULL")
+		// 	}
 	}
 	inOrder(node.Rhs)
 }
