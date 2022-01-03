@@ -1715,9 +1715,6 @@ func unary(rest **Token, tok *Token) *Node {
 	// printCurTok()
 	// printCalledFunc()
 
-	if equal(tok, "Sizeof") {
-		return newUnary(ND_SIZEOF, cast(rest, tok.Next), tok)
-	}
 	if equal(tok, "+") {
 		return cast(rest, tok.Next)
 	}
