@@ -25,14 +25,15 @@ func compile(arg string, w io.Writer) error {
 	}
 
 	var err error
-	token, err = tokenizeFile(arg)
+	var tok *Token
+	tok, err = tokenizeFile(arg)
 	if err != nil {
-		// printTokens()
+		printTokens(tok)
 		return err
 	}
 
-	// printTokens()
-	prog := parse(token)
+	printTokens(tok)
+	prog := parse(tok)
 	if err != nil {
 		return err
 	}

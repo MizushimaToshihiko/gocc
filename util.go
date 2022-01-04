@@ -20,9 +20,9 @@ func min(x, y int) int {
 
 // for printTokens function, the pointer of the head token
 // stored in 'headTok'.
-var headTok *Token
+// var headTok *Token
 
-func printTokens() {
+func printTokens(headTok *Token) {
 	fmt.Print("# Tokens:\n# ")
 	tok := headTok.Next
 	// var kind string
@@ -57,9 +57,9 @@ func printTokens() {
 // 	fmt.Print("# Current Token: ")
 // }
 
-func printCurTok() {
-	fmt.Printf(" %d:'%s' \n", token.Kind, token.Str)
-}
+// func printCurTok() {
+// 	fmt.Printf(" %d:'%s' \n", token.Kind, token.Str)
+// }
 
 func printCalledFunc() {
 	pc, _, line, _ := runtime.Caller(2)

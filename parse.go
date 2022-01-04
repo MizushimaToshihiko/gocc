@@ -161,8 +161,6 @@ type Node struct {
 var locals *Obj
 var globals *Obj
 
-var varScope *VarScope
-
 var scope *Scope = &Scope{}
 
 // Points to the function object the parser is currently parsing.
@@ -392,7 +390,7 @@ func getIdent(tok *Token) string {
 
 func findTyDef(tok *Token) *Type {
 	if tok.Kind == TK_IDENT {
-		if sc := findVar(token); sc != nil {
+		if sc := findVar(tok); sc != nil {
 			return sc.TyDef
 		}
 	}
@@ -494,11 +492,12 @@ func readTypePreffix(rest **Token, tok *Token) *Type {
 	// printCurTok()
 	// printCalledFunc()
 
-	if !equal(token, "[") {
+	if !equal(tok, "[") {
 		return declSpec(&tok, tok)
 	}
 
 	base, t := findBase(&tok, tok)
+	fmt.Printf("readTypepreffix: t: %#v\n\n", t)
 	arrTy := readArr(tok, base)
 	*rest = t
 
@@ -507,11 +506,15 @@ func readTypePreffix(rest **Token, tok *Token) *Type {
 
 // declarator = ident (type-preffix)? declspec
 func declarator(rest **Token, tok *Token) *Type {
+	var nPtr int
+	for consume(&tok, tok, "*") {
+		nPtr++
+	}
 	if tok.Kind != TK_IDENT {
 		panic("\n" + errorTok(tok, "expected a variable name"))
 	}
 	name := tok
-	ty := readTypePreffix(rest, tok.Next)
+	ty = readTypePreffix(rest, tok.Next)
 	ty.Name = name
 	return ty
 }
@@ -551,6 +554,34 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	}
 
 	ty = funcType(ty)
+	return ty
+}
+
+// array-dimensions = const-expr? "]" type-suffix
+func arrayDimensions(rest **Token, tok *Token, ty) *Type {
+	if equal(tok, "]") {
+		ty = typeSuffix(rest, tok.Next, ty)
+		return arrayOf(ty, -1)
+	}
+
+	sz := constExpr(&tok, tok)
+	tok = skip(tok, "]")
+	ty = typeSuffix(rest, tok,ty)
+	return arrayOf(ty, sz)
+}
+
+// type-suffix = "(" func-params
+//             | "[" array-dimensions
+//             |
+func typeSuffix(rest **Token, tok *Token, ty *Type) *Type {
+	if equal(tok, "(") {
+		return funcParams(rest, tok.Next, ty)
+	}
+	if equal(tok, "[") {
+		return arrayDimensions(rest, tok.Next, ty)
+	}
+
+	*rest = tok
 	return ty
 }
 
@@ -594,20 +625,6 @@ func gvarInitString(p []rune, len int) *Initializer {
 		cur = newInitVal(cur, 1, int(p[i]))
 	}
 	return head.Next
-}
-
-func emitStructPadding(cur *Initializer, parent *Type, mem *Member) *Initializer {
-	end := mem.Offset + sizeOf(mem.Ty, token)
-
-	padding := sizeOf(parent, token) - end
-	if mem.Next != nil {
-		padding = mem.Next.Offset - end
-	}
-
-	if padding != 0 {
-		cur = newInitZero(cur, padding)
-	}
-	return cur
 }
 
 func skipExcessElement(tok *Token) *Token {
@@ -854,74 +871,6 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	v.Rel = head.Next
 }
 
-type Designator struct {
-	Next *Designator
-	Idx  int
-	Mem  *Member
-}
-
-// Creates a node for an array sccess. For example, if v represents
-// a variable x and desg represents indices 3 and 4, this function
-// returns a node representing x[3][4]
-func newDesgNode2(v *Obj, desg *Designator) *Node {
-	tok := v.Tok
-	if desg == nil {
-		return newVarNode(v, tok)
-	}
-
-	node := newDesgNode2(v, desg.Next)
-
-	if desg.Mem != nil {
-		node = newUnary(ND_MEMBER, node, desg.Mem.Tok)
-		node.MemName = desg.Mem.Name
-		return node
-	}
-
-	node = newBinary(ND_ADD, node, newNum(int64(desg.Idx), tok), tok)
-	return newUnary(ND_DEREF, node, tok)
-}
-
-func newDesgNode(v *Obj, desg *Designator, rhs *Node) *Node {
-	lhs := newDesgNode2(v, desg)
-	node := newBinary(ND_ASSIGN, lhs, rhs, rhs.Tok)
-	return newUnary(ND_EXPR_STMT, node, rhs.Tok)
-}
-
-func lvarInitZero(cur *Node, v *Obj, ty *Type, desg *Designator) *Node {
-	if ty.Kind == TY_ARRAY {
-		for i := 0; i < ty.ArrSz; i++ {
-			desg2 := &Designator{desg, i, nil}
-			i++
-			cur = lvarInitZero(cur, v, ty.Base, desg2)
-		}
-		return cur
-	}
-
-	cur.Next = newDesgNode(v, desg, newNum(0, token))
-	return cur.Next
-}
-
-func stringAssign(cur *Node, v *Obj, ty *Type, desg *Designator, tok *Token) *Node {
-	var length int = tok.ContLen
-	if ty.ArrSz != tok.ContLen {
-		ty.ArrSz = tok.ContLen
-	}
-	var i int
-
-	for i = 0; i < length; i++ {
-		desg2 := &Designator{desg, i, nil}
-		rhs := newNum(int64(tok.Contents[i]), tok)
-		cur.Next = newDesgNode(v, desg2, rhs)
-		cur = cur.Next
-	}
-
-	for ; i < ty.ArrSz; i++ {
-		desg2 := &Designator{desg, i, nil}
-		cur = lvarInitZero(cur, v, ty.Base, desg2)
-	}
-	return cur
-}
-
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl(unimplemented)
 // VarDecl = "var" ident type-prefix declspec ("=" expr)
 // VarSpec = ident-list (type-preffix type-specifier [ "=" expr-list ] | "=" expr-list)
@@ -979,7 +928,7 @@ func isTypename(tok *Token) bool {
 			return true
 		}
 	}
-	return findTyDef(token) != nil
+	return findTyDef(tok) != nil
 }
 
 func isForClause(tok *Token) bool {
@@ -1022,7 +971,7 @@ func stmt(rest **Token, tok *Token) *Node {
 	if equal(tok, "return") {
 		node := newNode(ND_RETURN, tok)
 		exp := expr(&tok, tok.Next)
-		*rest = skip(token, ";")
+		*rest = skip(tok, ";")
 
 		addType(exp)
 		node.Lhs = newCast(exp, curFn.Ty.RetTy)
@@ -1040,7 +989,7 @@ func stmt(rest **Token, tok *Token) *Node {
 	}
 
 	if equal(tok, "switch") {
-		node := newNode(ND_SWITCH, token)
+		node := newNode(ND_SWITCH, tok)
 		node.Cond = expr(&tok, tok)
 
 		sw := curSwitch
@@ -1052,11 +1001,11 @@ func stmt(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "case") {
 		if curSwitch == nil {
-			panic("\n" + errorTok(token, "stray case"))
+			panic("\n" + errorTok(tok, "stray case"))
 		}
 		node := newNode(ND_CASE, tok)
 		val := constExpr(&tok, tok.Next)
-		token = skip(token, ":")
+		tok = skip(tok, ":")
 		node.Lbl = newUniqueName()
 		node.Lhs = stmt(rest, tok)
 		node.Val = val
@@ -1067,10 +1016,10 @@ func stmt(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "default") {
 		if curSwitch == nil {
-			panic("\n" + errorTok(token, "stray default"))
+			panic("\n" + errorTok(tok, "stray default"))
 		}
 		node := newNode(ND_CASE, tok)
-		token = skip(token, ":")
+		tok = skip(tok.Next, ":")
 		node.Lbl = newUniqueName()
 		node.Lhs = stmt(rest, tok)
 		curSwitch.DefCase = node
@@ -1080,10 +1029,10 @@ func stmt(rest **Token, tok *Token) *Node {
 	if equal(tok, "for") {
 		if !isForClause(tok) { // for for-stmt like 'while' statement
 			node := newNode(ND_FOR, tok)
-			if !equal(token, "{") {
+			if !equal(tok, "{") {
 				node.Cond = expr(&tok, tok)
 			} else {
-				node.Cond = newNum(1, token)
+				node.Cond = newNum(1, tok)
 			}
 			tok = skip(tok, "{")
 
@@ -1113,15 +1062,15 @@ func stmt(rest **Token, tok *Token) *Node {
 			if !equal(tok, ";") {
 				node.Init = exprStmt(&tok, tok)
 			}
-			token = skip(token, ";")
+			tok = skip(tok, ";")
 			if !equal(tok, ";") {
 				node.Cond = expr(&tok, tok)
 			}
-			token = skip(token, ";")
-			if !equal(token, "{") {
+			tok = skip(tok, ";")
+			if !equal(tok, "{") {
 				node.Inc = expr(&tok, tok)
 			}
-			token = skip(token, "{")
+			tok = skip(tok, "{")
 
 			node.Then = stmt(rest, tok)
 
@@ -1141,7 +1090,7 @@ func stmt(rest **Token, tok *Token) *Node {
 		return node
 	}
 
-	if consume(&token, token, "break") {
+	if equal(tok, "break") {
 		if brkLabel == "" {
 			panic("\n" + errorTok(tok, "stray break"))
 		}
@@ -1188,8 +1137,8 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 	enterScope()
 
 	for !equal(tok, "}") {
-		if equal(token, "var") {
-			cur.Next = declaration(&tok, tok)
+		if equal(tok, "var") {
+			cur.Next = declaration(&tok, tok.Next)
 			cur = cur.Next
 			addType(cur)
 			continue
@@ -1413,7 +1362,7 @@ func assign(rest **Token, tok *Token) *Node {
 	}
 
 	if equal(tok, "/=") {
-		return toAssign(newBinary(ND_DIV, node, assign(rest, tok.Next), token))
+		return toAssign(newBinary(ND_DIV, node, assign(rest, tok.Next), tok))
 	}
 
 	if equal(tok, "%=") {
@@ -1562,13 +1511,13 @@ func shift(rest **Token, tok *Token) *Node {
 	for {
 		start := tok
 
-		if consume(&token, token, "<<") {
+		if equal(tok, "<<") {
 			node = newBinary(ND_SHL, node, add(&tok, tok.Next), start)
 			continue
 		}
 
-		if consume(&token, token, ">>") {
-			node = newBinary(ND_SHR, node, add(&tok, tok), start)
+		if equal(tok, ">>") {
+			node = newBinary(ND_SHR, node, add(&tok, tok.Next), start)
 			continue
 		}
 
@@ -1698,7 +1647,7 @@ func cast(rest **Token, tok *Token) *Node {
 	if isTypename(tok) {
 		start := tok
 		ty := readTypePreffix(&tok, tok)
-		token = skip(token, "(")
+		tok = skip(tok, "(")
 		node := newCast(cast(rest, tok), ty)
 		node.Tok = start
 		tok = skip(tok, ")")
@@ -2061,8 +2010,11 @@ func globalVar(tok *Token) *Token {
 			tok = skip(tok, ",")
 		}
 		first = false
-
+		fmt.Printf("tok1: %#v\n\n", tok)
 		ty := declarator(&tok, tok)
+		fmt.Printf("ty: %#v\n\n", ty)
+		fmt.Printf("ty.Name: %#v\n\n", ty.Name)
+		fmt.Printf("tok2: %#v\n\n", tok)
 		v := newGvar(getIdent(ty.Name), ty)
 		if equal(tok, "=") {
 			gvarInitializer(&tok, tok.Next, v)
@@ -2078,7 +2030,7 @@ func parse(tok *Token) *Obj {
 
 	globals = nil
 
-	for !atEof() {
+	for !atEof(tok) {
 
 		if consume(&tok, tok, "func") {
 			tok = function(tok)
@@ -2096,7 +2048,7 @@ func parse(tok *Token) *Obj {
 			continue
 		}
 
-		panic("\n" + errorTok(token, "unexpected '%s'", token.Str))
+		panic("\n" + errorTok(tok, "unexpected '%s'", tok.Str))
 
 	}
 

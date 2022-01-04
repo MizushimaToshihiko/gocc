@@ -44,9 +44,6 @@ type Token struct {
 
 var curFilename string
 
-// current token
-var token *Token
-
 // inputted program
 var userInput []rune
 
@@ -141,42 +138,8 @@ func consume(rest **Token, tok *Token, s string) bool {
 	return false
 }
 
-// consumeIdent returns the current token if it is an identifier,
-// and the read position of token exceed one.
-func consumeIdent() *Token {
-	// defer printCurTok()
-	if token.Kind != TK_IDENT {
-		return nil
-	}
-	t := token
-	token = token.Next
-	return t
-}
-
-// if next token is integer, the read position of token exceed one
-// character or report an error.
-func expectNumber() int64 {
-	// defer printCurTok()
-	if token.Kind != TK_NUM {
-		panic("\n" + errorTok(token, "is not a number"))
-	}
-	val := token.Val
-	token = token.Next
-	return val
-}
-
-func expectIdent() string {
-	// defer printCurTok()
-	if token.Kind != TK_IDENT {
-		panic("\n" + errorTok(token, "expect an identifier"))
-	}
-	s := token.Str
-	token = token.Next
-	return s
-}
-
-func atEof() bool {
-	return token.Kind == TK_EOF
+func atEof(tok *Token) bool {
+	return tok.Kind == TK_EOF
 }
 
 // make new token and append to the end of cur.
@@ -420,9 +383,6 @@ func tokenize(filename string) (*Token, error) {
 	var head Token
 	head.Next = nil
 	cur := &head
-
-	// for printToken
-	headTok = &head
 
 	for curIdx < len(userInput) && userInput[curIdx] != 0 {
 

@@ -42,7 +42,7 @@ func (c *codeWriter) push() {
 }
 
 func (c *codeWriter) pop(arg string) {
-	c.println("	pop %%s", arg)
+	c.println("	pop %s", arg)
 	depth--
 }
 
@@ -219,7 +219,7 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_NULL_EXPR:
 		return
 	case ND_NUM:
-		c.println("	mov $%d, %%rax", node.Obj)
+		c.println("	mov $%d, %%rax", node.Val)
 		return
 	case ND_NEG:
 		c.genAddr(node.Lhs)
@@ -405,7 +405,6 @@ func (c *codeWriter) genExpr(node *Node) {
 	}
 
 	c.err = fmt.Errorf(errorTok(node.Tok, "invalid expression"))
-	return
 }
 
 func (c *codeWriter) genStmt(node *Node) {
