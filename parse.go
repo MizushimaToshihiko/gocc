@@ -493,7 +493,6 @@ func readTypePreffix(rest **Token, tok *Token) *Type {
 	// printCalledFunc()
 
 	if !equal(tok, "[") {
-		fmt.Println("ここ")
 		return declSpec(rest, tok)
 	}
 
@@ -504,6 +503,7 @@ func readTypePreffix(rest **Token, tok *Token) *Type {
 }
 
 // declarator = ident (type-preffix)? declspec
+//            | ident type-suffix
 func declarator(rest **Token, tok *Token) *Type {
 	// var nPtr int
 	// for consume(&tok, tok, "*") {
@@ -513,7 +513,13 @@ func declarator(rest **Token, tok *Token) *Type {
 		panic("\n" + errorTok(tok, "expected a variable name"))
 	}
 	name := tok
-	ty := readTypePreffix(rest, tok.Next)
+
+	var ty *Type
+	if equal(tok.Next, "(") {
+		ty = typeSuffix(rest, tok.Next, nil)
+	} else {
+		ty = readTypePreffix(rest, tok.Next)
+	}
 	ty.Name = name
 	return ty
 }
@@ -553,21 +559,23 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	}
 
 	ty = funcType(ty)
+	ty.Params = head.Next
+	*rest = tok.Next
 	return ty
 }
 
-// array-dimensions = const-expr? "]" type-suffix
-func arrayDimensions(rest **Token, tok *Token, ty *Type) *Type {
-	if equal(tok, "]") {
-		ty = typeSuffix(rest, tok.Next, ty)
-		return arrayOf(ty, -1)
-	}
+// // array-dimensions = const-expr? "]" type-suffix
+// func arrayDimensions(rest **Token, tok *Token, ty *Type) *Type {
+// 	if equal(tok, "]") {
+// 		ty = typeSuffix(rest, tok.Next, ty)
+// 		return arrayOf(ty, -1)
+// 	}
 
-	sz := constExpr(&tok, tok)
-	tok = skip(tok, "]")
-	ty = typeSuffix(rest, tok, ty)
-	return arrayOf(ty, int(sz))
-}
+// 	sz := constExpr(&tok, tok)
+// 	tok = skip(tok, "]")
+// 	ty = typeSuffix(rest, tok, ty)
+// 	return arrayOf(ty, int(sz))
+// }
 
 // type-suffix = "(" func-params
 //             | "[" array-dimensions
@@ -576,9 +584,9 @@ func typeSuffix(rest **Token, tok *Token, ty *Type) *Type {
 	if equal(tok, "(") {
 		return funcParams(rest, tok.Next, ty)
 	}
-	if equal(tok, "[") {
-		return arrayDimensions(rest, tok.Next, ty)
-	}
+	// if equal(tok, "[") {
+	// 	return arrayDimensions(rest, tok.Next, ty)
+	// }
 
 	*rest = tok
 	return ty
@@ -1015,11 +1023,12 @@ func stmt(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "if") {
 		node := newNode(ND_IF, tok)
-		node.Cond = expr(&tok, tok)
-		node.Then = stmt(&tok, tok)
+		node.Cond = expr(&tok, tok.Next)
+		node.Then = stmt(&tok, tok.Next)
 		if equal(tok, "else") {
 			node.Els = stmt(&tok, tok.Next)
 		}
+		*rest = tok
 		return node
 	}
 
@@ -1219,6 +1228,8 @@ func expr(rest **Token, tok *Token) *Node {
 	if equal(tok, ",") {
 		return newBinary(ND_COMMA, node, expr(rest, tok.Next), tok)
 	}
+
+	*rest = tok
 	return node
 }
 
@@ -1855,6 +1866,8 @@ func postfix(rest **Token, tok *Token) *Node {
 }
 
 // funcall = ident "(" (assign ("," assign)*)? ")"
+//
+// TODO: builtin libc-function such as "printf"
 func funcall(rest **Token, tok *Token) *Node {
 	start := tok
 	tok = tok.Next.Next
@@ -1919,7 +1932,7 @@ func primary(rest **Token, tok *Token) *Node {
 
 	if tok.Kind == TK_IDENT {
 		// Function call
-		if equal(tok, "(") {
+		if equal(tok.Next, "(") {
 			return funcall(rest, tok)
 		}
 

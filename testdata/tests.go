@@ -30,14 +30,14 @@ var g3 byte = 3
 
 // var g12_3 [2]T_g12 = [2]T_g12{{{1,2,}}, {{3,4,},}}
 
-// func assert(want int64, ac int64, code *byte) {
-// 	if want == ac {
-// 		printf("\n%s => %ld\n", code, ac)
-// 	} else {
-// 		printf("\n%s => %ld expeted but got %ld\n", code, want, ac)
-// 		exit(1)
-// 	}
-// }
+func assert(want int64, ac int64, code *byte) {
+	if want == ac {
+		printf("\n%s => %ld\n", code, ac)
+	} else {
+		printf("\n%s => %ld expeted but got %ld\n", code, want, ac)
+		exit(1)
+	}
+}
 
 // func ret3() int {
 // 	return 3

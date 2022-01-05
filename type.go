@@ -81,8 +81,19 @@ func isInteger(ty *Type) bool {
 }
 
 func copyType(ty *Type) *Type {
-	ret := &Type{}
-	ret = ty
+	ret := &Type{
+		Kind:   ty.Kind,
+		Sz:     ty.Sz,
+		Align:  ty.Align,
+		Base:   ty.Base,
+		Name:   ty.Name,
+		TyName: ty.TyName,
+		ArrSz:  ty.ArrSz,
+		Mems:   ty.Mems,
+		RetTy:  ty.RetTy,
+		Params: ty.Params,
+		Next:   ty.Next,
+	}
 	return ret
 }
 
