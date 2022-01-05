@@ -1,8 +1,7 @@
 var g1 int
+var g2 [4]int
+var g3 byte = 3
 
-// var g2 [4]int
-
-// var g3 byte = 3
 // var g4 int16 = 4
 // var g5 int = 5
 // var g6 int64 = 6

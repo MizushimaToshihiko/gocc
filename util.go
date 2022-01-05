@@ -22,9 +22,8 @@ func min(x, y int) int {
 // stored in 'headTok'.
 // var headTok *Token
 
-func printTokens(headTok *Token) {
+func printTokens(tok *Token) {
 	fmt.Print("# Tokens:\n# ")
-	tok := headTok.Next
 	// var kind string
 	for tok.Next != nil {
 		// 	switch tok.Kind {

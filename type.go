@@ -58,13 +58,13 @@ type Member struct {
 	Offset int
 }
 
-var ty_void *Type = &Type{Kind: TY_VOID, Sz: 1, Align: 1}
-var ty_bool *Type = &Type{Kind: TY_BOOL, Sz: 1, Align: 1}
+var ty_void *Type = &Type{Kind: TY_VOID, Sz: 1, Align: 1, TyName: "void"}
+var ty_bool *Type = &Type{Kind: TY_BOOL, Sz: 1, Align: 1, TyName: "bool"}
 
-var ty_char *Type = &Type{Kind: TY_BYTE, Sz: 1, Align: 1}
-var ty_short *Type = &Type{Kind: TY_SHORT, Sz: 2, Align: 2}
-var ty_int *Type = &Type{Kind: TY_INT, Sz: 4, Align: 4}
-var ty_long *Type = &Type{Kind: TY_LONG, Sz: 8, Align: 8}
+var ty_char *Type = &Type{Kind: TY_BYTE, Sz: 1, Align: 1, TyName: "byte"}
+var ty_short *Type = &Type{Kind: TY_SHORT, Sz: 2, Align: 2, TyName: "int16"}
+var ty_int *Type = &Type{Kind: TY_INT, Sz: 4, Align: 4, TyName: "int"}
+var ty_long *Type = &Type{Kind: TY_LONG, Sz: 8, Align: 8, TyName: "int64"}
 
 func alignTo(n, align int) int {
 	return (n + align - 1) / align * align

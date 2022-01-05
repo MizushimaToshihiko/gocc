@@ -380,6 +380,7 @@ func addLineNumbers(tok *Token) {
 
 // tokenize inputted string 'userInput', and return new tokens.
 func tokenize(filename string) (*Token, error) {
+	curFilename = filename
 	var head Token
 	head.Next = nil
 	cur := &head

@@ -385,7 +385,7 @@ func getIdent(tok *Token) string {
 	if tok.Kind != TK_IDENT {
 		errorTok(tok, "expected an identifier")
 	}
-	return string(strNdUp(tok.Contents, tok.Len))
+	return tok.Str
 }
 
 func findTyDef(tok *Token) *Type {
@@ -455,7 +455,7 @@ func declSpec(rest **Token, tok *Token) *Type {
 		ty = pointerTo(ty)
 	}
 
-	*rest = tok
+	*rest = tok.Next
 	return ty
 }
 
@@ -493,28 +493,27 @@ func readTypePreffix(rest **Token, tok *Token) *Type {
 	// printCalledFunc()
 
 	if !equal(tok, "[") {
-		return declSpec(&tok, tok)
+		fmt.Println("ここ")
+		return declSpec(rest, tok)
 	}
 
 	base, t := findBase(&tok, tok)
-	fmt.Printf("readTypepreffix: t: %#v\n\n", t)
 	arrTy := readArr(tok, base)
-	*rest = t
-
+	*rest = t.Next
 	return arrTy
 }
 
 // declarator = ident (type-preffix)? declspec
 func declarator(rest **Token, tok *Token) *Type {
-	var nPtr int
-	for consume(&tok, tok, "*") {
-		nPtr++
-	}
+	// var nPtr int
+	// for consume(&tok, tok, "*") {
+	// 	nPtr++
+	// }
 	if tok.Kind != TK_IDENT {
 		panic("\n" + errorTok(tok, "expected a variable name"))
 	}
 	name := tok
-	ty = readTypePreffix(rest, tok.Next)
+	ty := readTypePreffix(rest, tok.Next)
 	ty.Name = name
 	return ty
 }
@@ -558,7 +557,7 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 }
 
 // array-dimensions = const-expr? "]" type-suffix
-func arrayDimensions(rest **Token, tok *Token, ty) *Type {
+func arrayDimensions(rest **Token, tok *Token, ty *Type) *Type {
 	if equal(tok, "]") {
 		ty = typeSuffix(rest, tok.Next, ty)
 		return arrayOf(ty, -1)
@@ -566,8 +565,8 @@ func arrayDimensions(rest **Token, tok *Token, ty) *Type {
 
 	sz := constExpr(&tok, tok)
 	tok = skip(tok, "]")
-	ty = typeSuffix(rest, tok,ty)
-	return arrayOf(ty, sz)
+	ty = typeSuffix(rest, tok, ty)
+	return arrayOf(ty, int(sz))
 }
 
 // type-suffix = "(" func-params
@@ -583,6 +582,10 @@ func typeSuffix(rest **Token, tok *Token, ty *Type) *Type {
 
 	*rest = tok
 	return ty
+}
+
+func isEnd(tok *Token) bool {
+	return equal(tok, "}") || (equal(tok, ",") && equal(tok.Next, "}"))
 }
 
 func consumeEnd(rest **Token, tok *Token) bool {
@@ -683,6 +686,20 @@ func structInitializer1(rest **Token, tok *Token, init *Initializer) {
 	}
 }
 
+// struct-initializer2 = initializer ("," initializer)*
+func structInitializer2(rest **Token, tok *Token, init *Initializer) {
+	first := true
+
+	for mem := init.Ty.Mems; mem != nil && !isEnd(tok); mem = mem.Next {
+		if !first {
+			tok = skip(tok, ",")
+		}
+		first = false
+		initializer2(&tok, tok, init.Children[mem.Idx])
+	}
+	*rest = tok
+}
+
 // initializer = string-initializer | array-initializer
 //             | struct-initializer
 //             | assign
@@ -698,10 +715,27 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	}
 
 	if init.Ty.Kind == TY_STRUCT {
-		readTypePreffix(rest, tok) // discard the return value
-		structInitializer1(rest, tok, init)
+		if equal(tok, "{") {
+			readTypePreffix(rest, tok) // discard the return value
+			structInitializer1(rest, tok, init)
+			return
+		}
+
+		// A struct can be initialized with another struct. E.g.
+		// `type x y` where y is a another struct.
+		// Handle that case first.
+		expr := assign(rest, tok)
+		addType(expr)
+		if expr.Ty.Kind == TY_STRUCT {
+			init.Expr = expr
+			return
+		}
+
+		structInitializer2(rest, tok, init)
 		return
 	}
+
+	init.Expr = assign(rest, tok)
 }
 
 func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer {
@@ -819,6 +853,7 @@ func writeBuf(buf *string, val int64, sz int) {
 
 }
 
+// 要書き換え：string型かchar型しか書き込めない、integerはasciiとして登録されてしまう
 func writeGvarData(cur *Relocation,
 	init *Initializer, ty *Type, buf *string, offset int) *Relocation {
 	if ty.Kind == TY_ARRAY {
@@ -1908,7 +1943,7 @@ func primary(rest **Token, tok *Token) *Node {
 		return newVarNode(v, tok)
 	}
 
-	if tok.Kind != TK_NUM {
+	if tok.Kind == TK_NUM {
 		node := newNum(tok.Val, tok)
 		*rest = tok.Next
 		return node
@@ -2010,11 +2045,7 @@ func globalVar(tok *Token) *Token {
 			tok = skip(tok, ",")
 		}
 		first = false
-		fmt.Printf("tok1: %#v\n\n", tok)
 		ty := declarator(&tok, tok)
-		fmt.Printf("ty: %#v\n\n", ty)
-		fmt.Printf("ty.Name: %#v\n\n", ty.Name)
-		fmt.Printf("tok2: %#v\n\n", tok)
 		v := newGvar(getIdent(ty.Name), ty)
 		if equal(tok, "=") {
 			gvarInitializer(&tok, tok.Next, v)
