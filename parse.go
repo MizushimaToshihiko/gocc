@@ -58,11 +58,6 @@ type Obj struct {
 	StackSz int
 }
 
-type VarList struct {
-	Next *VarList
-	Obj  *Obj
-}
-
 type NodeKind int
 
 const (
@@ -189,6 +184,9 @@ func leaveScope() {
 
 // findVar finds a variable or a typedef by name.
 func findVar(tok *Token) *VarScope {
+	printCurTok(tok)
+	printCalledFunc()
+
 	for sc := scope; sc != nil; sc = sc.Next {
 		for sc2 := sc.Vars; sc2 != nil; sc2 = sc2.Next {
 			if equal(tok, sc2.Name) {
@@ -200,6 +198,9 @@ func findVar(tok *Token) *VarScope {
 }
 
 func findTag(tok *Token) *Type {
+	printCurTok(tok)
+	printCalledFunc()
+
 	for sc := scope; sc != nil; sc = sc.Next {
 		for sc2 := sc.Tags; sc2 != nil; sc2 = sc2.Next {
 			if equal(tok, sc2.Name) {
@@ -211,10 +212,16 @@ func findTag(tok *Token) *Type {
 }
 
 func newNode(kind NodeKind, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	return &Node{Kind: kind, Tok: tok}
 }
 
 func newBinary(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	return &Node{
 		Kind: kind,
 		Tok:  tok,
@@ -224,11 +231,17 @@ func newBinary(kind NodeKind, lhs *Node, rhs *Node, tok *Token) *Node {
 }
 
 func newUnary(kind NodeKind, expr *Node, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	node := &Node{Kind: kind, Lhs: expr, Tok: tok}
 	return node
 }
 
 func newNum(val int64, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	return &Node{
 		Kind: ND_NUM,
 		Tok:  tok,
@@ -237,6 +250,9 @@ func newNum(val int64, tok *Token) *Node {
 }
 
 func newLong(val int64, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	return &Node{
 		Kind: ND_NUM,
 		Tok:  tok,
@@ -246,10 +262,15 @@ func newLong(val int64, tok *Token) *Node {
 }
 
 func newVarNode(v *Obj, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	return &Node{Kind: ND_VAR, Tok: tok, Obj: v}
 }
 
 func newCast(expr *Node, ty *Type) *Node {
+	printCalledFunc()
+
 	addType(expr)
 
 	return &Node{
@@ -261,6 +282,8 @@ func newCast(expr *Node, ty *Type) *Node {
 }
 
 func pushScope(name string) *VarScope {
+	printCalledFunc()
+
 	sc := &VarScope{Name: name, Next: scope.Vars}
 	scope.Vars = sc
 	return sc
@@ -309,6 +332,8 @@ type InitDesg struct {
 }
 
 func newInitializer(ty *Type) *Initializer {
+	printCalledFunc()
+
 	init := &Initializer{Ty: ty}
 
 	if ty.Kind == TY_ARRAY {
@@ -338,8 +363,7 @@ func newInitializer(ty *Type) *Initializer {
 }
 
 func newVar(name string, ty *Type) *Obj {
-	// printCurTok()
-	// printCalledFunc()
+	printCalledFunc()
 
 	v := &Obj{Name: name, Ty: ty}
 	pushScope(name).Obj = v
@@ -347,6 +371,8 @@ func newVar(name string, ty *Type) *Obj {
 }
 
 func newLvar(name string, ty *Type) *Obj {
+	printCalledFunc()
+
 	v := newVar(name, ty)
 	v.IsLocal = true
 	v.Next = locals
@@ -355,6 +381,8 @@ func newLvar(name string, ty *Type) *Obj {
 }
 
 func newGvar(name string, ty *Type) *Obj {
+	printCalledFunc()
+
 	v := newVar(name, ty)
 	v.IsLocal = false
 	v.Next = globals
@@ -366,22 +394,33 @@ func newGvar(name string, ty *Type) *Obj {
 var cnt int
 
 func newUniqueName() string {
+	printCalledFunc()
+
 	res := fmt.Sprintf(".L..%d", cnt)
 	cnt++
 	return res
 }
 
 func newAnonGvar(ty *Type) *Obj {
+	printCalledFunc()
+
 	return newGvar(newUniqueName(), ty)
 }
 
 func newStringLiteral(p string, ty *Type) *Obj {
+	printCalledFunc()
+
 	v := newAnonGvar(ty)
 	v.InitData = p
 	return v
 }
 
 func getIdent(tok *Token) string {
+	printCurTok(tok)
+	printCalledFunc()
+
+	printCalledFunc()
+
 	if tok.Kind != TK_IDENT {
 		errorTok(tok, "expected an identifier")
 	}
@@ -389,6 +428,9 @@ func getIdent(tok *Token) string {
 }
 
 func findTyDef(tok *Token) *Type {
+	printCurTok(tok)
+	printCalledFunc()
+
 	if tok.Kind == TK_IDENT {
 		if sc := findVar(tok); sc != nil {
 			return sc.TyDef
@@ -398,6 +440,9 @@ func findTyDef(tok *Token) *Type {
 }
 
 func pushTagScope(tok *Token, ty *Type) {
+	printCurTok(tok)
+	printCalledFunc()
+
 	sc := &TagScope{
 		Name: string(strNdUp(tok.Contents, tok.Len)),
 		Ty:   ty,
@@ -416,8 +461,8 @@ func pushTagScope(tok *Token, ty *Type) {
 //                "string"
 //
 func declSpec(rest **Token, tok *Token) *Type {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	nPtr := 0
 	for consume(&tok, tok, "*") {
@@ -460,8 +505,8 @@ func declSpec(rest **Token, tok *Token) *Type {
 }
 
 func findBase(rest **Token, tok *Token) (*Type, *Token) {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	for !equal(tok, "*") && !isTypename(tok) {
 		tok = tok.Next
@@ -472,8 +517,8 @@ func findBase(rest **Token, tok *Token) (*Type, *Token) {
 }
 
 func readArr(tok *Token, base *Type) *Type {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	if !consume(&tok, tok, "[") {
 		return base
@@ -489,8 +534,8 @@ func readArr(tok *Token, base *Type) *Type {
 
 // type-preffix = ("[" const-expr "]")*
 func readTypePreffix(rest **Token, tok *Token) *Type {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	if !equal(tok, "[") {
 		return declSpec(rest, tok)
@@ -505,10 +550,9 @@ func readTypePreffix(rest **Token, tok *Token) *Type {
 // declarator = ident (type-preffix)? declspec
 //            | ident type-suffix
 func declarator(rest **Token, tok *Token) *Type {
-	// var nPtr int
-	// for consume(&tok, tok, "*") {
-	// 	nPtr++
-	// }
+	printCurTok(tok)
+	printCalledFunc()
+
 	if tok.Kind != TK_IDENT {
 		panic("\n" + errorTok(tok, "expected a variable name"))
 	}
@@ -534,8 +578,8 @@ func declarator(rest **Token, tok *Token) *Type {
 //  x [2]**int
 // params = param ("," param)*
 func funcParams(rest **Token, tok *Token, ty *Type) *Type {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	head := &Type{}
 	cur := head
@@ -564,23 +608,13 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	return ty
 }
 
-// // array-dimensions = const-expr? "]" type-suffix
-// func arrayDimensions(rest **Token, tok *Token, ty *Type) *Type {
-// 	if equal(tok, "]") {
-// 		ty = typeSuffix(rest, tok.Next, ty)
-// 		return arrayOf(ty, -1)
-// 	}
-
-// 	sz := constExpr(&tok, tok)
-// 	tok = skip(tok, "]")
-// 	ty = typeSuffix(rest, tok, ty)
-// 	return arrayOf(ty, int(sz))
-// }
-
 // type-suffix = "(" func-params
 //             | "[" array-dimensions
 //             |
 func typeSuffix(rest **Token, tok *Token, ty *Type) *Type {
+	printCurTok(tok)
+	printCalledFunc()
+
 	if equal(tok, "(") {
 		return funcParams(rest, tok.Next, ty)
 	}
@@ -593,10 +627,15 @@ func typeSuffix(rest **Token, tok *Token, ty *Type) *Type {
 }
 
 func isEnd(tok *Token) bool {
+	printCurTok(tok)
+	printCalledFunc()
+
 	return equal(tok, "}") || (equal(tok, ",") && equal(tok.Next, "}"))
 }
 
 func consumeEnd(rest **Token, tok *Token) bool {
+	printCalledFunc()
+
 	if equal(tok, "}") {
 		*rest = tok.Next
 		return true
@@ -610,35 +649,10 @@ func consumeEnd(rest **Token, tok *Token) bool {
 	return false
 }
 
-func newInitVal(cur *Initializer, sz int, val int) *Initializer {
-	init := &Initializer{Sz: sz, Val: int64(val)}
-	cur.Next = init
-	return init
-}
-
-func newInitLabel(cur *Initializer, label string) *Initializer {
-	init := &Initializer{Lbl: label}
-	cur.Next = init
-	return init
-}
-
-func newInitZero(cur *Initializer, nbytes int) *Initializer {
-	for i := 0; i < nbytes; i++ {
-		cur = newInitVal(cur, 1, 0)
-	}
-	return cur
-}
-
-func gvarInitString(p []rune, len int) *Initializer {
-	head := &Initializer{}
-	cur := head
-	for i := 0; i < len; i++ {
-		cur = newInitVal(cur, 1, int(p[i]))
-	}
-	return head.Next
-}
-
 func skipExcessElement(tok *Token) *Token {
+	printCurTok(tok)
+	printCalledFunc()
+
 	if equal(tok, "{") {
 		tok = skipExcessElement(tok.Next)
 		return skip(tok, "}")
@@ -650,6 +664,9 @@ func skipExcessElement(tok *Token) *Token {
 
 // string-initializer = string-literal
 func stringInitializer(rest **Token, tok *Token, init *Initializer) {
+	printCurTok(tok)
+	printCalledFunc()
+
 	len := min(init.Ty.ArrSz, tok.Ty.ArrSz)
 	for i := 0; i < len; i++ {
 		init.Children[i].Expr = newNum(int64(tok.Str[i]), tok)
@@ -659,6 +676,9 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 
 // array-initializer = (type-preffix)? decl-spec "{" initializer ("," initializer)* ","? "}"
 func arrayInitializer1(rest **Token, tok *Token, init *Initializer) {
+	printCurTok(tok)
+	printCalledFunc()
+
 	tok = skip(tok, "{")
 
 	for i := 0; !consumeEnd(rest, tok); i++ {
@@ -676,6 +696,9 @@ func arrayInitializer1(rest **Token, tok *Token, init *Initializer) {
 
 // struct-initializer = "{" initializer ("," initializer)* ","? "}"
 func structInitializer1(rest **Token, tok *Token, init *Initializer) {
+	printCurTok(tok)
+	printCalledFunc()
+
 	tok = skip(tok, "{")
 
 	mem := init.Ty.Mems
@@ -696,6 +719,9 @@ func structInitializer1(rest **Token, tok *Token, init *Initializer) {
 
 // struct-initializer2 = initializer ("," initializer)*
 func structInitializer2(rest **Token, tok *Token, init *Initializer) {
+	printCurTok(tok)
+	printCalledFunc()
+
 	first := true
 
 	for mem := init.Ty.Mems; mem != nil && !isEnd(tok); mem = mem.Next {
@@ -712,6 +738,9 @@ func structInitializer2(rest **Token, tok *Token, init *Initializer) {
 //             | struct-initializer
 //             | assign
 func initializer2(rest **Token, tok *Token, init *Initializer) {
+	printCurTok(tok)
+	printCalledFunc()
+
 	if init.Ty.Kind == TY_ARRAY && tok.Kind == TK_STR {
 		stringInitializer(rest, tok, init)
 		return
@@ -747,6 +776,9 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 }
 
 func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer {
+	printCurTok(tok)
+	printCalledFunc()
+
 	init := newInitializer(ty)
 	initializer2(rest, tok, init)
 
@@ -771,6 +803,9 @@ func initDesgExpr(desg *InitDesg, tok *Token) *Node {
 }
 
 func createLvarInit(init *Initializer, ty *Type, desg *InitDesg, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	if ty.Kind == TY_ARRAY {
 		node := newNode(ND_NULL_EXPR, tok)
 		for i := 0; i < ty.ArrSz; i++ {
@@ -828,6 +863,9 @@ func createLvarInit(init *Initializer, ty *Type, desg *InitDesg, tok *Token) *No
 // A string(char array) can be initialized by a string literal. For example,
 // `var x string="abc"`
 func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	// Initialize a char array with a string literal.
 	// => unnecessary
 
@@ -864,6 +902,8 @@ func writeBuf(buf *string, val int64, sz int) {
 // 要書き換え：string型かchar型しか書き込めない、integerはasciiとして登録されてしまう
 func writeGvarData(cur *Relocation,
 	init *Initializer, ty *Type, buf *string, offset int) *Relocation {
+	printCalledFunc()
+
 	if ty.Kind == TY_ARRAY {
 		sz := ty.Base.Sz
 		for i := 0; i < ty.ArrSz; i++ {
@@ -902,8 +942,8 @@ func writeGvarData(cur *Relocation,
 }
 
 func gvarInitializer(rest **Token, tok *Token, v *Obj) {
-	// printCalledFunc()
-	// printCurTok()
+	printCurTok(tok)
+	printCalledFunc()
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 
@@ -920,8 +960,8 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 // ShortVarDecl = "var" ident "=" expr => unimplemented
 //              | ident ":=" expr => unimplemented
 func declaration(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	head := &Node{}
 	cur := head
@@ -959,8 +999,8 @@ func declaration(rest **Token, tok *Token) *Node {
 }
 
 func isTypename(tok *Token) bool {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	kw := []string{
 		"byte", "bool", "int16", "int", "int64", "struct", "string",
@@ -975,8 +1015,8 @@ func isTypename(tok *Token) bool {
 }
 
 func isForClause(tok *Token) bool {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	for !equal(tok, "{") {
 		if equal(tok, ";") {
@@ -1008,8 +1048,8 @@ func isForClause(tok *Token) bool {
 // block = "{" stmt-list "};" .
 // stmt-list = { stmt ";" } .
 func stmt(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	if equal(tok, "return") {
 		node := newNode(ND_RETURN, tok)
@@ -1174,6 +1214,9 @@ func stmt(rest **Token, tok *Token) *Node {
 
 // compound-stmt = (typedef | declaration | stmt)* "}"
 func compoundStmt(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	node := newNode(ND_BLOCK, tok)
 	head := &Node{}
 	cur := head
@@ -1207,6 +1250,9 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 
 // expr-stmt = expr? ";"
 func exprStmt(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	if equal(tok, ";") {
 		*rest = tok.Next
 		return newNode(ND_BLOCK, tok)
@@ -1220,8 +1266,8 @@ func exprStmt(rest **Token, tok *Token) *Node {
 
 // expr       = assign ("," assign)*
 func expr(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	node := assign(&tok, tok)
 
@@ -1234,10 +1280,14 @@ func expr(rest **Token, tok *Token) *Node {
 }
 
 func eval(node *Node) int64 {
+	printCalledFunc()
+
 	return eval2(node, nil)
 }
 
 func eval2(node *Node, label *string) int64 {
+	printCalledFunc()
+
 	addType(node)
 
 	switch node.Kind {
@@ -1339,6 +1389,8 @@ func eval2(node *Node, label *string) int64 {
 }
 
 func evalRval(node *Node, label *string) int64 {
+	printCalledFunc()
+
 	switch node.Kind {
 	case ND_VAR:
 		if node.Obj.IsLocal {
@@ -1357,12 +1409,17 @@ func evalRval(node *Node, label *string) int64 {
 
 // const-expr
 func constExpr(rest **Token, tok *Token) int64 {
+	printCurTok(tok)
+	printCalledFunc()
+
 	return eval(logor(rest, tok))
 }
 
 // Convert `A op= B` to `*tmp = *tmp op B`
 // where tmp is a fresh pointer variable.
 func toAssign(binary *Node) *Node {
+	printCalledFunc()
+
 	addType(binary.Lhs)
 	addType(binary.Rhs)
 	tok := binary.Tok
@@ -1386,8 +1443,8 @@ func toAssign(binary *Node) *Node {
 // assign = logor (assign-op assign)?
 // assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "<<=" | ">>="
 func assign(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	node := logor(&tok, tok)
 
@@ -1437,6 +1494,9 @@ func assign(rest **Token, tok *Token) *Node {
 
 // logor = logand ("||" logand)*
 func logor(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	node := logand(&tok, tok)
 	for equal(tok, "||") {
 		start := tok
@@ -1448,6 +1508,9 @@ func logor(rest **Token, tok *Token) *Node {
 
 // logand = bitor ("&&" bitor)*
 func logand(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	node := bitor(&tok, tok)
 	for equal(tok, "&&") {
 		start := tok
@@ -1459,6 +1522,9 @@ func logand(rest **Token, tok *Token) *Node {
 
 // bitor = bitxor ("|" bitxor)*
 func bitor(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	node := bitxor(&tok, tok)
 	for equal(tok, "|") {
 		start := tok
@@ -1470,6 +1536,9 @@ func bitor(rest **Token, tok *Token) *Node {
 
 // bitxor = bitand ("^" bitand)*
 func bitxor(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	node := bitand(&tok, tok)
 	for equal(tok, "^") {
 		start := tok
@@ -1481,6 +1550,9 @@ func bitxor(rest **Token, tok *Token) *Node {
 
 // bitand = equality ("&" equality)*
 func bitand(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	node := equality(&tok, tok)
 	for equal(tok, "&") {
 		start := tok
@@ -1492,8 +1564,8 @@ func bitand(rest **Token, tok *Token) *Node {
 
 // equality   = relational ("==" relational | "!=" relational)*
 func equality(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	node := relational(&tok, tok)
 
@@ -1517,8 +1589,8 @@ func equality(rest **Token, tok *Token) *Node {
 
 // relational = shift ("<" shift | "<=" shift | ">" shift | ">=" shift)*
 func relational(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	node := shift(&tok, tok)
 
@@ -1552,6 +1624,9 @@ func relational(rest **Token, tok *Token) *Node {
 
 // shift = add ("<<" add | ">>" add)*
 func shift(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	node := add(&tok, tok)
 
 	for {
@@ -1579,6 +1654,9 @@ func shift(rest **Token, tok *Token) *Node {
 // pointer value. This function takes care of the scaling.
 // => that isn't supported in Go.
 func newAdd(lhs, rhs *Node, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	addType(lhs)
 	addType(rhs)
 
@@ -1606,6 +1684,9 @@ func newAdd(lhs, rhs *Node, tok *Token) *Node {
 // Like `+`, `-` is overloaded for the pointer type.
 // => that isn't supported in Go.
 func newSub(lhs, rhs *Node, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	addType(lhs)
 	addType(rhs)
 
@@ -1635,8 +1716,8 @@ func newSub(lhs, rhs *Node, tok *Token) *Node {
 
 // add        = mul ("+" mul | "-" mul)*
 func add(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	node := mul(&tok, tok)
 
@@ -1660,8 +1741,8 @@ func add(rest **Token, tok *Token) *Node {
 
 // mul = cast ("*" cast | "/" cast)*
 func mul(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	node := cast(&tok, tok)
 
@@ -1689,6 +1770,8 @@ func mul(rest **Token, tok *Token) *Node {
 
 // cast = type-name "(" cast ")" | unary
 func cast(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
 
 	if isTypename(tok) {
 		start := tok
@@ -1707,8 +1790,8 @@ func cast(rest **Token, tok *Token) *Node {
 //         | "Sizeof" unary
 //         | postfix
 func unary(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	if equal(tok, "+") {
 		return cast(rest, tok.Next)
@@ -1739,8 +1822,8 @@ func unary(rest **Token, tok *Token) *Node {
 
 // struct-member = ident type-prefix type-specifier
 func structMems(rest **Token, tok *Token, ty *Type) *Member {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	head := &Member{}
 	cur := head
@@ -1773,8 +1856,8 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 
 // struct-decl = "struct" "{" struct-member "}"
 func structDecl(rest **Token, tok *Token) *Type {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	tok = skip(tok, "{")
 
@@ -1798,6 +1881,9 @@ func structDecl(rest **Token, tok *Token) *Type {
 }
 
 func getStructMember(ty *Type, tok *Token) *Member {
+	printCurTok(tok)
+	printCalledFunc()
+
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
 		if mem.Name == tok.Str {
 			return mem
@@ -1807,6 +1893,9 @@ func getStructMember(ty *Type, tok *Token) *Member {
 }
 
 func structRef(lhs *Node, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	addType(lhs)
 	if lhs.Ty.Kind != TY_STRUCT {
 		panic("\n" + errorTok(lhs.Tok, "not a struct"))
@@ -1819,6 +1908,9 @@ func structRef(lhs *Node, tok *Token) *Node {
 
 // Convert A++ to `(typeof A)((A += 1) - 1)`
 func newIncDec(node *Node, tok *Token, addend int) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	addType(node)
 	return newCast(newAdd(toAssign(newAdd(node, newNum(int64(addend), tok), tok)),
 		newNum(int64(addend)*-1, tok), tok),
@@ -1827,8 +1919,8 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 
 // postfix = primary ("[" expr "]" | "." ident | "++" | "--")*
 func postfix(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	node := primary(&tok, tok)
 
@@ -1867,8 +1959,11 @@ func postfix(rest **Token, tok *Token) *Node {
 
 // funcall = ident "(" (assign ("," assign)*)? ")"
 //
-// TODO: builtin libc-function such as "printf"
+//
 func funcall(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
 	start := tok
 	tok = tok.Next.Next
 
@@ -1919,8 +2014,8 @@ func funcall(rest **Token, tok *Token) *Node {
 // primary = "(" expr ")" | ident args? | num
 // args = "(" ")"
 func primary(rest **Token, tok *Token) *Node {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	// if the next token is '(', the program must be
 	// "(" expr ")"
@@ -1967,6 +2062,9 @@ func primary(rest **Token, tok *Token) *Node {
 
 // typedef = "type" ident (type-preffix)? decl-spec
 func parseTypedef(tok *Token) *Token {
+	printCurTok(tok)
+	printCalledFunc()
+
 	first := true
 
 	for !consume(&tok, tok, ";") {
@@ -1994,6 +2092,8 @@ func createParamLvars(param *Type) {
 // can refer a label that apears later in the function.
 // So, we need to do this after we parse the entire function.
 func resolveGotoLabels() {
+	printCalledFunc()
+
 	for x := gotos; x != nil; x = x.GotoNext {
 		for y := labels; y != nil; y = y.GotoNext {
 			if x.Lbl == y.Lbl {
@@ -2013,8 +2113,8 @@ func resolveGotoLabels() {
 
 // function = "func" ident "(" params? ")" type-prefix type-specifier "{" stmt "}"
 func function(tok *Token) *Token {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	ty := declarator(&tok, tok)
 
@@ -2049,8 +2149,8 @@ func function(tok *Token) *Token {
 // var x [2]int = [2]int{1,2}
 // var x T(typedef) = T{1,2}
 func globalVar(tok *Token) *Token {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	first := true
 	for !consume(&tok, tok, ";") {
@@ -2069,10 +2169,12 @@ func globalVar(tok *Token) *Token {
 
 // program = (global-var | function)*
 func parse(tok *Token) *Obj {
-	// printCurTok()
-	// printCalledFunc()
+	printCurTok(tok)
+	printCalledFunc()
 
 	globals = nil
+	// builtin libc-functions such as "printf"
+	newGvar("printf", funcType(ty_int))
 
 	for !atEof(tok) {
 
@@ -2093,7 +2195,6 @@ func parse(tok *Token) *Obj {
 		}
 
 		panic("\n" + errorTok(tok, "unexpected '%s'", tok.Str))
-
 	}
 
 	return globals

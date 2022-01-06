@@ -56,9 +56,9 @@ func printTokens(tok *Token) {
 // 	fmt.Print("# Current Token: ")
 // }
 
-// func printCurTok() {
-// 	fmt.Printf(" %d:'%s' \n", token.Kind, token.Str)
-// }
+func printCurTok(tok *Token) {
+	fmt.Printf(" %d:'%s' \n", tok.Kind, tok.Str)
+}
 
 func printCalledFunc() {
 	pc, _, line, _ := runtime.Caller(2)
