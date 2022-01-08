@@ -1064,7 +1064,9 @@ func stmt(rest **Token, tok *Token) *Node {
 	if equal(tok, "if") {
 		node := newNode(ND_IF, tok)
 		node.Cond = expr(&tok, tok.Next)
-		node.Then = stmt(&tok, tok.Next)
+		fmt.Printf("tok: %#v\n\n", tok)
+		node.Then = stmt(&tok, tok)
+		fmt.Printf("tok: %#v\n\n", tok)
 		if equal(tok, "else") {
 			node.Els = stmt(&tok, tok.Next)
 		}
@@ -2175,6 +2177,7 @@ func parse(tok *Token) *Obj {
 	globals = nil
 	// builtin libc-functions such as "printf"
 	newGvar("printf", funcType(ty_int))
+	newGvar("exit", funcType(ty_void))
 
 	for !atEof(tok) {
 

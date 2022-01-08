@@ -363,14 +363,17 @@ func addSemiColn(cur *Token) *Token {
 	return cur
 }
 
-// Initialize lineinfo for all tokens.
+// Initialize line info for all tokens.
 func addLineNumbers(tok *Token) {
 	var n int = 1
 
 	for i := 0; i < len(userInput); i++ {
-		if i == tok.Loc {
+		for i == tok.Loc && i < len(userInput) {
 			tok.LineNo = n
 			tok = tok.Next
+			if tok == nil {
+				return
+			}
 		}
 		if userInput[i] == '\n' {
 			n++
