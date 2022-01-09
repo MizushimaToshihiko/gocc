@@ -32,7 +32,7 @@ func compile(arg string, w io.Writer) error {
 		return err
 	}
 
-	printTokens(tok)
+	// printTokens(tok)
 	prog := parse(tok)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func compile(arg string, w io.Writer) error {
 }
 
 func usage(status int) {
-	fmt.Fprintf(os.Stderr, "gocc [ -o <path> ] <file>\n")
+	fmt.Fprintf(os.Stderr, "usage: ./gocc [ -o <path> ] <file>\n")
 	os.Exit(status)
 }
 

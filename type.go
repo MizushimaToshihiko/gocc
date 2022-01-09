@@ -71,7 +71,7 @@ func alignTo(n, align int) int {
 }
 
 func newType(kind TypeKind, size, align int, name string) *Type {
-	return &Type{Kind: kind, Align: align, TyName: name}
+	return &Type{Kind: kind, Sz: size, Align: align, TyName: name}
 }
 
 func isInteger(ty *Type) bool {
@@ -97,28 +97,12 @@ func copyType(ty *Type) *Type {
 	return ret
 }
 
-func voidType() *Type {
-	return newType(TY_VOID, 1, 1, "void")
-}
-
-func boolType() *Type {
-	return newType(TY_BOOL, 1, 1, "bool")
-}
-
 func charType() *Type {
 	return newType(TY_BYTE, 1, 1, "byte")
 }
 
-func shortType() *Type {
-	return newType(TY_SHORT, 2, 2, "int16")
-}
-
-func intType() *Type {
-	return newType(TY_INT, 4, 4, "int")
-}
-
-func longType() *Type {
-	return newType(TY_LONG, 8, 8, "int64")
+func pointerTo(base *Type) *Type {
+	return &Type{Kind: TY_PTR, Base: base, Sz: 8, Align: 8, TyName: "pointer"}
 }
 
 func funcType(retTy *Type) *Type {
@@ -127,10 +111,6 @@ func funcType(retTy *Type) *Type {
 
 func stringType() *Type {
 	return &Type{Kind: TY_PTR, Base: charType(), Align: 8, TyName: "string"}
-}
-
-func pointerTo(base *Type) *Type {
-	return &Type{Kind: TY_PTR, Base: base, Align: 8, TyName: "pointer"}
 }
 
 func arrayOf(base *Type, size int) *Type {
@@ -144,43 +124,6 @@ func arrayOf(base *Type, size int) *Type {
 
 func structType() *Type {
 	return newType(TY_STRUCT, 0, 1, "struct")
-}
-
-func sizeOf(ty *Type, tok *Token) int {
-	assert(ty.Kind != TY_VOID, "invalid void type")
-
-	switch ty.Kind {
-	case TY_BYTE, TY_BOOL:
-		return 1
-	case TY_SHORT:
-		return 2
-	case TY_INT:
-		return 4
-	case TY_PTR, TY_LONG:
-		return 8
-	case TY_ARRAY:
-		return sizeOf(ty.Base, tok) * ty.ArrSz
-	case TY_STRUCT:
-		mem := ty.Mems
-		for mem.Next != nil {
-			mem = mem.Next
-		}
-		end := mem.Offset + sizeOf(mem.Ty, mem.Tok)
-		return alignTo(end, ty.Align)
-	default:
-		panic("invalid type")
-	}
-}
-
-func findMember(ty *Type, name string) *Member {
-	assert(ty.Kind == TY_STRUCT, "invalid type")
-
-	for mem := ty.Mems; mem != nil; mem = mem.Next {
-		if mem.Name == name {
-			return mem
-		}
-	}
-	return nil
 }
 
 func getCommonType(ty1, ty2 *Type) *Type {
@@ -231,65 +174,73 @@ func (e *errWriter) visit(node *Node) {
 	}
 
 	switch node.Kind {
-	case ND_MUL,
-		ND_DIV,
-		ND_BITAND,
-		ND_BITOR,
-		ND_BITXOR,
-		ND_EQ,
-		ND_NE,
-		ND_LT,
-		ND_LE,
-		ND_NOT,
-		ND_LOGOR,
-		ND_LOGAND:
-		node.Ty = intType()
-		return
 	case ND_NUM:
 		if node.Val <= int64(math.MaxInt32) {
-			node.Ty = intType()
+			node.Ty = ty_int
 			return
 		}
-		node.Ty = longType()
+		node.Ty = ty_long
+		return
+	case ND_ADD,
+		ND_SUB,
+		ND_MUL,
+		ND_DIV,
+		ND_MOD,
+		ND_BITAND,
+		ND_BITOR,
+		ND_BITXOR:
+		usualArithConv(&node.Lhs, &node.Rhs)
+		node.Ty = node.Lhs.Ty
+		return
+	case ND_NEG:
+		ty := getCommonType(ty_int, node.Lhs.Ty)
+		node.Lhs = newCast(node.Lhs, ty)
+		node.Ty = ty
+		return
+	case ND_ASSIGN:
+		if node.Lhs.Ty.Kind == TY_ARRAY {
+			e.err = fmt.Errorf(errorTok(node.Lhs.Tok, "not an lvalue"))
+		}
+		if node.Lhs.Ty.Kind != TY_STRUCT {
+			node.Lhs = newCast(node.Rhs, node.Lhs.Ty)
+		}
+		node.Ty = node.Lhs.Ty
+		return
+	case ND_EQ,
+		ND_NE,
+		ND_LT,
+		ND_LE:
+		usualArithConv(&node.Lhs, &node.Rhs)
+		node.Ty = ty_int
+		return
+	case ND_FUNCALL:
+		node.Ty = ty_long
+		return
+	case ND_BITNOT,
+		ND_SHL,
+		ND_SHR:
+		node.Ty = node.Lhs.Ty
+		return
+	case ND_NOT,
+		ND_LOGOR,
+		ND_LOGAND:
+		node.Ty = ty_int
 		return
 	case ND_VAR:
 		node.Ty = node.Obj.Ty
 		return
-	case ND_ADD:
-		if node.Rhs.Ty.Base != nil {
-			tmp := node.Lhs
-			node.Lhs = node.Rhs
-			node.Rhs = tmp
+	case ND_COND:
+		if node.Then.Ty.Kind == TY_VOID || node.Els.Ty.Kind == TY_VOID {
+			node.Ty = ty_void
+			return
 		}
-		if node.Rhs.Ty.Base != nil {
-			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer arithmetic operands"))
-		}
-		node.Ty = node.Lhs.Ty
-		return
-	case ND_SUB:
-		if node.Rhs.Ty.Base != nil {
-			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer arithmetic operands"))
-		}
-		node.Ty = node.Lhs.Ty
-		return
-	case ND_ASSIGN,
-		ND_SHL,
-		ND_SHR,
-		ND_BITNOT:
-		node.Ty = node.Lhs.Ty
+		usualArithConv(&node.Then, &node.Els)
+		node.Ty = node.Then.Ty
 		return
 	case ND_COMMA:
 		node.Ty = node.Rhs.Ty
 		return
 	case ND_MEMBER:
-		if node.Lhs.Ty.Kind != TY_STRUCT {
-			e.err = fmt.Errorf(errorTok(node.Tok, "not a struct"))
-		}
-		node.Mem = findMember(node.Lhs.Ty, node.MemName)
-		if node.Mem == nil {
-			e.err = fmt.Errorf(errorTok(node.Tok, "specified member does not exist"))
-			return
-		}
 		node.Ty = node.Mem.Ty
 		return
 	case ND_ADDR:
@@ -303,17 +254,25 @@ func (e *errWriter) visit(node *Node) {
 		if node.Lhs.Ty.Base == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
 		}
-
-		node.Ty = node.Lhs.Ty.Base
 		if node.Ty.Kind == TY_VOID {
 			e.err = fmt.Errorf(errorTok(node.Tok, "dereference a void pointer"))
 		}
+
+		node.Ty = node.Lhs.Ty.Base
 		return
-	case ND_SIZEOF:
-		node.Kind = ND_NUM
-		node.Ty = intType()
-		node.Val = int64(sizeOf(node.Lhs.Ty, node.Tok))
-		node.Lhs = nil
+	case ND_STMT_EXPR:
+		if node.Body == nil {
+			stmt := node.Body
+			for stmt.Next != nil {
+				stmt = stmt.Next
+			}
+			if stmt.Kind == ND_EXPR_STMT {
+				node.Ty = stmt.Lhs.Ty
+				return
+			}
+		}
+		e.err = fmt.Errorf(errorTok(node.Tok,
+			"statement expressionreturning void is not supported"))
 		return
 	}
 }

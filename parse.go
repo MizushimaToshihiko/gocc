@@ -1064,9 +1064,7 @@ func stmt(rest **Token, tok *Token) *Node {
 	if equal(tok, "if") {
 		node := newNode(ND_IF, tok)
 		node.Cond = expr(&tok, tok.Next)
-		fmt.Printf("tok: %#v\n\n", tok)
 		node.Then = stmt(&tok, tok)
-		fmt.Printf("tok: %#v\n\n", tok)
 		if equal(tok, "else") {
 			node.Els = stmt(&tok, tok.Next)
 		}
@@ -2139,6 +2137,7 @@ func function(tok *Token) *Token {
 	fn.Locals = locals
 	leaveScope()
 	resolveGotoLabels()
+	tok = skip(tok, ";")
 	return tok
 }
 
@@ -2193,7 +2192,6 @@ func parse(tok *Token) *Obj {
 
 		if consume(&tok, tok, "type") {
 			tok = parseTypedef(tok)
-			tok = skip(tok, ";")
 			continue
 		}
 
