@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 // Scope for local variables, global variables or typedefs
@@ -48,7 +47,7 @@ type Obj struct {
 	IsDef  bool
 
 	// Global variables
-	InitData string
+	InitData []rune
 	Rel      *Relocation
 
 	// Function
@@ -414,7 +413,7 @@ func newStringLiteral(p string, ty *Type) *Obj {
 	printCalledFunc()
 
 	v := newAnonGvar(ty)
-	v.InitData = p
+	v.InitData = []rune(p)
 	return v
 }
 
@@ -886,16 +885,16 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	return newBinary(ND_COMMA, lhs, rhs, tok)
 }
 
-func writeBuf(buf *string, val int64, sz int) {
+func writeBuf(buf *rune, val int64, sz int) {
 	switch sz {
 	case 1:
-		*buf = strconv.Itoa(int(int8(val)))
+		*buf = rune(int8(val))
 	case 2:
-		*buf = strconv.Itoa(int(int16(val)))
+		*buf = rune(int16(val))
 	case 4:
-		*buf = strconv.Itoa(int(val))
+		*buf = rune(int(val))
 	case 8:
-		*buf = strconv.FormatInt(val, 10)
+		*buf = rune(val)
 	default:
 		panic("internal error")
 	}
@@ -903,45 +902,37 @@ func writeBuf(buf *string, val int64, sz int) {
 }
 
 // 要書き換え：string型かchar型しか書き込めない、integerはasciiとして登録されてしまう
-func writeGvarData(cur *Relocation,
-	init *Initializer, ty *Type, buf *string, offset int) *Relocation {
+func writeGvarData(
+	init *Initializer, ty *Type, buf *string, offset int) {
 	printCalledFunc()
 
 	if ty.Kind == TY_ARRAY {
 		sz := ty.Base.Sz
 		for i := 0; i < ty.ArrSz; i++ {
-			cur = writeGvarData(cur, init.Children[i], ty.Base, buf, offset+sz*i)
+			writeGvarData(init.Children[i], ty.Base, buf, offset+sz*i)
 		}
-		return cur
+		return
 	}
 
-	if ty.Kind == TY_STRUCT {
-		for mem := ty.Mems; mem != nil; mem = mem.Next {
-			cur = writeGvarData(cur, init.Children[mem.Idx], mem.Ty, buf,
-				offset+mem.Offset)
-		}
-		return cur
-	}
+	// if ty.Kind == TY_STRUCT {
+	// 	for mem := ty.Mems; mem != nil; mem = mem.Next {
+	// 		cur = writeGvarData(cur, init.Children[mem.Idx], mem.Ty, buf,
+	// 			offset+mem.Offset)
+	// 	}
+	// 	return cur
+	// }
 
 	if init.Expr == nil {
-		return cur
+		writeBuf(buf+offset, eval(init.Expr), ty.Sz)
 	}
 
-	var label *string = nil
+	var label *rune = nil
 	val := eval2(init.Expr, label)
 
 	if label == nil {
 		writeBuf(buf, val, ty.Sz)
-		return cur
 	}
 
-	rel := &Relocation{
-		Offset: offset,
-		Lbl:    *label,
-		Addend: int64(val),
-	}
-	cur.Next = rel
-	return cur.Next
 }
 
 func gvarInitializer(rest **Token, tok *Token, v *Obj) {
@@ -950,11 +941,9 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 
-	head := &Relocation{}
-	var buf string
-	writeGvarData(head, init, v.Ty, &buf, 0)
+	var buf *rune
+	writeGvarData(init, v.Ty, buf, 0)
 	v.InitData = buf
-	v.Rel = head.Next
 }
 
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl(unimplemented)

@@ -532,7 +532,7 @@ func (c *codeWriter) emitData(prog *Obj) {
 		c.println("	.globl %s", v.Name)
 		c.println("%s:", v.Name)
 
-		if v.InitData != "" {
+		if v.InitData != nil {
 			for i := 0; i < v.Ty.Sz; i++ {
 				c.println("	.byte %d", v.InitData[i])
 			}
