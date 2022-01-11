@@ -60,7 +60,7 @@ func (c *codeWriter) genAddr(node *Node) {
 			return
 		}
 		// Global variable
-		c.println("	lea %s(%%rip) %%rax", node.Obj.Name)
+		c.println("	lea %s(%%rip), %%rax", node.Obj.Name)
 		return
 	case ND_DEREF:
 		c.genExpr(node.Lhs)
@@ -71,7 +71,7 @@ func (c *codeWriter) genAddr(node *Node) {
 		return
 	case ND_MEMBER:
 		c.genAddr(node.Lhs)
-		c.println("	add $%d %%rax", node.Mem.Offset)
+		c.println("	add $%d, %%rax", node.Mem.Offset)
 		return
 	default:
 		c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
@@ -320,7 +320,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		}
 
 		for i := nargs - 1; i >= 0; i-- {
-			c.pop(argreg8[i])
+			c.pop(argreg64[i])
 		}
 
 		c.println("	mov $0, %%rax")
@@ -328,9 +328,9 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	}
 
-	c.genExpr(node.Lhs)
-	c.push()
 	c.genExpr(node.Rhs)
+	c.push()
+	c.genExpr(node.Lhs)
 	c.pop("%rdi")
 
 	var ax, di string
@@ -573,7 +573,7 @@ func (c *codeWriter) emitText(prog *Obj) {
 	c.println(".text")
 
 	for fn := prog; fn != nil; fn = fn.Next {
-		if !fn.IsFunc || !fn.IsDef {
+		if !fn.IsFunc || !fn.IsDef || fn.Name == "printf" || fn.Name == "exit" {
 			continue
 		}
 

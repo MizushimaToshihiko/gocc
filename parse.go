@@ -385,6 +385,9 @@ func newGvar(name string, ty *Type) *Obj {
 
 	v := newVar(name, ty)
 	v.IsLocal = false
+	if ty.Kind == TY_FUNC {
+		v.IsFunc = true
+	}
 	v.Next = globals
 	globals = v
 	return v
