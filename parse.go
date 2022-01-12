@@ -885,16 +885,17 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	return newBinary(ND_COMMA, lhs, rhs, tok)
 }
 
-func writeBuf(buf *rune, val int64, sz int) {
+// writeBuf returns the trancated value.
+func writeBuf(val int64, sz int) int64 {
 	switch sz {
 	case 1:
-		*buf = rune(int8(val))
+		return int64(int8(val))
 	case 2:
-		*buf = rune(int16(val))
+		return int64(int16(val))
 	case 4:
-		*buf = rune(int(val))
+		return int64(int(val))
 	case 8:
-		*buf = rune(val)
+		return val
 	default:
 		panic("internal error")
 	}
@@ -903,13 +904,13 @@ func writeBuf(buf *rune, val int64, sz int) {
 
 // 要書き換え：string型かchar型しか書き込めない、integerはasciiとして登録されてしまう
 func writeGvarData(
-	init *Initializer, ty *Type, buf *string, offset int) {
+	init *Initializer, ty *Type, buf *[]rune, offset int) {
 	printCalledFunc()
 
 	if ty.Kind == TY_ARRAY {
-		sz := ty.Base.Sz
+		// sz := ty.Base.Sz
 		for i := 0; i < ty.ArrSz; i++ {
-			writeGvarData(init.Children[i], ty.Base, buf, offset+sz*i)
+			writeGvarData(init.Children[i], ty.Base, buf, i)
 		}
 		return
 	}
@@ -922,17 +923,9 @@ func writeGvarData(
 	// 	return cur
 	// }
 
-	if init.Expr == nil {
-		writeBuf(buf+offset, eval(init.Expr), ty.Sz)
+	if init.Expr != nil {
+		*buf = append(*buf, rune(writeBuf(eval(init.Expr), ty.Sz)))
 	}
-
-	var label *rune = nil
-	val := eval2(init.Expr, label)
-
-	if label == nil {
-		writeBuf(buf, val, ty.Sz)
-	}
-
 }
 
 func gvarInitializer(rest **Token, tok *Token, v *Obj) {
@@ -941,8 +934,8 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 
-	var buf *rune
-	writeGvarData(init, v.Ty, buf, 0)
+	var buf []rune = make([]rune, 0)
+	writeGvarData(init, v.Ty, &buf, 0)
 	v.InitData = buf
 }
 

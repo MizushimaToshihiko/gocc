@@ -2,10 +2,12 @@ var g1 int
 var g2 [4]int
 var g3 byte = 3
 
-// var g4 int16 = 4
-// var g5 int = 5
-// var g6 int64 = 6
-// var g7 *int = &g5
+var g4 int16 = 4
+var g5 int = 5
+var g6 int64 = 6
+
+var g7 *int = &g5
+
 // var g8 string = "abc"
 // var g8_1 [3]byte = [3]byte{'a', 'b', 'c'}
 // var g9 [3]int = [3]int{0, 1, 2}
@@ -22,13 +24,13 @@ var g3 byte = 3
 // 	a [2]int
 // }
 
-// var g12 [2]T_g12 = [2]T_g12{T_g12{[2]int{1,2}}, T_g12{[2]int{3,4}}}
+// var g12 [2]T_g12 = [2]T_g12{T_g12{[2]int{1, 2}}, T_g12{[2]int{3, 4}}}
 
-// var g12_1 [2]T_g12 = [2]T_g12{T_g12{[2]int{1,2,}}, T_g12{[2]int{3,4,},}}
+// var g12_1 [2]T_g12 = [2]T_g12{T_g12{[2]int{1, 2}}, T_g12{[2]int{3, 4}}}
 
 // var g12_2 []int
 
-// var g12_3 [2]T_g12 = [2]T_g12{{{1,2,}}, {{3,4,},}}
+// var g12_3 [2]T_g12 = [2]T_g12{{{1, 2}}, {{3, 4}}}
 
 func assert(want int64, ac int64, code *byte) {
 	if want == ac {

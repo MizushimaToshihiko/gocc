@@ -533,7 +533,7 @@ func (c *codeWriter) emitData(prog *Obj) {
 		c.println("%s:", v.Name)
 
 		if v.InitData != nil {
-			for i := 0; i < v.Ty.Sz; i++ {
+			for i := 0; i < len(v.InitData); i++ {
 				c.println("	.byte %d", v.InitData[i])
 			}
 		} else {
