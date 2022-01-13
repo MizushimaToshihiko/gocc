@@ -1267,19 +1267,19 @@ func expr(rest **Token, tok *Token) *Node {
 func eval(node *Node) int64 {
 	printCalledFunc()
 
-	return eval2(node, nil)
+	return eval2(node)
 }
 
-func eval2(node *Node, label *string) int64 {
+func eval2(node *Node) int64 {
 	printCalledFunc()
 
 	addType(node)
 
 	switch node.Kind {
 	case ND_ADD:
-		return eval2(node.Lhs, label) + eval(node.Rhs)
+		return eval2(node.Lhs) + eval(node.Rhs)
 	case ND_SUB:
-		return eval2(node.Lhs, label) - eval(node.Rhs)
+		return eval2(node.Lhs) - eval(node.Rhs)
 	case ND_MUL:
 		return eval(node.Lhs) * eval(node.Rhs)
 	case ND_DIV:
@@ -1320,11 +1320,11 @@ func eval2(node *Node, label *string) int64 {
 		return 0
 	case ND_COND:
 		if eval(node.Cond) != 0 {
-			return eval2(node.Then, label)
+			return eval2(node.Then)
 		}
-		return eval2(node.Els, label)
+		return eval2(node.Els)
 	case ND_COMMA:
-		return eval2(node.Lhs, label)
+		return eval2(node.Lhs)
 	case ND_NOT:
 		if eval(node.Lhs) == 0 {
 			return 1
@@ -1343,7 +1343,7 @@ func eval2(node *Node, label *string) int64 {
 		}
 		return 0
 	case ND_CAST:
-		val := eval2(node.Lhs, label)
+		val := eval2(node.Lhs)
 		if isInteger(node.Ty) {
 			switch node.Ty.Sz {
 			case 1:
@@ -1355,17 +1355,17 @@ func eval2(node *Node, label *string) int64 {
 			}
 		}
 		return val
-	case ND_ADDR:
-		return evalRval(node.Lhs, label)
-	case ND_MEMBER:
-		if label == nil {
-			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
-		}
-		if node.Obj.Ty.Kind != TY_ARRAY && node.Obj.Ty.Kind == TY_FUNC {
-			panic("\n" + errorTok(node.Tok, "invalid initializer"))
-		}
-		*label = node.Obj.Name
-		return 0
+	// case ND_ADDR:
+	// 	return evalRval(node.Lhs)
+	// case ND_MEMBER:
+	// 	if label == nil {
+	// 		panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+	// 	}
+	// 	if node.Obj.Ty.Kind != TY_ARRAY && node.Obj.Ty.Kind == TY_FUNC {
+	// 		panic("\n" + errorTok(node.Tok, "invalid initializer"))
+	// 	}
+	// 	*label = node.Obj.Name
+	// 	return 0
 	case ND_NUM:
 		return node.Val
 	default:
@@ -1373,24 +1373,24 @@ func eval2(node *Node, label *string) int64 {
 	}
 }
 
-func evalRval(node *Node, label *string) int64 {
-	printCalledFunc()
+// func evalRval(node *Node, label *string) int64 {
+// 	printCalledFunc()
 
-	switch node.Kind {
-	case ND_VAR:
-		if node.Obj.IsLocal {
-			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
-		}
-		*label = node.Obj.Name
-		return 0
-	case ND_DEREF:
-		return eval2(node.Lhs, label)
-	case ND_MEMBER:
-		return evalRval(node.Lhs, label) + int64(node.Mem.Offset)
-	default:
-		panic("\n" + errorTok(node.Tok, "invalid initializer"))
-	}
-}
+// 	switch node.Kind {
+// 	case ND_VAR:
+// 		if node.Obj.IsLocal {
+// 			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+// 		}
+// 		*label = node.Obj.Name
+// 		return 0
+// 	case ND_DEREF:
+// 		return eval2(node.Lhs, label)
+// 	case ND_MEMBER:
+// 		return evalRval(node.Lhs, label) + int64(node.Mem.Offset)
+// 	default:
+// 		panic("\n" + errorTok(node.Tok, "invalid initializer"))
+// 	}
+// }
 
 // const-expr
 func constExpr(rest **Token, tok *Token) int64 {
@@ -1913,7 +1913,7 @@ func postfix(rest **Token, tok *Token) *Node {
 		if equal(tok, "[") {
 			// x[y] is short for *(x+y)
 			start := tok
-			idx := expr(&tok, tok)
+			idx := expr(&tok, tok.Next)
 			tok = skip(tok, "]")
 			node = newUnary(ND_DEREF, newAdd(node, idx, start), start)
 			continue

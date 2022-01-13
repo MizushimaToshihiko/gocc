@@ -198,6 +198,7 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = ty
 		return
 	case ND_ASSIGN:
+		fmt.Printf("node.Lhs: %#v\n\n", node.Lhs)
 		if node.Lhs.Ty.Kind == TY_ARRAY {
 			e.err = fmt.Errorf(errorTok(node.Lhs.Tok, "not an lvalue"))
 		}
@@ -254,7 +255,7 @@ func (e *errWriter) visit(node *Node) {
 		if node.Lhs.Ty.Base == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
 		}
-		if node.Ty.Kind == TY_VOID {
+		if node.Lhs.Ty.Kind == TY_VOID {
 			e.err = fmt.Errorf(errorTok(node.Tok, "dereference a void pointer"))
 		}
 
