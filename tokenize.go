@@ -113,8 +113,8 @@ func strNdUp(b []rune, len int) []rune {
 
 // Consumes the current token if it matches 's'.
 func equal(tok *Token, s string) bool {
-	defer printCalledFunc()
-	defer printCurTok(tok)
+	printCurTok(tok)
+	printCalledFunc()
 
 	return tok.Str == s
 }
@@ -122,8 +122,8 @@ func equal(tok *Token, s string) bool {
 // if the current token is an expected symbol, the read position
 // of token exceed one token.
 func skip(tok *Token, s string) *Token {
-	defer printCalledFunc()
-	defer printCurTok(tok)
+	printCurTok(tok)
+	printCalledFunc()
 
 	if !equal(tok, s) {
 		panic("\n" + errorTok(tok, "'%s' expected", string(s)))

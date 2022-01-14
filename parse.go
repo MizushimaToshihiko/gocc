@@ -1197,6 +1197,7 @@ func stmt(rest **Token, tok *Token) *Node {
 	return exprStmt(rest, tok)
 }
 
+// ここを直す? 2022/01/14
 // compound-stmt = (typedef | declaration | stmt)* "}"
 func compoundStmt(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
@@ -1209,22 +1210,19 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 	enterScope()
 
 	for !equal(tok, "}") {
-		if equal(tok, "var") {
-			cur.Next = declaration(&tok, tok.Next)
-			cur = cur.Next
-			addType(cur)
-			continue
-		}
-
 		if consume(&tok, tok, "type") {
 			tok = parseTypedef(tok)
 			tok = skip(tok, ";")
 			continue
 		}
 
-		cur.Next = stmt(&tok, tok)
+		if consume(&tok, tok, "var") { // このへんが違っているみたい?
+			cur.Next = declaration(&tok, tok)
+		} else {
+			cur.Next = stmt(&tok, tok) // このへんが違っているみたい?
+		}
 		cur = cur.Next
-		addType(cur)
+		addType(cur) //
 	}
 	leaveScope()
 
@@ -1354,7 +1352,7 @@ func eval2(node *Node) int64 {
 				return int64(uint32(val))
 			}
 		}
-		return val
+		return val // node.Ty.Sz == 8
 	// case ND_ADDR:
 	// 	return evalRval(node.Lhs)
 	// case ND_MEMBER:
@@ -1563,7 +1561,7 @@ func equality(rest **Token, tok *Token) *Node {
 		}
 
 		if equal(tok, "!=") {
-			node = newBinary(ND_NE, node, relational(&tok, tok), start)
+			node = newBinary(ND_NE, node, relational(&tok, tok.Next), start)
 			continue
 		}
 
@@ -1593,12 +1591,12 @@ func relational(rest **Token, tok *Token) *Node {
 		}
 
 		if equal(tok, ">") {
-			node = newBinary(ND_LT, shift(&tok, tok), node, start)
+			node = newBinary(ND_LT, shift(&tok, tok.Next), node, start)
 			continue
 		}
 
 		if equal(tok, ">=") {
-			node = newBinary(ND_LE, shift(&tok, tok), node, start)
+			node = newBinary(ND_LE, shift(&tok, tok.Next), node, start)
 			continue
 		}
 
@@ -1715,7 +1713,7 @@ func add(rest **Token, tok *Token) *Node {
 		}
 
 		if equal(tok, "-") {
-			node = newSub(node, mul(&tok, tok), start)
+			node = newSub(node, mul(&tok, tok.Next), start)
 			continue
 		}
 
@@ -1740,12 +1738,12 @@ func mul(rest **Token, tok *Token) *Node {
 		}
 
 		if equal(tok, "/") {
-			node = newBinary(ND_DIV, node, cast(&tok, tok), start)
+			node = newBinary(ND_DIV, node, cast(&tok, tok.Next), start)
 			continue
 		}
 
 		if equal(tok, "%") {
-			node = newBinary(ND_MOD, node, cast(&tok, tok), start)
+			node = newBinary(ND_MOD, node, cast(&tok, tok.Next), start)
 		}
 
 		*rest = tok
