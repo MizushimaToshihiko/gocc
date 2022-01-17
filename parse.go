@@ -612,9 +612,7 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	return ty
 }
 
-// type-suffix = "(" func-params
-//             | "[" array-dimensions
-//             |
+// type-suffix = ("(" func-params )?
 func typeSuffix(rest **Token, tok *Token, ty *Type) *Type {
 	printCurTok(tok)
 	printCalledFunc()
@@ -622,9 +620,6 @@ func typeSuffix(rest **Token, tok *Token, ty *Type) *Type {
 	if equal(tok, "(") {
 		return funcParams(rest, tok.Next, ty)
 	}
-	// if equal(tok, "[") {
-	// 	return arrayDimensions(rest, tok.Next, ty)
-	// }
 
 	*rest = tok
 	return ty
@@ -941,6 +936,39 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	v.InitData = buf
 }
 
+// abstruct-declarator = "*"* declspec ("(" abstruct-declarator ")")? type-suffix
+func abstructDeclarator(rest **Token, tok *Token, ty *Type) *Type {
+
+	nPtr := 0
+	for equal(tok, "*") {
+		nPtr++
+		tok = tok.Next
+	}
+
+	if isTypename(tok.Next) {
+		ty = declSpec(&tok, tok)
+	}
+
+	for i := 0; i < nPtr; i++ {
+		ty = pointerTo(abstructDeclarator(&tok, tok, ty))
+	}
+
+	if equal(tok, "(") {
+		start := tok
+		ty = abstructDeclarator(&tok, start.Next, ty)
+		tok = skip(tok, ")")
+		ty = typeSuffix(rest, tok, ty)
+		return abstructDeclarator(&tok, start.Next, ty)
+	}
+
+	return typeSuffix(rest, tok, ty)
+}
+
+// type-name = abstruct-declarator
+func typename(rest **Token, tok *Token) *Type {
+	return abstructDeclarator(rest, tok, &Type{})
+}
+
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl(unimplemented)
 // VarDecl = "var" ident type-prefix declspec ("=" expr)
 // VarSpec = ident-list (type-preffix type-specifier [ "=" expr-list ] | "=" expr-list)
@@ -1199,7 +1227,6 @@ func stmt(rest **Token, tok *Token) *Node {
 	return exprStmt(rest, tok)
 }
 
-// ここを直す? 2022/01/14
 // compound-stmt = (typedef | declaration | stmt)* "}"
 func compoundStmt(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
@@ -1218,10 +1245,10 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 			continue
 		}
 
-		if consume(&tok, tok, "var") { // このへんが違っているみたい?
+		if consume(&tok, tok, "var") {
 			cur.Next = declaration(&tok, tok)
 		} else {
-			cur.Next = stmt(&tok, tok) // このへんが違っているみたい?
+			cur.Next = stmt(&tok, tok)
 		}
 		cur = cur.Next
 		addType(cur) //
@@ -1822,10 +1849,9 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 			}
 			first = false
 
-			name := getIdent(tok)
-			memTy := readTypePreffix(&tok, tok)
+			memTy := declarator(&tok, tok)
 			mem := &Member{
-				Name: name,
+				Name: getIdent(memTy.Name),
 				Ty:   memTy,
 				Idx:  idx,
 			}
@@ -2009,6 +2035,10 @@ func primary(rest **Token, tok *Token) *Node {
 		*rest = skip(tok, ")")
 		return node
 	}
+
+	// if equal(tok, "Sizeof") && equal(tok.Next, "(") && isTypename(tok.Next.Next) {
+	// 	ty :=
+	// }
 
 	if tok.Kind == TK_IDENT {
 		// Function call
