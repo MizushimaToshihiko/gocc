@@ -66,10 +66,6 @@ var ty_short *Type = &Type{Kind: TY_SHORT, Sz: 2, Align: 2, TyName: "int16"}
 var ty_int *Type = &Type{Kind: TY_INT, Sz: 4, Align: 4, TyName: "int"}
 var ty_long *Type = &Type{Kind: TY_LONG, Sz: 8, Align: 8, TyName: "int64"}
 
-func alignTo(n, align int) int {
-	return (n + align - 1) / align * align
-}
-
 func newType(kind TypeKind, size, align int, name string) *Type {
 	return &Type{Kind: kind, Sz: size, Align: align, TyName: name}
 }

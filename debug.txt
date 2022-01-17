@@ -1,0 +1,7572 @@
+go build -o bin/gocc -v codegen.go main.go main_test.go parse.go tokenize.go type.go util.go
+bin/gocc -o testdata/tests.s testdata/tests.go
+ 0:'var' 
+3: main.main 87
+2: main.compile 36
+1: main.parse 2189
+3: main.compile 36
+2: main.parse 2193
+1: main.newGvar 383
+3: main.parse 2193
+2: main.newGvar 385
+1: main.newVar 365
+3: main.newGvar 385
+2: main.newVar 368
+1: main.pushScope 284
+3: main.compile 36
+2: main.parse 2194
+1: main.newGvar 383
+3: main.parse 2194
+2: main.newGvar 385
+1: main.newVar 365
+3: main.newGvar 385
+2: main.newVar 368
+1: main.pushScope 284
+ 0:'var' 
+3: main.parse 2198
+2: main.consume 138
+1: main.equal 117
+ 0:'var' 
+3: main.parse 2203
+2: main.consume 138
+1: main.equal 117
+ 1:'g1' 
+3: main.compile 36
+2: main.parse 2204
+1: main.globalVar 2169
+ 1:'g1' 
+3: main.globalVar 2172
+2: main.consume 138
+1: main.equal 117
+ 1:'g1' 
+3: main.parse 2204
+2: main.globalVar 2177
+1: main.declarator 558
+ 0:'int' 
+3: main.globalVar 2177
+2: main.declarator 566
+1: main.equal 117
+ 0:'int' 
+3: main.globalVar 2177
+2: main.declarator 569
+1: main.readTypePreffix 540
+ 0:'int' 
+3: main.declarator 569
+2: main.readTypePreffix 542
+1: main.equal 117
+ 0:'int' 
+3: main.declarator 569
+2: main.readTypePreffix 543
+1: main.declSpec 467
+ 0:'int' 
+3: main.declSpec 470
+2: main.consume 138
+1: main.equal 117
+ 0:'int' 
+3: main.readTypePreffix 543
+2: main.declSpec 475
+1: main.equal 117
+ 0:'int' 
+3: main.readTypePreffix 543
+2: main.declSpec 477
+1: main.equal 117
+ 0:'int' 
+3: main.readTypePreffix 543
+2: main.declSpec 479
+1: main.equal 117
+ 0:'int' 
+3: main.readTypePreffix 543
+2: main.declSpec 481
+1: main.equal 117
+ 0:'int' 
+3: main.readTypePreffix 543
+2: main.declSpec 483
+1: main.equal 117
+ 0:'int' 
+3: main.readTypePreffix 543
+2: main.declSpec 492
+1: main.findTyDef 434
+ 1:'g1' 
+3: main.parse 2204
+2: main.globalVar 2178
+1: main.getIdent 422
+3: main.parse 2204
+2: main.globalVar 2178
+1: main.getIdent 424
+3: main.parse 2204
+2: main.globalVar 2178
+1: main.newGvar 383
+3: main.globalVar 2178
+2: main.newGvar 385
+1: main.newVar 365
+3: main.newGvar 385
+2: main.newVar 368
+1: main.pushScope 284
+ 0:';' 
+3: main.parse 2204
+2: main.globalVar 2179
+1: main.equal 117
+ 0:';' 
+3: main.globalVar 2172
+2: main.consume 138
+1: main.equal 117
+ 0:'func' 
+3: main.parse 2198
+2: main.consume 138
+1: main.equal 117
+ 1:'assert' 
+3: main.compile 36
+2: main.parse 2199
+1: main.function 2132
+ 1:'assert' 
+3: main.parse 2199
+2: main.function 2134
+1: main.declarator 558
+ 0:'(' 
+3: main.function 2134
+2: main.declarator 566
+1: main.equal 117
+ 0:'(' 
+3: main.function 2134
+2: main.declarator 567
+1: main.typeSuffix 618
+ 0:'(' 
+3: main.declarator 567
+2: main.typeSuffix 620
+1: main.equal 117
+ 1:'want' 
+3: main.declarator 567
+2: main.typeSuffix 621
+1: main.funcParams 586
+ 1:'want' 
+3: main.typeSuffix 621
+2: main.funcParams 591
+1: main.equal 117
+ 1:'want' 
+3: main.typeSuffix 621
+2: main.funcParams 595
+1: main.declarator 558
+ 0:'int64' 
+3: main.funcParams 595
+2: main.declarator 566
+1: main.equal 117
+ 0:'int64' 
+3: main.funcParams 595
+2: main.declarator 569
+1: main.readTypePreffix 540
+ 0:'int64' 
+3: main.declarator 569
+2: main.readTypePreffix 542
+1: main.equal 117
+ 0:'int64' 
+3: main.declarator 569
+2: main.readTypePreffix 543
+1: main.declSpec 467
+ 0:'int64' 
+3: main.declSpec 470
+2: main.consume 138
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 475
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 477
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 479
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 481
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 483
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 485
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 492
+1: main.findTyDef 434
+ 0:',' 
+3: main.typeSuffix 621
+2: main.funcParams 591
+1: main.equal 117
+ 0:',' 
+3: main.typeSuffix 621
+2: main.funcParams 593
+1: main.skip 126
+ 0:',' 
+3: main.funcParams 593
+2: main.skip 128
+1: main.equal 117
+ 1:'ac' 
+3: main.typeSuffix 621
+2: main.funcParams 595
+1: main.declarator 558
+ 0:'int64' 
+3: main.funcParams 595
+2: main.declarator 566
+1: main.equal 117
+ 0:'int64' 
+3: main.funcParams 595
+2: main.declarator 569
+1: main.readTypePreffix 540
+ 0:'int64' 
+3: main.declarator 569
+2: main.readTypePreffix 542
+1: main.equal 117
+ 0:'int64' 
+3: main.declarator 569
+2: main.readTypePreffix 543
+1: main.declSpec 467
+ 0:'int64' 
+3: main.declSpec 470
+2: main.consume 138
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 475
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 477
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 479
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 481
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 483
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 485
+1: main.equal 117
+ 0:'int64' 
+3: main.readTypePreffix 543
+2: main.declSpec 492
+1: main.findTyDef 434
+ 0:',' 
+3: main.typeSuffix 621
+2: main.funcParams 591
+1: main.equal 117
+ 0:',' 
+3: main.typeSuffix 621
+2: main.funcParams 593
+1: main.skip 126
+ 0:',' 
+3: main.funcParams 593
+2: main.skip 128
+1: main.equal 117
+ 1:'code' 
+3: main.typeSuffix 621
+2: main.funcParams 595
+1: main.declarator 558
+ 0:'*' 
+3: main.funcParams 595
+2: main.declarator 566
+1: main.equal 117
+ 0:'*' 
+3: main.funcParams 595
+2: main.declarator 569
+1: main.readTypePreffix 540
+ 0:'*' 
+3: main.declarator 569
+2: main.readTypePreffix 542
+1: main.equal 117
+ 0:'*' 
+3: main.declarator 569
+2: main.readTypePreffix 543
+1: main.declSpec 467
+ 0:'*' 
+3: main.declSpec 470
+2: main.consume 138
+1: main.equal 117
+ 0:'byte' 
+3: main.declSpec 470
+2: main.consume 138
+1: main.equal 117
+ 0:'byte' 
+3: main.readTypePreffix 543
+2: main.declSpec 475
+1: main.equal 117
+ 0:'byte' 
+3: main.readTypePreffix 543
+2: main.declSpec 492
+1: main.findTyDef 434
+ 0:')' 
+3: main.typeSuffix 621
+2: main.funcParams 591
+1: main.equal 117
+ 1:'assert' 
+3: main.parse 2199
+2: main.function 2136
+1: main.getIdent 422
+3: main.parse 2199
+2: main.function 2136
+1: main.getIdent 424
+3: main.parse 2199
+2: main.function 2136
+1: main.newGvar 383
+3: main.function 2136
+2: main.newGvar 385
+1: main.newVar 365
+3: main.newGvar 385
+2: main.newVar 368
+1: main.pushScope 284
+ 0:'{' 
+3: main.function 2138
+2: main.consume 138
+1: main.equal 117
+ 1:'code' 
+3: main.createParamLvars 2099
+2: main.createParamLvars 2100
+1: main.getIdent 422
+3: main.createParamLvars 2099
+2: main.createParamLvars 2100
+1: main.getIdent 424
+3: main.createParamLvars 2099
+2: main.createParamLvars 2100
+1: main.newLvar 373
+3: main.createParamLvars 2100
+2: main.newLvar 375
+1: main.newVar 365
+3: main.newLvar 375
+2: main.newVar 368
+1: main.pushScope 284
+ 1:'ac' 
+3: main.createParamLvars 2099
+2: main.createParamLvars 2100
+1: main.getIdent 422
+3: main.createParamLvars 2099
+2: main.createParamLvars 2100
+1: main.getIdent 424
+3: main.createParamLvars 2099
+2: main.createParamLvars 2100
+1: main.newLvar 373
+3: main.createParamLvars 2100
+2: main.newLvar 375
+1: main.newVar 365
+3: main.newLvar 375
+2: main.newVar 368
+1: main.pushScope 284
+ 1:'want' 
+3: main.function 2147
+2: main.createParamLvars 2100
+1: main.getIdent 422
+3: main.function 2147
+2: main.createParamLvars 2100
+1: main.getIdent 424
+3: main.function 2147
+2: main.createParamLvars 2100
+1: main.newLvar 373
+3: main.createParamLvars 2100
+2: main.newLvar 375
+1: main.newVar 365
+3: main.newLvar 375
+2: main.newVar 368
+1: main.pushScope 284
+ 0:'{' 
+3: main.parse 2199
+2: main.function 2150
+1: main.skip 126
+ 0:'{' 
+3: main.function 2150
+2: main.skip 128
+1: main.equal 117
+ 0:'if' 
+3: main.parse 2199
+2: main.function 2151
+1: main.compoundStmt 1233
+ 0:'if' 
+3: main.function 2151
+2: main.compoundStmt 1235
+1: main.newNode 215
+ 0:'if' 
+3: main.function 2151
+2: main.compoundStmt 1241
+1: main.equal 117
+ 0:'if' 
+3: main.compoundStmt 1242
+2: main.consume 138
+1: main.equal 117
+ 0:'if' 
+3: main.compoundStmt 1248
+2: main.consume 138
+1: main.equal 117
+ 0:'if' 
+3: main.function 2151
+2: main.compoundStmt 1251
+1: main.stmt 1067
+ 0:'if' 
+3: main.compoundStmt 1251
+2: main.stmt 1069
+1: main.equal 117
+ 0:'if' 
+3: main.compoundStmt 1251
+2: main.stmt 1079
+1: main.equal 117
+ 0:'if' 
+3: main.compoundStmt 1251
+2: main.stmt 1080
+1: main.newNode 215
+ 1:'want' 
+3: main.compoundStmt 1251
+2: main.stmt 1081
+1: main.expr 1282
+ 1:'want' 
+3: main.stmt 1081
+2: main.expr 1284
+1: main.assign 1459
+ 1:'want' 
+3: main.expr 1284
+2: main.assign 1461
+1: main.logor 1510
+ 1:'want' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'want' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'want' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'want' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'want' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'want' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'want' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'want' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'want' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'want' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'want' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'want' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'want' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'want' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'want' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'want' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:'==' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'want' 
+3: main.postfix 1936
+2: main.primary 2049
+1: main.findVar 187
+ 1:'want' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'want' 
+3: main.postfix 1936
+2: main.primary 2056
+1: main.newVarNode 265
+ 0:'==' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:'==' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:'==' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:'==' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:'==' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:'==' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:'==' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:'==' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:'==' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:'==' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:'==' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:'==' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:'==' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:'==' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:'==' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:'==' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 1:'ac' 
+3: main.bitand 1568
+2: main.equality 1588
+1: main.relational 1605
+ 1:'ac' 
+3: main.equality 1588
+2: main.relational 1607
+1: main.shift 1640
+ 1:'ac' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'ac' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'ac' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'ac' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'ac' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'ac' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'ac' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'ac' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:'{' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'ac' 
+3: main.postfix 1936
+2: main.primary 2049
+1: main.findVar 187
+ 1:'ac' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.postfix 1936
+2: main.primary 2056
+1: main.newVarNode 265
+ 0:'{' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:'{' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:'{' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:'{' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:'{' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:'{' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:'{' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:'{' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:'{' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:'{' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:'{' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:'{' 
+3: main.equality 1588
+2: main.relational 1612
+1: main.equal 117
+ 0:'{' 
+3: main.equality 1588
+2: main.relational 1617
+1: main.equal 117
+ 0:'{' 
+3: main.equality 1588
+2: main.relational 1622
+1: main.equal 117
+ 0:'{' 
+3: main.equality 1588
+2: main.relational 1627
+1: main.equal 117
+ 0:'==' 
+3: main.bitand 1568
+2: main.equality 1588
+1: main.newBinary 222
+ 0:'{' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:'{' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:'{' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:'{' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:'{' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:'{' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:'{' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1463
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1467
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1471
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1475
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1479
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1483
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1487
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1491
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1495
+1: main.equal 117
+ 0:'{' 
+3: main.expr 1284
+2: main.assign 1499
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1081
+2: main.expr 1286
+1: main.equal 117
+ 0:'{' 
+3: main.compoundStmt 1251
+2: main.stmt 1082
+1: main.stmt 1067
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1069
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1079
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1090
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1101
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1116
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1128
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1183
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1192
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1202
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1082
+2: main.stmt 1223
+1: main.equal 117
+ 1:'printf' 
+3: main.stmt 1082
+2: main.stmt 1224
+1: main.compoundStmt 1233
+ 1:'printf' 
+3: main.stmt 1224
+2: main.compoundStmt 1235
+1: main.newNode 215
+ 1:'printf' 
+3: main.stmt 1224
+2: main.compoundStmt 1241
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1242
+2: main.consume 138
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1248
+2: main.consume 138
+1: main.equal 117
+ 1:'printf' 
+3: main.stmt 1224
+2: main.compoundStmt 1251
+1: main.stmt 1067
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1069
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1079
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1090
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1101
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1116
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1128
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1183
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1192
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1202
+1: main.equal 117
+ 0:'(' 
+3: main.compoundStmt 1251
+2: main.stmt 1213
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1223
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1227
+1: main.exprStmt 1266
+ 1:'printf' 
+3: main.stmt 1227
+2: main.exprStmt 1268
+1: main.equal 117
+ 1:'printf' 
+3: main.stmt 1227
+2: main.exprStmt 1273
+1: main.newNode 215
+ 1:'printf' 
+3: main.stmt 1227
+2: main.exprStmt 1274
+1: main.expr 1282
+ 1:'printf' 
+3: main.exprStmt 1274
+2: main.expr 1284
+1: main.assign 1459
+ 1:'printf' 
+3: main.expr 1284
+2: main.assign 1461
+1: main.logor 1510
+ 1:'printf' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'printf' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'printf' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'printf' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'printf' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'printf' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'printf' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'printf' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'printf' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'printf' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'printf' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'printf' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'printf' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'printf' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:'(' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'printf' 
+3: main.postfix 1936
+2: main.primary 2046
+1: main.funcall 1976
+ 1:'printf' 
+3: main.primary 2046
+2: main.funcall 1981
+1: main.findVar 187
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 2:'
+%s => %ld
+' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 2:'
+%s => %ld
+' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 2:'
+%s => %ld
+' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 2:'
+%s => %ld
+' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 2:'
+%s => %ld
+' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 2:'
+%s => %ld
+' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 2:'
+%s => %ld
+' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 2:'
+%s => %ld
+' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 2:'
+%s => %ld
+' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 2:'
+%s => %ld
+' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 2:'
+%s => %ld
+' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 2:'
+%s => %ld
+' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 2:'
+%s => %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 2:'
+%s => %ld
+' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 2:'
+%s => %ld
+' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 2:'
+%s => %ld
+' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 2:'
+%s => %ld
+' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 2:'
+%s => %ld
+' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+3: main.postfix 1936
+2: main.primary 2064
+1: main.newStringLiteral 413
+3: main.primary 2064
+2: main.newStringLiteral 415
+1: main.newAnonGvar 407
+3: main.newStringLiteral 415
+2: main.newAnonGvar 409
+1: main.newUniqueName 399
+3: main.newStringLiteral 415
+2: main.newAnonGvar 409
+1: main.newGvar 383
+3: main.newAnonGvar 409
+2: main.newGvar 385
+1: main.newVar 365
+3: main.newGvar 385
+2: main.newVar 368
+1: main.pushScope 284
+ 2:'
+%s => %ld
+' 
+3: main.postfix 1936
+2: main.primary 2066
+1: main.newVarNode 265
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:',' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:',' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:',' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:',' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:',' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1997
+1: main.skip 126
+ 0:',' 
+3: main.funcall 1997
+2: main.skip 128
+1: main.equal 117
+ 1:'code' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 1:'code' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 1:'code' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'code' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'code' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'code' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'code' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'code' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'code' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'code' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'code' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'code' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'code' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'code' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'code' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'code' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'code' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:',' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'code' 
+3: main.postfix 1936
+2: main.primary 2049
+1: main.findVar 187
+ 1:'code' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.postfix 1936
+2: main.primary 2056
+1: main.newVarNode 265
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:',' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:',' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:',' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:',' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:',' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1997
+1: main.skip 126
+ 0:',' 
+3: main.funcall 1997
+2: main.skip 128
+1: main.equal 117
+ 1:'ac' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 1:'ac' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 1:'ac' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'ac' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'ac' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'ac' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'ac' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'ac' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'ac' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'ac' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'ac' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'ac' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'ac' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'ac' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'ac' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'ac' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'ac' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:')' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'ac' 
+3: main.postfix 1936
+2: main.primary 2049
+1: main.findVar 187
+ 1:'ac' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.postfix 1936
+2: main.primary 2056
+1: main.newVarNode 265
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:')' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:')' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:')' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:')' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:')' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 2015
+1: main.skip 126
+ 0:')' 
+3: main.funcall 2015
+2: main.skip 128
+1: main.equal 117
+ 1:'printf' 
+3: main.primary 2046
+2: main.funcall 2017
+1: main.newNode 215
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:';' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:';' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:';' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:';' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:';' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1463
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1467
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1471
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1475
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1479
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1483
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1487
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1491
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1495
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1499
+1: main.equal 117
+ 0:';' 
+3: main.exprStmt 1274
+2: main.expr 1286
+1: main.equal 117
+ 0:';' 
+3: main.stmt 1227
+2: main.exprStmt 1275
+1: main.skip 126
+ 0:';' 
+3: main.exprStmt 1275
+2: main.skip 128
+1: main.equal 117
+ 0:'}' 
+3: main.stmt 1224
+2: main.compoundStmt 1241
+1: main.equal 117
+ 0:'else' 
+3: main.compoundStmt 1251
+2: main.stmt 1083
+1: main.equal 117
+ 0:'{' 
+3: main.compoundStmt 1251
+2: main.stmt 1084
+1: main.stmt 1067
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1069
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1079
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1090
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1101
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1116
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1128
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1183
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1192
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1202
+1: main.equal 117
+ 0:'{' 
+3: main.stmt 1084
+2: main.stmt 1223
+1: main.equal 117
+ 1:'printf' 
+3: main.stmt 1084
+2: main.stmt 1224
+1: main.compoundStmt 1233
+ 1:'printf' 
+3: main.stmt 1224
+2: main.compoundStmt 1235
+1: main.newNode 215
+ 1:'printf' 
+3: main.stmt 1224
+2: main.compoundStmt 1241
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1242
+2: main.consume 138
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1248
+2: main.consume 138
+1: main.equal 117
+ 1:'printf' 
+3: main.stmt 1224
+2: main.compoundStmt 1251
+1: main.stmt 1067
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1069
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1079
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1090
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1101
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1116
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1128
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1183
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1192
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1202
+1: main.equal 117
+ 0:'(' 
+3: main.compoundStmt 1251
+2: main.stmt 1213
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1223
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1227
+1: main.exprStmt 1266
+ 1:'printf' 
+3: main.stmt 1227
+2: main.exprStmt 1268
+1: main.equal 117
+ 1:'printf' 
+3: main.stmt 1227
+2: main.exprStmt 1273
+1: main.newNode 215
+ 1:'printf' 
+3: main.stmt 1227
+2: main.exprStmt 1274
+1: main.expr 1282
+ 1:'printf' 
+3: main.exprStmt 1274
+2: main.expr 1284
+1: main.assign 1459
+ 1:'printf' 
+3: main.expr 1284
+2: main.assign 1461
+1: main.logor 1510
+ 1:'printf' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'printf' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'printf' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'printf' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'printf' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'printf' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'printf' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'printf' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'printf' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'printf' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'printf' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'printf' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'printf' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'printf' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:'(' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'printf' 
+3: main.postfix 1936
+2: main.primary 2046
+1: main.funcall 1976
+ 1:'printf' 
+3: main.primary 2046
+2: main.funcall 1981
+1: main.findVar 187
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+3: main.postfix 1936
+2: main.primary 2064
+1: main.newStringLiteral 413
+3: main.primary 2064
+2: main.newStringLiteral 415
+1: main.newAnonGvar 407
+3: main.newStringLiteral 415
+2: main.newAnonGvar 409
+1: main.newUniqueName 399
+3: main.newStringLiteral 415
+2: main.newAnonGvar 409
+1: main.newGvar 383
+3: main.newAnonGvar 409
+2: main.newGvar 385
+1: main.newVar 365
+3: main.newGvar 385
+2: main.newVar 368
+1: main.pushScope 284
+ 2:'
+%s => %ld expeted but got %ld
+' 
+3: main.postfix 1936
+2: main.primary 2066
+1: main.newVarNode 265
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:',' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:',' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:',' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:',' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:',' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1997
+1: main.skip 126
+ 0:',' 
+3: main.funcall 1997
+2: main.skip 128
+1: main.equal 117
+ 1:'code' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 1:'code' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 1:'code' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'code' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'code' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'code' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'code' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'code' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'code' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'code' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'code' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'code' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'code' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'code' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'code' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'code' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'code' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'code' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:',' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'code' 
+3: main.postfix 1936
+2: main.primary 2049
+1: main.findVar 187
+ 1:'code' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'code' 
+3: main.postfix 1936
+2: main.primary 2056
+1: main.newVarNode 265
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:',' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:',' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:',' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:',' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:',' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1997
+1: main.skip 126
+ 0:',' 
+3: main.funcall 1997
+2: main.skip 128
+1: main.equal 117
+ 1:'want' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 1:'want' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 1:'want' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'want' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'want' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'want' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'want' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'want' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'want' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'want' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'want' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'want' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'want' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'want' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'want' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'want' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'want' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'want' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'want' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'want' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:',' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'want' 
+3: main.postfix 1936
+2: main.primary 2049
+1: main.findVar 187
+ 1:'want' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'want' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'want' 
+3: main.postfix 1936
+2: main.primary 2056
+1: main.newVarNode 265
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:',' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:',' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:',' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:',' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:',' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1997
+1: main.skip 126
+ 0:',' 
+3: main.funcall 1997
+2: main.skip 128
+1: main.equal 117
+ 1:'ac' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 1:'ac' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 1:'ac' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'ac' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'ac' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'ac' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'ac' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'ac' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'ac' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'ac' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'ac' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'ac' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'ac' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'ac' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'ac' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'ac' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'ac' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'ac' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:')' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'ac' 
+3: main.postfix 1936
+2: main.primary 2049
+1: main.findVar 187
+ 1:'ac' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'ac' 
+3: main.postfix 1936
+2: main.primary 2056
+1: main.newVarNode 265
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:')' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:')' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:')' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:')' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:')' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 2015
+1: main.skip 126
+ 0:')' 
+3: main.funcall 2015
+2: main.skip 128
+1: main.equal 117
+ 1:'printf' 
+3: main.primary 2046
+2: main.funcall 2017
+1: main.newNode 215
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:';' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:';' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:';' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:';' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:';' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1463
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1467
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1471
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1475
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1479
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1483
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1487
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1491
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1495
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1499
+1: main.equal 117
+ 0:';' 
+3: main.exprStmt 1274
+2: main.expr 1286
+1: main.equal 117
+ 0:';' 
+3: main.stmt 1227
+2: main.exprStmt 1275
+1: main.skip 126
+ 0:';' 
+3: main.exprStmt 1275
+2: main.skip 128
+1: main.equal 117
+ 1:'exit' 
+3: main.stmt 1224
+2: main.compoundStmt 1241
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1242
+2: main.consume 138
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1248
+2: main.consume 138
+1: main.equal 117
+ 1:'exit' 
+3: main.stmt 1224
+2: main.compoundStmt 1251
+1: main.stmt 1067
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1069
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1079
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1090
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1101
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1116
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1128
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1183
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1192
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1202
+1: main.equal 117
+ 0:'(' 
+3: main.compoundStmt 1251
+2: main.stmt 1213
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1223
+1: main.equal 117
+ 1:'exit' 
+3: main.compoundStmt 1251
+2: main.stmt 1227
+1: main.exprStmt 1266
+ 1:'exit' 
+3: main.stmt 1227
+2: main.exprStmt 1268
+1: main.equal 117
+ 1:'exit' 
+3: main.stmt 1227
+2: main.exprStmt 1273
+1: main.newNode 215
+ 1:'exit' 
+3: main.stmt 1227
+2: main.exprStmt 1274
+1: main.expr 1282
+ 1:'exit' 
+3: main.exprStmt 1274
+2: main.expr 1284
+1: main.assign 1459
+ 1:'exit' 
+3: main.expr 1284
+2: main.assign 1461
+1: main.logor 1510
+ 1:'exit' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'exit' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'exit' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'exit' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'exit' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'exit' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'exit' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'exit' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'exit' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'exit' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'exit' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'exit' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'exit' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'exit' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'exit' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'exit' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'exit' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'exit' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:'(' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'exit' 
+3: main.postfix 1936
+2: main.primary 2046
+1: main.funcall 1976
+ 1:'exit' 
+3: main.primary 2046
+2: main.funcall 1981
+1: main.findVar 187
+ 1:'exit' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'exit' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 3:'1' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 3:'1' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 3:'1' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 3:'1' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 3:'1' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 3:'1' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 3:'1' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 3:'1' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 3:'1' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 3:'1' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 3:'1' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 3:'1' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 3:'1' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 3:'1' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 3:'1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 3:'1' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 3:'1' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 3:'1' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 3:'1' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 3:'1' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 3:'1' 
+3: main.postfix 1936
+2: main.primary 2070
+1: main.newNum 242
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:')' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:')' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:')' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:')' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:')' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 2015
+1: main.skip 126
+ 0:')' 
+3: main.funcall 2015
+2: main.skip 128
+1: main.equal 117
+ 1:'exit' 
+3: main.primary 2046
+2: main.funcall 2017
+1: main.newNode 215
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:';' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:';' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:';' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:';' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:';' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1463
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1467
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1471
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1475
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1479
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1483
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1487
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1491
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1495
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1499
+1: main.equal 117
+ 0:';' 
+3: main.exprStmt 1274
+2: main.expr 1286
+1: main.equal 117
+ 0:';' 
+3: main.stmt 1227
+2: main.exprStmt 1275
+1: main.skip 126
+ 0:';' 
+3: main.exprStmt 1275
+2: main.skip 128
+1: main.equal 117
+ 0:'}' 
+3: main.stmt 1224
+2: main.compoundStmt 1241
+1: main.equal 117
+3: main.(*errWriter).visit 209
+2: main.usualArithConv 144
+1: main.newCast 271
+3: main.(*errWriter).visit 209
+2: main.usualArithConv 145
+1: main.newCast 271
+ 0:';' 
+3: main.function 2151
+2: main.compoundStmt 1241
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1242
+2: main.consume 138
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1248
+2: main.consume 138
+1: main.equal 117
+ 0:';' 
+3: main.function 2151
+2: main.compoundStmt 1251
+1: main.stmt 1067
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1069
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1079
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1090
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1101
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1116
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1128
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1183
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1192
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1202
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1223
+1: main.equal 117
+ 0:';' 
+3: main.compoundStmt 1251
+2: main.stmt 1227
+1: main.exprStmt 1266
+ 0:';' 
+3: main.stmt 1227
+2: main.exprStmt 1268
+1: main.equal 117
+ 0:';' 
+3: main.stmt 1227
+2: main.exprStmt 1270
+1: main.newNode 215
+ 0:'}' 
+3: main.function 2151
+2: main.compoundStmt 1241
+1: main.equal 117
+3: main.parse 2199
+2: main.function 2154
+1: main.resolveGotoLabels 2110
+ 0:';' 
+3: main.parse 2199
+2: main.function 2155
+1: main.skip 126
+ 0:';' 
+3: main.function 2155
+2: main.skip 128
+1: main.equal 117
+ 0:'func' 
+3: main.parse 2198
+2: main.consume 138
+1: main.equal 117
+ 1:'main' 
+3: main.compile 36
+2: main.parse 2199
+1: main.function 2132
+ 1:'main' 
+3: main.parse 2199
+2: main.function 2134
+1: main.declarator 558
+ 0:'(' 
+3: main.function 2134
+2: main.declarator 566
+1: main.equal 117
+ 0:'(' 
+3: main.function 2134
+2: main.declarator 567
+1: main.typeSuffix 618
+ 0:'(' 
+3: main.declarator 567
+2: main.typeSuffix 620
+1: main.equal 117
+ 0:')' 
+3: main.declarator 567
+2: main.typeSuffix 621
+1: main.funcParams 586
+ 0:')' 
+3: main.typeSuffix 621
+2: main.funcParams 591
+1: main.equal 117
+ 1:'main' 
+3: main.parse 2199
+2: main.function 2136
+1: main.getIdent 422
+3: main.parse 2199
+2: main.function 2136
+1: main.getIdent 424
+3: main.parse 2199
+2: main.function 2136
+1: main.newGvar 383
+3: main.function 2136
+2: main.newGvar 385
+1: main.newVar 365
+3: main.newGvar 385
+2: main.newVar 368
+1: main.pushScope 284
+ 0:'{' 
+3: main.function 2138
+2: main.consume 138
+1: main.equal 117
+ 0:'{' 
+3: main.parse 2199
+2: main.function 2150
+1: main.skip 126
+ 0:'{' 
+3: main.function 2150
+2: main.skip 128
+1: main.equal 117
+ 1:'g1' 
+3: main.parse 2199
+2: main.function 2151
+1: main.compoundStmt 1233
+ 1:'g1' 
+3: main.function 2151
+2: main.compoundStmt 1235
+1: main.newNode 215
+ 1:'g1' 
+3: main.function 2151
+2: main.compoundStmt 1241
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1242
+2: main.consume 138
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1248
+2: main.consume 138
+1: main.equal 117
+ 1:'g1' 
+3: main.function 2151
+2: main.compoundStmt 1251
+1: main.stmt 1067
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1069
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1079
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1090
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1101
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1116
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1128
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1183
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1192
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1202
+1: main.equal 117
+ 0:'=' 
+3: main.compoundStmt 1251
+2: main.stmt 1213
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1223
+1: main.equal 117
+ 1:'g1' 
+3: main.compoundStmt 1251
+2: main.stmt 1227
+1: main.exprStmt 1266
+ 1:'g1' 
+3: main.stmt 1227
+2: main.exprStmt 1268
+1: main.equal 117
+ 1:'g1' 
+3: main.stmt 1227
+2: main.exprStmt 1273
+1: main.newNode 215
+ 1:'g1' 
+3: main.stmt 1227
+2: main.exprStmt 1274
+1: main.expr 1282
+ 1:'g1' 
+3: main.exprStmt 1274
+2: main.expr 1284
+1: main.assign 1459
+ 1:'g1' 
+3: main.expr 1284
+2: main.assign 1461
+1: main.logor 1510
+ 1:'g1' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'g1' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'g1' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'g1' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'g1' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'g1' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'g1' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'g1' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'g1' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'g1' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'g1' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'g1' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'g1' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'g1' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'g1' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:'=' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'g1' 
+3: main.postfix 1936
+2: main.primary 2049
+1: main.findVar 187
+ 1:'g1' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.postfix 1936
+2: main.primary 2056
+1: main.newVarNode 265
+ 0:'=' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:'=' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:'=' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:'=' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:'=' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:'=' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:'=' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:'=' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:'=' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:'=' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:'=' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:'=' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:'=' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:'=' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:'=' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:'=' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:'=' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:'=' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:'=' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:'=' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:'=' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:'=' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:'=' 
+3: main.expr 1284
+2: main.assign 1463
+1: main.equal 117
+ 3:'3' 
+3: main.expr 1284
+2: main.assign 1464
+1: main.assign 1459
+ 3:'3' 
+3: main.assign 1464
+2: main.assign 1461
+1: main.logor 1510
+ 3:'3' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 3:'3' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 3:'3' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 3:'3' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 3:'3' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 3:'3' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 3:'3' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 3:'3' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 3:'3' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 3:'3' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 3:'3' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 3:'3' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 3:'3' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 3:'3' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 3:'3' 
+3: main.postfix 1936
+2: main.primary 2070
+1: main.newNum 242
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:';' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:';' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:';' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:';' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:';' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1463
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1467
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1471
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1475
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1479
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1483
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1487
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1491
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1495
+1: main.equal 117
+ 0:';' 
+3: main.assign 1464
+2: main.assign 1499
+1: main.equal 117
+ 0:'=' 
+3: main.expr 1284
+2: main.assign 1464
+1: main.newBinary 222
+ 0:';' 
+3: main.exprStmt 1274
+2: main.expr 1286
+1: main.equal 117
+ 0:';' 
+3: main.stmt 1227
+2: main.exprStmt 1275
+1: main.skip 126
+ 0:';' 
+3: main.exprStmt 1275
+2: main.skip 128
+1: main.equal 117
+3: main.(*errWriter).visit 157
+2: main.(*errWriter).visit 201
+1: main.newCast 271
+ 1:'assert' 
+3: main.function 2151
+2: main.compoundStmt 1241
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1242
+2: main.consume 138
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1248
+2: main.consume 138
+1: main.equal 117
+ 1:'assert' 
+3: main.function 2151
+2: main.compoundStmt 1251
+1: main.stmt 1067
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1069
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1079
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1090
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1101
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1116
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1128
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1183
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1192
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1202
+1: main.equal 117
+ 0:'(' 
+3: main.compoundStmt 1251
+2: main.stmt 1213
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1223
+1: main.equal 117
+ 1:'assert' 
+3: main.compoundStmt 1251
+2: main.stmt 1227
+1: main.exprStmt 1266
+ 1:'assert' 
+3: main.stmt 1227
+2: main.exprStmt 1268
+1: main.equal 117
+ 1:'assert' 
+3: main.stmt 1227
+2: main.exprStmt 1273
+1: main.newNode 215
+ 1:'assert' 
+3: main.stmt 1227
+2: main.exprStmt 1274
+1: main.expr 1282
+ 1:'assert' 
+3: main.exprStmt 1274
+2: main.expr 1284
+1: main.assign 1459
+ 1:'assert' 
+3: main.expr 1284
+2: main.assign 1461
+1: main.logor 1510
+ 1:'assert' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'assert' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'assert' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'assert' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'assert' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'assert' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'assert' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'assert' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'assert' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'assert' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'assert' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'assert' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'assert' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'assert' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'assert' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'assert' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'assert' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'assert' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'assert' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'assert' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:'(' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'assert' 
+3: main.postfix 1936
+2: main.primary 2046
+1: main.funcall 1976
+ 1:'assert' 
+3: main.primary 2046
+2: main.funcall 1981
+1: main.findVar 187
+ 1:'assert' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'assert' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 3:'3' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 3:'3' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 3:'3' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 3:'3' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 3:'3' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 3:'3' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 3:'3' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 3:'3' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 3:'3' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 3:'3' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 3:'3' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 3:'3' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 3:'3' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 3:'3' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 3:'3' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 3:'3' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 3:'3' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 3:'3' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 3:'3' 
+3: main.postfix 1936
+2: main.primary 2070
+1: main.newNum 242
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:',' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:',' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:',' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:',' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:',' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+3: main.primary 2046
+2: main.funcall 2007
+1: main.newCast 271
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1997
+1: main.skip 126
+ 0:',' 
+3: main.funcall 1997
+2: main.skip 128
+1: main.equal 117
+ 1:'g1' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 1:'g1' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 1:'g1' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'g1' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'g1' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'g1' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'g1' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'g1' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'g1' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'g1' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'g1' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'g1' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'g1' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'g1' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'g1' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'g1' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'g1' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'g1' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:',' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'g1' 
+3: main.postfix 1936
+2: main.primary 2049
+1: main.findVar 187
+ 1:'g1' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.primary 2049
+2: main.findVar 191
+1: main.equal 117
+ 1:'g1' 
+3: main.postfix 1936
+2: main.primary 2056
+1: main.newVarNode 265
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:',' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:',' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:',' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:',' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:',' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:',' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:',' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:',' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:',' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:',' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:',' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:',' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+3: main.primary 2046
+2: main.funcall 2007
+1: main.newCast 271
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:',' 
+3: main.primary 2046
+2: main.funcall 1997
+1: main.skip 126
+ 0:',' 
+3: main.funcall 1997
+2: main.skip 128
+1: main.equal 117
+ 2:'g1' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 2:'g1' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 2:'g1' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 2:'g1' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 2:'g1' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 2:'g1' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 2:'g1' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 2:'g1' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 2:'g1' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 2:'g1' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 2:'g1' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 2:'g1' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 2:'g1' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 2:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 2:'g1' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 2:'g1' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 2:'g1' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 2:'g1' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 2:'g1' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+3: main.postfix 1936
+2: main.primary 2064
+1: main.newStringLiteral 413
+3: main.primary 2064
+2: main.newStringLiteral 415
+1: main.newAnonGvar 407
+3: main.newStringLiteral 415
+2: main.newAnonGvar 409
+1: main.newUniqueName 399
+3: main.newStringLiteral 415
+2: main.newAnonGvar 409
+1: main.newGvar 383
+3: main.newAnonGvar 409
+2: main.newGvar 385
+1: main.newVar 365
+3: main.newGvar 385
+2: main.newVar 368
+1: main.pushScope 284
+ 2:'g1' 
+3: main.postfix 1936
+2: main.primary 2066
+1: main.newVarNode 265
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:')' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:')' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:')' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:')' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:')' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+3: main.primary 2046
+2: main.funcall 2007
+1: main.newCast 271
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 2015
+1: main.skip 126
+ 0:')' 
+3: main.funcall 2015
+2: main.skip 128
+1: main.equal 117
+ 1:'assert' 
+3: main.primary 2046
+2: main.funcall 2017
+1: main.newNode 215
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:';' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:';' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:';' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:';' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:';' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1463
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1467
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1471
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1475
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1479
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1483
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1487
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1491
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1495
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1499
+1: main.equal 117
+ 0:';' 
+3: main.exprStmt 1274
+2: main.expr 1286
+1: main.equal 117
+ 0:';' 
+3: main.stmt 1227
+2: main.exprStmt 1275
+1: main.skip 126
+ 0:';' 
+3: main.exprStmt 1275
+2: main.skip 128
+1: main.equal 117
+ 1:'printf' 
+3: main.function 2151
+2: main.compoundStmt 1241
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1242
+2: main.consume 138
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1248
+2: main.consume 138
+1: main.equal 117
+ 1:'printf' 
+3: main.function 2151
+2: main.compoundStmt 1251
+1: main.stmt 1067
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1069
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1079
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1090
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1101
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1116
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1128
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1183
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1192
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1202
+1: main.equal 117
+ 0:'(' 
+3: main.compoundStmt 1251
+2: main.stmt 1213
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1223
+1: main.equal 117
+ 1:'printf' 
+3: main.compoundStmt 1251
+2: main.stmt 1227
+1: main.exprStmt 1266
+ 1:'printf' 
+3: main.stmt 1227
+2: main.exprStmt 1268
+1: main.equal 117
+ 1:'printf' 
+3: main.stmt 1227
+2: main.exprStmt 1273
+1: main.newNode 215
+ 1:'printf' 
+3: main.stmt 1227
+2: main.exprStmt 1274
+1: main.expr 1282
+ 1:'printf' 
+3: main.exprStmt 1274
+2: main.expr 1284
+1: main.assign 1459
+ 1:'printf' 
+3: main.expr 1284
+2: main.assign 1461
+1: main.logor 1510
+ 1:'printf' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 1:'printf' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 1:'printf' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 1:'printf' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 1:'printf' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 1:'printf' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 1:'printf' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 1:'printf' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 1:'printf' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 1:'printf' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 1:'printf' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 1:'printf' 
+3: main.isTypename 1029
+2: main.findTyDef 437
+1: main.findVar 187
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.findTyDef 437
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 1:'printf' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 1:'printf' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 1:'printf' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+ 0:'(' 
+3: main.postfix 1936
+2: main.primary 2045
+1: main.equal 117
+ 1:'printf' 
+3: main.postfix 1936
+2: main.primary 2046
+1: main.funcall 1976
+ 1:'printf' 
+3: main.primary 2046
+2: main.funcall 1981
+1: main.findVar 187
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 1:'printf' 
+3: main.funcall 1981
+2: main.findVar 191
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.primary 2046
+2: main.funcall 2000
+1: main.assign 1459
+ 2:'
+OK
+' 
+3: main.funcall 2000
+2: main.assign 1461
+1: main.logor 1510
+ 2:'
+OK
+' 
+3: main.assign 1461
+2: main.logor 1512
+1: main.logand 1524
+ 2:'
+OK
+' 
+3: main.logor 1512
+2: main.logand 1526
+1: main.bitor 1538
+ 2:'
+OK
+' 
+3: main.logand 1526
+2: main.bitor 1540
+1: main.bitxor 1552
+ 2:'
+OK
+' 
+3: main.bitor 1540
+2: main.bitxor 1554
+1: main.bitand 1566
+ 2:'
+OK
+' 
+3: main.bitxor 1554
+2: main.bitand 1568
+1: main.equality 1580
+ 2:'
+OK
+' 
+3: main.bitand 1568
+2: main.equality 1582
+1: main.relational 1605
+ 2:'
+OK
+' 
+3: main.equality 1582
+2: main.relational 1607
+1: main.shift 1640
+ 2:'
+OK
+' 
+3: main.relational 1607
+2: main.shift 1642
+1: main.add 1732
+ 2:'
+OK
+' 
+3: main.shift 1642
+2: main.add 1734
+1: main.mul 1757
+ 2:'
+OK
+' 
+3: main.add 1734
+2: main.mul 1759
+1: main.cast 1786
+ 2:'
+OK
+' 
+3: main.mul 1759
+2: main.cast 1788
+1: main.isTypename 1018
+ 2:'
+OK
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1788
+2: main.isTypename 1025
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1788
+2: main.isTypename 1029
+1: main.findTyDef 434
+ 2:'
+OK
+' 
+3: main.mul 1759
+2: main.cast 1798
+1: main.unary 1806
+ 2:'
+OK
+' 
+3: main.cast 1798
+2: main.unary 1808
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1798
+2: main.unary 1812
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1798
+2: main.unary 1816
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1798
+2: main.unary 1820
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1798
+2: main.unary 1824
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1798
+2: main.unary 1828
+1: main.equal 117
+ 2:'
+OK
+' 
+3: main.cast 1798
+2: main.unary 1832
+1: main.postfix 1934
+ 2:'
+OK
+' 
+3: main.unary 1832
+2: main.postfix 1936
+1: main.primary 2029
+ 2:'
+OK
+' 
+3: main.postfix 1936
+2: main.primary 2033
+1: main.equal 117
+3: main.postfix 1936
+2: main.primary 2064
+1: main.newStringLiteral 413
+3: main.primary 2064
+2: main.newStringLiteral 415
+1: main.newAnonGvar 407
+3: main.newStringLiteral 415
+2: main.newAnonGvar 409
+1: main.newUniqueName 399
+3: main.newStringLiteral 415
+2: main.newAnonGvar 409
+1: main.newGvar 383
+3: main.newAnonGvar 409
+2: main.newGvar 385
+1: main.newVar 365
+3: main.newGvar 385
+2: main.newVar 368
+1: main.pushScope 284
+ 2:'
+OK
+' 
+3: main.postfix 1936
+2: main.primary 2066
+1: main.newVarNode 265
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:')' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:')' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:')' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:')' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:')' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:')' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:')' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:')' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:')' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:')' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:')' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1463
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1467
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1471
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1475
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1479
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1483
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1487
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1491
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1495
+1: main.equal 117
+ 0:')' 
+3: main.funcall 2000
+2: main.assign 1499
+1: main.equal 117
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 1995
+1: main.equal 117
+ 0:')' 
+3: main.primary 2046
+2: main.funcall 2015
+1: main.skip 126
+ 0:')' 
+3: main.funcall 2015
+2: main.skip 128
+1: main.equal 117
+ 1:'printf' 
+3: main.primary 2046
+2: main.funcall 2017
+1: main.newNode 215
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1939
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1948
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1954
+1: main.equal 117
+ 0:';' 
+3: main.unary 1832
+2: main.postfix 1960
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1764
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1769
+1: main.equal 117
+ 0:';' 
+3: main.add 1734
+2: main.mul 1774
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1739
+1: main.equal 117
+ 0:';' 
+3: main.shift 1642
+2: main.add 1744
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1647
+1: main.equal 117
+ 0:';' 
+3: main.relational 1607
+2: main.shift 1652
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1612
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1617
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1622
+1: main.equal 117
+ 0:';' 
+3: main.equality 1582
+2: main.relational 1627
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1587
+1: main.equal 117
+ 0:';' 
+3: main.bitand 1568
+2: main.equality 1592
+1: main.equal 117
+ 0:';' 
+3: main.bitxor 1554
+2: main.bitand 1569
+1: main.equal 117
+ 0:';' 
+3: main.bitor 1540
+2: main.bitxor 1555
+1: main.equal 117
+ 0:';' 
+3: main.logand 1526
+2: main.bitor 1541
+1: main.equal 117
+ 0:';' 
+3: main.logor 1512
+2: main.logand 1527
+1: main.equal 117
+ 0:';' 
+3: main.assign 1461
+2: main.logor 1513
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1463
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1467
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1471
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1475
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1479
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1483
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1487
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1491
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1495
+1: main.equal 117
+ 0:';' 
+3: main.expr 1284
+2: main.assign 1499
+1: main.equal 117
+ 0:';' 
+3: main.exprStmt 1274
+2: main.expr 1286
+1: main.equal 117
+ 0:';' 
+3: main.stmt 1227
+2: main.exprStmt 1275
+1: main.skip 126
+ 0:';' 
+3: main.exprStmt 1275
+2: main.skip 128
+1: main.equal 117
+ 0:'}' 
+3: main.function 2151
+2: main.compoundStmt 1241
+1: main.equal 117
+3: main.parse 2199
+2: main.function 2154
+1: main.resolveGotoLabels 2110
+ 0:';' 
+3: main.parse 2199
+2: main.function 2155
+1: main.skip 126
+ 0:';' 
+3: main.function 2155
+2: main.skip 128
+1: main.equal 117
+depth: 1
+depth: 1

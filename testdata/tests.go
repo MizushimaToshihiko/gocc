@@ -1,10 +1,11 @@
 var g1 int
-var g2 [4]int
-var g3 byte = 3
 
-var g4 int16 = 4
-var g5 int = 5
-var g6 int64 = 6
+// var g2 [4]int
+// var g3 byte = 3
+
+// var g4 int16 = 4
+// var g5 int = 5
+// var g6 int64 = 6
 
 // var g7 *int = &g5
 
@@ -1387,18 +1388,18 @@ func main() {
 	// 	assert(21, add6(1, 2, 3, 4, 5, 6), "add6(1, 2, 3, 4, 5, 6)")
 	// 	assert(55, fib(9), "fib(9)")
 
-	assert(0, g1, "g1")
+	// assert(0, g1, "g1")
 	g1 = 3
 	assert(3, g1, "g1")
 
-	g2[0] = 0
-	g2[1] = 1
-	g2[2] = 2
-	g2[3] = 3
-	assert(0, g2[0], "g2[0]")
-	assert(1, g2[1], "g2[1]")
-	assert(2, g2[2], "g2[2]")
-	assert(3, g2[3], "g2[3]")
+	// g2[0] = 0
+	// g2[1] = 1
+	// g2[2] = 2
+	// g2[3] = 3
+	// assert(0, g2[0], "g2[0]")
+	// assert(1, g2[1], "g2[1]")
+	// assert(2, g2[2], "g2[2]")
+	// assert(3, g2[3], "g2[3]")
 
 	// 	assert(1, subChar(7, 3, 3), "subChar(7, 3, 3)")
 
@@ -1685,10 +1686,10 @@ func main() {
 	// 	assert(3, f211(), "f211:\ntype T struct {\n\ta int\n\tb int\n}\nvar x [2]T = [2]T{{1,2},{3,4}}\nreturn x[0].a")
 	// 	assert(4, f212(), "f212:\ntype T struct {\n\ta int\n\tb int\n}\nvar x [2]T = [2]T{{1,2},{3,4}}\nreturn x[1].b")
 
-	// 	assert(3, g3, "g3")
-	// 	assert(4, g4, "g4")
-	// 	assert(5, g5, "g5")
-	// 	assert(6, g6, "g6")
+	// assert(3, g3, "g3")
+	// assert(4, g4, "g4")
+	// assert(5, g5, "g5")
+	// assert(6, g6, "g6")
 	// 	assert(5, *g7, "*g7")
 	// 	assert(0, strcmp(f213(), "abc"), "strcmp(f213(),\"abc\")")
 	// 	assert(0, strcmp(f214(), "abc"), "strcmp(f214(), \"abc\")")

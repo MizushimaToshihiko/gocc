@@ -6,6 +6,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"os"
 )
 
 type codeWriter struct {
@@ -46,6 +47,10 @@ func (c *codeWriter) pop(arg string) {
 	depth--
 }
 
+func alignTo(n, align int) int {
+	return (n + align - 1) / align * align
+}
+
 // Pushes the given node's address to the stack
 func (c *codeWriter) genAddr(node *Node) {
 	if c.err != nil {
@@ -74,6 +79,8 @@ func (c *codeWriter) genAddr(node *Node) {
 		c.println("	add $%d, %%rax", node.Mem.Offset)
 		return
 	default:
+		fmt.Fprintf(os.Stderr, "\nnode: %#v\n\n", node)
+		fmt.Fprintf(os.Stderr, "node.Lhs: %#v\n\n", node.Lhs)
 		c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
 	}
 
@@ -95,7 +102,9 @@ func (c *codeWriter) load(ty *Type) {
 	}
 
 	// When we load a char or a short value to a register, we always
-	//
+	// extend them to the size of int, so we can assume the lower half of a
+	// register for char, short and int may contain garbage. When we load
+	// a long value to a register, it simply occupies the entire register.
 	switch ty.Sz {
 	case 1:
 		c.println("	movsbl (%%rax), %%eax")
@@ -138,8 +147,6 @@ func (c *codeWriter) store(ty *Type) {
 	default:
 		c.err = fmt.Errorf("invalid size")
 	}
-
-	c.println("	push rdi")
 }
 
 func (c *codeWriter) cmpZero(ty *Type) {
@@ -313,6 +320,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_FUNCALL:
 		nargs := 0
+		fmt.Println("ND_FUNCALL: depth:", depth)
 		for arg := node.Args; arg != nil; arg = arg.Next {
 			c.genExpr(arg)
 			c.push()
@@ -323,6 +331,7 @@ func (c *codeWriter) genExpr(node *Node) {
 			c.pop(argreg64[i])
 		}
 
+		fmt.Println("ND_FUNCALL: depth:", depth)
 		c.println("	mov $0, %%rax")
 		c.println("	call %s", node.FuncName)
 		return
@@ -440,7 +449,7 @@ func (c *codeWriter) genStmt(node *Node) {
 			c.println("	je %s", node.BrkLabel)
 		}
 		c.genStmt(node.Then)
-		c.println("%s:", node.BrkLabel)
+		c.println("%s:", node.ContLabel)
 		if node.Inc != nil {
 			c.genExpr(node.Inc)
 		}
@@ -570,14 +579,13 @@ func (c *codeWriter) emitText(prog *Obj) {
 		return
 	}
 
-	c.println(".text")
-
 	for fn := prog; fn != nil; fn = fn.Next {
 		if !fn.IsFunc || !fn.IsDef || fn.Name == "printf" || fn.Name == "exit" {
 			continue
 		}
 
 		c.println("	.globl %s", fn.Name)
+		c.println("	.text")
 		c.println("%s:", fn.Name)
 		curFnInGen = fn
 
@@ -595,7 +603,8 @@ func (c *codeWriter) emitText(prog *Obj) {
 
 		// Emit code
 		c.genStmt(fn.Body)
-		assert(depth == 0, "depth == 0")
+		fmt.Println("depth:", depth)
+		// assert(depth == 0, "depth == 0")
 
 		// 'main' function returns implicitly 0.
 		if fn.Name == "main" {
