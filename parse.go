@@ -543,8 +543,10 @@ func readTypePreffix(rest **Token, tok *Token) *Type {
 		return declSpec(rest, tok)
 	}
 
+	start := tok
+
 	base, t := findBase(&tok, tok)
-	arrTy := readArr(tok, base)
+	arrTy := readArr(start, base)
 	*rest = t.Next
 	return arrTy
 }

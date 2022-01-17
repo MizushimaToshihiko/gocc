@@ -198,18 +198,6 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = ty
 		return
 	case ND_ASSIGN:
-		fmt.Printf("node: %#v\n\n", node)
-		fmt.Printf("node.Tok: %#v\n\n", node.Tok)
-		fmt.Printf("node.Lhs: %#v\n\n", node.Lhs)
-		fmt.Printf("node.Lhs.Tok: %#v\n\n", node.Lhs.Tok)
-		fmt.Printf("node.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs)
-		if node.Lhs.Lhs != nil {
-			fmt.Printf("node.Lhs.Lhs.Tok: %#v\n\n", node.Lhs.Lhs.Tok)
-			fmt.Printf("node.Lhs.Lhs.Ty: %#v\n\n", node.Lhs.Lhs.Ty)
-			if node.Lhs.Lhs.Ty != nil {
-				fmt.Printf("node.Lhs.Lhs.Ty.Name: %#v\n\n", node.Lhs.Lhs.Ty.Name)
-			}
-		}
 		if node.Lhs.Ty.Kind == TY_ARRAY {
 			e.err = fmt.Errorf(errorTok(node.Lhs.Tok, "not an lvalue"))
 		}
@@ -265,9 +253,11 @@ func (e *errWriter) visit(node *Node) {
 	case ND_DEREF:
 		if node.Lhs.Ty.Base == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
+			return
 		}
-		if node.Lhs.Ty.Kind == TY_VOID {
+		if node.Lhs.Ty.Base.Kind == TY_VOID {
 			e.err = fmt.Errorf(errorTok(node.Tok, "dereference a void pointer"))
+			return
 		}
 
 		node.Ty = node.Lhs.Ty.Base
