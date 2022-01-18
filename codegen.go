@@ -38,11 +38,19 @@ var argreg64 = []string{"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}
 var curFnInGen *Obj
 
 func (c *codeWriter) push() {
+	if c.err != nil {
+		return
+	}
+
 	c.println("	push %%rax")
 	depth++
 }
 
 func (c *codeWriter) pop(arg string) {
+	if c.err != nil {
+		return
+	}
+
 	c.println("	pop %s", arg)
 	depth--
 }
@@ -603,8 +611,7 @@ func (c *codeWriter) emitText(prog *Obj) {
 
 		// Emit code
 		c.genStmt(fn.Body)
-		fmt.Println("depth:", depth)
-		// assert(depth == 0, "depth == 0")
+		assert(depth == 0, "depth == 0")
 
 		// 'main' function returns implicitly 0.
 		if fn.Name == "main" {

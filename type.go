@@ -198,7 +198,7 @@ func (e *errWriter) visit(node *Node) {
 			e.err = fmt.Errorf(errorTok(node.Lhs.Tok, "not an lvalue"))
 		}
 		if node.Lhs.Ty.Kind != TY_STRUCT {
-			node.Lhs = newCast(node.Rhs, node.Lhs.Ty)
+			node.Rhs = newCast(node.Rhs, node.Lhs.Ty)
 		}
 		node.Ty = node.Lhs.Ty
 		return
