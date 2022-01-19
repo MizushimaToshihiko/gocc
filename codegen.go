@@ -328,7 +328,6 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_FUNCALL:
 		nargs := 0
-		fmt.Println("ND_FUNCALL: depth:", depth)
 		for arg := node.Args; arg != nil; arg = arg.Next {
 			c.genExpr(arg)
 			c.push()
@@ -339,7 +338,6 @@ func (c *codeWriter) genExpr(node *Node) {
 			c.pop(argreg64[i])
 		}
 
-		fmt.Println("ND_FUNCALL: depth:", depth)
 		c.println("	mov $0, %%rax")
 		c.println("	call %s", node.FuncName)
 		return

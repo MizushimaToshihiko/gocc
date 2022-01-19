@@ -409,11 +409,11 @@ func newAnonGvar(ty *Type) *Obj {
 	return newGvar(newUniqueName(), ty)
 }
 
-func newStringLiteral(p string, ty *Type) *Obj {
+func newStringLiteral(p []rune, ty *Type) *Obj {
 	printCalledFunc()
 
 	v := newAnonGvar(ty)
-	v.InitData = []rune(p)
+	v.InitData = p
 	return v
 }
 
@@ -495,7 +495,7 @@ func declSpec(rest **Token, tok *Token) *Type {
 	}
 
 	if ty == nil {
-		ty = ty_void
+		return ty_void
 	}
 
 	for i := 0; i < nPtr; i++ {
@@ -2061,7 +2061,7 @@ func primary(rest **Token, tok *Token) *Node {
 	}
 
 	if tok.Kind == TK_STR {
-		v := newStringLiteral(tok.Str, tok.Ty)
+		v := newStringLiteral(tok.Contents, tok.Ty)
 		*rest = tok.Next
 		return newVarNode(v, tok)
 	}
@@ -2132,7 +2132,9 @@ func function(tok *Token) *Token {
 	printCalledFunc()
 
 	ty := declarator(&tok, tok)
+	// fmt.Printf("ty: %#v\n\n", ty)
 
+	ty.RetTy = readTypePreffix(&tok, tok)
 	fn := newGvar(getIdent(ty.Name), ty)
 	fn.IsFunc = true
 	fn.IsDef = !consume(&tok, tok, ";")

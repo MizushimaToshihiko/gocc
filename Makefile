@@ -1,3 +1,5 @@
+CFLAGS=-std=c11 -g -fno-common
+
 BINARY_NAME := bin/gocc
 GOCMD=go
 GOBUILD=$(GOCMD) build
@@ -11,14 +13,14 @@ SRCS=$(wildcard *.go)
 TEST_SRCS=$(wildcard testdata/*.go)
 TESTS=$(TEST_SRCS:.go=.exe)
 
-all: $(BINARY_NAME) test
+all: build test
 
-$(BINARY_NAME): $(SRCS)
+build: $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
 testdata/%.exe: testdata/%.go
 	$(BINARY_NAME) -o testdata/$*.s $^
-	gcc -static -g -o $@ testdata/$*.s
+	$(CC) -static -o $@ testdata/$*.s -xc testdata/common
 
 test: $(TESTS)
 	for i in $^; do echo $$i; ./$$i || exit 1; echo; done
@@ -34,4 +36,4 @@ coverage: $(SRCS)
 	$(GOTEST) $^ -coverprofile=profile
 	$(GOCMD) tool cover -html=profile
 
-.PHONY: test clean fmt coverage
+.PHONY: build test clean fmt coverage

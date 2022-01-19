@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"runtime"
 )
 
 func assert(b bool, m string) {
@@ -57,19 +56,19 @@ func printTokens(tok *Token) {
 // }
 
 func printCurTok(tok *Token) {
-	fmt.Printf(" %d:'%s' \n", tok.Kind, tok.Str)
+	// fmt.Printf(" %d:'%s' \n", tok.Kind, tok.Str)
 }
 
 func printCalledFunc() {
-	pc, _, line, _ := runtime.Caller(3)
-	fn := runtime.FuncForPC(pc)
-	fmt.Printf("3: %s %d\n", fn.Name(), line)
-	pc, _, line, _ = runtime.Caller(2)
-	fn = runtime.FuncForPC(pc)
-	fmt.Printf("2: %s %d\n", fn.Name(), line)
-	pc, _, line, _ = runtime.Caller(1)
-	fn = runtime.FuncForPC(pc)
-	fmt.Printf("1: %s %d\n", fn.Name(), line)
+	// pc, _, line, _ := runtime.Caller(3)
+	// fn := runtime.FuncForPC(pc)
+	// fmt.Printf("3: %s %d\n", fn.Name(), line)
+	// pc, _, line, _ = runtime.Caller(2)
+	// fn = runtime.FuncForPC(pc)
+	// fmt.Printf("2: %s %d\n", fn.Name(), line)
+	// pc, _, line, _ = runtime.Caller(1)
+	// fn = runtime.FuncForPC(pc)
+	// fmt.Printf("1: %s %d\n", fn.Name(), line)
 }
 
 var ND = map[NodeKind]string{
