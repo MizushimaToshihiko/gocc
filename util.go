@@ -4,12 +4,6 @@ import (
 	"fmt"
 )
 
-func assert(b bool, m string) {
-	if !b {
-		panic(m)
-	}
-}
-
 func min(x, y int) int {
 	if x < y {
 		return x

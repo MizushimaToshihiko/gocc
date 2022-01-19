@@ -593,6 +593,9 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 			tok = skip(tok, ",")
 		}
 		ty2 := declarator(&tok, tok)
+		if ty2.Kind == TY_VOID {
+			panic(errorTok(tok, "type name expected"))
+		}
 
 		// "array of T" is converted tot "pointer to T" only in the parameter
 		// context. For example, *argv[] is converted to **argv by this.
@@ -604,6 +607,7 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 
 		cur.Next = copyType(ty2)
 		cur = cur.Next
+		fmt.Printf("tok: %#v\n\n", tok)
 	}
 
 	ty = funcType(ty)
@@ -2194,6 +2198,7 @@ func parse(tok *Token) *Obj {
 	// builtin libc-functions such as "printf"
 	newGvar("printf", funcType(ty_int))
 	newGvar("exit", funcType(ty_void))
+	newGvar("assert", funcType(ty_void))
 
 	for !atEof(tok) {
 

@@ -13,7 +13,7 @@ SRCS=$(wildcard *.go)
 TEST_SRCS=$(wildcard testdata/*.go)
 TESTS=$(TEST_SRCS:.go=.exe)
 
-all: build test
+all: clean build test
 
 build: $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
@@ -27,7 +27,7 @@ test: $(TESTS)
 
 clean: 
 	$(GOCLEAN)
-	rm -f bin/* testdata/*.o testdata/*.s testdata/asm* profile
+	rm -f bin/* testdata/*.o testdata/*.s testdata/*.exe profile
 
 fmt:
 	$(GOFMT) ./...

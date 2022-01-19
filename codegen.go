@@ -193,7 +193,7 @@ const i32i8 string = "movsbl %al, %eax"
 const i32i16 string = "movswl %ax, %eax"
 const i32i64 string = "movsxd %eax, %rax"
 
-var castTable [4][10]string = [4][10]string{
+var castTable [4][4]string = [4][4]string{
 	{"", "", "", i32i64},        // i8
 	{i32i8, "", "", i32i64},     // i16
 	{i32i8, i32i16, "", i32i64}, // i32
@@ -211,7 +211,7 @@ func (c *codeWriter) cast(from *Type, to *Type) {
 
 	if to.Kind == TY_BOOL {
 		c.cmpZero(from)
-		c.println("	stene %%al")
+		c.println("	setne %%al")
 		c.println("	movzx %%al, %%eax")
 		return
 	}
@@ -377,7 +377,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println("	idiv %s", di)
 
 		if node.Kind == ND_MOD {
-			c.println("	mov %%rdi, %%rax")
+			c.println("	mov %%rdx, %%rax")
 		}
 		return
 	case ND_BITAND:
@@ -502,7 +502,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		return
 	case ND_RETURN:
 		c.genExpr(node.Lhs)
-		c.println("	jmp .Lreturn.%s", curFnInGen.Name)
+		c.println("	jmp .L.return.%s", curFnInGen.Name)
 		return
 	case ND_EXPR_STMT:
 		c.genExpr(node.Lhs)
@@ -580,13 +580,23 @@ func (c *codeWriter) storeGp(r, offset, sz int) {
 	}
 }
 
+func isImplicitFn(fnName string) bool {
+	var imFn []string = []string{"printf", "exit", "assert"}
+	for _, f := range imFn {
+		if fnName == f {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *codeWriter) emitText(prog *Obj) {
 	if c.err != nil {
 		return
 	}
 
 	for fn := prog; fn != nil; fn = fn.Next {
-		if !fn.IsFunc || !fn.IsDef || fn.Name == "printf" || fn.Name == "exit" {
+		if !fn.IsFunc || !fn.IsDef || isImplicitFn(fn.Name) {
 			continue
 		}
 
@@ -609,15 +619,22 @@ func (c *codeWriter) emitText(prog *Obj) {
 
 		// Emit code
 		c.genStmt(fn.Body)
-		assert(depth == 0, "depth == 0")
+		if depth != 0 {
+			c.err = fmt.Errorf("depth is not 0")
+			return
+		}
 
 		// 'main' function returns implicitly 0.
+		// [https://www.sigbus.info/n1570#5.1.2.2.3p1] The C spec defines
+		// a special rule for the main function. Reaching the end of the
+		// main function is equivalent to returning 0, evan though the
+		// behavior is undifined for the other functions.
 		if fn.Name == "main" {
 			c.println("	mov $0, %%rax")
 		}
 
 		// Epilogue
-		c.println(".Lreturn.%s:", fn.Name)
+		c.println(".L.return.%s:", fn.Name)
 		c.println("	mov %%rbp, %%rbp")
 		c.println("	pop %%rbp")
 		c.println("	ret")
