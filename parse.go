@@ -607,7 +607,6 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 
 		cur.Next = copyType(ty2)
 		cur = cur.Next
-		fmt.Printf("tok: %#v\n\n", tok)
 	}
 
 	ty = funcType(ty)
@@ -2136,7 +2135,6 @@ func function(tok *Token) *Token {
 	printCalledFunc()
 
 	ty := declarator(&tok, tok)
-	// fmt.Printf("ty: %#v\n\n", ty)
 
 	ty.RetTy = readTypePreffix(&tok, tok)
 	fn := newGvar(getIdent(ty.Name), ty)

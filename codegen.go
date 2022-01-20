@@ -89,7 +89,11 @@ func (c *codeWriter) genAddr(node *Node) {
 	default:
 		fmt.Fprintf(os.Stderr, "\nnode: %#v\n\n", node)
 		fmt.Fprintf(os.Stderr, "node.Lhs: %#v\n\n", node.Lhs)
-		c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
+		if c.err == nil {
+			c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
+		} else {
+			c.err = fmt.Errorf(c.err.Error() + "\n" + errorTok(node.Tok, "not an lvalue"))
+		}
 	}
 
 }
@@ -123,7 +127,11 @@ func (c *codeWriter) load(ty *Type) {
 	case 8:
 		c.println("	mov (%%rax), %%rax")
 	default:
-		c.err = fmt.Errorf("invalid size")
+		if c.err == nil {
+			c.err = fmt.Errorf("invalid size")
+		} else {
+			c.err = fmt.Errorf(c.err.Error() + "\ninvalid size")
+		}
 		return
 	}
 }
@@ -153,7 +161,11 @@ func (c *codeWriter) store(ty *Type) {
 	case 8:
 		c.println("	mov %%rax, (%%rdi)")
 	default:
-		c.err = fmt.Errorf("invalid size")
+		if c.err == nil {
+			c.err = fmt.Errorf("invalid size")
+		} else {
+			c.err = fmt.Errorf(c.err.Error() + "\ninvalid size")
+		}
 	}
 }
 
@@ -419,7 +431,11 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	}
 
-	c.err = fmt.Errorf(errorTok(node.Tok, "invalid expression"))
+	if c.err == nil {
+		c.err = fmt.Errorf("invalid expression")
+	} else {
+		c.err = fmt.Errorf(c.err.Error() + "\ninvalid expression")
+	}
 }
 
 func (c *codeWriter) genStmt(node *Node) {
@@ -508,8 +524,11 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.genExpr(node.Lhs)
 		return
 	}
-
-	c.err = fmt.Errorf(errorTok(node.Tok, "invalid statement"))
+	if c.err == nil {
+		c.err = fmt.Errorf(errorTok(node.Tok, "invalid statement"))
+	} else {
+		c.err = fmt.Errorf(c.err.Error() + "\n" + errorTok(node.Tok, "invalid statement"))
+	}
 }
 
 // Assign offsets to local variables
@@ -576,7 +595,11 @@ func (c *codeWriter) storeGp(r, offset, sz int) {
 		c.println("	mov %s, %d(%%rbp)", argreg64[r], offset)
 		return
 	default:
-		c.err = fmt.Errorf("internal error")
+		if c.err == nil {
+			c.err = fmt.Errorf("internal error")
+		} else {
+			c.err = fmt.Errorf(c.err.Error() + "\ninternal error")
+		}
 	}
 }
 
@@ -620,7 +643,11 @@ func (c *codeWriter) emitText(prog *Obj) {
 		// Emit code
 		c.genStmt(fn.Body)
 		if depth != 0 {
-			c.err = fmt.Errorf("depth is not 0")
+			if c.err == nil {
+				c.err = fmt.Errorf("expected depth is 0, but %d", depth)
+			} else {
+				c.err = fmt.Errorf(c.err.Error()+"\nexpected depth is 0, but %d", depth)
+			}
 			return
 		}
 

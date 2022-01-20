@@ -32,7 +32,7 @@ func compile(arg string, w io.Writer) error {
 		return err
 	}
 
-	printTokens(tok)
+	// printTokens(tok)
 	prog := parse(tok)
 	if err != nil {
 		return err
