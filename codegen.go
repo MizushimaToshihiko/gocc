@@ -607,7 +607,7 @@ func (c *codeWriter) emitText(prog *Obj) {
 
 		// Prologue
 		c.println("	push %%rbp")
-		c.println("	mov %%rsp, %%rsp")
+		c.println("	mov %%rsp, %%rbp")
 		c.println("	sub $%d, %%rsp", fn.StackSz)
 
 		// Push arguments to the stack
@@ -635,7 +635,7 @@ func (c *codeWriter) emitText(prog *Obj) {
 
 		// Epilogue
 		c.println(".L.return.%s:", fn.Name)
-		c.println("	mov %%rbp, %%rbp")
+		c.println("	mov %%rbp, %%rsp")
 		c.println("	pop %%rbp")
 		c.println("	ret")
 	}
