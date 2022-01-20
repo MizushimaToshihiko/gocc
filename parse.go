@@ -1129,7 +1129,7 @@ func stmt(rest **Token, tok *Token) *Node {
 	}
 
 	if equal(tok, "for") {
-		if !isForClause(tok) { // for for-stmt like 'while' statement
+		if !isForClause(tok) { // for-stmt like 'while' statement
 			node := newNode(ND_FOR, tok)
 			if !equal(tok, "{") {
 				node.Cond = expr(&tok, tok)
@@ -1151,7 +1151,7 @@ func stmt(rest **Token, tok *Token) *Node {
 			contLabel = cont
 			return node
 
-		} else { // for for-clause
+		} else { // for-clause
 			node := newNode(ND_FOR, tok)
 			enterScope()
 			brk := brkLabel
@@ -1557,7 +1557,7 @@ func bitxor(rest **Token, tok *Token) *Node {
 	node := bitand(&tok, tok)
 	for equal(tok, "^") {
 		start := tok
-		node = newBinary(ND_BITXOR, node, bitand(&tok, tok), start)
+		node = newBinary(ND_BITXOR, node, bitand(&tok, tok.Next), start)
 	}
 	*rest = tok
 	return node
@@ -1571,7 +1571,7 @@ func bitand(rest **Token, tok *Token) *Node {
 	node := equality(&tok, tok)
 	for equal(tok, "&") {
 		start := tok
-		node = newBinary(ND_BITAND, node, equality(&tok, tok), start)
+		node = newBinary(ND_BITAND, node, equality(&tok, tok.Next), start)
 	}
 	*rest = tok
 	return node
@@ -1662,7 +1662,7 @@ func shift(rest **Token, tok *Token) *Node {
 	}
 }
 
-// `+` operator is overloaded to perform the pointer arithmetic.
+// In C, `+` operator is overloaded to perform the pointer arithmetic.
 // If p is a pointer, p+n add not n but sizeof(*p)*n to the value of p,
 // sothat p+n pointes to the location n elements (not bytes) ahead of p.
 // In other words, we need to scale an integer value before adding to a
@@ -1789,12 +1789,12 @@ func cast(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	if isTypename(tok) {
-		start := tok
 		ty := readTypePreffix(&tok, tok)
+		start := tok
 		tok = skip(tok, "(")
 		node := newCast(cast(rest, tok), ty)
 		node.Tok = start
-		tok = skip(tok, ")")
+		tok = skip(tok.Next, ")")
 		return node
 	}
 
@@ -1979,7 +1979,7 @@ func funcall(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	start := tok
-	tok = tok.Next.Next
+	tok = tok.Next.Next // skip '('
 
 	sc := findVar(start)
 	if sc == nil {
@@ -1996,6 +1996,7 @@ func funcall(rest **Token, tok *Token) *Node {
 	cur := head
 
 	for !equal(tok, ")") {
+		fmt.Printf("funcall(): tok: %#v\n\n", tok)
 		if cur != head {
 			tok = skip(tok, ",")
 		}

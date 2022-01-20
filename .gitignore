@@ -2,3 +2,4 @@ bin/*
 testdata/*
 !testdata/*.go
 profile
+debug.txt

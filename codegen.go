@@ -249,7 +249,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println("	mov $%d, %%rax", node.Val)
 		return
 	case ND_NEG:
-		c.genAddr(node.Lhs)
+		c.genExpr(node.Lhs)
 		c.println("	neg %%rax")
 		return
 	case ND_VAR, ND_MEMBER:
