@@ -285,7 +285,7 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_MEMZERO:
 		// `rep stosb` is equivalent to `memset(%rdi, %al, %rcx)`.
 		c.println("	mov $%d, %%rcx", node.Obj.Ty.Sz)
-		c.println("	lea %d(%%rdp), %%rdi", node.Obj.Offset)
+		c.println("	lea %d(%%rbp), %%rdi", node.Obj.Offset)
 		c.println("	mov $0, %%al")
 		c.println("	rep stosb")
 		return

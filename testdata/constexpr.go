@@ -1,12 +1,12 @@
 package test
 
 func main() {
-	// var i int = 0
-	// switch 3 {
-	// case 5 - 2 + 0*3:
-	// 	i++
-	// }
-	// assert(1, i, "var i int =0; switch(3) { case 5-2+0*3: i++; }")
+	var i int = 0
+	switch 3 {
+	case 5 - 2 + 0*3:
+		i++
+	}
+	assert(1, i, "var i int =0; switch(3) { case 5-2+0*3: i++; }")
 	// var x [1 + 1]int
 	// assert(8, Sizeof(x), "var x [1+1]int; Sizeof(x)")
 	// assert(6, ({ char x[8-2]; Sizeof(x); }));

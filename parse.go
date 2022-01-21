@@ -1092,12 +1092,19 @@ func stmt(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "switch") {
 		node := newNode(ND_SWITCH, tok)
-		node.Cond = expr(&tok, tok)
+		node.Cond = expr(&tok, tok.Next)
 
 		sw := curSwitch
 		curSwitch = node
+
+		var brk string = brkLabel
+		node.BrkLabel = newUniqueName()
+		brkLabel = node.BrkLabel
+
 		node.Then = stmt(rest, tok)
+
 		curSwitch = sw
+		brkLabel = brk
 		return node
 	}
 
