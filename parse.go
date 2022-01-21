@@ -1488,6 +1488,10 @@ func assign(rest **Token, tok *Token) *Node {
 	}
 
 	if equal(tok, "%=") {
+		return toAssign(newBinary(ND_MOD, node, assign(rest, tok.Next), tok))
+	}
+
+	if equal(tok, "&=") {
 		return toAssign(newBinary(ND_BITAND, node, assign(rest, tok.Next), tok))
 	}
 
@@ -2203,6 +2207,12 @@ func parse(tok *Token) *Obj {
 	newGvar("assert", funcType(ty_void))
 
 	for !atEof(tok) {
+
+		// package statement 読み飛ばし
+		if consume(&tok, tok, "package") {
+			tok = tok.Next.Next
+			continue
+		}
 
 		if consume(&tok, tok, "func") {
 			tok = function(tok)

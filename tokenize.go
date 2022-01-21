@@ -195,7 +195,7 @@ func startsWithReserved(p string) string {
 
 	kw := []string{
 		"if", "else", "for", "type", "var", "func", "struct",
-		"goto", "switch", "case", "default",
+		"goto", "switch", "case", "default", "package", "import",
 		"true", "false",
 		"nil", "Sizeof"}
 	// unimplemented:
@@ -215,7 +215,8 @@ func startsWithReserved(p string) string {
 
 	// Multi-letter punctuator
 	ops := []string{"<<=", ">>=", "==", "!=", "<=", ">=", "->", "++", "--",
-		"<<", ">>", "+=", "-=", "*=", "/=", ":=", "&&", "||"}
+		"<<", ">>", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=",
+		":=", "&&", "||"}
 
 	for _, op := range ops {
 		if startsWith(p, op) {
