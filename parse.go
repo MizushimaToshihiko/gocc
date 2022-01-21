@@ -1275,7 +1275,11 @@ func exprStmt(rest **Token, tok *Token) *Node {
 
 	node := newNode(ND_EXPR_STMT, tok)
 	node.Lhs = expr(&tok, tok)
-	*rest = skip(tok, ";")
+	if equal(tok, ";") {
+		*rest = skip(tok, ";")
+	} else {
+		*rest = skip(tok.Next, ";")
+	}
 	return node
 }
 
@@ -1802,7 +1806,6 @@ func cast(rest **Token, tok *Token) *Node {
 }
 
 // unary   = ("+" | "-" | "*" | "&" | "!")? cast
-//         | "Sizeof" unary
 //         | postfix
 func unary(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
@@ -1996,7 +1999,7 @@ func funcall(rest **Token, tok *Token) *Node {
 	cur := head
 
 	for !equal(tok, ")") {
-		fmt.Printf("funcall(): tok: %#v\n\n", tok)
+		// fmt.Printf("funcall(): tok: %#v\n\n", tok)
 		if cur != head {
 			tok = skip(tok, ",")
 		}
