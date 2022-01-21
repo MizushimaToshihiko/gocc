@@ -1,5 +1,6 @@
 bin/*
 testdata/*
 !testdata/*.go
+!testdata/common
 profile
 debug.txt
