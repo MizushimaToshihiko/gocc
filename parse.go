@@ -2033,11 +2033,17 @@ func funcall(rest **Token, tok *Token) *Node {
 	return node
 }
 
-// primary = "(" expr ")" | ident args? | num
-// args = "(" ")"
+// primary = "(" expr ")"
+//         | "sizeof" "(" type-name ")"
+//         | "sizeof" unary
+//         | ident func-args?
+//         | str
+//         | num
 func primary(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
+
+	start := tok
 
 	// if the next token is '(', the program must be
 	// "(" expr ")"
@@ -2047,9 +2053,17 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
-	// if equal(tok, "Sizeof") && equal(tok.Next, "(") && isTypename(tok.Next.Next) {
-	// 	ty :=
-	// }
+	if equal(tok, "Sizeof") && equal(tok.Next, "(") && isTypename(tok.Next.Next) {
+		ty := readTypePreffix(&tok, tok.Next.Next)
+		*rest = skip(tok, ")")
+		return newNum(int64(ty.Sz), start)
+	}
+
+	if equal(tok, "Sizeof") {
+		node := unary(rest, tok.Next)
+		addType(node)
+		return newNum(int64(node.Ty.Sz), tok)
+	}
 
 	if tok.Kind == TK_IDENT {
 		// Function call

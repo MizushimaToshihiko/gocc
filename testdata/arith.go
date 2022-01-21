@@ -52,8 +52,8 @@ func main() {
 	assert(1, !0, "!0")
 	assert(1, !byte(0), "!byte(0)")
 	assert(3, int64(3), "int64(3)")
-	// ASSERT(4, sizeof(!(char)0));
-	// ASSERT(4, sizeof(!(long)0));
+	assert(4, Sizeof(!byte(0)), "Sizeof(!byte(0))")
+	assert(4, Sizeof(!int64(0)), "Sizeof(!int64(0))")
 
 	assert(-1, ^0, "^0")
 	assert(0, ^-1, "^-1")
