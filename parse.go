@@ -1797,7 +1797,8 @@ func mul(rest **Token, tok *Token) *Node {
 	}
 }
 
-// cast = type-name "(" cast ")" | unary
+// cast = type-name "(" cast ")"
+//      | unary
 func cast(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -1806,9 +1807,9 @@ func cast(rest **Token, tok *Token) *Node {
 		ty := readTypePreffix(&tok, tok)
 		start := tok
 		tok = skip(tok, "(")
-		node := newCast(cast(rest, tok), ty)
+		node := newCast(cast(&tok, tok), ty)
 		node.Tok = start
-		tok = skip(tok.Next, ")")
+		tok = skip(tok, ")")
 		*rest = tok
 		return node
 	}
