@@ -1173,7 +1173,6 @@ func stmt(rest **Token, tok *Token) *Node {
 			if !equal(tok.Next, ";") {
 				node.Init = exprStmt(&tok, tok.Next)
 			}
-			// tok = skip(tok, ";")
 			if !equal(tok, ";") {
 				node.Cond = expr(&tok, tok)
 			}
@@ -1184,6 +1183,7 @@ func stmt(rest **Token, tok *Token) *Node {
 			tok = skip(tok, "{")
 
 			node.Then = stmt(rest, tok)
+			*rest = skip(*rest, "}")
 
 			leaveScope()
 			brkLabel = brk

@@ -33,17 +33,17 @@ func main() {
 		j = i + j
 	}
 	assert(55, j, "for i=0; i<=10; i=i+1 {j=i+j;}")
-	for i < 10 {
-		i = i + 1
-	}
-	assert(10, i, "for i<10 {i=i+1;}")
+	// for i < 10 {
+	// 	i = i + 1
+	// }
+	// assert(10, i, "for i<10 {i=i+1;}")
 
-	i = 1
-	{
-		i = 2
-	}
-	i = 3
-	assert(3, i, "i = 1;{i = 2};i = 3")
+	// i = 1
+	// {
+	// 	i = 2
+	// }
+	// i = 3
+	// assert(3, i, "i = 1;{i = 2};i = 3")
 	// assert(5, ({ ;;; 5; }));
 
 	// assert(10, ({ int i=0; while(i<10) i=i+1; i; }));
