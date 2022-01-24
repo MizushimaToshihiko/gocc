@@ -1146,6 +1146,7 @@ func stmt(rest **Token, tok *Token) *Node {
 				node.Cond = expr(&tok, tok.Next)
 			} else {
 				node.Cond = newNum(1, tok)
+				tok = tok.Next
 			}
 
 			brk := brkLabel
@@ -1177,7 +1178,6 @@ func stmt(rest **Token, tok *Token) *Node {
 				tok = skip(tok.Next, ";")
 			}
 			if !equal(tok, ";") {
-				fmt.Printf("tok: %#v\n\n", tok)
 				node.Cond = expr(&tok, tok)
 			}
 			tok = skip(tok, ";")
