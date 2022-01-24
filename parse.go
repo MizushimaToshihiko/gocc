@@ -1034,6 +1034,8 @@ func isTypename(tok *Token) bool {
 	return findTyDef(tok) != nil
 }
 
+// isForClause returns true and exceeds the next token, if ";" will be found
+// between "for" and "{".
 func isForClause(tok *Token) bool {
 	printCurTok(tok)
 	printCalledFunc()
@@ -1140,12 +1142,11 @@ func stmt(rest **Token, tok *Token) *Node {
 	if equal(tok, "for") {
 		if !isForClause(tok) { // for-stmt like 'while' statement
 			node := newNode(ND_FOR, tok)
-			if !equal(tok, "{") {
-				node.Cond = expr(&tok, tok)
+			if !equal(tok.Next, "{") {
+				node.Cond = expr(&tok, tok.Next)
 			} else {
 				node.Cond = newNum(1, tok)
 			}
-			tok = skip(tok, "{")
 
 			brk := brkLabel
 			cont := contLabel
@@ -1172,18 +1173,19 @@ func stmt(rest **Token, tok *Token) *Node {
 
 			if !equal(tok.Next, ";") {
 				node.Init = exprStmt(&tok, tok.Next)
+			} else {
+				tok = skip(tok.Next, ";")
 			}
 			if !equal(tok, ";") {
+				fmt.Printf("tok: %#v\n\n", tok)
 				node.Cond = expr(&tok, tok)
 			}
 			tok = skip(tok, ";")
 			if !equal(tok, "{") {
 				node.Inc = expr(&tok, tok)
 			}
-			tok = skip(tok, "{")
 
 			node.Then = stmt(rest, tok)
-			*rest = skip(*rest, "}")
 
 			leaveScope()
 			brkLabel = brk
@@ -1253,7 +1255,6 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 	for !equal(tok, "}") {
 		if consume(&tok, tok, "type") {
 			tok = parseTypedef(tok)
-			tok = skip(tok, ";")
 			continue
 		}
 
