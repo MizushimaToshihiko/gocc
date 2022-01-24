@@ -425,23 +425,6 @@ func tokenize(filename string) (*Token, error) {
 			continue
 		}
 
-		// keyword or multi-letter punctuator
-		kw := startsWithReserved(string(userInput[curIdx:]))
-		if kw != "" {
-			cur = newToken(TK_RESERVED, cur, kw, len(kw))
-			curIdx += len(kw)
-			cur = addSemiColn(cur)
-			continue
-		}
-
-		// single-letter punctuator
-		if strings.Contains("+-()*/<>=;{},&[].,!|^:?%", string(userInput[curIdx])) {
-			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
-			curIdx++
-			cur = addSemiColn(cur)
-			continue
-		}
-
 		// identifier
 		// if 'userInput[cutIdx]' is alphabets, it makes a token of TK_IDENT type.
 		if isIdent1(userInput[curIdx]) {
@@ -485,6 +468,23 @@ func tokenize(filename string) (*Token, error) {
 			if err != nil {
 				return nil, err
 			}
+			cur = addSemiColn(cur)
+			continue
+		}
+
+		// keyword or multi-letter punctuator
+		kw := startsWithReserved(string(userInput[curIdx:]))
+		if kw != "" {
+			cur = newToken(TK_RESERVED, cur, kw, len(kw))
+			curIdx += len(kw)
+			cur = addSemiColn(cur)
+			continue
+		}
+
+		// single-letter punctuator
+		if strings.Contains("+-()*/<>=;{},&[].,!|^:?%", string(userInput[curIdx])) {
+			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
+			curIdx++
 			cur = addSemiColn(cur)
 			continue
 		}
