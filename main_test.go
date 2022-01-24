@@ -16,6 +16,7 @@ func TestGetTypeName(t *testing.T) {
 		"case4": {"byte", "byte", TY_BYTE},
 		"case5": {"string", "string", TY_PTR},
 		"case6": {"*string", "pointer", TY_PTR},
+		"case7": {"[1 + 1]int", "[2]int", TY_ARRAY},
 	}
 
 	for name, c := range cases {

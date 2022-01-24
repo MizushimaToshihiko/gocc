@@ -1805,7 +1805,8 @@ func cast(rest **Token, tok *Token) *Node {
 		tok = skip(tok, "(")
 		node := newCast(cast(rest, tok), ty)
 		node.Tok = start
-		*rest = skip(tok.Next, ")")
+		tok = skip(tok.Next, ")")
+		*rest = tok
 		return node
 	}
 
@@ -2064,9 +2065,10 @@ func primary(rest **Token, tok *Token) *Node {
 		return newNum(int64(ty.Sz), start)
 	}
 
-	if equal(tok, "Sizeof") {
-		node := unary(rest, tok.Next)
+	if equal(tok, "Sizeof") && equal(tok.Next, "(") {
+		node := unary(rest, tok.Next.Next)
 		addType(node)
+		*rest = skip(*rest, ")")
 		return newNum(int64(node.Ty.Sz), tok)
 	}
 
