@@ -490,9 +490,11 @@ func (c *codeWriter) genStmt(node *Node) {
 			}
 			c.println("	cmp $%d, %s", n.Val, reg)
 			c.println("	je %s", n.Lbl)
+			n.CaseEndLbl = node.BrkLabel
 		}
 
 		if node.DefCase != nil {
+			node.DefCase.CaseEndLbl = node.BrkLabel
 			c.println("	jmp %s", node.DefCase.Lbl)
 		}
 
@@ -503,6 +505,7 @@ func (c *codeWriter) genStmt(node *Node) {
 	case ND_CASE:
 		c.println("%s:", node.Lbl)
 		c.genStmt(node.Lhs)
+		c.println("	jmp %s", node.CaseEndLbl)
 		return
 	case ND_BLOCK:
 		for n := node.Body; n != nil; n = n.Next {

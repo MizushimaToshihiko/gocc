@@ -146,7 +146,7 @@ type Node struct {
 	CaseNext   *Node
 	DefCase    *Node
 	CaseLbl    int
-	CaseEndLbl int
+	CaseEndLbl string
 
 	Obj *Obj  // used if kind == ND_VAR
 	Val int64 // used if kind == ND_NUM

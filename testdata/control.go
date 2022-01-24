@@ -137,17 +137,83 @@ foo:
 		}
 	}
 	assert(3, i, "i=0; for ;i<10;i++ { for ;; {break;}; if i == 3 {break;} } i")
-	// assert(4, ({ int i=0; while (1) { while(1) break; if (i++ == 3) break; } i; }));
-
-	// assert(10, ({ int i=0; int j=0; for (;i<10;i++) { if (i>5) continue; j++; } i; }));
-	// assert(6, ({ int i=0; int j=0; for (;i<10;i++) { if (i>5) continue; j++; } j; }));
-	// assert(10, ({ int i=0; int j=0; for(;!i;) { for (;j!=10;j++) continue; break; } j; }));
-	// assert(11, ({ int i=0; int j=0; while (i++<10) { if (i>5) continue; j++; } i; }));
-	// assert(5, ({ int i=0; int j=0; while (i++<10) { if (i>5) continue; j++; } j; }));
-	// assert(11, ({ int i=0; int j=0; while(!i) { while (j++!=10) continue; break; } j; }));
-
-	// assert(5, ({ int i=0; switch(0) { case 0:i=5;break; case 1:i=6;break; case 2:i=7;break; } i; }));
-	// assert(6, ({ int i=0; switch(1) { case 0:i=5;break; case 1:i=6;break; case 2:i=7;break; } i; }));
+	i = 0
+	j = 0
+	for ; i < 10; i++ {
+		if i > 5 {
+			continue
+		}
+		j++
+	}
+	assert(10, i, "i=0; j=0; for ;i<10;i++ { if i>5 {continue;}; j++; }; i")
+	i = 0
+	j = 0
+	for ; i < 10; i++ {
+		if i > 5 {
+			continue
+		}
+		j++
+	}
+	assert(6, j, "i=0; j=0; for ;i<10;i++ { if i>5 {continue;}; j++; } j")
+	i = 0
+	j = 0
+	for !i {
+		for ; j != 10; j++ {
+			continue
+		}
+		break
+	}
+	assert(10, j, "i=0; j=0; for ;!i; { for ;j!=10;j++ {continue;}; break; } j")
+	i = 0
+	j = 0
+	for i < 10 {
+		i++
+		if i > 5 {
+			continue
+		}
+		j++
+	}
+	assert(10, i, "i=0; j=0; for i<10 {i++; if i>5 {continue;}; j++; } i")
+	i = 0
+	j = 0
+	for i < 10 {
+		i++
+		if i > 5 {
+			continue
+		}
+		j++
+	}
+	assert(5, j, "i=0; j=0; for i<10 {i++; if i>5 {continue;}; j++; } j")
+	i = 0
+	j = 0
+	for !i {
+		for j != 10 {
+			j++
+			continue
+		}
+		break
+	}
+	assert(10, j, "i=0; j=0; for !i { for j!=10 {j++; continue;}; break; } j")
+	i = 0
+	switch 0 {
+	case 0:
+		i = 5
+	case 1:
+		i = 6
+	case 2:
+		i = 7
+	}
+	assert(5, i, "i=0; switch 0 { case 0:i=5; case 1:i=6; case 2:i=7; } i")
+	i = 0
+	switch 1 {
+	case 0:
+		i = 5
+	case 1:
+		i = 6
+	case 2:
+		i = 7
+	}
+	assert(6, i, "i=0; switch 0 { case 0:i=5; case 1:i=6; case 2:i=7; } i")
 	// assert(7, ({ int i=0; switch(2) { case 0:i=5;break; case 1:i=6;break; case 2:i=7;break; } i; }));
 	// assert(0, ({ int i=0; switch(3) { case 0:i=5;break; case 1:i=6;break; case 2:i=7;break; } i; }));
 	// assert(5, ({ int i=0; switch(0) { case 0:i=5;break; default:i=7; } i; }));
