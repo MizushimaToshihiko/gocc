@@ -510,7 +510,8 @@ func findBase(rest **Token, tok *Token) (*Type, *Token) {
 	printCurTok(tok)
 	printCalledFunc()
 
-	for !equal(tok, "*") && !isTypename(tok) {
+	for !(equal(tok, "*") && isTypename(tok.Next)) &&
+		!(isTypename(tok) && !equal(tok.Next, "(")) {
 		tok = tok.Next
 	}
 	ty := declSpec(rest, tok)
@@ -564,10 +565,11 @@ func declarator(rest **Token, tok *Token) *Type {
 
 	var ty *Type
 	if equal(tok.Next, "(") {
-		ty = typeSuffix(rest, tok.Next, nil)
+		ty = typeSuffix(&tok, tok.Next, nil)
 	} else {
-		ty = readTypePreffix(rest, tok.Next)
+		ty = readTypePreffix(&tok, tok.Next)
 	}
+	*rest = tok
 	ty.Name = name
 	return ty
 }

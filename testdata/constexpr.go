@@ -1,42 +1,64 @@
 package test
 
 func main() {
-	var i int = 0
-	switch 3 {
-	case 5 - 2 + 0*3:
-		i++
-	}
-	assert(1, i, "var i int =0; switch(3) { case 5-2+0*3: i++; }")
-	// var x [1 + 1]int
-	// assert(8, Sizeof(x), "var x [1+1]int; Sizeof(x)")
-	// assert(6, ({ char x[8-2]; Sizeof(x); }));
-	// assert(6, ({ char x[2*3]; Sizeof(x); }));
-	// assert(3, ({ char x[12/4]; Sizeof(x); }));
-	// assert(2, ({ char x[12%10]; Sizeof(x); }));
+	// var i int = 0
+	// switch 3 {
+	// case 5 - 2 + 0*3:
+	// 	i++
+	// }
+	// assert(1, i, "var i int =0; switch(3) { case 5-2+0*3: i++; }")
+	// var x1 [1 + 1]int
+	// assert(8, Sizeof(x1), "var x [1+1]int; Sizeof(x1)")
+	// var x2 [8 - 2]byte
+	// assert(6, Sizeof(x2), "var x [8-2]byte; Sizeof(x2)")
+	// var x3 [2 * 3]byte
+	// assert(6, Sizeof(x3), "var x [2*3]byte; Sizeof(x3)")
+	var x4 [12 / 4]byte
+	assert(3, Sizeof(x4), "var x4 [12/4]byte; Sizeof(x4)")
+	var x5 [12 % 10]byte
+	assert(2, Sizeof(x5), "var x5 [12%10]byte; Sizeof(x5)")
+
 	// assert(0b100, ({ char x[0b110&0b101]; Sizeof(x); }));
 	// assert(0b111, ({ char x[0b110|0b101]; Sizeof(x); }));
 	// assert(0b110, ({ char x[0b111^0b001]; Sizeof(x); }));
-	// assert(4, ({ char x[1<<2]; Sizeof(x); }));
-	// assert(2, ({ char x[4>>1]; Sizeof(x); }));
-	// assert(2, ({ char x[(1==1)+1]; Sizeof(x); }));
-	// assert(1, ({ char x[(1!=1)+1]; Sizeof(x); }));
-	// assert(1, ({ char x[(1<1)+1]; Sizeof(x); }));
-	// assert(2, ({ char x[(1<=1)+1]; Sizeof(x); }));
-	// assert(2, ({ char x[1?2:3]; Sizeof(x); }));
-	// assert(3, ({ char x[0?2:3]; Sizeof(x); }));
-	// assert(3, ({ char x[(1,3)]; Sizeof(x); }));
-	// assert(2, ({ char x[!0+1]; Sizeof(x); }));
-	// assert(1, ({ char x[!1+1]; Sizeof(x); }));
-	// assert(2, ({ char x[~-3]; Sizeof(x); }));
-	// assert(2, ({ char x[(5||6)+1]; Sizeof(x); }));
-	// assert(1, ({ char x[(0||0)+1]; Sizeof(x); }));
-	// assert(2, ({ char x[(1&&1)+1]; Sizeof(x); }));
-	// assert(1, ({ char x[(1&&0)+1]; Sizeof(x); }));
-	// assert(3, ({ char x[(int)3]; Sizeof(x); }));
-	// assert(15, ({ char x[(char)0xffffff0f]; Sizeof(x); }));
-	// assert(0x10f, ({ char x[(short)0xffff010f]; Sizeof(x); }));
-	// assert(4, ({ char x[(int)0xfffffffffff+5]; Sizeof(x); }));
-	// assert(8, ({ char x[(int*)0+2]; Sizeof(x); }));
+
+	var x6 [1 << 2]byte
+	assert(4, Sizeof(x6), "var x6 [1<<2]byte; Sizeof(x6)")
+	var x7 [4 >> 1]byte
+	assert(2, Sizeof(x7), "var x7 [4>>1]byte; Sizeof(x7)")
+	var x8 [(1 == 1) + 1]byte
+	assert(2, Sizeof(x8), "var x8 [(1==1)+1]byte; Sizeof(x8)")
+	var x9 [(1 != 1) + 1]byte
+	assert(1, Sizeof(x9), "var x9 [(1!=1)+1]byte; Sizeof(x9)")
+	var x10 [(1 < 1) + 1]byte
+	assert(1, Sizeof(x10), "var x10 [(1<1)+1]byte; Sizeof(x10)")
+	var x11 [(1 <= 1) + 1]byte
+	assert(2, Sizeof(x11), "var x11 [(1<=1)+1]byte; Sizeof(x11)")
+	// var x14 [(1,3)]byte
+	// assert(3, Sizeof(x14), "var x14 [(1,3)]byte; Sizeof(x14)")
+	var x15 [!0 + 1]byte
+	assert(2, Sizeof(x15), "var x15 [!0+1]byte; Sizeof(x15)")
+	var x16 [!1 + 1]byte
+	assert(1, Sizeof(x16), "var x16 [!1+1]byte; Sizeof(x16)")
+	var x17 [^-3]byte
+	assert(2, Sizeof(x17), "var x17 [^-3]byte; Sizeof(x17)")
+	var x18 [(5 || 6) + 1]byte
+	assert(2, Sizeof(x18), "var x18 [(5||6)+1]byte; Sizeof(x18)")
+	var x19 [(0 || 0) + 1]byte
+	assert(1, Sizeof(x19), "var x19 [(0||0)+1]byte; Sizeof(x19)")
+	var x20 [(1 && 1) + 1]byte
+	assert(2, Sizeof(x20), "var x20 [(1&&1)+1]byte; Sizeof(x20)")
+	var x21 [(1 && 0) + 1]byte
+	assert(1, Sizeof(x21), "var x21 [(1&&0)+1]byte; Sizeof(x21)")
+	var x22 [int(3)]byte
+	assert(3, Sizeof(x22), "var x22 [int(3)]byte; Sizeof(x22)")
+	// assert(15, ({ char x23 [(char)0xffffff0f]; Sizeof(x23); }));
+	// assert(0x10f, ({ char x24 [(short)0xffff010f]; Sizeof(x24); }));
+	// assert(4, ({ char x25 [(int)0xfffffffffff+5]; Sizeof(x25); }));
+
+	// Below is not supported in Go.
+	// var x26 [(*int)(0) + 2]byte
+	// assert(8, Sizeof(x26), "var x26 [(int*)0+2]byte; Sizeof(x26)")
 	// assert(12, ({ char x[(int*)16-1]; Sizeof(x); }));
 	// assert(3, ({ char x[(int*)16-(int*)4]; Sizeof(x); }));
 

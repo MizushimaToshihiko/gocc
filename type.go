@@ -109,13 +109,14 @@ func stringType() *Type {
 	return &Type{Kind: TY_PTR, Base: charType(), Align: 8, TyName: "string"}
 }
 
-func arrayOf(base *Type, size int) *Type {
+func arrayOf(base *Type, len int) *Type {
 	return &Type{
 		Kind:   TY_ARRAY,
+		Sz:     base.Sz * len,
 		Align:  base.Align,
 		Base:   base,
-		ArrSz:  size,
-		TyName: "[" + strconv.Itoa(size) + "]" + base.TyName}
+		ArrSz:  len,
+		TyName: "[" + strconv.Itoa(len) + "]" + base.TyName}
 }
 
 func structType() *Type {
