@@ -1282,11 +1282,7 @@ func exprStmt(rest **Token, tok *Token) *Node {
 
 	node := newNode(ND_EXPR_STMT, tok)
 	node.Lhs = expr(&tok, tok)
-	if equal(tok, ";") {
-		*rest = skip(tok, ";")
-	} else {
-		*rest = skip(tok.Next, ";")
-	}
+	*rest = skip(tok, ";")
 	return node
 }
 
@@ -1809,7 +1805,7 @@ func cast(rest **Token, tok *Token) *Node {
 		tok = skip(tok, "(")
 		node := newCast(cast(rest, tok), ty)
 		node.Tok = start
-		tok = skip(tok.Next, ")")
+		*rest = skip(tok.Next, ")")
 		return node
 	}
 
@@ -1963,6 +1959,9 @@ func postfix(rest **Token, tok *Token) *Node {
 		}
 
 		if equal(tok, ".") {
+			if node.Obj.Ty.Kind == TY_PTR {
+				node = newUnary(ND_DEREF, node, tok)
+			}
 			node = structRef(node, tok.Next)
 			tok = tok.Next.Next
 			continue
@@ -2010,7 +2009,6 @@ func funcall(rest **Token, tok *Token) *Node {
 	cur := head
 
 	for !equal(tok, ")") {
-		// fmt.Printf("funcall(): tok: %#v\n\n", tok)
 		if cur != head {
 			tok = skip(tok, ",")
 		}

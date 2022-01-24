@@ -38,11 +38,6 @@ func compile(arg string, w io.Writer) error {
 		return err
 	}
 
-	// for n := node; n != nil; n = n.Next {
-	// 	walkInOrder(n)
-	// }
-	// }
-
 	fmt.Fprintf(w, ".file 1 \"%s\"\n", curFilename)
 	return codegen(w, prog) // make the asm code, down on the AST
 }
