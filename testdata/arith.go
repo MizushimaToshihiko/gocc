@@ -80,5 +80,5 @@ func main() {
 	// assert(0, 0b1111^0b1111, "0b1111^0b1111")
 	// assert(0b110100, 0b111000^0b001100, "0b111000^0b001100")
 
-	printf("\nOK\n")
+	println("\nOK")
 }

@@ -238,7 +238,6 @@ foo:
 	switch i {
 	case 0:
 		i = 5
-		i
 	default:
 		i = 7
 	}
@@ -247,7 +246,6 @@ foo:
 	switch i {
 	case 0:
 		i = 5
-		i
 	default:
 		i = 7
 	}
@@ -255,5 +253,5 @@ foo:
 
 	// assert(3, ({ int i=0; switch(-1) { case 0xffffffff: i=3; break; } i; }));
 
-	printf("\nOK\n")
+	println("\nOK")
 }

@@ -2230,6 +2230,7 @@ func parse(tok *Token) *Obj {
 	newGvar("printf", funcType(ty_int))
 	newGvar("exit", funcType(ty_void))
 	newGvar("assert", funcType(ty_void))
+	newGvar("println", funcType(ty_void))
 
 	for !atEof(tok) {
 
