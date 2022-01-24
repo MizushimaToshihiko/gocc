@@ -1170,10 +1170,10 @@ func stmt(rest **Token, tok *Token) *Node {
 			node.ContLabel = newUniqueName()
 			contLabel = node.ContLabel
 
-			if !equal(tok, ";") {
-				node.Init = exprStmt(&tok, tok)
+			if !equal(tok.Next, ";") {
+				node.Init = exprStmt(&tok, tok.Next)
 			}
-			tok = skip(tok, ";")
+			// tok = skip(tok, ";")
 			if !equal(tok, ";") {
 				node.Cond = expr(&tok, tok)
 			}
