@@ -906,7 +906,7 @@ func writeBuf(val int64, sz int) int64 {
 
 }
 
-// 要書き換え：string型かchar型しか書き込めない、integerはasciiとして登録されてしまう
+// integer又はscalarの場合Ty.Sz分だけゼロ埋めする
 func writeGvarData(
 	init *Initializer, ty *Type, buf *[]rune, offset int) {
 	printCalledFunc()
@@ -928,7 +928,8 @@ func writeGvarData(
 	// }
 
 	if init.Expr != nil {
-		*buf = append(*buf, rune(writeBuf(eval(init.Expr), ty.Sz)))
+		*buf = make([]rune, ty.Sz)
+		(*buf)[0] = rune(eval(init.Expr))
 	}
 }
 
