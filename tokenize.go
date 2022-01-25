@@ -24,7 +24,10 @@ const (
 	TK_STR // 2: string literals
 	TK_NUM // 3: integer
 
-	TK_EOF // 4: the end of tokens
+	// comment
+	TK_COMM // 4: comment
+
+	TK_EOF // 5: the end of tokens
 )
 
 type Token struct {
