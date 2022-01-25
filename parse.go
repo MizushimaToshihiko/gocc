@@ -751,13 +751,14 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	}
 
 	if init.Ty.Kind == TY_ARRAY {
-		readTypePreffix(rest, tok) // discard the return value
+		readTypePreffix(&tok, tok) // discard the return value for now.
 		arrayInitializer1(rest, tok, init)
+		return
 	}
 
 	if init.Ty.Kind == TY_STRUCT {
 		if equal(tok, "{") {
-			readTypePreffix(rest, tok) // discard the return value
+			readTypePreffix(rest, tok) // discard the return value for now.
 			structInitializer1(rest, tok, init)
 			return
 		}
