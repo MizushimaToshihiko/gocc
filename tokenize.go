@@ -245,12 +245,52 @@ func isIdent2(c rune) bool {
 }
 
 func readDigit(cur *Token) (*Token, error) {
+	var base int = 10
+
+	if startsWith(string(userInput)[curIdx:curIdx+2], "0x") ||
+		startsWith(string(userInput)[curIdx:curIdx+2], "0X") {
+		curIdx += 2
+		return readHexDigit(cur)
+	}
+
 	var sVal string
+
+	if startsWith(string(userInput)[curIdx:curIdx+2], "0b") ||
+		startsWith(string(userInput)[curIdx:curIdx+2], "0B") {
+		base = 2
+		curIdx += 2
+	}
+
+	if startsWith(string(userInput)[curIdx:curIdx+2], "0o") ||
+		startsWith(string(userInput)[curIdx:curIdx+2], "0O") {
+		base = 8
+		curIdx += 2
+	}
+
 	for ; curIdx < len(userInput) && isDigit(userInput[curIdx]); curIdx++ {
 		sVal += string(userInput[curIdx])
 	}
+
 	cur = newToken(TK_NUM, cur, sVal, len(sVal))
-	v, err := strconv.ParseInt(sVal, 10, 64)
+	v, err := strconv.ParseInt(sVal, base, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	cur.Val = v
+	return cur, nil
+}
+
+func readHexDigit(cur *Token) (*Token, error) {
+	var sVal string
+	for ('0' <= userInput[curIdx] && userInput[curIdx] <= '9') ||
+		('A' <= userInput[curIdx] && userInput[curIdx] <= 'F') ||
+		('a' <= userInput[curIdx] && userInput[curIdx] <= 'f') {
+		sVal += string(userInput[curIdx])
+		curIdx++
+	}
+	cur = newToken(TK_NUM, cur, sVal, len(sVal))
+	v, err := strconv.ParseInt(sVal, 16, 64)
 	if err != nil {
 		return nil, err
 	}
