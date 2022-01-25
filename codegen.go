@@ -634,7 +634,7 @@ func (c *codeWriter) emitText(prog *Obj) {
 		// Prologue
 		c.println("	push %%rbp")
 		c.println("	mov %%rsp, %%rbp")
-		c.println("	sub $%d, %%rsp", fn.StackSz)
+		c.println("	sub $%d, %%rsp", int(fn.StackSz))
 
 		// Push arguments to the stack
 		i := 0

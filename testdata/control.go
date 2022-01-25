@@ -250,8 +250,12 @@ foo:
 		i = 7
 	}
 	assert(7, i, "i=2; switch i { case 0:i=5;i; default:i=7; } i")
-
-	// assert(3, ({ int i=0; switch(-1) { case 0xffffffff: i=3; break; } i; }));
+	i = 0
+	switch -1 {
+	case 0xffffffff:
+		i = 3
+	}
+	assert(3, i, "i=0; switch(-1) { case 0xffffffff: i=3; }; i")
 
 	println("\nOK")
 }
