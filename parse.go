@@ -1259,6 +1259,7 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 
 		if tok.Kind == TK_COMM {
 			tok = tok.Next
+			continue
 		}
 
 		if consume(&tok, tok, "type") {
@@ -2260,6 +2261,7 @@ func parse(tok *Token) *Obj {
 
 		if tok.Kind == TK_COMM {
 			tok = tok.Next
+			continue
 		}
 
 		if consume(&tok, tok, "func") {
