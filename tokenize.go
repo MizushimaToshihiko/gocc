@@ -391,7 +391,8 @@ func readCharLiteral(cur *Token, start int) (*Token, error) {
 }
 
 func isTermOfProd(cur *Token) bool {
-	if curIdx == len(userInput) || userInput[curIdx] == '\n' {
+	if curIdx == len(userInput) || userInput[curIdx] == '\n' ||
+		(cur.Next != nil && cur.Next.Kind == TK_COMM) {
 		return cur.Kind == TK_IDENT ||
 			cur.Kind == TK_NUM ||
 			cur.Kind == TK_STR ||
@@ -451,6 +452,7 @@ func tokenize(filename string) (*Token, error) {
 			for ; curIdx < len(userInput) && userInput[curIdx] != '\n'; curIdx++ {
 				// skip to the end of line.
 			}
+			cur = newToken(TK_COMM, cur, "", 0)
 			continue
 		}
 

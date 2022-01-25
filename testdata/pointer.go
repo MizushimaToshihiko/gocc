@@ -13,9 +13,18 @@ func main() {
 	assert(5, *(&x3 + 1), "var x3 int=3; var y3 int=5; *(&x3+1)")
 	assert(3, *(&y3 - 1), "var x3 int=3; var y3 int=5; *(&y3-1)")
 	assert(5, *(&x3 - (-1)), "var x3 int=3; var y3 int=5; *(&x3-(-1))")
-	// assert(5, ({ int x=3; int *y=&x; *y=5; x; }));
-	// assert(7, ({ int x=3; int y=5; *(&x+1)=7; y; }));
-	// assert(7, ({ int x=3; int y=5; *(&y-2+1)=7; x; }));
+	var x4 int = 3
+	var y4 *int = &x4
+	*y4 = 5
+	assert(5, x4, "var x4 int=3; var y4 *int=&x4; *y4=5; x4")
+	var x5 int = 3
+	var y5 int = 5
+	*(&x5 + 1) = 7
+	assert(7, y5, "var x5 int=3; var y5 int=5; *(&x5+1)=7; y5")
+	var x6 int = 3
+	var y6 int = 5
+	*(&y6 - 2 + 1) = 7
+	assert(7, x6, "var x6 int=3; var y6 int=5; *(&y6-2+1)=7; x6")
 	// assert(5, ({ int x=3; (&x+2)-&x+3; }));
 	// assert(8, ({ int x, y; x=3; y=5; x+y; }));
 	// assert(8, ({ int x=3, y=5; x+y; }));

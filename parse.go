@@ -1256,6 +1256,11 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 	enterScope()
 
 	for !equal(tok, "}") {
+
+		if tok.Kind == TK_COMM {
+			tok = tok.Next
+		}
+
 		if consume(&tok, tok, "type") {
 			tok = parseTypedef(tok)
 			continue
@@ -2251,6 +2256,10 @@ func parse(tok *Token) *Obj {
 		if consume(&tok, tok, "package") {
 			tok = tok.Next.Next
 			continue
+		}
+
+		if tok.Kind == TK_COMM {
+			tok = tok.Next
 		}
 
 		if consume(&tok, tok, "func") {
