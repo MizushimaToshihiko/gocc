@@ -106,7 +106,7 @@ func funcType(retTy *Type) *Type {
 }
 
 func stringType() *Type {
-	return &Type{Kind: TY_PTR, Base: charType(), Align: 8, TyName: "string"}
+	return &Type{Kind: TY_PTR, Base: charType(), Sz: 8, Align: 8, TyName: "string"}
 }
 
 func arrayOf(base *Type, len int) *Type {

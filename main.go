@@ -43,7 +43,7 @@ func compile(arg string, w io.Writer) error {
 }
 
 func usage(status int) {
-	fmt.Fprintf(os.Stderr, "usage: ./gocc [ -o <path> ] <file>\n")
+	fmt.Fprintf(os.Stderr, "usage: ./bin/gocc [ -o <path> ] <file>\n")
 	os.Exit(status)
 }
 

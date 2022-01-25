@@ -25,14 +25,27 @@ func main() {
 	assert(2, x4[0][1], "var x4 [2][3]int=[2][3]int{{1,2}}; x4[0][1]")
 	assert(0, x4[1][0], "var x4 [2][3]int=[2][3]int{{1,2}}; x4[1][0]")
 	assert(0, x4[1][2], "var x4 [2][3]int=[2][3]int{{1,2}}; x4[1][2]")
+	var x5 [4]byte = "abc"
+	assert('a', x5[0], "var x5 [4]byte=\"abc\"; x5[0]")
+	assert('c', x5[2], "var x5 [4]byte=\"abc\"; x5[2]")
+	assert(0, x5[3], "var x5 [4]byte=\"abc\"; x5[3]")
 
-	// assert('a', ({ char x[4]="abc"; x[0]; }));
-	// assert('c', ({ char x[4]="abc"; x[2]; }));
-	// assert(0, ({ char x[4]="abc"; x[3]; }));
-	// assert('a', ({ char x[2][4]={"abc","def"}; x[0][0]; }));
-	// assert(0, ({ char x[2][4]={"abc","def"}; x[0][3]; }));
-	// assert('d', ({ char x[2][4]={"abc","def"}; x[1][0]; }));
-	// assert('f', ({ char x[2][4]={"abc","def"}; x[1][2]; }));
+	var x6 string = "abc"
+	assert('a', x6[0], "var x6 string=\"abc\"; x6[0]")
+	assert('c', x6[2], "var x6 string=\"abc\"; x6[2]")
+	assert(0, x6[3], "var x6 string=\"abc\"; x6[3]")
+
+	var x7 [2][4]byte = [2][4]byte{"abc", "def"}
+	assert('a', x7[0][0], "var x7 [2][4]byte={\"abc\",\"def\"}; x7[0][0]")
+	assert(0, x7[0][3], "var x7 [2][4]byte={\"abc\",\"def\"}; x7[0][3]")
+	assert('d', x7[1][0], "var x7 [2][4]byte={\"abc\",\"def\"}; x7[1][0]")
+	assert('f', x7[1][2], "var x7 [2][4]byte={\"abc\",\"def\"}; x7[1][2]")
+
+	var x8 [2]string = [2]string{"abc", "def"}
+	assert('a', x8[0][0], "var x8 [2]string=[2]string{\"abc\",\"def\"}; x8[0][0]")
+	assert(0, x8[0][3], "var x8 [2]string=[2]string{\"abc\",\"def\"}; x8[0][3]")
+	assert('d', x8[1][0], "var x8 [2]string=[2]string{\"abc\",\"def\"}; x8[1][0]")
+	assert('f', x8[1][2], "var x8 [2]string=[2]string{\"abc\",\"def\"}; x8[1][2]")
 
 	// assert(4, ({ int x[]={1,2,3,4}; x[3]; }));
 	// assert(16, ({ int x[]={1,2,3,4}; sizeof(x); }));

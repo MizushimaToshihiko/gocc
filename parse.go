@@ -671,9 +671,9 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
 
-	len := min(init.Ty.ArrSz, tok.Ty.ArrSz)
-	for i := 0; i < len; i++ {
-		init.Children[i].Expr = newNum(int64(tok.Str[i]), tok)
+	length := min(init.Ty.ArrSz, tok.Ty.ArrSz)
+	for i := 0; i < length; i++ {
+		init.Children[i].Expr = newNum(int64(tok.Contents[i]), tok)
 	}
 	*rest = tok.Next
 }
