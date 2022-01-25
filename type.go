@@ -98,7 +98,18 @@ func charType() *Type {
 }
 
 func pointerTo(base *Type) *Type {
-	return &Type{Kind: TY_PTR, Base: base, Sz: 8, Align: 8, TyName: "pointer"}
+	tyname := "*"
+	for b := base; b != nil; b = b.Base {
+		if b.TyName == "string" {
+			tyname += "string"
+			break
+		} else if b.Kind == TY_PTR {
+			tyname += "*"
+		} else {
+			tyname += b.TyName
+		}
+	}
+	return &Type{Kind: TY_PTR, Base: base, Sz: 8, Align: 8, TyName: tyname}
 }
 
 func funcType(retTy *Type) *Type {

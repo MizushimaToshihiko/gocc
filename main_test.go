@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -12,11 +13,12 @@ func TestGetTypeName(t *testing.T) {
 	}{
 		"case1": {"[2]int", "[2]int", TY_ARRAY},
 		"case2": {"[2][3]int", "[2][3]int", TY_ARRAY},
-		"case3": {"****int", "pointer", TY_PTR},
+		"case3": {"****int", "****int", TY_PTR},
 		"case4": {"byte", "byte", TY_BYTE},
 		"case5": {"string", "string", TY_PTR},
-		"case6": {"*string", "pointer", TY_PTR},
+		"case6": {"*string", "*string", TY_PTR},
 		"case7": {"[1 + 1]int", "[2]int", TY_ARRAY},
+		"case8": {"[1 + 1]*int", "[2]*int", TY_ARRAY},
 	}
 
 	for name, c := range cases {
@@ -31,12 +33,15 @@ func TestGetTypeName(t *testing.T) {
 			}
 			ty := readTypePreffix(&tok, tok)
 
-			// fmt.Printf("tok: %#v\n\n", tok)
+			fmt.Printf("tok: %#v\n\n", tok)
 			if ty.Kind != c.want2 {
-				t.Fatalf("%d expected, but got %d", c.want2, ty.Kind)
+				t.Fatalf("%s: %d expected, but got %d", c.in, c.want2, ty.Kind)
 			}
 			if ty.TyName != c.want1 {
-				t.Fatalf("%s expected, but got %s", c.want1, ty.TyName)
+				t.Fatalf("%s: %s expected, but got %s", c.in, c.want1, ty.TyName)
+			}
+			if tok.Kind != TK_EOF {
+				t.Fatalf("the token position: EOF expected, but %s", tok.Str)
 			}
 		})
 	}

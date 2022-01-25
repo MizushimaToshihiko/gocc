@@ -506,7 +506,7 @@ func declSpec(rest **Token, tok *Token) *Type {
 	return ty
 }
 
-func findBase(rest **Token, tok *Token) (*Type, *Token) {
+func findBase(rest **Token, tok *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -514,9 +514,9 @@ func findBase(rest **Token, tok *Token) (*Type, *Token) {
 		!(isTypename(tok) && !equal(tok.Next, "(")) {
 		tok = tok.Next
 	}
-	ty := declSpec(rest, tok)
-	t := tok // どこまでtokenを読んだか
-	return ty, t
+	ty := declSpec(&tok, tok)
+	*rest = tok // どこまでtokenを読んだか
+	return ty
 }
 
 func readArr(tok *Token, base *Type) *Type {
@@ -546,9 +546,9 @@ func readTypePreffix(rest **Token, tok *Token) *Type {
 
 	start := tok
 
-	base, t := findBase(&tok, tok)
+	base := findBase(&tok, tok)
 	arrTy := readArr(start, base)
-	*rest = t.Next
+	*rest = tok
 	return arrTy
 }
 
@@ -756,9 +756,10 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		return
 	}
 
+	// fmt.Printf("init.Ty: %#v\n\n", init.Ty)
 	if init.Ty.Kind == TY_STRUCT {
-		if equal(tok, "{") {
-			readTypePreffix(rest, tok) // discard the return value for now.
+		if equal(tok.Next, "{") {
+			readTypePreffix(&tok, tok) // discard the return value for now.
 			structInitializer1(rest, tok, init)
 			return
 		}
@@ -1880,7 +1881,7 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 		}
 	}
 
-	*rest = tok.Next
+	*rest = tok
 	return head.Next
 }
 
@@ -1947,6 +1948,15 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 		node.Ty)
 }
 
+func findLhsVarNode(n *Node) *Node {
+	for ; n != nil; n = n.Lhs {
+		if n.Kind == ND_VAR {
+			return n
+		}
+	}
+	return nil
+}
+
 // postfix = primary ("[" expr "]" | "." ident | "++" | "--")*
 func postfix(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
@@ -1965,7 +1975,8 @@ func postfix(rest **Token, tok *Token) *Node {
 		}
 
 		if equal(tok, ".") {
-			if node.Obj.Ty.Kind == TY_PTR {
+			node2 := findLhsVarNode(node)
+			if node2.Obj.Ty.Kind == TY_PTR {
 				node = newUnary(ND_DEREF, node, tok)
 			}
 			node = structRef(node, tok.Next)
