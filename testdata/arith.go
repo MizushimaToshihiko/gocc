@@ -34,17 +34,23 @@ func main() {
 	assert(0, 1073741824*100/100, "1073741824 * 100 / 100")
 
 	var i int
-	i = 2, i += 5
-	assert(7, i, "i=2, i+=5, i")
-	i = 5, i -= 2
-	assert(3, i, "i=5, i-=2, i")
-	i=3, i*=2
-	assert(6, i, "i=3, i*=2, i")
-	i=6; i/=2
-	assert(3,i,"i=6; i/=2, i")
-	i=2; i++
-	assert(3, i,"i=2; i++, i")
-	i=2; i--
+	i = 2
+	i += 5
+	assert(7, i, "i=2; i+=5, i")
+	i = 5
+	i -= 2
+	assert(3, i, "i=5; i-=2, i")
+	i = 3
+	i *= 2
+	assert(6, i, "i=3; i*=2, i")
+	i = 6
+	i /= 2
+	assert(3, i, "i=6; i/=2, i")
+	i = 2
+	i++
+	assert(3, i, "i=2; i++, i")
+	i = 2
+	i--
 	assert(1, i, "i=2; i--, i")
 
 	assert(0, !1, "!1")
