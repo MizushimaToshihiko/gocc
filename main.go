@@ -16,7 +16,7 @@ func exists(name string) bool {
 	return !os.IsNotExist(err)
 }
 
-func compile(arg string, w io.Writer) error {
+func compile(prtok bool, arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
 
@@ -32,7 +32,11 @@ func compile(arg string, w io.Writer) error {
 		return err
 	}
 
-	// printTokens(tok)
+	if prtok {
+		printTokens(tok)
+		return nil
+	}
+
 	prog := parse(tok)
 	if err != nil {
 		return err
@@ -55,6 +59,8 @@ func main() {
 	flag.StringVar(&outpath, "o", "", "The output file name")
 	var help bool
 	flag.BoolVar(&help, "help", false, "Help")
+	var prtok bool
+	flag.BoolVar(&prtok, "prtok", false, "print tokens only")
 	flag.Parse()
 
 	if help {
@@ -79,7 +85,7 @@ func main() {
 		}
 	}
 
-	if err := compile(inputPath, optOut); err != nil {
+	if err := compile(prtok, inputPath, optOut); err != nil {
 		log.Fatal(err)
 	}
 }
