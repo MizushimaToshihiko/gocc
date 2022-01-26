@@ -257,5 +257,5 @@ foo:
 	}
 	assert(3, i, "i=0; switch(-1) { case 0xffffffff: i=3; }; i")
 
-	println("\nOK")
+	println("OK")
 }

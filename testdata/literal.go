@@ -14,5 +14,5 @@ func main() {
 	assert(1, 0b1, "0b1")
 	assert(47, 0b101111, "0b101111")
 
-	println("\nOK")
+	println("OK")
 }

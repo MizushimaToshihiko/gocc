@@ -34,5 +34,5 @@ func main() {
 	// assert(8, sizeof(int(*)[10]));
 	// assert(8, sizeof(int(*)[][10]));
 
-	printf("OK\n")
+	println("OK")
 }

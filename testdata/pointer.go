@@ -51,19 +51,30 @@ func main() {
 	assert(4, *(*(x10 + 1) + 1), "var x10 [2][3]int; var y10 *int=x10; *(y10+4)=4; *(*(x10+1)+1)")
 	*(y10 + 5) = 5
 	assert(5, *(*(x10 + 1) + 2), "var x10 [2][3]int; var y10 *int=x10; *(y10+5)=5; *(*(x10+1)+2)")
+	var x [3]int
+	*x = 3
+	x[1] = 4
+	x[2] = 5
+	assert(3, *x, "var x [3]int; *x=3; x[1]=4; x[2]=5; *x")
+	assert(4, *(x + 1), "var x [3]int; *x=3; x[1]=4; x[2]=5; *(x+1)")
+	assert(5, *(x + 2), "var x [3]int; *x=3; x[1]=4; x[2]=5; *(x+2)")
+	assert(5, *(x + 2), "var x [3]int; *x=3; x[1]=4; x[2]=5; *(x+2)")
+	2[x] = 5
+	assert(5, *(x + 2), "var x [3]int; *x=3; x[1]=4; 2[x]=5; *(x+2)")
+	var x [2][3]int
+	y * int = x
+	y[0] = 0
+	assert(0, x[0][0], "var x [2][3]int; y *int=x; y[0]=0; x[0][0]")
+	y[1] = 1
+	assert(1, x[0][1], "var x [2][3]int; y *int=x; y[1]=1; x[0][1]")
+	y[2] = 2
+	assert(2, x[0][2], "var x [2][3]int; y *int=x; y[2]=2; x[0][2]")
+	y[3] = 3
+	assert(3, x[1][0], "var x [2][3]int; y *int=x; y[3]=3; x[1][0]")
+	y[4] = 4
+	assert(4, x[1][1], "var x [2][3]int; y *int=x; y[4]=4; x[1][1]")
+	y[5] = 5
+	assert(5, x[1][2], "var x [2][3]int; y *int=x; y[5]=5; x[1][2]")
 
-	// assert(3, ({ int x[3]; *x=3; x[1]=4; x[2]=5; *x; }));
-	// assert(4, ({ int x[3]; *x=3; x[1]=4; x[2]=5; *(x+1); }));
-	// assert(5, ({ int x[3]; *x=3; x[1]=4; x[2]=5; *(x+2); }));
-	// assert(5, ({ int x[3]; *x=3; x[1]=4; x[2]=5; *(x+2); }));
-	// assert(5, ({ int x[3]; *x=3; x[1]=4; 2[x]=5; *(x+2); }));
-
-	// assert(0, ({ int x[2][3]; int *y=x; y[0]=0; x[0][0]; }));
-	// assert(1, ({ int x[2][3]; int *y=x; y[1]=1; x[0][1]; }));
-	// assert(2, ({ int x[2][3]; int *y=x; y[2]=2; x[0][2]; }));
-	// assert(3, ({ int x[2][3]; int *y=x; y[3]=3; x[1][0]; }));
-	// assert(4, ({ int x[2][3]; int *y=x; y[4]=4; x[1][1]; }));
-	// assert(5, ({ int x[2][3]; int *y=x; y[5]=5; x[1][2]; }));
-
-	printf("OK\n")
+	println("OK")
 }

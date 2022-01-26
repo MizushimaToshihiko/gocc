@@ -100,5 +100,5 @@ func main() {
 	x[0] = 3
 	assert(3, paramDecay(x), "var x [2]int ; x[0]=3; paramDecay(x)")
 
-	println("\nOK")
+	println("OK")
 }

@@ -20,5 +20,5 @@ func main() {
 	assert(1, bool(2), "bool(2)")
 	assert(0, bool(byte(256)), "bool(byte(256))")
 
-	println("\nOK")
+	println("OK")
 }

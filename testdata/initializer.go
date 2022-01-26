@@ -122,5 +122,5 @@ func main() {
 	assert(5, g5, "g5")
 	assert(6, g6, "g6")
 
-	println("\nOK")
+	println("OK")
 }

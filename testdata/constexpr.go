@@ -70,5 +70,5 @@ func main() {
 	// assert(12, ({ char x[(int*)16-1]; Sizeof(x); }));
 	// assert(3, ({ char x[(int*)16-(int*)4]; Sizeof(x); }));
 
-	println("\nOK")
+	println("OK")
 }
