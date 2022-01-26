@@ -51,30 +51,30 @@ func main() {
 	assert(4, *(*(x10 + 1) + 1), "var x10 [2][3]int; var y10 *int=x10; *(y10+4)=4; *(*(x10+1)+1)")
 	*(y10 + 5) = 5
 	assert(5, *(*(x10 + 1) + 2), "var x10 [2][3]int; var y10 *int=x10; *(y10+5)=5; *(*(x10+1)+2)")
-	var x [3]int
-	*x = 3
-	x[1] = 4
-	x[2] = 5
-	assert(3, *x, "var x [3]int; *x=3; x[1]=4; x[2]=5; *x")
-	assert(4, *(x + 1), "var x [3]int; *x=3; x[1]=4; x[2]=5; *(x+1)")
-	assert(5, *(x + 2), "var x [3]int; *x=3; x[1]=4; x[2]=5; *(x+2)")
-	assert(5, *(x + 2), "var x [3]int; *x=3; x[1]=4; x[2]=5; *(x+2)")
-	2[x] = 5
-	assert(5, *(x + 2), "var x [3]int; *x=3; x[1]=4; 2[x]=5; *(x+2)")
-	var x [2][3]int
-	y * int = x
-	y[0] = 0
-	assert(0, x[0][0], "var x [2][3]int; y *int=x; y[0]=0; x[0][0]")
-	y[1] = 1
-	assert(1, x[0][1], "var x [2][3]int; y *int=x; y[1]=1; x[0][1]")
-	y[2] = 2
-	assert(2, x[0][2], "var x [2][3]int; y *int=x; y[2]=2; x[0][2]")
-	y[3] = 3
-	assert(3, x[1][0], "var x [2][3]int; y *int=x; y[3]=3; x[1][0]")
-	y[4] = 4
-	assert(4, x[1][1], "var x [2][3]int; y *int=x; y[4]=4; x[1][1]")
-	y[5] = 5
-	assert(5, x[1][2], "var x [2][3]int; y *int=x; y[5]=5; x[1][2]")
+	var x11 [3]int
+	*x11 = 3
+	x11[1] = 4
+	x11[2] = 5
+	assert(3, *x11, "var x11 [3]int; *x11=3; x11[1]=4; x11[2]=5; *x11")
+	assert(4, *(x11 + 1), "var x11 [3]int; *x11=3; x11[1]=4; x11[2]=5; *(x11+1)")
+	assert(5, *(x11 + 2), "var x11 [3]int; *x11=3; x11[1]=4; x11[2]=5; *(x11+2)")
+	assert(5, *(x11 + 2), "var x11 [3]int; *x11=3; x11[1]=4; x11[2]=5; *(x11+2)")
+	2[x11] = 5
+	assert(5, *(x11 + 2), "var x11 [3]int; *x11=3; x11[1]=4; 2[x11]=5; *(x11+2)")
+	var x12 [2][3]int
+	var y12 *int = x12
+	y12[0] = 0
+	assert(0, x12[0][0], "var x12 [2][3]int; var y12 *int=x12; y12[0]=0; x12[0][0]")
+	y12[1] = 1
+	assert(1, x12[0][1], "var x12 [2][3]int; var y12 *int=x12; y12[1]=1; x12[0][1]")
+	y12[2] = 2
+	assert(2, x12[0][2], "var x12 [2][3]int; var y12 *int=x12; y12[2]=2; x12[0][2]")
+	y12[3] = 3
+	assert(3, x12[1][0], "var x12 [2][3]int; var y12 *int=x12; y12[3]=3; x12[1][0]")
+	y12[4] = 4
+	assert(4, x12[1][1], "var x12 [2][3]int; var y12 *int=x12; y12[4]=4; x12[1][1]")
+	y12[5] = 5
+	assert(5, x12[1][2], "var x12 [2][3]int; var y12 *int=x12; y12[5]=5; x12[1][2]")
 
 	println("OK")
 }

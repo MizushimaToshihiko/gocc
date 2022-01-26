@@ -11,6 +11,8 @@ import (
 var optOut *os.File
 var inputPath string
 
+var isdeb bool // Is debug mode or not.
+
 func exists(name string) bool {
 	_, err := os.Stat(name)
 	return !os.IsNotExist(err)
@@ -61,6 +63,7 @@ func main() {
 	flag.BoolVar(&help, "help", false, "Help")
 	var prtok bool
 	flag.BoolVar(&prtok, "prtok", false, "print tokens only")
+	flag.BoolVar(&isdeb, "debug", false, "debug mode or not")
 	flag.Parse()
 
 	if help {

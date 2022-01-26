@@ -58,7 +58,7 @@ func main() {
 	var x24 [byte(0xffffff0f)]byte
 	assert(15, Sizeof(x24), "var x24 [byte(0xffffff0f)]byte; Sizeof(x24)")
 	var x25 [int16(0xffff010f)]byte
-	assert(0x10f, Sizeof(x25), "var x25 [int16(0xffff010f)]byte; Sizeof(x25)");
+	assert(0x10f, Sizeof(x25), "var x25 [int16(0xffff010f)]byte; Sizeof(x25)")
 	
 	// error occures
 	// var x26 [int(0xfffffffffff)+5]byte

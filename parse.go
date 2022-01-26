@@ -233,6 +233,7 @@ func newUnary(kind NodeKind, expr *Node, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
+	fmt.Printf("newUnary: tok: %#v\n\n", tok)
 	node := &Node{Kind: kind, Lhs: expr, Tok: tok}
 	return node
 }
@@ -1812,6 +1813,7 @@ func cast(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
+	fmt.Printf("cast: tok: %#v\n\n", tok)
 	if isTypename(tok) {
 		ty := readTypePreffix(&tok, tok)
 		start := tok
@@ -1832,11 +1834,13 @@ func unary(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
+	fmt.Printf("unary: tok: %#v\n\n", tok)
 	if equal(tok, "+") {
 		return cast(rest, tok.Next)
 	}
 
 	if equal(tok, "-") {
+		fmt.Printf("ここ tok.Next: %#v\n\n", tok.Next)
 		return newUnary(ND_NEG, cast(rest, tok.Next), tok)
 	}
 
@@ -1969,6 +1973,7 @@ func postfix(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
+	fmt.Printf("postfix: tok: %#v\n\n", tok)
 	node := primary(&tok, tok)
 
 	for {
@@ -2071,6 +2076,8 @@ func funcall(rest **Token, tok *Token) *Node {
 func primary(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
+
+	fmt.Printf("primary: tok: %#v\n\n", tok)
 
 	start := tok
 

@@ -101,7 +101,7 @@ func errorTok(tok *Token, formt string, ap ...interface{}) string {
 	var errStr string
 
 	if tok != nil {
-		errStr = fmt.Sprintf("tok: '%s':%d\n", tok.Str, tok.Kind)
+		errStr = fmt.Sprintf("tok: '%s':%d:%d\n", tok.Str, tok.Kind, tok.Loc)
 		errStr += verrorAt(tok.LineNo, tok.Loc, formt, ap...)
 	}
 
@@ -437,15 +437,20 @@ func delNewLineTok(head *Token) {
 }
 
 // Initialize line info for all tokens.
-func addLineNumbers(tok *Token) {
+func addLineNumbers(head *Token) {
+	var tok *Token = head
 	var n int = 1
 
 	for i := 0; i < len(userInput); i++ {
 		for i == tok.Loc && i < len(userInput) {
 			tok.LineNo = n
+			l := tok.Len
 			tok = tok.Next
 			if tok == nil {
 				return
+			}
+			if tok.Str == ";" {
+				tok.Loc = i + l
 			}
 		}
 		if userInput[i] == '\n' {
@@ -482,7 +487,7 @@ func tokenize(filename string) (*Token, error) {
 			for ; curIdx < len(userInput) && userInput[curIdx] != '\n'; curIdx++ {
 				// skip to the end of line.
 			}
-			cur = newToken(TK_COMM, cur, "", 0)
+			cur = newToken(TK_COMM, cur, "<line comment>", 0)
 			continue
 		}
 
@@ -496,6 +501,7 @@ func tokenize(filename string) (*Token, error) {
 					errorAt(curIdx, "unclosed block comment"),
 				)
 			}
+			cur = newToken(TK_COMM, cur, "<block comment>", 0)
 			curIdx += idx + 2
 			continue
 		}
