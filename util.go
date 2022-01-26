@@ -35,6 +35,9 @@ func printTokens(tok *Token) {
 		// 	}
 		// 	fmt.Printf(" %s: Str:\"%s\" :%d Val:%d\n", kind, tok.Str, tok.Len, tok.Val)
 		fmt.Printf(" '%s' ", tok.Str)
+		if tok.Str == ";" {
+			fmt.Println()
+		}
 		tok = tok.Next
 	}
 

@@ -24,10 +24,10 @@ const (
 	TK_STR // 2: string literals
 	TK_NUM // 3: integer
 
-	// comment
 	TK_COMM // 4: comment
+	TK_NL   // 5: new line
 
-	TK_EOF // 5: the end of tokens
+	TK_EOF // 6: the end of tokens
 )
 
 type Token struct {
@@ -99,7 +99,9 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 
 func errorTok(tok *Token, formt string, ap ...interface{}) string {
 	var errStr string
+
 	if tok != nil {
+		errStr = fmt.Sprintf("tok: '%s':%d\n", tok.Str, tok.Kind)
 		errStr += verrorAt(tok.LineNo, tok.Loc, formt, ap...)
 	}
 
@@ -230,7 +232,7 @@ func startsWithReserved(p string) string {
 }
 
 func isSpace(op rune) bool {
-	return strings.Contains("\n\t\v\f\r ", string(op))
+	return strings.Contains("\t\v\f\r ", string(op))
 }
 
 func isDigit(op rune) bool {
@@ -391,8 +393,8 @@ func readCharLiteral(cur *Token, start int) (*Token, error) {
 }
 
 func isTermOfProd(cur *Token) bool {
-	if curIdx == len(userInput) || userInput[curIdx] == '\n' ||
-		(cur.Next != nil && cur.Next.Kind == TK_COMM) {
+	if cur.Next != nil && cur.Next.Str != ";" && (cur.Next.Kind == TK_COMM ||
+		cur.Next.Kind == TK_NL || cur.Next.Kind == TK_EOF) {
 		return cur.Kind == TK_IDENT ||
 			cur.Kind == TK_NUM ||
 			cur.Kind == TK_STR ||
@@ -406,11 +408,32 @@ func isTermOfProd(cur *Token) bool {
 
 // addSemiColn adds ";" token as terminators
 // Reference: https://golang.org/ref/spec#Semicolons
-func addSemiColn(cur *Token) *Token {
-	if isTermOfProd(cur) {
-		return newToken(TK_RESERVED, cur, ";", 0)
+func addSemiColn(head *Token) {
+	var cur *Token = head
+	for cur != nil && cur.Kind != TK_EOF {
+		if isTermOfProd(cur) {
+			tmp := cur.Next
+			cur.Next = newToken(TK_RESERVED, cur, ";", 0)
+			cur.Next.Next = tmp
+			cur = cur.Next.Next
+		}
+		cur = cur.Next
 	}
-	return cur
+}
+
+//
+func delNewLineTok(head *Token) {
+	var cur *Token = head
+	prev := cur
+	for cur != nil && cur.Kind != TK_EOF {
+		if cur.Kind == TK_NL {
+			prev.Next = cur.Next
+			cur = cur.Next
+			continue
+		}
+		prev = cur
+		cur = cur.Next
+	}
 }
 
 // Initialize line info for all tokens.
@@ -442,6 +465,13 @@ func tokenize(filename string) (*Token, error) {
 
 		// skip space(s)
 		if isSpace(userInput[curIdx]) {
+			curIdx++
+			continue
+		}
+
+		// new line
+		if userInput[curIdx] == '\n' {
+			cur = newToken(TK_NL, cur, "", 0)
 			curIdx++
 			continue
 		}
@@ -478,7 +508,6 @@ func tokenize(filename string) (*Token, error) {
 				ident = append(ident, userInput[curIdx])
 			}
 			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
-			cur = addSemiColn(cur)
 			continue
 		}
 
@@ -490,7 +519,6 @@ func tokenize(filename string) (*Token, error) {
 			if err != nil {
 				return nil, err
 			}
-			cur = addSemiColn(cur)
 			continue
 		}
 
@@ -502,7 +530,6 @@ func tokenize(filename string) (*Token, error) {
 				return nil, err
 			}
 			curIdx += cur.Len
-			cur = addSemiColn(cur)
 			continue
 		}
 
@@ -513,7 +540,6 @@ func tokenize(filename string) (*Token, error) {
 			if err != nil {
 				return nil, err
 			}
-			cur = addSemiColn(cur)
 			continue
 		}
 
@@ -522,7 +548,6 @@ func tokenize(filename string) (*Token, error) {
 		if kw != "" {
 			cur = newToken(TK_RESERVED, cur, kw, len(kw))
 			curIdx += len(kw)
-			cur = addSemiColn(cur)
 			continue
 		}
 
@@ -530,7 +555,6 @@ func tokenize(filename string) (*Token, error) {
 		if strings.Contains("+-()*/<>=;{},&[].,!|^:?%", string(userInput[curIdx])) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
-			cur = addSemiColn(cur)
 			continue
 		}
 
@@ -541,6 +565,9 @@ func tokenize(filename string) (*Token, error) {
 	}
 
 	newToken(TK_EOF, cur, "", 0)
+
+	addSemiColn(head.Next)
+	delNewLineTok(head.Next)
 	addLineNumbers(head.Next)
 	return head.Next, nil
 }

@@ -1294,6 +1294,7 @@ func exprStmt(rest **Token, tok *Token) *Node {
 
 	node := newNode(ND_EXPR_STMT, tok)
 	node.Lhs = expr(&tok, tok)
+	fmt.Printf("tok: %#v\n\n", tok)
 	*rest = skip(tok, ";")
 	return node
 }

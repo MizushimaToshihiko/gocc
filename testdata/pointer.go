@@ -9,10 +9,9 @@ func main() {
 	assert(3, **z2, "var x2 int=3; var y2 *int=&x2; var z2 **int=&y2; **z2")
 	var x3 int = 3
 	var y3 int = 5
-	// Not supported in Go.
-	assert(5, *(&x3 + 1), "var x3 int=3; var y3 int=5; *(&x3+1)")
-	assert(3, *(&y3 - 1), "var x3 int=3; var y3 int=5; *(&y3-1)")
-	assert(5, *(&x3 - (-1)), "var x3 int=3; var y3 int=5; *(&x3-(-1))")
+	assert(5, *(&x3 + 1), "var x3 int=3; var y3 int=5; *(&x3+1)")       // Not supported in Go.
+	assert(3, *(&y3 - 1), "var x3 int=3; var y3 int=5; *(&y3-1)")       // Not supported in Go.
+	assert(5, *(&x3 - (-1)), "var x3 int=3; var y3 int=5; *(&x3-(-1))") // Not supported in Go.
 	var x4 int = 3
 	var y4 *int = &x4
 	*y4 = 5
