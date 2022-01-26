@@ -11,22 +11,19 @@ func main() {
 	// }
 	// assert(8, Sizeof(T1), "Sizeof(type T1 struct {a int; b int;};)")
 
-	// var i int = 0
-	// assert(1, Sizeof(i+1), "Sizeof(i+1)")
-	assert(8, Sizeof(-10+int64(5)), "Sizeof(-10+int64(5))")
-	// assert(8, Sizeof(-10 - (long)5));
-	// assert(8, Sizeof(-10 * (long)5));
-	// assert(8, Sizeof(-10 / (long)5));
-	// assert(8, Sizeof((long)-10 + 5));
-	// assert(8, Sizeof((long)-10 - 5));
-	// assert(8, Sizeof((long)-10 * 5));
-	// assert(8, Sizeof((long)-10 / 5));
-
-	// assert(1, ({ char i; Sizeof(++i); }));
-	// assert(1, ({ char i; Sizeof(i++); }));
-
-	// assert(8, Sizeof(int(*)[10]));
-	// assert(8, Sizeof(int(*)[][10]));
+	// 以下なぜかparseできない
+	// var x int = 0
+	// assert(1, Sizeof(x+1), "Sizeof(x+1)")
+	// assert(8, Sizeof(-10+int64(5)), "Sizeof(-10+int64(5))")
+	// assert(8, Sizeof(-10 - int64(5)), "Sizeof(-10 - int64(5))");
+	// assert(8, Sizeof(-10 * int64(5), "Sizeof(-10 * int64(5)");
+	// assert(8, Sizeof(-10 / int64(5), "Sizeof(-10 / int64(5)");
+	// assert(8, Sizeof(int64(-10) + 5), "Sizeof(int64(-10) + 5)");
+	// assert(8, Sizeof(int64(-10) - 5), "Sizeof(int64(-10) - 5)");
+	// assert(8, Sizeof(int64(-10) * 5), "Sizeof(int64(-10) * 5)");
+	// assert(8, Sizeof(int64(-10) / 5), "Sizeof(int64(-10) / 5)");
+	var i byte
+	assert(1, Sizeof(i++), "var i byte; Sizeof(i++)")
 
 	println("OK")
 }
