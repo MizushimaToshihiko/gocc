@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -33,14 +32,16 @@ func TestGetTypeName(t *testing.T) {
 			}
 			ty := readTypePreffix(&tok, tok)
 
-			fmt.Printf("tok: %#v\n\n", tok)
+			// fmt.Printf("tok: %#v\n\n", tok)
 			if ty.Kind != c.want2 {
 				t.Fatalf("%s: %d expected, but got %d", c.in, c.want2, ty.Kind)
 			}
 			if ty.TyName != c.want1 {
 				t.Fatalf("%s: %s expected, but got %s", c.in, c.want1, ty.TyName)
 			}
-			if tok.Kind != TK_EOF {
+			if tok.Kind != TK_RESERVED &&
+				tok.Str == ";" &&
+				tok.Next.Kind == TK_EOF {
 				t.Fatalf("the token position: EOF expected, but %s", tok.Str)
 			}
 		})

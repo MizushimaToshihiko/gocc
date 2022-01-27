@@ -491,8 +491,11 @@ func readCharLiteral(cur *Token) (*Token, error) {
 }
 
 func isTermOfProd(cur *Token) bool {
-	if cur.Next != nil && cur.Next.Str != ";" && (cur.Next.Kind == TK_COMM ||
-		cur.Next.Kind == TK_NL || cur.Next.Kind == TK_EOF) {
+	if cur.Next != nil && cur.Next.Str != ";" &&
+		(cur.Next.Kind == TK_COMM ||
+			cur.Next.Kind == TK_NL ||
+			cur.Next.Kind == TK_EOF ||
+			cur.Next.Str == "}") {
 		return cur.Kind == TK_IDENT ||
 			cur.Kind == TK_NUM ||
 			cur.Kind == TK_STR ||

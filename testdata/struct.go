@@ -42,8 +42,14 @@ func main() {
 	}
 	var x5 T5
 	assert(8, Sizeof(x5), "type T5 struct {a int; b int;};var x5 T5; Sizeof(x5)")
-	// assert(12, ({ struct {int a[3];} x; sizeof(x); }));
-	// assert(16, ({ struct {int a;} x[4]; sizeof(x); }));
+	type T6 struct {
+		a [3]int
+	}
+	var x6 T6
+	assert(12, Sizeof(x6), "type T6 struct {int a[3];}; var x6 T6; Sizeof(x6)")
+	type T7 struct{ a int }
+	var x7 [4]T7
+	assert(16, Sizeof(x7), "type T7 struct {a int;}; var x [4]T7; Sizeof(x7)")
 	// assert(24, ({ struct {int a[3];} x[2]; sizeof(x); }));
 	// assert(2, ({ struct {char a; char b;} x; sizeof(x); }));
 	// assert(0, ({ struct {} x; sizeof(x); }));
