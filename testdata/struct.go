@@ -49,20 +49,48 @@ func main() {
 	assert(12, Sizeof(x6), "type T6 struct {int a[3];}; var x6 T6; Sizeof(x6)")
 	type T7 struct{ a int }
 	var x7 [4]T7
-	assert(16, Sizeof(x7), "type T7 struct {a int;}; var x [4]T7; Sizeof(x7)")
-	// assert(24, ({ struct {int a[3];} x[2]; sizeof(x); }));
-	// assert(2, ({ struct {char a; char b;} x; sizeof(x); }));
-	// assert(0, ({ struct {} x; sizeof(x); }));
-	// assert(8, ({ struct {char a; int b;} x; sizeof(x); }));
-	// assert(8, ({ struct {int a; char b;} x; sizeof(x); }));
+	assert(16, Sizeof(x7), "type T7 struct {a int}; var x [4]T7; Sizeof(x7)")
+	type T8 struct{ a [3]int }
+	var x8 [2]T8
+	assert(24, Sizeof(x8), "type T8 struct {a [3]int};var x8 [2]T8; Sizeof(x8)")
+	type T9 struct {
+		a byte
+		b byte
+	}
+	var x9 T9
+	assert(2, Sizeof(x9), "type T9 struct {a byte; b byte;}; var x9 T9; Sizeof(x9)")
+	type T10 struct{}
+	var x10 T10
+	assert(0, Sizeof(x10), "type T10 struct {};var x10 T10; Sizeof(x10)")
+	type T11 struct {
+		a byte
+		b byte
+	}
+	var x11 T11
+	assert(2, Sizeof(x11), "type T11 struct {a byte;b byte;};var x11 T11; Sizeof(x11)")
+	type T12 struct {
+		a int
+		b byte
+	}
+	var x12 T12
+	assert(8, Sizeof(x12), "type T12 struct {a int; b byte;};var x12 T12; Sizeof(x12)")
+	type T13 struct {
+		a int
+		b int
+	}
+	var y13 T13
+	assert(8, Sizeof(y13), "type T13 struct {a int;b int;};var y13 T13; Sizeof(y13)")
 
-	// assert(8, ({ struct t {int a; int b;} x; struct t y; sizeof(y); }));
-	// assert(8, ({ struct t {int a; int b;}; struct t y; sizeof(y); }));
-	// assert(2, ({ struct t {char a[2];}; { struct t {char a[4];}; } struct t y; sizeof(y); }));
-	// assert(3, ({ struct t {int x;}; int t=1; struct t y; y.x=2; t+y.x; }));
-
-	// assert(3, ({ struct t {char a;} x; struct t *y = &x; x.a=3; y->a; }));
-	// assert(3, ({ struct t {char a;} x; struct t *y = &x; y->a=3; x.a; }));
+	type T14 struct{ a byte }
+	var x14 T14
+	var y14 *T14 = &x14
+	x14.a = 3
+	assert(3, y14.a, "type T14 struct {a byte;};var x14 T14; var y14 *T14= &x14; x14.a=3; y14.a")
+	type T15 struct{ a byte }
+	var x15 T15
+	var y15 *T15 = &x15
+	y15.a = 3
+	assert(3, x15.a, "type T15 struct {a byte;};var x15 T15; var y15 *T15=&x; y15.a=3; x15.a")
 
 	// assert(3, ({ struct {int a,b;} x,y; x.a=3; y=x; y.a; }));
 	// assert(7, ({ struct t {int a,b;}; struct t x; x.a=7; struct t y; struct t *z=&y; *z=x; y.a; }));
