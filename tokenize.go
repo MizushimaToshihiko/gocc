@@ -494,8 +494,7 @@ func isTermOfProd(cur *Token) bool {
 	if cur.Next != nil && cur.Next.Str != ";" &&
 		(cur.Next.Kind == TK_COMM ||
 			cur.Next.Kind == TK_NL ||
-			cur.Next.Kind == TK_EOF ||
-			cur.Next.Str == "}") {
+			cur.Next.Kind == TK_EOF) {
 		return cur.Kind == TK_IDENT ||
 			cur.Kind == TK_NUM ||
 			cur.Kind == TK_STR ||

@@ -1893,6 +1893,9 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 			idx++
 			cur.Next = mem
 			cur = cur.Next
+			if equal(tok, "}") {
+				break
+			}
 		}
 	}
 
