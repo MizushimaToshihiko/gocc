@@ -42,7 +42,7 @@ func main() {
 	}
 	var x5 T5
 	assert(8, Sizeof(x5), "type T5 struct {a int; b int;};var x5 T5; Sizeof(x5)")
-	// assert(12, ({ struct {int a[3];} x; sizeof(x); }));add pointers of array line '*[3]int' and struct tests
+	// assert(12, ({ struct {int a[3];} x; sizeof(x); }));
 	// assert(16, ({ struct {int a;} x[4]; sizeof(x); }));
 	// assert(24, ({ struct {int a[3];} x[2]; sizeof(x); }));
 	// assert(2, ({ struct {char a; char b;} x; sizeof(x); }));
