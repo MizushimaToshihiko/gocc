@@ -540,6 +540,10 @@ func readTypePreffix(rest **Token, tok *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
+	if consume(&tok, tok, "*") {
+		return pointerTo(readTypePreffix(rest, tok))
+	}
+
 	if !equal(tok, "[") {
 		return declSpec(rest, tok)
 	}
@@ -1024,6 +1028,10 @@ func declaration(rest **Token, tok *Token) *Node {
 func isTypename(tok *Token) bool {
 	printCurTok(tok)
 	printCalledFunc()
+
+	for equal(tok, "*") {
+		tok = tok.Next
+	}
 
 	kw := []string{
 		"byte", "bool", "int16", "int", "int64", "struct", "string",
