@@ -101,7 +101,7 @@ func errorTok(tok *Token, formt string, ap ...interface{}) string {
 	var errStr string
 
 	if tok != nil {
-		errStr = fmt.Sprintf("tok: '%s':%d:%d\n", tok.Str, tok.Kind, tok.Loc)
+		errStr = fmt.Sprintf("tok: '%s': kind: %d: pos :%d\n", tok.Str, tok.Kind, tok.Loc)
 		errStr += verrorAt(tok.LineNo, tok.Loc, formt, ap...)
 	}
 
@@ -159,16 +159,34 @@ func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
 	return tok
 }
 
-// startsWith compare 'p' and 'q' , qq is keyword
+// startsWith compare 'p' and 'q' , q is keyword
 func startsWith(p, q string) bool {
 	return len(p) >= len(q) && p[:len(q)] == q
 }
 
-func startsWithTypeName(p string) string {
-	var tyName = []string{"int16", "int64", "int",
-		"uint8", "byte", "bool", "rune", "string",
-	} // <-順番が大事、intとint16ではint16が先
+// reserved words
+var tyName = []string{"int16", "int64", "int",
+	"uint8", "byte", "bool", "rune", "string",
+} // <-順番が大事、intとint16ではint16が先
 
+var term = []string{"break", "continue", "fallthrough",
+	"return", "++", "--"}
+
+var kw = []string{
+	"if", "else", "for", "type", "var", "func", "struct",
+	"goto", "switch", "case", "default", "package", "import",
+	"true", "false", "nil", "Sizeof"}
+
+// unimplemented:
+// "chan", "const", "defer", "fallthrough", "interface", "map", "package", "range", "select"
+// "complex64", "complex128", "error",
+// "float32", "float64", "int8",
+// "uint", "uint16", "uint32", "uint64", "uintptr"
+// "iota"
+// "append", "cap", "close", "complex", "copy", "delete", "imag",
+// "len", "make", "new", "panic", "print", "println", "real", "recover"
+
+func startsWithTypeName(p string) string {
 	for _, k := range tyName {
 		if startsWith(p, k) {
 			return k
@@ -178,8 +196,6 @@ func startsWithTypeName(p string) string {
 }
 
 func startsWithTermKw(p string) string {
-	var term = []string{"break", "continue", "fallthrough", "return", "++", "--"}
-
 	for _, k := range term {
 		if startsWith(p, k) {
 			return k
@@ -198,20 +214,6 @@ func startsWithReserved(p string) string {
 		return k
 	}
 
-	kw := []string{
-		"if", "else", "for", "type", "var", "func", "struct",
-		"goto", "switch", "case", "default", "package", "import",
-		"true", "false",
-		"nil", "Sizeof"}
-	// unimplemented:
-	// "chan", "const", "defer", "fallthrough", "interface", "map", "package", "range", "select"
-	// "complex64", "complex128", "error",
-	// "float32", "float64", "int8",
-	// "uint", "uint16", "uint32", "uint64", "uintptr"
-	// "iota"
-	// "append", "cap", "close", "complex", "copy", "delete", "imag",
-	// "len", "make", "new", "panic", "print", "println", "real", "recover"
-
 	for _, k := range kw {
 		if startsWith(p, k) && len(p) >= len(k) && !isIdent2(rune(p[len(k)])) {
 			return k
@@ -229,6 +231,28 @@ func startsWithReserved(p string) string {
 		}
 	}
 	return ""
+}
+
+func isKw(tok *Token) bool {
+	for _, k := range tyName {
+		if tok.Str == k {
+			return true
+		}
+	}
+
+	for _, k := range term {
+		if tok.Str == k {
+			return true
+		}
+	}
+
+	for _, k := range kw {
+		if tok.Str == k {
+			return true
+		}
+	}
+
+	return false
 }
 
 func isSpace(op rune) bool {
@@ -459,6 +483,14 @@ func addLineNumbers(head *Token) {
 	}
 }
 
+func convKw(tok *Token) {
+	for t := tok; t != nil; t = t.Next {
+		if isKw(t) {
+			t.Kind = TK_RESERVED
+		}
+	}
+}
+
 // tokenize inputted string 'userInput', and return new tokens.
 func tokenize(filename string) (*Token, error) {
 	curFilename = filename
@@ -575,6 +607,7 @@ func tokenize(filename string) (*Token, error) {
 	addSemiColn(head.Next)
 	delNewLineTok(head.Next)
 	addLineNumbers(head.Next)
+	convKw(head.Next)
 	return head.Next, nil
 }
 

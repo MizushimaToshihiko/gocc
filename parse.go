@@ -233,7 +233,6 @@ func newUnary(kind NodeKind, expr *Node, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
-	fmt.Printf("newUnary: tok: %#v\n\n", tok)
 	node := &Node{Kind: kind, Lhs: expr, Tok: tok}
 	return node
 }
@@ -1813,7 +1812,6 @@ func cast(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
-	fmt.Printf("cast: tok: %#v\n\n", tok)
 	if isTypename(tok) {
 		ty := readTypePreffix(&tok, tok)
 		start := tok
@@ -1834,13 +1832,11 @@ func unary(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
-	fmt.Printf("unary: tok: %#v\n\n", tok)
 	if equal(tok, "+") {
 		return cast(rest, tok.Next)
 	}
 
 	if equal(tok, "-") {
-		fmt.Printf("ここ tok.Next: %#v\n\n", tok.Next)
 		return newUnary(ND_NEG, cast(rest, tok.Next), tok)
 	}
 
@@ -1973,7 +1969,6 @@ func postfix(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
-	fmt.Printf("postfix: tok: %#v\n\n", tok)
 	node := primary(&tok, tok)
 
 	for {
@@ -2077,8 +2072,6 @@ func primary(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
-	fmt.Printf("primary: tok: %#v\n\n", tok)
-
 	start := tok
 
 	// if the next token is '(', the program must be
@@ -2089,16 +2082,18 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
-	if equal(tok, "Sizeof") && equal(tok.Next, "(") && isTypename(tok.Next.Next) {
+	if equal(tok, "Sizeof") && equal(tok.Next, "(") &&
+		isTypename(tok.Next.Next) && !equal(tok.Next.Next.Next, "(") {
 		ty := readTypePreffix(&tok, tok.Next.Next)
 		*rest = skip(tok, ")")
 		return newNum(int64(ty.Sz), start)
 	}
 
 	if equal(tok, "Sizeof") && equal(tok.Next, "(") {
-		node := unary(rest, tok.Next.Next)
+		// "(" 以降のtokenをunaryに渡して、
+		// unary -> postfix -> primaryと来て"(" expr ")"でparseする
+		node := unary(rest, tok.Next)
 		addType(node)
-		*rest = skip(*rest, ")")
 		return newNum(int64(node.Ty.Sz), tok)
 	}
 

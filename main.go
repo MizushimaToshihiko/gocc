@@ -39,6 +39,10 @@ func compile(prtok bool, arg string, w io.Writer) error {
 		return nil
 	}
 
+	if isdeb {
+		printTokens(tok)
+	}
+
 	prog := parse(tok)
 	if err != nil {
 		return err
