@@ -327,92 +327,166 @@ func readHexDigit(cur *Token) (*Token, error) {
 	return cur, nil
 }
 
-func getEscapeChar(c rune) rune {
+func isxdigit(p rune) bool {
+	return ('0' <= p && p <= '9') ||
+		('A' <= p && p <= 'F') ||
+		('a' <= p && p <= 'f')
+}
 
-	switch c {
+func fromHex(c int) int {
+	if '0' <= c && c <= '9' {
+		return c - '0'
+	}
+	if 'a' <= c && c <= 'f' {
+		return c - 'a' + 10
+	}
+	return c - 'A' + 10
+}
+
+func getEscapeChar(newPos *int, idx int) (rune, error) {
+	if '0' <= userInput[idx] && userInput[idx] <= '7' {
+		// Read octal number.
+		c := userInput[idx] - '0'
+		idx++
+		if '0' <= userInput[idx] && userInput[idx] <= '7' {
+			c = (c << 3) + (userInput[idx] - '0')
+			idx++
+			if '0' <= userInput[idx] && userInput[idx] <= '7' {
+				c = (c << 3) + (userInput[idx] - '0')
+				idx++
+			}
+		}
+		*newPos = idx
+		return c, nil
+	}
+
+	if userInput[idx] == 'x' {
+		// Read hexadecimal number.
+		idx++
+		if !isxdigit(userInput[idx]) {
+			return -1, fmt.Errorf(
+				"tokenize(): err:\n%s",
+				errorAt(idx, "invalid hex escape sequence"))
+		}
+		var c rune
+		for ; isxdigit(userInput[idx]); idx++ {
+			c = (c << 4) + rune(fromHex(int(userInput[idx])))
+		}
+		*newPos = idx
+		return c, nil
+	}
+
+	*newPos = idx
+
+	switch userInput[idx] {
 	case 'a':
-		return '\a'
+		return '\a', nil
 	case 'b':
-		return '\b'
+		return '\b', nil
 	case 't':
-		return '\t'
+		return '\t', nil
 	case 'n':
-		return '\n'
+		return '\n', nil
 	case 'v':
-		return '\v'
+		return '\v', nil
 	case 'f':
-		return '\f'
+		return '\f', nil
 	case 'r':
-		return '\r'
+		return '\r', nil
 	case 'e':
-		return 27
-	case '0':
-		return 0
+		return 27, nil
 	default:
-		return c
+		return userInput[idx], nil
 	}
 }
 
-func readStringLiteral(cur *Token) (*Token, error) {
-	p := 0
-
-	buf := make([]rune, 0, 1024)
-	for ; curIdx < len(userInput); curIdx++ {
-		if userInput[curIdx] == 0 {
-			return nil, fmt.Errorf(
-				"tokenize(): err:\n%s",
-				errorAt(curIdx+p, "unclosed string literal"),
+// stringLiteralEnd finds a closing double-quote.
+// strings.Indexを使えば簡単なんだけど
+func stringLiteralEnd(idx int) (int, error) {
+	var start int = idx
+	for ; userInput[idx] != '"'; idx++ {
+		if userInput[idx] == '\n' || userInput[idx] == 0 {
+			return -1, fmt.Errorf(
+				"tokenize(): stringLiteralEnd: err:\n%s",
+				errorAt(start, "unclosed string literal"),
 			)
 		}
-		if userInput[curIdx] == '"' {
-			break
-		}
-
-		if userInput[curIdx] == '\\' {
-			curIdx++
-			buf = append(buf, getEscapeChar(userInput[curIdx]))
-		} else {
-			buf = append(buf, userInput[curIdx])
+		if userInput[idx] == '\\' {
+			idx++
 		}
 	}
+	return idx, nil
+}
 
-	tok := newToken(TK_STR, cur, string(buf), len(buf))
+func readStringLiteral(start int, cur *Token) (*Token, error) {
+	var end int
+	var err error
+	var idx int
+	end, err = stringLiteralEnd(start + 1)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := make([]rune, 0, 1024)
+	for idx = start + 1; idx < end; idx++ {
+
+		var c rune
+		if userInput[idx] == '\\' {
+			c, err = getEscapeChar(&idx, idx+1)
+			if err != nil {
+				return nil, err
+			}
+
+			buf = append(buf, c)
+			continue
+		}
+
+		buf = append(buf, userInput[idx])
+	}
+	idx++
+
+	tok := newToken(TK_STR, cur, string(buf), end-start+1)
 	tok.Contents = strNdUp(buf, len(buf))
 	tok.ContLen = len(buf) + 1
 	tok.Ty = arrayOf(ty_char, len(buf)+1)
-	curIdx++
+	curIdx += tok.Len
 	return tok, nil
 }
 
-func readCharLiteral(cur *Token, start int) (*Token, error) {
-	p := start + 1
-	if p < len(userInput) && userInput[p] == 0 {
+func readCharLiteral(cur *Token) (*Token, error) {
+	start := curIdx
+	idx := start + 1
+	if idx < len(userInput) && userInput[idx] == 0 {
 		return nil, fmt.Errorf(
 			"tokenize(): err:\n%s",
-			errorAt(curIdx, "unclosed char literal"),
+			errorAt(idx, "EOF: unclosed char literal"),
 		)
 	}
 
 	var c rune
-	if userInput[p] == '\\' {
-		p++
-		c = getEscapeChar(userInput[p])
-		p++
+	var err error
+	if userInput[idx] == '\\' {
+		c, err = getEscapeChar(&idx, idx+1)
+		if err != nil {
+			return nil, err
+		}
+		idx++
 	} else {
-		c = userInput[p]
-		p++
+		c = userInput[idx]
+		idx++
 	}
 
-	if userInput[p] != '\'' {
+	if userInput[idx] != '\'' {
 		return nil, fmt.Errorf(
 			"tokenize(): err:\n%s",
-			errorAt(curIdx, "char literal too long"),
+			errorAt(idx, "char literal too long"),
 		)
 	}
-	p++
+	idx++
 
-	tok := newToken(TK_NUM, cur, string(userInput[start:p]), p-start)
+	tok := newToken(TK_NUM, cur, string(userInput[start:idx]), idx-start)
 	tok.Val = int64(c)
+	curIdx += tok.Len
 	return tok, nil
 }
 
@@ -551,9 +625,8 @@ func tokenize(filename string) (*Token, error) {
 
 		// string literal
 		if userInput[curIdx] == '"' {
-			curIdx++
 			var err error
-			cur, err = readStringLiteral(cur)
+			cur, err = readStringLiteral(curIdx, cur)
 			if err != nil {
 				return nil, err
 			}
@@ -563,11 +636,10 @@ func tokenize(filename string) (*Token, error) {
 		// character literal
 		if userInput[curIdx] == '\'' {
 			var err error
-			cur, err = readCharLiteral(cur, curIdx)
+			cur, err = readCharLiteral(cur)
 			if err != nil {
 				return nil, err
 			}
-			curIdx += cur.Len
 			continue
 		}
 
@@ -597,7 +669,7 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		return nil, fmt.Errorf(
-			"tokenize(): err:\n%s",
+			"tokenize(): err:\ncurIdx: %s\n%s", string(userInput[curIdx]),
 			errorAt(curIdx, "invalid token"),
 		)
 	}

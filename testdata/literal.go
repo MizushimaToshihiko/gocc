@@ -2,7 +2,7 @@ package test
 
 func main() {
 	assert(97, 'a', "'a'")
-	assert(10, '\n', "'\n'")
+	assert(10, '\n', "'\\n'")
 
 	assert(511, 0o777, "0o777")
 	assert(0, 0x0, "0x0")

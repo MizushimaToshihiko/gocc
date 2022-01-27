@@ -607,7 +607,8 @@ func (c *codeWriter) storeGp(r, offset, sz int) {
 }
 
 func isImplicitFn(fnName string) bool {
-	var imFn []string = []string{"printf", "exit", "assert", "println"}
+	var imFn []string = []string{
+		"printf", "exit", "assert", "println"}
 	for _, f := range imFn {
 		if fnName == f {
 			return true
