@@ -1,0 +1,21 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+
+#define ASSERT(x, y) assert(x, y, #y)
+
+void assert(int expected, int actual, char *code) {
+  if (expected == actual) {
+    printf("%s => %d\n", code, actual);
+  } else {
+    printf("%s => %d expected but got %d\n", code, expected, actual);
+    exit(1);
+  }
+}
+
+void println(char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  printf(fmt, ap);
+  printf("\n");
+}

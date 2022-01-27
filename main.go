@@ -11,12 +11,14 @@ import (
 var optOut *os.File
 var inputPath string
 
+var isdeb bool // Is debug mode or not.
+
 func exists(name string) bool {
 	_, err := os.Stat(name)
 	return !os.IsNotExist(err)
 }
 
-func compile(arg string, w io.Writer) error {
+func compile(prtok bool, arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
 
@@ -25,30 +27,33 @@ func compile(arg string, w io.Writer) error {
 	}
 
 	var err error
-	token, err = tokenizeFile(arg)
+	var tok *Token
+	tok, err = tokenizeFile(arg)
 	if err != nil {
-		// printTokens()
+		// printTokens(tok)
 		return err
 	}
 
-	// printTokens()
-	prog := program()
-	err = addType(prog)
+	if prtok {
+		printTokens(tok)
+		return nil
+	}
+
+	if isdeb {
+		printTokens(tok)
+	}
+
+	prog := parse(tok)
 	if err != nil {
 		return err
 	}
-
-	// for n := node; n != nil; n = n.Next {
-	// 	walkInOrder(n)
-	// }
-	// }
 
 	fmt.Fprintf(w, ".file 1 \"%s\"\n", curFilename)
 	return codegen(w, prog) // make the asm code, down on the AST
 }
 
 func usage(status int) {
-	fmt.Fprintf(os.Stderr, "gocc [ -o <path> ] <file>\n")
+	fmt.Fprintf(os.Stderr, "usage: ./bin/gocc [ -o <path> ] <file>\n")
 	os.Exit(status)
 }
 
@@ -60,6 +65,9 @@ func main() {
 	flag.StringVar(&outpath, "o", "", "The output file name")
 	var help bool
 	flag.BoolVar(&help, "help", false, "Help")
+	var prtok bool
+	flag.BoolVar(&prtok, "prtok", false, "print tokens only")
+	flag.BoolVar(&isdeb, "debug", false, "debug mode or not")
 	flag.Parse()
 
 	if help {
@@ -84,7 +92,7 @@ func main() {
 		}
 	}
 
-	if err := compile(inputPath, optOut); err != nil {
+	if err := compile(prtok, inputPath, optOut); err != nil {
 		log.Fatal(err)
 	}
 }

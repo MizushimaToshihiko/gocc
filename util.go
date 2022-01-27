@@ -5,37 +5,20 @@ import (
 	"runtime"
 )
 
-func assert(b bool, m string) {
-	if !b {
-		panic(m)
+func min(x, y int) int {
+	if x < y {
+		return x
 	}
+	return y
 }
 
-// for printTokens function, the pointer of the head token
-// stored in 'headTok'.
-var headTok *Token
-
-func printTokens() {
-	fmt.Print("# Tokens:\n# ")
-	tok := headTok.Next
-	// var kind string
+func printTokens(tok *Token) {
+	fmt.Print("# Tokens:\n")
 	for tok.Next != nil {
-		// 	switch tok.Kind {
-		// 	case TK_IDENT:
-		// 		kind = "IDENT"
-		// 	case TK_NUM:
-		// 		kind = "NUM"
-		// 	case TK_RESERVED:
-		// 		kind = "RESERVED"
-		// 	case TK_SIZEOF:
-		// 		kind = "SIZEOF"
-		// 	case TK_STR:
-		// 		kind = "STR"
-		// 	default:
-		// 		log.Fatal("unknown token kind")
-		// 	}
-		// 	fmt.Printf(" %s: Str:\"%s\" :%d Val:%d\n", kind, tok.Str, tok.Len, tok.Val)
-		fmt.Printf(" '%s'", tok.Str)
+		fmt.Printf(" '%s' ", tok.Str)
+		if tok.Str == ";" || tok.Kind == TK_COMM {
+			fmt.Println()
+		}
 		tok = tok.Next
 	}
 
@@ -46,23 +29,33 @@ func printTokens() {
 	fmt.Print("\n\n")
 }
 
-// func printCurTokInit() {
-// 	fmt.Print("# Current Token: ")
-// }
-
-func printCurTok() {
-	fmt.Printf(" %d:'%s' \n", token.Kind, token.Str)
+func printCurTok(tok *Token) {
+	if !isdeb {
+		return
+	}
+	fmt.Printf("'%s': kind: %d loc: %d line: %d \n",
+		tok.Str, tok.Kind, tok.Loc, tok.LineNo)
 }
 
 func printCalledFunc() {
-	pc, _, line, _ := runtime.Caller(2)
-	fn := runtime.FuncForPC(pc)
-	fmt.Printf(" %s %d\n", fn.Name(), line)
+	if !isdeb {
+		return
+	}
+	var pc uintptr
+	var line int
+	var fn *runtime.Func
+	pc, _, line, _ = runtime.Caller(3)
+	fn = runtime.FuncForPC(pc)
+	fmt.Printf("	3: %s %d\n", fn.Name(), line)
+	pc, _, line, _ = runtime.Caller(2)
+	fn = runtime.FuncForPC(pc)
+	fmt.Printf("	2: %s %d\n", fn.Name(), line)
 	pc, _, line, _ = runtime.Caller(1)
 	fn = runtime.FuncForPC(pc)
-	fmt.Printf(" %s %d\n", fn.Name(), line)
+	fmt.Printf("	1: %s %d\n", fn.Name(), line)
 }
 
+// 以下要修正
 var ND = map[NodeKind]string{
 	0:  "ND_ADD",       // 0: +
 	1:  "ND_SUB",       // 1: -
@@ -180,12 +173,12 @@ func inOrder(node *Node) {
 		} else {
 			fmt.Printf(" '%s': %s ", ND[node.Kind], "if")
 		}
-	case ND_WHILE:
-		if isLeaf(node) {
-			fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "for-stmt")
-		} else {
-			fmt.Printf(" '%s': %s ", ND[node.Kind], "for-stmt")
-		}
+	// case ND_WHILE:
+	// 	if isLeaf(node) {
+	// 		fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "for-stmt")
+	// 	} else {
+	// 		fmt.Printf(" '%s': %s ", ND[node.Kind], "for-stmt")
+	// 	}
 	case ND_FOR:
 		if isLeaf(node) {
 			fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "for-clause")
@@ -222,12 +215,12 @@ func inOrder(node *Node) {
 		} else {
 			fmt.Printf(" '%s': %s ", ND[node.Kind], "ExprStmt")
 		}
-	case ND_NULL:
-		if isLeaf(node) {
-			fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "NULL")
-		} else {
-			fmt.Printf(" '%s': %s ", ND[node.Kind], "NULL")
-		}
+		// case ND_NULL:
+		// 	if isLeaf(node) {
+		// 		fmt.Printf(" '%s: %s': leaf ", ND[node.Kind], "NULL")
+		// 	} else {
+		// 		fmt.Printf(" '%s': %s ", ND[node.Kind], "NULL")
+		// 	}
 	}
 	inOrder(node.Rhs)
 }
