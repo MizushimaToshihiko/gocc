@@ -1,6 +1,7 @@
 bin/*
 testdata/*
-!testdata/tests*
-!testdata/examples
+!testdata/*.go
+!testdata/common
+!testdata/esc
 profile
-funcs
+debug.txt
