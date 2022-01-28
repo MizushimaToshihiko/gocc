@@ -67,7 +67,7 @@ func main() {
 	flag.BoolVar(&help, "help", false, "Help")
 	var prtok bool
 	flag.BoolVar(&prtok, "prtok", false, "print tokens only")
-	flag.BoolVar(&isdeb, "debug", false, "debug mode or not")
+	flag.BoolVar(&isdeb, "isdeb", false, "debug mode or not")
 	flag.Parse()
 
 	if help {

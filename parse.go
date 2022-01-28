@@ -462,7 +462,7 @@ func pushTagScope(tok *Token, ty *Type) {
 // builtin-type = void | "bool" | "byte"| "int16" | "int" | "int64" |
 //                "string"
 //
-func declSpec(rest **Token, tok *Token) *Type {
+func declSpec(rest **Token, tok *Token, name *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -485,7 +485,7 @@ func declSpec(rest **Token, tok *Token) *Type {
 	} else if equal(tok, "int64") {
 		ty = ty_long
 	} else if equal(tok, "struct") { // struct type
-		ty = structDecl(&tok, tok.Next)
+		ty = structDecl(&tok, tok.Next, name)
 	}
 
 	// Handle user-defined types.
@@ -506,7 +506,7 @@ func declSpec(rest **Token, tok *Token) *Type {
 	return ty
 }
 
-func findBase(rest **Token, tok *Token) *Type {
+func findBase(rest **Token, tok *Token, name *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -514,7 +514,7 @@ func findBase(rest **Token, tok *Token) *Type {
 		!(isTypename(tok) && !equal(tok.Next, "(")) {
 		tok = tok.Next
 	}
-	ty := declSpec(&tok, tok)
+	ty := declSpec(&tok, tok, name)
 	*rest = tok // どこまでtokenを読んだか
 	return ty
 }
@@ -536,21 +536,21 @@ func readArr(tok *Token, base *Type) *Type {
 }
 
 // type-preffix = ("[" const-expr "]")*
-func readTypePreffix(rest **Token, tok *Token) *Type {
+func readTypePreffix(rest **Token, tok *Token, name *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
 	if consume(&tok, tok, "*") {
-		return pointerTo(readTypePreffix(rest, tok))
+		return pointerTo(readTypePreffix(rest, tok, name))
 	}
 
 	if !equal(tok, "[") {
-		return declSpec(rest, tok)
+		return declSpec(rest, tok, name)
 	}
 
 	start := tok
 
-	base := findBase(&tok, tok)
+	base := findBase(&tok, tok, name)
 	arrTy := readArr(start, base)
 	*rest = tok
 	return arrTy
@@ -571,7 +571,7 @@ func declarator(rest **Token, tok *Token) *Type {
 	if equal(tok.Next, "(") {
 		ty = typeSuffix(&tok, tok.Next, nil)
 	} else {
-		ty = readTypePreffix(&tok, tok.Next)
+		ty = readTypePreffix(&tok, tok.Next, name)
 	}
 	*rest = tok
 	ty.Name = name
@@ -755,7 +755,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	}
 
 	if init.Ty.Kind == TY_ARRAY {
-		readTypePreffix(&tok, tok) // discard the return value for now.
+		readTypePreffix(&tok, tok, nil) // discard the return value for now.
 		arrayInitializer1(rest, tok, init)
 		return
 	}
@@ -763,7 +763,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	// fmt.Printf("init.Ty: %#v\n\n", init.Ty)
 	if init.Ty.Kind == TY_STRUCT {
 		if equal(tok.Next, "{") {
-			readTypePreffix(&tok, tok) // discard the return value for now.
+			readTypePreffix(&tok, tok, nil) // discard the return value for now.
 			structInitializer1(rest, tok, init)
 			return
 		}
@@ -958,7 +958,7 @@ func abstructDeclarator(rest **Token, tok *Token, ty *Type) *Type {
 	}
 
 	if isTypename(tok.Next) {
-		ty = declSpec(&tok, tok)
+		ty = declSpec(&tok, tok, nil)
 	}
 
 	for i := 0; i < nPtr; i++ {
@@ -1821,7 +1821,7 @@ func cast(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	if isTypename(tok) {
-		ty := readTypePreffix(&tok, tok)
+		ty := readTypePreffix(&tok, tok, nil)
 		start := tok
 		tok = skip(tok, "(")
 		node := newCast(cast(&tok, tok), ty)
@@ -1885,6 +1885,8 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 			first = false
 
 			memTy := declarator(&tok, tok)
+			// fmt.Printf("tok: %#v\n\n", tok)
+			// fmt.Printf("memTy: %#v\n\n", memTy)
 			mem := &Member{
 				Name: getIdent(memTy.Name),
 				Ty:   memTy,
@@ -1904,7 +1906,7 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 }
 
 // struct-decl = "struct" "{" struct-member "}"
-func structDecl(rest **Token, tok *Token) *Type {
+func structDecl(rest **Token, tok *Token, name *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -1912,8 +1914,12 @@ func structDecl(rest **Token, tok *Token) *Type {
 
 	// Construct a struct object.
 	ty := structType()
+	pushScope(getIdent(name)).TyDef = ty
 	ty.Mems = structMems(rest, tok, ty)
 
+	for m := ty.Mems; m != nil; m = m.Next {
+		fmt.Printf("m: %#v\n\n", m)
+	}
 	// Assign offsers within the struct to members.
 	offset := 0
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
@@ -1933,6 +1939,14 @@ func getStructMember(ty *Type, tok *Token) *Member {
 	printCurTok(tok)
 	printCalledFunc()
 
+	if ty.Kind != TY_STRUCT {
+		for ty != nil && ty.Base != nil {
+			ty = ty.Base
+		}
+	}
+
+	fmt.Printf("ty: %#v\n\n", ty)
+
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
 		if mem.Name == tok.Str {
 			return mem
@@ -1941,17 +1955,35 @@ func getStructMember(ty *Type, tok *Token) *Member {
 	panic("\n" + errorTok(tok, "no such member"))
 }
 
-func structRef(lhs *Node, tok *Token) *Node {
+func structRef(lhs *Node, tok, toknext *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
 	addType(lhs)
-	if lhs.Ty.Kind != TY_STRUCT {
-		panic("\n" + errorTok(lhs.Tok, "not a struct"))
+
+	fmt.Printf("structRef: lhs: %#v\n\n", lhs)
+	fmt.Printf("structRef: lsh.Tok: %#v\n\n", lhs.Tok)
+	fmt.Printf("structRef: lhs.Ty: %#v\n\n", lhs.Ty)
+
+	if lhs.Ty.Base != nil {
+		fmt.Printf("structRef: lhs.Ty.Base: %#v\n\n", lhs.Ty.Base)
 	}
 
-	node := newUnary(ND_MEMBER, lhs, tok)
-	node.Mem = getStructMember(lhs.Ty, tok)
+	// var lhsbase *Type
+	// for base := lhs.Ty.Base; base != nil && base.Base != nil; base = base.Base {
+	// 	lhsbase = base
+	// }
+
+	if lhs.Ty.Kind != TY_STRUCT {
+		if lhs.Ty.Base != nil && lhs.Ty.Base.Kind != TY_STRUCT {
+			panic("\n" + errorTok(lhs.Tok, "not a struct"))
+		}
+		lhs = newUnary(ND_DEREF, lhs, tok)
+		addType(lhs)
+	}
+
+	node := newUnary(ND_MEMBER, lhs, toknext)
+	node.Mem = getStructMember(lhs.Ty, toknext)
 	return node
 }
 
@@ -1993,14 +2025,15 @@ func postfix(rest **Token, tok *Token) *Node {
 		}
 
 		if equal(tok, ".") {
-			node2 := findLhsVarNode(node)
-			if node2.Obj.Ty.Kind == TY_PTR {
-				node = newUnary(ND_DEREF, node, tok)
-			}
-			node = structRef(node, tok.Next)
+			node = structRef(node, tok, tok.Next)
 			tok = tok.Next.Next
 			continue
 		}
+
+		// if equal(tok, "->") {
+		// 	node = structRef(node, tok, tok.Next)
+		// 	tok = tok.Next.Next
+		// }
 
 		if equal(tok, "++") {
 			node = newIncDec(node, tok, 1)
@@ -2095,7 +2128,7 @@ func primary(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "Sizeof") && equal(tok.Next, "(") &&
 		isTypename(tok.Next.Next) && !equal(tok.Next.Next.Next, "(") {
-		ty := readTypePreffix(&tok, tok.Next.Next)
+		ty := readTypePreffix(&tok, tok.Next.Next, nil)
 		*rest = skip(tok, ")")
 		return newNum(int64(ty.Sz), start)
 	}
@@ -2157,7 +2190,9 @@ func parseTypedef(tok *Token) *Token {
 		first = false
 
 		ty := declarator(&tok, tok)
-		pushScope(getIdent(ty.Name)).TyDef = ty
+		if ty.Kind != TY_STRUCT {
+			pushScope(getIdent(ty.Name)).TyDef = ty
+		}
 	}
 	return tok
 }
@@ -2201,7 +2236,7 @@ func function(tok *Token) *Token {
 
 	ty := declarator(&tok, tok)
 
-	ty.RetTy = readTypePreffix(&tok, tok)
+	ty.RetTy = readTypePreffix(&tok, tok, nil)
 	fn := newGvar(getIdent(ty.Name), ty)
 	fn.IsFunc = true
 	fn.IsDef = !consume(&tok, tok, ";")
