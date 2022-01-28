@@ -767,7 +767,10 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			structInitializer(rest, tok, init)
 			return
 		}
-
+		if equal(tok, "{") {
+			structInitializer(rest, tok, init)
+			return
+		}
 		// A struct can be initialized with another struct. E.g.
 		// `type x y` where y is a another struct.
 		// Handle that case first.
@@ -1892,7 +1895,11 @@ func structDecl(rest **Token, tok *Token, name *Token) *Type {
 
 	// Construct a struct object.
 	ty := structType()
-	pushScope(getIdent(name)).TyDef = ty
+	if name != nil {
+		pushScope(getIdent(name)).TyDef = ty
+	} else {
+		pushScope(newUniqueName()).TyDef = ty
+	}
 	ty.Mems = structMems(rest, tok, ty)
 
 	// Assign offsers within the struct to members.
