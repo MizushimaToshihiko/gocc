@@ -1823,10 +1823,8 @@ func cast(rest **Token, tok *Token) *Node {
 	if isTypename(tok) {
 		ty := readTypePreffix(&tok, tok, nil)
 		start := tok
-		tok = skip(tok, "(")
 		node := newCast(cast(&tok, tok), ty)
 		node.Tok = start
-		tok = skip(tok, ")")
 		*rest = tok
 		return node
 	}
