@@ -30,7 +30,7 @@ func TestGetTypeName(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			ty := readTypePreffix(&tok, tok)
+			ty := readTypePreffix(&tok, tok, nil)
 
 			// fmt.Printf("tok: %#v\n\n", tok)
 			if ty.Kind != c.want2 {

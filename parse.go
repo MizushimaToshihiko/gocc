@@ -1885,8 +1885,6 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 			first = false
 
 			memTy := declarator(&tok, tok)
-			// fmt.Printf("tok: %#v\n\n", tok)
-			// fmt.Printf("memTy: %#v\n\n", memTy)
 			mem := &Member{
 				Name: getIdent(memTy.Name),
 				Ty:   memTy,
@@ -1917,9 +1915,6 @@ func structDecl(rest **Token, tok *Token, name *Token) *Type {
 	pushScope(getIdent(name)).TyDef = ty
 	ty.Mems = structMems(rest, tok, ty)
 
-	for m := ty.Mems; m != nil; m = m.Next {
-		fmt.Printf("m: %#v\n\n", m)
-	}
 	// Assign offsers within the struct to members.
 	offset := 0
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
@@ -1945,8 +1940,6 @@ func getStructMember(ty *Type, tok *Token) *Member {
 		}
 	}
 
-	fmt.Printf("ty: %#v\n\n", ty)
-
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
 		if mem.Name == tok.Str {
 			return mem
@@ -1955,24 +1948,11 @@ func getStructMember(ty *Type, tok *Token) *Member {
 	panic("\n" + errorTok(tok, "no such member"))
 }
 
-func structRef(lhs *Node, tok, toknext *Token) *Node {
+func structRef(lhs *Node, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
 	addType(lhs)
-
-	fmt.Printf("structRef: lhs: %#v\n\n", lhs)
-	fmt.Printf("structRef: lsh.Tok: %#v\n\n", lhs.Tok)
-	fmt.Printf("structRef: lhs.Ty: %#v\n\n", lhs.Ty)
-
-	if lhs.Ty.Base != nil {
-		fmt.Printf("structRef: lhs.Ty.Base: %#v\n\n", lhs.Ty.Base)
-	}
-
-	// var lhsbase *Type
-	// for base := lhs.Ty.Base; base != nil && base.Base != nil; base = base.Base {
-	// 	lhsbase = base
-	// }
 
 	if lhs.Ty.Kind != TY_STRUCT {
 		if lhs.Ty.Base != nil && lhs.Ty.Base.Kind != TY_STRUCT {
@@ -1982,8 +1962,8 @@ func structRef(lhs *Node, tok, toknext *Token) *Node {
 		addType(lhs)
 	}
 
-	node := newUnary(ND_MEMBER, lhs, toknext)
-	node.Mem = getStructMember(lhs.Ty, toknext)
+	node := newUnary(ND_MEMBER, lhs, tok.Next)
+	node.Mem = getStructMember(lhs.Ty, tok.Next)
 	return node
 }
 
@@ -2025,15 +2005,10 @@ func postfix(rest **Token, tok *Token) *Node {
 		}
 
 		if equal(tok, ".") {
-			node = structRef(node, tok, tok.Next)
+			node = structRef(node, tok)
 			tok = tok.Next.Next
 			continue
 		}
-
-		// if equal(tok, "->") {
-		// 	node = structRef(node, tok, tok.Next)
-		// 	tok = tok.Next.Next
-		// }
 
 		if equal(tok, "++") {
 			node = newIncDec(node, tok, 1)
