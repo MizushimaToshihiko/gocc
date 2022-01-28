@@ -4,6 +4,14 @@ var g3 byte = 3
 var g4 int16 = 4
 var g5 int = 5
 var g6 int64 = 6
+var g9 [3]int = [3]int{0, 1, 2}
+type gT11 struct {
+	a byte
+	b int
+}
+var g11 [2]gT11 = [2]gT11{gT11{1, 2}, gT11{3, 4}}
+type gT12 struct{ a [2]int }
+var g12 [2]gT12 = [2]gT12{{{1, 2}}}
 
 func main() {
 	var x1 [3]int = [3]int{1, 2, 3}
@@ -122,5 +130,19 @@ func main() {
 	assert(5, g5, "g5")
 	assert(6, g6, "g6")
 
-	println("OK")
+	assert(0, g9[0], "g9[0]")
+	assert(1, g9[1], "g9[1]")
+	assert(2, g9[2], "g9[2]")
+
+	assert(1, g11[0].a, "g11[0].a")
+	assert(2, g11[0].b, "g11[0].b")
+	assert(3, g11[1].a, "g11[1].a")
+	assert(4, g11[1].b, "g11[1].b")
+
+	assert(1, g12[0].a[0], "g12[0].a[0]")
+	assert(2, g12[0].a[1], "g12[0].a[1]")
+	assert(0, g12[1].a[0], "g12[1].a[0]")
+	assert(0, g12[1].a[1], "g12[1].a[1]")
+
+	// println("OK")
 }

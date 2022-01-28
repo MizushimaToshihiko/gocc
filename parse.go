@@ -683,13 +683,13 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 }
 
 // array-initializer = (type-preffix)? decl-spec "{" initializer ("," initializer)* ","? "}"
-func arrayInitializer1(rest **Token, tok *Token, init *Initializer) {
+func arrayInitializer(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
 
 	tok = skip(tok, "{")
 
-	for i := 0; !consumeEnd(rest, tok); i++ {
+	for i := 0; !consume(rest, tok, "}"); i++ {
 		if i > 0 {
 			tok = skip(tok, ",")
 		}
@@ -703,7 +703,7 @@ func arrayInitializer1(rest **Token, tok *Token, init *Initializer) {
 }
 
 // struct-initializer = "{" initializer ("," initializer)* ","? "}"
-func structInitializer1(rest **Token, tok *Token, init *Initializer) {
+func structInitializer(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -756,7 +756,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 	if init.Ty.Kind == TY_ARRAY {
 		readTypePreffix(&tok, tok, nil) // discard the return value for now.
-		arrayInitializer1(rest, tok, init)
+		arrayInitializer(rest, tok, init)
 		return
 	}
 
@@ -764,7 +764,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	if init.Ty.Kind == TY_STRUCT {
 		if equal(tok.Next, "{") {
 			readTypePreffix(&tok, tok, nil) // discard the return value for now.
-			structInitializer1(rest, tok, init)
+			structInitializer(rest, tok, init)
 			return
 		}
 
@@ -778,7 +778,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			return
 		}
 
-		structInitializer2(rest, tok, init)
+		structInitializer(rest, tok, init)
 		return
 	}
 
@@ -893,47 +893,29 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	return newBinary(ND_COMMA, lhs, rhs, tok)
 }
 
-// writeBuf returns the trancated value.
-func writeBuf(val int64, sz int) int64 {
-	switch sz {
-	case 1:
-		return int64(int8(val))
-	case 2:
-		return int64(int16(val))
-	case 4:
-		return int64(int(val))
-	case 8:
-		return val
-	default:
-		panic("internal error")
-	}
-
-}
-
 // integer又はscalarの場合Ty.Sz分だけゼロ埋めする
 func writeGvarData(
 	init *Initializer, ty *Type, buf *[]rune, offset int) {
 	printCalledFunc()
 
 	if ty.Kind == TY_ARRAY {
-		// sz := ty.Base.Sz
+		sz := ty.Base.Sz
 		for i := 0; i < ty.ArrSz; i++ {
-			writeGvarData(init.Children[i], ty.Base, buf, i)
+			writeGvarData(init.Children[i], ty.Base, buf, offset+sz*i)
 		}
 		return
 	}
 
-	// if ty.Kind == TY_STRUCT {
-	// 	for mem := ty.Mems; mem != nil; mem = mem.Next {
-	// 		cur = writeGvarData(cur, init.Children[mem.Idx], mem.Ty, buf,
-	// 			offset+mem.Offset)
-	// 	}
-	// 	return cur
-	// }
+	if ty.Kind == TY_STRUCT {
+		for mem := ty.Mems; mem != nil; mem = mem.Next {
+			writeGvarData(init.Children[mem.Idx], mem.Ty, buf,
+				offset+mem.Offset)
+		}
+		return
+	}
 
 	if init.Expr != nil {
-		*buf = make([]rune, ty.Sz)
-		(*buf)[0] = rune(eval(init.Expr))
+		(*buf)[offset] = rune(eval(init.Expr))
 	}
 }
 
@@ -943,7 +925,7 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 
-	var buf []rune = make([]rune, 0)
+	var buf []rune = make([]rune, v.Ty.Sz)
 	writeGvarData(init, v.Ty, &buf, 0)
 	v.InitData = buf
 }
