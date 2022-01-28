@@ -15,6 +15,7 @@ var g12 [2]gT12 = [2]gT12{{{1, 2}}}
 
 // Unsupported yet. => supported
 var g40 [2]struct{ a int } = [2]struct{ a int }{{1}, {3}}
+var g41 [3]struct{ a int; b int } = [3]struct{ a int;b int }{{1,2}, {3,4},{5,6}}
 
 func main() {
 	var x1 [3]int = [3]int{1, 2, 3}
@@ -147,5 +148,15 @@ func main() {
 	assert(0, g12[1].a[0], "g12[1].a[0]")
 	assert(0, g12[1].a[1], "g12[1].a[1]")
 
-	// println("OK")
+	assert(1, g40[0].a, "g40[0].a")
+	assert(3, g40[1].a, "g40[1].a")
+
+	assert(1, g41[0].a, "g41[0].a")
+	assert(2, g41[0].b, "g41[0].b")
+	assert(3, g41[1].a, "g41[1].a")
+	assert(4, g41[1].b, "g41[1].b")
+	assert(5, g41[2].a, "g41[2].a")
+	assert(6, g41[2].b, "g41[2].b")
+
+	println("OK")
 }
