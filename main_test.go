@@ -1,60 +1,23 @@
 package main
 
 import (
-	"os"
-	"os/exec"
 	"testing"
 )
 
-func TestCompile(t *testing.T) {
-
-	var asm *os.File
-	var err error
-	asm, err = os.Create("testdata/asm.s")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := asm.Close(); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
-	if err = compile("testdata/tests", asm); err != nil {
-		t.Fatal(err)
-	}
-
-	var b []byte
-	b, err = exec.Command(
-		"gcc",
-		"-static",
-		"-g",
-		"-o",
-		"testdata/asm",
-		"testdata/asm.s",
-	).CombinedOutput()
-	if err != nil {
-		t.Fatalf("\noutput:\n%s\n%v", string(b), err)
-	}
-
-	b, err = exec.Command("testdata/asm").CombinedOutput()
-	if err != nil {
-		t.Fatalf("\noutput:\n%s\n%v", string(b), err)
-	}
-	t.Logf("\noutput:\n%s", string(b))
-}
-
 func TestGetTypeName(t *testing.T) {
 	cases := map[string]struct {
-		in   string
-		want string
+		in    string
+		want1 string
+		want2 TypeKind
 	}{
-		"case1": {"[2]int", "[2]int"},
-		"case2": {"[2][3]int", "[2][3]int"},
-		"case3": {"****int", "pointer"},
-		"case4": {"byte", "byte"},
-		"case5": {"string", "string"},
-		"case6": {"*string", "pointer"},
+		"case1": {"[2]int", "[2]int", TY_ARRAY},
+		"case2": {"[2][3]int", "[2][3]int", TY_ARRAY},
+		"case3": {"****int", "****int", TY_PTR},
+		"case4": {"byte", "byte", TY_BYTE},
+		"case5": {"string", "string", TY_PTR},
+		"case6": {"*string", "*string", TY_PTR},
+		"case7": {"[1 + 1]int", "[2]int", TY_ARRAY},
+		"case8": {"[1 + 1]*int", "[2]*int", TY_ARRAY},
 	}
 
 	for name, c := range cases {
@@ -62,14 +25,24 @@ func TestGetTypeName(t *testing.T) {
 			userInput = append([]rune(c.in), 0)
 			curIdx = 0
 			var err error
-			token, err = tokenize()
+			var tok *Token
+			tok, err = tokenize("main_test")
 			if err != nil {
 				t.Fatal(err)
 			}
-			ty := readTypePreffix()
+			ty := readTypePreffix(&tok, tok)
 
-			if ty.Name != c.want {
-				t.Fatalf("%s expected, but got %s", c.want, ty.Name)
+			// fmt.Printf("tok: %#v\n\n", tok)
+			if ty.Kind != c.want2 {
+				t.Fatalf("%s: %d expected, but got %d", c.in, c.want2, ty.Kind)
+			}
+			if ty.TyName != c.want1 {
+				t.Fatalf("%s: %s expected, but got %s", c.in, c.want1, ty.TyName)
+			}
+			if tok.Kind != TK_RESERVED &&
+				tok.Str == ";" &&
+				tok.Next.Kind == TK_EOF {
+				t.Fatalf("the token position: EOF expected, but %s", tok.Str)
 			}
 		})
 	}

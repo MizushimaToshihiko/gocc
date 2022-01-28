@@ -181,3 +181,8 @@ func typeStr(ty *Type, tok *Token) string {
 	return retTy
 }
 ``` 
+
+2022/01/19
+- 引数付の関数定義?呼び出し?時にsegmentation faultが出る
+- testdata/commonにc言語で定義するとsegmentation faultにならない
+- 2022/01/20 PrologueとEpilogueのレジスタ名が間違っていた為

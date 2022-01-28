@@ -1,49 +1,24 @@
 package main
 
 import (
-	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"os"
 )
 
-var filename string
+var optOut *os.File
+var inputPath string
 
-func readFile(path string) ([]rune, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	br := bufio.NewReader(f)
-
-	ret := make([]rune, 0, 1064)
-	for {
-		ru, sz, err := br.ReadRune()
-		if sz == 0 || err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		ret = append(ret, ru)
-	}
-	ret = append(ret, 0)
-	return ret, nil
-}
+var isdeb bool // Is debug mode or not.
 
 func exists(name string) bool {
 	_, err := os.Stat(name)
 	return !os.IsNotExist(err)
 }
 
-func compile(arg string, w io.Writer) error {
+func compile(prtok bool, arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
 
@@ -52,40 +27,72 @@ func compile(arg string, w io.Writer) error {
 	}
 
 	var err error
-	userInput, err = readFile(arg)
+	var tok *Token
+	tok, err = tokenizeFile(arg)
 	if err != nil {
-		return err
-	}
-	filename = arg
-
-	token, err = tokenize()
-	if err != nil {
-		printTokens()
+		// printTokens(tok)
 		return err
 	}
 
-	// printTokens()
-	prog := program()
-	err = addType(prog)
+	if prtok {
+		printTokens(tok)
+		return nil
+	}
+
+	if isdeb {
+		printTokens(tok)
+	}
+
+	prog := parse(tok)
 	if err != nil {
 		return err
 	}
 
-	// for n := node; n != nil; n = n.Next {
-	// 	walkInOrder(n)
-	// }
-	// }
-
-	fmt.Fprintf(w, ".file 1 \"%s\"\n", filename)
+	fmt.Fprintf(w, ".file 1 \"%s\"\n", curFilename)
 	return codegen(w, prog) // make the asm code, down on the AST
 }
 
+func usage(status int) {
+	fmt.Fprintf(os.Stderr, "usage: ./bin/gocc [ -o <path> ] <file>\n")
+	os.Exit(status)
+}
+
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("invalid number of arguments")
+	// setting log
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
+
+	var outpath string
+	flag.StringVar(&outpath, "o", "", "The output file name")
+	var help bool
+	flag.BoolVar(&help, "help", false, "Help")
+	var prtok bool
+	flag.BoolVar(&prtok, "prtok", false, "print tokens only")
+	flag.BoolVar(&isdeb, "debug", false, "debug mode or not")
+	flag.Parse()
+
+	if help {
+		usage(0)
 	}
 
-	if err := compile(os.Args[1], os.Stdout); err != nil {
+	if len(os.Args) < 2 {
+		fmt.Fprintln(os.Stderr, "no input files")
+		usage(1)
+	}
+
+	inputPath = flag.Args()[0]
+
+	var err error
+	if outpath == "" {
+		optOut = os.Stdout
+	} else {
+		optOut, err = os.Create(outpath)
+		if err != nil {
+			fmt.Println(inputPath)
+			log.Fatal(err)
+		}
+	}
+
+	if err := compile(prtok, inputPath, optOut); err != nil {
 		log.Fatal(err)
 	}
 }
