@@ -13,9 +13,8 @@ var g11 [2]gT11 = [2]gT11{gT11{1, 2}, gT11{3, 4}}
 type gT12 struct{ a [2]int }
 var g12 [2]gT12 = [2]gT12{{{1, 2}}}
 
-// Unsupported yet. => supported
 var g40 [2]struct{ a int } = [2]struct{ a int }{{1}, {3}}
-var g41 [3]struct{ a int; b int } = [3]struct{ a int;b int }{{1,2}, {3,4},{5,6}}
+var g41 [3]struct{ a int; b int } = [3]struct{ a int;b int }{{1,2},{3,4},{5,6}}
 
 func main() {
 	var x1 [3]int = [3]int{1, 2, 3}
