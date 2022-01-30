@@ -157,6 +157,10 @@ func main() {
 	assert(4, g41[1].b, "g41[1].b")
 	assert(5, g41[2].a, "g41[2].a")
 	assert(6, g41[2].b, "g41[2].b")
+	var a [3]int=[3]int{1,2,3,};
+  assert(3, a[2], "var a [3]int=[3]int{1,2,3,}; a[2]");
+	var x19 struct {a int;b int;c int;}={1,2,3,};
+  assert(1, x19.a, "var x19 struct {a int;b int;c int;}={1,2,3,}; x19.a");
 
 	println("OK")
 }

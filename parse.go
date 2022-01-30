@@ -689,7 +689,7 @@ func arrayInitializer(rest **Token, tok *Token, init *Initializer) {
 
 	tok = skip(tok, "{")
 
-	for i := 0; !consume(rest, tok, "}"); i++ {
+	for i := 0; !consumeEnd(rest, tok); i++ {
 		if i > 0 {
 			tok = skip(tok, ",")
 		}
@@ -781,7 +781,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			return
 		}
 
-		structInitializer(rest, tok, init)
+		structInitializer2(rest, tok, init)
 		return
 	}
 
