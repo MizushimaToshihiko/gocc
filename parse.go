@@ -796,7 +796,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			return
 		}
 		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
-		fmt.Printf("initializer2: rhsTy: %#v\n\n", rhsTy)
 		if rhsTy.Kind == TY_VOID {
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
@@ -809,7 +808,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			for i := 0; i < init.Ty.ArrSz; i++ {
 				init.Children[i] = newInitializer(init.Ty.Base)
 			}
-			fmt.Printf("initializer2: init.Ty: %#v\n\n", init.Ty)
 			initializer2(rest, tok, init)
 			return
 		}
@@ -825,7 +823,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			for mem := init.Ty.Mems; mem != nil; mem = mem.Next {
 				init.Children[mem.Idx] = newInitializer(mem.Ty)
 			}
-			fmt.Printf("initializer2: init.Ty: %#v\n\n", init.Ty)
 			initializer2(rest, tok, init)
 			return
 		}
@@ -842,12 +839,9 @@ func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer 
 	printCurTok(tok)
 	printCalledFunc()
 
-	fmt.Printf("initializer: ty: %#v\n\n", ty)
 	init := newInitializer(ty)
 	initializer2(rest, tok, init)
 
-	fmt.Printf("initializer: init: %#v\n\n", init)
-	fmt.Printf("initializer: init.Ty: %#v\n\n", init.Ty)
 	*newTy = init.Ty
 	return init
 }
@@ -936,9 +930,6 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	// => unnecessary
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
-	fmt.Printf("lvarInitializer: init: %#v\n\n", init)
-	fmt.Printf("lvarInitializer: init.Ty: %#v\n\n", init.Ty)
-	fmt.Printf("lvarInitializer: v.Ty: %#v\n\n", v.Ty)
 	desg := &InitDesg{nil, 0, nil, v}
 
 	// If a partial initializer list is given, the standard requires
@@ -984,7 +975,6 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 
-	fmt.Printf("gvarInitializer: init.Ty: %#v\n\n", init.Ty)
 	var buf []rune = make([]rune, v.Ty.Sz)
 	writeGvarData(init, v.Ty, &buf, 0)
 	v.InitData = buf
@@ -1043,14 +1033,12 @@ func declaration(rest **Token, tok *Token) *Node {
 		i++
 		ty := declarator(&tok, tok)
 
-		fmt.Printf("tok: %#v\n\n", tok)
 		// if ty.Kind == TY_VOID {
 		// 	panic("\n" + errorTok(tok, "variable declared void"))
 		// }
 
 		v := newLvar(getIdent(ty.Name), ty)
 		if equal(tok, "=") {
-			fmt.Println("ここ")
 			expr := lvarInitializer(&tok, tok.Next, v)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
