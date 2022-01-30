@@ -798,7 +798,10 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
 		fmt.Printf("initializer2: rhsTy: %#v\n\n", rhsTy)
 		if rhsTy.Kind == TY_VOID {
-			panic(errorTok(tok, "the lhs and rhs both declared void"))
+			init.Expr = assign(rest, tok)
+			addType(init.Expr)
+			rhsTy = init.Expr.Ty
+			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
 		init.Ty = rhsTy
 		if init.Ty.Kind == TY_ARRAY {
@@ -830,7 +833,9 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		return
 	}
 
-	init.Expr = assign(rest, tok)
+	if init.Expr == nil {
+		init.Expr = assign(rest, tok)
+	}
 }
 
 func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer {
@@ -979,6 +984,7 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 
+	fmt.Printf("gvarInitializer: init.Ty: %#v\n\n", init.Ty)
 	var buf []rune = make([]rune, v.Ty.Sz)
 	writeGvarData(init, v.Ty, &buf, 0)
 	v.InitData = buf
