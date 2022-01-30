@@ -566,12 +566,13 @@ func declarator(rest **Token, tok *Token) *Type {
 		panic("\n" + errorTok(tok, "expected a variable name"))
 	}
 	name := tok
+	tok = tok.Next
 
 	var ty *Type
-	if equal(tok.Next, "(") {
-		ty = typeSuffix(&tok, tok.Next, nil)
+	if equal(tok, "(") {
+		ty = typeSuffix(&tok, tok, nil)
 	} else {
-		ty = readTypePreffix(&tok, tok.Next, name)
+		ty = readTypePreffix(&tok, tok, name)
 	}
 	*rest = tok
 	ty.Name = name
@@ -749,11 +750,13 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
 
+	// If rhs is string literal.
 	if init.Ty.Kind == TY_ARRAY && tok.Kind == TK_STR {
 		stringInitializer(rest, tok, init)
 		return
 	}
 
+	// If rhs is array literal.
 	if init.Ty.Kind == TY_ARRAY {
 		readTypePreffix(&tok, tok, nil) // discard the return value for now.
 		arrayInitializer(rest, tok, init)
@@ -785,6 +788,48 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		return
 	}
 
+	if init.Ty.Kind == TY_VOID {
+		var rhsTy *Type
+		if tok.Kind == TK_STR {
+			init.Ty = stringType()
+			initializer2(rest, tok, init)
+			return
+		}
+		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
+		fmt.Printf("initializer2: rhsTy: %#v\n\n", rhsTy)
+		if rhsTy.Kind == TY_VOID {
+			panic(errorTok(tok, "the lhs and rhs both declared void"))
+		}
+		init.Ty = rhsTy
+		if init.Ty.Kind == TY_ARRAY {
+			init.Children = make([]*Initializer, init.Ty.ArrSz)
+			for i := 0; i < init.Ty.ArrSz; i++ {
+				init.Children[i] = newInitializer(init.Ty.Base)
+			}
+			fmt.Printf("initializer2: init.Ty: %#v\n\n", init.Ty)
+			initializer2(rest, tok, init)
+			return
+		}
+		if init.Ty.Kind == TY_STRUCT {
+			// Count the number of struct members
+			var l int
+			for mem := init.Ty.Mems; mem != nil; mem = mem.Next {
+				l++
+			}
+
+			init.Children = make([]*Initializer, l)
+
+			for mem := init.Ty.Mems; mem != nil; mem = mem.Next {
+				init.Children[mem.Idx] = newInitializer(mem.Ty)
+			}
+			fmt.Printf("initializer2: init.Ty: %#v\n\n", init.Ty)
+			initializer2(rest, tok, init)
+			return
+		}
+		initializer2(rest, tok, init)
+		return
+	}
+
 	init.Expr = assign(rest, tok)
 }
 
@@ -792,9 +837,12 @@ func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer 
 	printCurTok(tok)
 	printCalledFunc()
 
+	fmt.Printf("initializer: ty: %#v\n\n", ty)
 	init := newInitializer(ty)
 	initializer2(rest, tok, init)
 
+	fmt.Printf("initializer: init: %#v\n\n", init)
+	fmt.Printf("initializer: init.Ty: %#v\n\n", init.Ty)
 	*newTy = init.Ty
 	return init
 }
@@ -883,6 +931,9 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	// => unnecessary
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
+	fmt.Printf("lvarInitializer: init: %#v\n\n", init)
+	fmt.Printf("lvarInitializer: init.Ty: %#v\n\n", init.Ty)
+	fmt.Printf("lvarInitializer: v.Ty: %#v\n\n", v.Ty)
 	desg := &InitDesg{nil, 0, nil, v}
 
 	// If a partial initializer list is given, the standard requires
@@ -985,12 +1036,15 @@ func declaration(rest **Token, tok *Token) *Node {
 		}
 		i++
 		ty := declarator(&tok, tok)
-		if ty.Kind == TY_VOID {
-			panic("\n" + errorTok(tok, "variable declared void"))
-		}
+
+		fmt.Printf("tok: %#v\n\n", tok)
+		// if ty.Kind == TY_VOID {
+		// 	panic("\n" + errorTok(tok, "variable declared void"))
+		// }
 
 		v := newLvar(getIdent(ty.Name), ty)
 		if equal(tok, "=") {
+			fmt.Println("ここ")
 			expr := lvarInitializer(&tok, tok.Next, v)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
