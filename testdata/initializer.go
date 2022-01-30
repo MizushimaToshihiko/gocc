@@ -12,98 +12,99 @@ package test
 // var g11 [2]gT11 = [2]gT11{gT11{1, 2}, gT11{3, 4}}
 // type gT12 struct{ a [2]int }
 // var g12 [2]gT12 = [2]gT12{{{1, 2}}}
+var g17 string = "foobar"
 
 // var g40 [2]struct{ a int } = [2]struct{ a int }{{1}, {3}}
 // var g41 [3]struct{ a int; b int } = [3]struct{ a int;b int }{{1,2},{3,4},{5,6}}
 
-var g01 = 3
-var g02 = 'a'
-var g03 = [3]int{1, 2, 3}
-var g04 = [2][3]int{{1, 2, 3}, {4, 5, 6}}
+// var g01 = 3
+// var g02 = 'a'
+// var g03 = [3]int{1, 2, 3}
+// var g04 = [2][3]int{{1, 2, 3}, {4, 5, 6}}
 
 // Belows are not supported yet.
 // var g05 = "abc"
 // var g06 = [2]string{"abc", "def"}
-var g07 = [2]struct {
-	a int
-	b int
-	c int
-}{
-	{1, 2, 3},
-	{4, 5, 6},
-}
+// var g07 = [2]struct {
+// 	a int
+// 	b int
+// 	c int
+// }{
+// 	{1, 2, 3},
+// 	{4, 5, 6},
+// }
 
 func main() {
-	var x01 = 3 + 1*2
-	assert(5, x01, "var x01=3;x01")
-	var x02 = [3]int{1, 2, 3}
-	assert(1, x02[0], "var x02=[3]int{1,2,3}; x02[0]")
-	assert(2, x02[1], "var x02=[3]int{1,2,3}; x02[1]")
-	assert(3, x02[2], "var x02=[3]int{1,2,3}; x02[2]")
-	var x03 = [2][3]int{{1, 2, 3}, {4, 5, 6}}
-	assert(1, x03[0][0], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[0][1]")
-	assert(2, x03[0][1], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[0][1]")
-	assert(3, x03[0][2], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[0][2]")
-	assert(4, x03[1][0], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[1][0]")
-	assert(5, x03[1][1], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[1][1]")
-	assert(6, x03[1][2], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[1][2]")
+	// var x01 = 3 + 1*2
+	// assert(5, x01, "var x01=3;x01")
+	// var x02 = [3]int{1, 2, 3}
+	// assert(1, x02[0], "var x02=[3]int{1,2,3}; x02[0]")
+	// assert(2, x02[1], "var x02=[3]int{1,2,3}; x02[1]")
+	// assert(3, x02[2], "var x02=[3]int{1,2,3}; x02[2]")
+	// var x03 = [2][3]int{{1, 2, 3}, {4, 5, 6}}
+	// assert(1, x03[0][0], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[0][1]")
+	// assert(2, x03[0][1], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[0][1]")
+	// assert(3, x03[0][2], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[0][2]")
+	// assert(4, x03[1][0], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[1][0]")
+	// assert(5, x03[1][1], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[1][1]")
+	// assert(6, x03[1][2], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[1][2]")
 
-	var x04 = "abc"
-	assert('a', x04[0], "var x04=\"abc\"; x04[0]")
+	// var x04 = "abc"
+	// assert('a', x04[0], "var x04=\"abc\"; x04[0]")
 
-	var x05 = [2]string{"abc", "def"}
-	assert('a', x05[0][0], "var x05 =[2]string{\"abc\",\"def\"}; x05[0][0]")
-	assert('b', x05[0][1], "var x05 =[2]string{\"abc\",\"def\"}; x05[0][1]")
-	assert('c', x05[0][2], "var x05 =[2]string{\"abc\",\"def\"}; x05[0][2]")
-	assert('d', x05[1][0], "var x05 =[2]string{\"abc\",\"def\"}; x05[1][0]")
-	assert('e', x05[1][1], "var x05 =[2]string{\"abc\",\"def\"}; x05[1][1]")
-	assert('f', x05[1][2], "var x05 =[2]string{\"abc\",\"def\"}; x05[1][2]")
+	// var x05 = [2]string{"abc", "def"}
+	// assert('a', x05[0][0], "var x05 =[2]string{\"abc\",\"def\"}; x05[0][0]")
+	// assert('b', x05[0][1], "var x05 =[2]string{\"abc\",\"def\"}; x05[0][1]")
+	// assert('c', x05[0][2], "var x05 =[2]string{\"abc\",\"def\"}; x05[0][2]")
+	// assert('d', x05[1][0], "var x05 =[2]string{\"abc\",\"def\"}; x05[1][0]")
+	// assert('e', x05[1][1], "var x05 =[2]string{\"abc\",\"def\"}; x05[1][1]")
+	// assert('f', x05[1][2], "var x05 =[2]string{\"abc\",\"def\"}; x05[1][2]")
 
-	var x06 = struct {
-		a int
-		b int
-		c int
-	}{1, 2, 3}
-	assert(1, x06.a, "var x06 =struct {a int;b int;c int;}{1,2,3,};x06.a")
-	assert(2, x06.b, "var x06 =struct {a int;b int;c int;}{1,2,3,};x06.b")
-	assert(3, x06.c, "var x06 =struct {a int;b int;c int;}{1,2,3,};x06.c")
-	var x07 = [2]struct {
-		a int
-		b int
-		c int
-	}{
-		{1, 2, 3},
-		{4, 5, 6},
-	}
-	assert(1, x07[0].a, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[0].a")
-	assert(2, x07[0].b, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[0].b")
-	assert(3, x07[0].c, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[0].c")
-	assert(4, x07[1].a, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[1].a")
-	assert(5, x07[1].b, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[1].b")
-	assert(6, x07[1].c, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[1].c")
+	// var x06 = struct {
+	// 	a int
+	// 	b int
+	// 	c int
+	// }{1, 2, 3}
+	// assert(1, x06.a, "var x06 =struct {a int;b int;c int;}{1,2,3,};x06.a")
+	// assert(2, x06.b, "var x06 =struct {a int;b int;c int;}{1,2,3,};x06.b")
+	// assert(3, x06.c, "var x06 =struct {a int;b int;c int;}{1,2,3,};x06.c")
+	// var x07 = [2]struct {
+	// 	a int
+	// 	b int
+	// 	c int
+	// }{
+	// 	{1, 2, 3},
+	// 	{4, 5, 6},
+	// }
+	// assert(1, x07[0].a, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[0].a")
+	// assert(2, x07[0].b, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[0].b")
+	// assert(3, x07[0].c, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[0].c")
+	// assert(4, x07[1].a, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[1].a")
+	// assert(5, x07[1].b, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[1].b")
+	// assert(6, x07[1].c, "var x07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};x07[1].c")
 
-	assert(3, g01, "var g01=3;g01")
-	assert('a', g02, "var g02='a';g02")
+	// assert(3, g01, "var g01=3;g01")
+	// assert('a', g02, "var g02='a';g02")
 
-	assert(1, g03[0], "var g03=[3]int{1,2,3}; g03[0]")
-	assert(2, g03[1], "var g03=[3]int{1,2,3}; g03[1]")
-	assert(3, g03[2], "var g03=[3]int{1,2,3}; g03[2]")
+	// assert(1, g03[0], "var g03=[3]int{1,2,3}; g03[0]")
+	// assert(2, g03[1], "var g03=[3]int{1,2,3}; g03[1]")
+	// assert(3, g03[2], "var g03=[3]int{1,2,3}; g03[2]")
 
-	assert(1, g04[0][0], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[0][1]")
-	assert(2, g04[0][1], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[0][1]")
-	assert(3, g04[0][2], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[0][2]")
-	assert(4, g04[1][0], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[1][0]")
-	assert(5, g04[1][1], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[1][1]")
-	assert(6, g04[1][2], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[1][2]")
+	// assert(1, g04[0][0], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[0][1]")
+	// assert(2, g04[0][1], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[0][1]")
+	// assert(3, g04[0][2], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[0][2]")
+	// assert(4, g04[1][0], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[1][0]")
+	// assert(5, g04[1][1], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[1][1]")
+	// assert(6, g04[1][2], "var g04=[2][3]int{{1,2,3},{4,5,6}}; g04[1][2]")
 
-	// assert('a', g05[0], "var g05=\"abc\"; g05[0]")
+	// // assert('a', g05[0], "var g05=\"abc\"; g05[0]")
 
-	assert(1, g07[0].a, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[0].a")
-	assert(2, g07[0].b, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[0].b")
-	assert(3, g07[0].c, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[0].c")
-	assert(4, g07[1].a, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[1].a")
-	assert(5, g07[1].b, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[1].b")
-	assert(6, g07[1].c, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[1].c")
+	// assert(1, g07[0].a, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[0].a")
+	// assert(2, g07[0].b, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[0].b")
+	// assert(3, g07[0].c, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[0].c")
+	// assert(4, g07[1].a, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[1].a")
+	// assert(5, g07[1].b, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[1].b")
+	// assert(6, g07[1].c, "var g07=[2]struct{a int;b int;c int;}{{1,2,3},{4,5,6},};g07[1].c")
 
 	// var x1 [3]int = [3]int{1, 2, 3}
 	// assert(1, x1[0], "var x1 [3]int=[3]int{1,2,3}; x1[0]")
@@ -234,6 +235,10 @@ func main() {
 	// assert(2, g12[0].a[1], "g12[0].a[1]")
 	// assert(0, g12[1].a[0], "g12[1].a[0]")
 	// assert(0, g12[1].a[1], "g12[1].a[1]")
+
+	assert(8, Sizeof(g17), "Sizeof(g17)")
+
+	assert('f', g17[0], "g17[0]")
 
 	// assert(1, g40[0].a, "g40[0].a")
 	// assert(3, g40[1].a, "g40[1].a")
