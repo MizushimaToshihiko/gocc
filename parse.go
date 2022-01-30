@@ -751,7 +751,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	printCalledFunc()
 
 	// If rhs is string literal.
-	if (init.Ty.Kind == TY_ARRAY || init.Ty.Kind == TY_PTR) &&
+	if init.Ty.Kind == TY_ARRAY &&
 		tok.Kind == TK_STR {
 		stringInitializer(rest, tok, init)
 		return
@@ -987,6 +987,10 @@ func writeGvarData(
 	return cur.Next
 }
 
+// Initializers for global variables are evaluated at compile-time and
+// embedded to .data section. This function serializes Initializer
+// object to a flat byte array. It is a compile error if an
+// initializer list contains a non-sonctant expression.
 func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	printCurTok(tok)
 	printCalledFunc()

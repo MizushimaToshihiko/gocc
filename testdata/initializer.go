@@ -12,7 +12,7 @@ package test
 // var g11 [2]gT11 = [2]gT11{gT11{1, 2}, gT11{3, 4}}
 // type gT12 struct{ a [2]int }
 // var g12 [2]gT12 = [2]gT12{{{1, 2}}}
-var g17 string = "foobar"
+// var g17 string = "foobar"
 
 // var g40 [2]struct{ a int } = [2]struct{ a int }{{1}, {3}}
 // var g41 [3]struct{ a int; b int } = [3]struct{ a int;b int }{{1,2},{3,4},{5,6}}
@@ -130,8 +130,8 @@ func main() {
 	// assert('c', x5[2], "var x5 [4]byte=\"abc\"; x5[2]")
 	// assert(0, x5[3], "var x5 [4]byte=\"abc\"; x5[3]")
 
-	// var x6 string = "abc"
-	// assert('a', x6[0], "var x6 string=\"abc\"; x6[0]")
+	var x6 string = "abc"
+	assert('a', x6[0], "var x6 string=\"abc\"; x6[0]")
 	// assert('c', x6[2], "var x6 string=\"abc\"; x6[2]")
 	// assert(0, x6[3], "var x6 string=\"abc\"; x6[3]")
 
@@ -236,9 +236,9 @@ func main() {
 	// assert(0, g12[1].a[0], "g12[1].a[0]")
 	// assert(0, g12[1].a[1], "g12[1].a[1]")
 
-	assert(8, Sizeof(g17), "Sizeof(g17)")
+	// assert(8, Sizeof(g17), "Sizeof(g17)")
 
-	assert('f', g17[0], "g17[0]")
+	// assert('f', g17[0], "g17[0]")
 
 	// assert(1, g40[0].a, "g40[0].a")
 	// assert(3, g40[1].a, "g40[1].a")
