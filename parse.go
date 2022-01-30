@@ -945,23 +945,28 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 
 // integer又はscalarの場合Ty.Sz分だけゼロ埋めする
 func writeGvarData(
-	init *Initializer, ty *Type, buf *[]rune, offset int) {
+	cur *Relocation, init *Initializer, ty *Type, buf *[]rune,
+	offset int) *Relocation {
 	printCalledFunc()
 
 	if ty.Kind == TY_ARRAY {
 		sz := ty.Base.Sz
 		for i := 0; i < ty.ArrSz; i++ {
-			writeGvarData(init.Children[i], ty.Base, buf, offset+sz*i)
+			cur = writeGvarData(cur, init.Children[i], ty.Base, buf, offset+sz*i)
 		}
-		return
+		return cur
 	}
 
 	if ty.Kind == TY_STRUCT {
 		for mem := ty.Mems; mem != nil; mem = mem.Next {
-			writeGvarData(init.Children[mem.Idx], mem.Ty, buf,
+			cur = writeGvarData(cur, init.Children[mem.Idx], mem.Ty, buf,
 				offset+mem.Offset)
 		}
-		return
+		return cur
+	}
+
+	if init.Expr == nil {
+		return cur
 	}
 
 	if init.Expr != nil {
