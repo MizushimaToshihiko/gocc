@@ -804,7 +804,10 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			rhsTy = init.Expr.Ty
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
-		// fmt.Printf("rhsTy: %#v\n\n", rhsTy)
+		fmt.Printf("initializer2: rhsTy: %#v\n\n", rhsTy)
+		if rhsTy.Init != nil {
+			fmt.Printf("initializer2: rhsTy.Init: %#v\n\n", rhsTy.Init)
+		}
 		// fmt.Printf("init.Expr: %#v\n\n", init.Expr)
 		// if init.Expr != nil {
 		// 	fmt.Printf("init.Expr.Ty: %#v\n\n", init.Expr.Ty)
@@ -822,10 +825,12 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 				return
 			}
 			// Copy Initializer from rhs, if array can be initialized by other array.
+			init = rhsTy.Init
 			return
 		}
 
-		if (equal(start, "{") || equal(startNext, "{")) && init.Ty.Kind == TY_STRUCT {
+		if (equal(start, "{") || equal(startNext, "{")) &&
+			init.Ty.Kind == TY_STRUCT {
 			// Count the number of struct members
 			var l int
 			for mem := init.Ty.Mems; mem != nil; mem = mem.Next {
@@ -1007,7 +1012,8 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	printCalledFunc()
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
-	fmt.Printf("init: %#v\n\n", init)
+	fmt.Printf("gvarInitializer: init: %#v\n\n", init)
+	fmt.Printf("gvarInitializer: v.Ty: %#v\n\n", v.Ty)
 	head := &Relocation{}
 	var buf []rune = make([]rune, v.Ty.Sz)
 	writeGvarData(head, init, v.Ty, &buf, 0)
@@ -1491,8 +1497,6 @@ func eval2(node *Node, label **string) int64 {
 		if label == nil {
 			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
 		}
-		fmt.Printf("node.Obj: %#v\n\n", node.Obj)
-
 		if node.Ty.Kind != TY_ARRAY {
 			panic("\n" + errorTok(node.Tok, "invalid initializer"))
 		}
@@ -2340,7 +2344,6 @@ func globalVar(tok *Token) *Token {
 		first = false
 		ty := declarator(&tok, tok)
 		v := newGvar(getIdent(ty.Name), ty)
-		fmt.Printf("globalVar: tok: %#v\n\n", tok)
 		if equal(tok, "=") {
 			gvarInitializer(&tok, tok.Next, v)
 		}
