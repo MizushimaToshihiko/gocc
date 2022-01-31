@@ -16,6 +16,15 @@ var g17 string = "foobar"
 var g17_2 [7]byte = "foobar"
 var g18 string
 
+var g24 int = 3
+var g25 *int = &g24
+var g26 [3]int = [3]int{1,2,3}
+var g27 *int=g26+1
+var g28 *int = &g11[1].a
+var g30 = struct{a struct{a [3]int;};}{{{1,2,3}}}
+var g31 *int = g30.a.a
+var g031 = g30.a.a
+
 var g40 [2]struct{ a int } = [2]struct{ a int }{{1}, {3}}
 var g41 [3]struct{ a int; b int } = [3]struct{ a int;b int }{{1,2},{3,4},{5,6}}
 
@@ -24,7 +33,6 @@ var g02 = 'a'
 var g03 = [3]int{1, 2, 3}
 var g04 = [2][3]int{{1, 2, 3}, {4, 5, 6}}
 
-// Belows are not supported yet.
 var g05 = "abc"
 var g06 = [2]string{"abc", "def"}
 
@@ -270,6 +278,19 @@ func main() {
 	assert('o', g18[1], "g18[1]")
 	assert('o', g18[2], "g18[2]")
 
+	assert(3, g24, "g24")
+	assert(3, *g25, "*g25")
+	assert(2, *g27, "*g27")
+	assert(3, *g28, "*g28")
+
+	assert(1, g31[0], "g31[0]");
+  assert(2, g31[1], "g31[1]");
+  assert(3, g31[2], "g31[2]");
+	
+	assert(1, g031[0], "g031[0]");
+  assert(2, g031[1], "g031[1]");
+  assert(3, g031[2], "g031[2]");
+	
 	assert(1, g40[0].a, "g40[0].a")
 	assert(3, g40[1].a, "g40[1].a")
 

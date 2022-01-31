@@ -796,22 +796,39 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			return
 		}
 		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
+		var start *Token = tok
+		var startNext *Token = tok.Next
 		if rhsTy.Kind == TY_VOID {
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
 			rhsTy = init.Expr.Ty
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
+		// fmt.Printf("rhsTy: %#v\n\n", rhsTy)
+		// fmt.Printf("init.Expr: %#v\n\n", init.Expr)
+		// if init.Expr != nil {
+		// 	fmt.Printf("init.Expr.Ty: %#v\n\n", init.Expr.Ty)
+		// 	fmt.Printf("init.Expr.Mem.Ty: %#v\n\n", init.Expr.Mem.Ty)
+		// }
 		init.Ty = rhsTy
+
 		if init.Ty.Kind == TY_ARRAY {
-			init.Children = make([]*Initializer, init.Ty.ArrSz)
-			for i := 0; i < init.Ty.ArrSz; i++ {
-				init.Children[i] = newInitializer(init.Ty.Base)
+			if equal(start, "{") || equal(startNext, "{") {
+				init.Children = make([]*Initializer, init.Ty.ArrSz)
+				for i := 0; i < init.Ty.ArrSz; i++ {
+					init.Children[i] = newInitializer(init.Ty.Base)
+				}
+				initializer2(rest, tok, init)
+				return
 			}
-			initializer2(rest, tok, init)
+			// Copy Initializer from rhs, if array can be initialized by other array.
+			// init = &Initializer{
+			// 	Next: ,
+			// }
 			return
 		}
-		if init.Ty.Kind == TY_STRUCT {
+
+		if (equal(start, "{") || equal(startNext, "{")) && init.Ty.Kind == TY_STRUCT {
 			// Count the number of struct members
 			var l int
 			for mem := init.Ty.Mems; mem != nil; mem = mem.Next {
@@ -841,6 +858,7 @@ func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer 
 
 	init := newInitializer(ty)
 	initializer2(rest, tok, init)
+	ty.Init = init
 
 	*newTy = init.Ty
 	return init
@@ -971,7 +989,6 @@ func writeGvarData(
 	}
 
 	var label *string = nil
-	// fmt.Printf("init.Expr.Kind: %d\n\n", init.Expr.Kind)
 	var val = eval2(init.Expr, &label)
 
 	if label == nil {
@@ -993,7 +1010,7 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	printCalledFunc()
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
-
+	fmt.Printf("init: %#v\n\n", init)
 	head := &Relocation{}
 	var buf []rune = make([]rune, v.Ty.Sz)
 	writeGvarData(head, init, v.Ty, &buf, 0)
@@ -1477,7 +1494,9 @@ func eval2(node *Node, label **string) int64 {
 		if label == nil {
 			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
 		}
-		if node.Obj.Ty.Kind != TY_ARRAY {
+		fmt.Printf("node.Obj: %#v\n\n", node.Obj)
+
+		if node.Ty.Kind != TY_ARRAY {
 			panic("\n" + errorTok(node.Tok, "invalid initializer"))
 		}
 		return evalRval(node.Lhs, label) + int64(node.Mem.Offset)
@@ -2324,6 +2343,7 @@ func globalVar(tok *Token) *Token {
 		first = false
 		ty := declarator(&tok, tok)
 		v := newGvar(getIdent(ty.Name), ty)
+		fmt.Printf("globalVar: tok: %#v\n\n", tok)
 		if equal(tok, "=") {
 			gvarInitializer(&tok, tok.Next, v)
 		}

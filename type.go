@@ -47,6 +47,8 @@ type Type struct {
 	RetTy  *Type
 	Params *Type
 	Next   *Type
+
+	Init *Initializer
 }
 
 type Member struct {
