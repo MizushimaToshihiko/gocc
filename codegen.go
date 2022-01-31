@@ -570,8 +570,18 @@ func (c *codeWriter) emitData(prog *Obj) {
 		c.println("%s:", v.Name)
 
 		if v.InitData != nil {
-			for i := 0; i < len(v.InitData); i++ {
-				c.println("	.byte %d", v.InitData[i])
+			rel := v.Rel
+			pos := 0
+			for pos < v.Ty.Sz {
+				if rel != nil && rel.Offset == pos {
+					c.println("	.quad %s%+d", rel.Lbl, rel.Addend)
+					rel = rel.Next
+					pos += 8
+					continue
+				}
+
+				c.println("	.byte %d", v.InitData[pos])
+				pos++
 			}
 		} else {
 			c.println("	.zero %d", v.Ty.Sz)

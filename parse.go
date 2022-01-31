@@ -944,29 +944,48 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 }
 
 // integer又はscalarの場合Ty.Sz分だけゼロ埋めする
+//
 func writeGvarData(
-	init *Initializer, ty *Type, buf *[]rune, offset int) {
+	cur *Relocation, init *Initializer, ty *Type, buf *[]rune,
+	offset int) *Relocation {
 	printCalledFunc()
 
 	if ty.Kind == TY_ARRAY {
 		sz := ty.Base.Sz
 		for i := 0; i < ty.ArrSz; i++ {
-			writeGvarData(init.Children[i], ty.Base, buf, offset+sz*i)
+			cur = writeGvarData(cur, init.Children[i], ty.Base, buf, offset+sz*i)
 		}
-		return
+		return cur
 	}
 
 	if ty.Kind == TY_STRUCT {
 		for mem := ty.Mems; mem != nil; mem = mem.Next {
-			writeGvarData(init.Children[mem.Idx], mem.Ty, buf,
+			cur = writeGvarData(cur, init.Children[mem.Idx], mem.Ty, buf,
 				offset+mem.Offset)
 		}
-		return
+		return cur
 	}
 
-	if init.Expr != nil {
-		(*buf)[offset] = rune(eval(init.Expr))
+	if init.Expr == nil {
+		return cur
 	}
+
+	var label *string = nil
+	// fmt.Printf("init.Expr.Kind: %d\n\n", init.Expr.Kind)
+	var val = eval2(init.Expr, &label)
+
+	if label == nil {
+		(*buf)[offset] = rune(val)
+		return cur
+	}
+
+	rel := &Relocation{
+		Offset: offset,
+		Lbl:    *label,
+		Addend: val,
+	}
+	cur.Next = rel
+	return cur.Next
 }
 
 func gvarInitializer(rest **Token, tok *Token, v *Obj) {
@@ -975,9 +994,11 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 
+	head := &Relocation{}
 	var buf []rune = make([]rune, v.Ty.Sz)
-	writeGvarData(init, v.Ty, &buf, 0)
+	writeGvarData(head, init, v.Ty, &buf, 0)
 	v.InitData = buf
+	v.Rel = head.Next
 }
 
 // abstruct-declarator = "*"* declspec ("(" abstruct-declarator ")")? type-suffix
@@ -1354,22 +1375,27 @@ func expr(rest **Token, tok *Token) *Node {
 	return node
 }
 
+// Evaluate a given node as a constant expression.
+//
+// A constant expression is either just a number or ptr+n where ptr
+// number. The latter form is accept only as an initialization
+// expression for a global variable.
 func eval(node *Node) int64 {
 	printCalledFunc()
 
-	return eval2(node)
+	return eval2(node, nil)
 }
 
-func eval2(node *Node) int64 {
+func eval2(node *Node, label **string) int64 {
 	printCalledFunc()
 
 	addType(node)
 
 	switch node.Kind {
 	case ND_ADD:
-		return eval2(node.Lhs) + eval(node.Rhs)
+		return eval2(node.Lhs, label) + eval(node.Rhs)
 	case ND_SUB:
-		return eval2(node.Lhs) - eval(node.Rhs)
+		return eval2(node.Lhs, label) - eval(node.Rhs)
 	case ND_MUL:
 		return eval(node.Lhs) * eval(node.Rhs)
 	case ND_DIV:
@@ -1410,11 +1436,11 @@ func eval2(node *Node) int64 {
 		return 0
 	case ND_COND:
 		if eval(node.Cond) != 0 {
-			return eval2(node.Then)
+			return eval2(node.Then, label)
 		}
-		return eval2(node.Els)
+		return eval2(node.Els, label)
 	case ND_COMMA:
-		return eval2(node.Lhs)
+		return eval2(node.Rhs, label)
 	case ND_NOT:
 		if eval(node.Lhs) == 0 {
 			return 1
@@ -1433,7 +1459,7 @@ func eval2(node *Node) int64 {
 		}
 		return 0
 	case ND_CAST:
-		val := eval2(node.Lhs)
+		val := eval2(node.Lhs, label)
 		if isInteger(node.Ty) {
 			switch node.Ty.Sz {
 			case 1:
@@ -1444,18 +1470,26 @@ func eval2(node *Node) int64 {
 				return int64(uint32(val))
 			}
 		}
-		return val // node.Ty.Sz == 8
-	// case ND_ADDR:
-	// 	return evalRval(node.Lhs)
-	// case ND_MEMBER:
-	// 	if label == nil {
-	// 		panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
-	// 	}
-	// 	if node.Obj.Ty.Kind != TY_ARRAY && node.Obj.Ty.Kind == TY_FUNC {
-	// 		panic("\n" + errorTok(node.Tok, "invalid initializer"))
-	// 	}
-	// 	*label = node.Obj.Name
-	// 	return 0
+		return val // If node.Ty.Sz is 8
+	case ND_ADDR:
+		return evalRval(node.Lhs, label)
+	case ND_MEMBER:
+		if label == nil {
+			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+		}
+		if node.Obj.Ty.Kind != TY_ARRAY {
+			panic("\n" + errorTok(node.Tok, "invalid initializer"))
+		}
+		return evalRval(node.Lhs, label) + int64(node.Mem.Offset)
+	case ND_VAR:
+		if label == nil {
+			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+		}
+		if node.Obj.Ty.Kind != TY_ARRAY && node.Obj.Ty.Kind == TY_FUNC {
+			panic("\n" + errorTok(node.Tok, "invalid initializer"))
+		}
+		*label = &node.Obj.Name
+		return 0
 	case ND_NUM:
 		return node.Val
 	default:
@@ -1463,24 +1497,24 @@ func eval2(node *Node) int64 {
 	}
 }
 
-// func evalRval(node *Node, label *string) int64 {
-// 	printCalledFunc()
+func evalRval(node *Node, label **string) int64 {
+	printCalledFunc()
 
-// 	switch node.Kind {
-// 	case ND_VAR:
-// 		if node.Obj.IsLocal {
-// 			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
-// 		}
-// 		*label = node.Obj.Name
-// 		return 0
-// 	case ND_DEREF:
-// 		return eval2(node.Lhs, label)
-// 	case ND_MEMBER:
-// 		return evalRval(node.Lhs, label) + int64(node.Mem.Offset)
-// 	default:
-// 		panic("\n" + errorTok(node.Tok, "invalid initializer"))
-// 	}
-// }
+	switch node.Kind {
+	case ND_VAR:
+		if node.Obj.IsLocal {
+			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+		}
+		*label = &node.Obj.Name
+		return 0
+	case ND_DEREF:
+		return eval2(node.Lhs, label)
+	case ND_MEMBER:
+		return evalRval(node.Lhs, label) + int64(node.Mem.Offset)
+	default:
+		panic("\n" + errorTok(node.Tok, "invalid initializer"))
+	}
+}
 
 // const-expr
 func constExpr(rest **Token, tok *Token) int64 {
