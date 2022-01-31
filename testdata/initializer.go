@@ -12,7 +12,8 @@ package test
 // var g11 [2]gT11 = [2]gT11{gT11{1, 2}, gT11{3, 4}}
 // type gT12 struct{ a [2]int }
 // var g12 [2]gT12 = [2]gT12{{{1, 2}}}
-var g17 [7]byte = "foobar"
+var g17 string = "foobar"
+var g18 string
 
 // var g40 [2]struct{ a int } = [2]struct{ a int }{{1}, {3}}
 // var g41 [3]struct{ a int; b int } = [3]struct{ a int;b int }{{1,2},{3,4},{5,6}}
@@ -23,7 +24,7 @@ var g17 [7]byte = "foobar"
 // var g04 = [2][3]int{{1, 2, 3}, {4, 5, 6}}
 
 // Belows are not supported yet.
-var g05 = "abc"
+// var g05 = "abc"
 
 // var g06 = [2]string{"abc", "def"}
 // var g07 = [2]struct {
@@ -50,8 +51,8 @@ func main() {
 	// assert(5, x03[1][1], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[1][1]")
 	// assert(6, x03[1][2], "var x03=[2][3]int{{1,2,3},{4,5,6}}; x03[1][2]")
 
-	// var x04 = "abc"
-	// assert('a', x04[0], "var x04=\"abc\"; x04[0]")
+	var x04 = "abc"
+	assert('a', x04[0], "var x04=\"abc\"; x04[0]")
 
 	// var x05 = [2]string{"abc", "def"}
 	// assert('a', x05[0][0], "var x05 =[2]string{\"abc\",\"def\"}; x05[0][0]")
@@ -131,8 +132,8 @@ func main() {
 	// assert('c', x5[2], "var x5 [4]byte=\"abc\"; x5[2]")
 	// assert(0, x5[3], "var x5 [4]byte=\"abc\"; x5[3]")
 
-	var x6 string = "abc"
-	assert('a', x6[0], "var x6 string=\"abc\"; x6[0]")
+	var x6 string = "def"
+	assert('d', x6[0], "var x6 string=\"def\"; x6[0]")
 	// assert('c', x6[2], "var x6 string=\"abc\"; x6[2]")
 	// assert(0, x6[3], "var x6 string=\"abc\"; x6[3]")
 
@@ -240,6 +241,9 @@ func main() {
 	// assert(8, Sizeof(g17), "Sizeof(g17)")
 
 	assert('f', g17[0], "g17[0]")
+
+	g18 = "foo"
+	assert('f', g18[0], "g18[0]")
 
 	// assert(1, g40[0].a, "g40[0].a")
 	// assert(3, g40[1].a, "g40[1].a")

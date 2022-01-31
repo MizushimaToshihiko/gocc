@@ -677,6 +677,7 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 	printCalledFunc()
 
 	length := min(init.Ty.ArrSz, tok.Ty.ArrSz)
+
 	for i := 0; i < length; i++ {
 		init.Children[i].Expr = newNum(int64(tok.Contents[i]), tok)
 	}
@@ -753,6 +754,12 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	// If rhs is string literal.
 	if init.Ty.Kind == TY_ARRAY &&
 		tok.Kind == TK_STR {
+		init.Ty.Sz = init.Ty.Base.Sz * tok.ContLen
+		init.Ty.ArrSz = tok.ContLen
+		init.Children = make([]*Initializer, init.Ty.ArrSz)
+		for i := 0; i < init.Ty.ArrSz; i++ {
+			init.Children[i] = newInitializer(init.Ty.Base)
+		}
 		stringInitializer(rest, tok, init)
 		return
 	}
@@ -792,12 +799,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	if init.Ty.Kind == TY_VOID {
 		var rhsTy *Type
 		if tok.Kind == TK_STR {
-			// init.Ty = stringType()
-			init.Ty = arrayOf(ty_char, tok.ContLen)
-			init.Children = make([]*Initializer, init.Ty.ArrSz)
-			for i := 0; i < init.Ty.ArrSz; i++ {
-				init.Children[i] = newInitializer(init.Ty.Base)
-			}
+			init.Ty = stringType()
+
 			initializer2(rest, tok, init)
 			return
 		}
@@ -825,7 +828,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			}
 
 			init.Children = make([]*Initializer, l)
-
 			for mem := init.Ty.Mems; mem != nil; mem = mem.Next {
 				init.Children[mem.Idx] = newInitializer(mem.Ty)
 			}
@@ -944,6 +946,8 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	// initializing it with user-supplied values.
 	lhs := newNode(ND_MEMZERO, tok)
 	lhs.Obj = v
+	fmt.Printf("lhs.Obj: %#v\n\n", lhs.Obj)
+	fmt.Printf("lhs.Obj.Ty: %#v\n\n", lhs.Obj.Ty)
 
 	rhs := createLvarInit(init, v.Ty, desg, tok)
 	return newBinary(ND_COMMA, lhs, rhs, tok)
