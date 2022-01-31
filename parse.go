@@ -822,9 +822,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 				return
 			}
 			// Copy Initializer from rhs, if array can be initialized by other array.
-			// init = &Initializer{
-			// 	Next: ,
-			// }
 			return
 		}
 
