@@ -792,7 +792,12 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	if init.Ty.Kind == TY_VOID {
 		var rhsTy *Type
 		if tok.Kind == TK_STR {
-			init.Ty = stringType()
+			// init.Ty = stringType()
+			init.Ty = arrayOf(ty_char, tok.ContLen)
+			init.Children = make([]*Initializer, init.Ty.ArrSz)
+			for i := 0; i < init.Ty.ArrSz; i++ {
+				init.Children[i] = newInitializer(init.Ty.Base)
+			}
 			initializer2(rest, tok, init)
 			return
 		}

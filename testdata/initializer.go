@@ -12,7 +12,7 @@ package test
 // var g11 [2]gT11 = [2]gT11{gT11{1, 2}, gT11{3, 4}}
 // type gT12 struct{ a [2]int }
 // var g12 [2]gT12 = [2]gT12{{{1, 2}}}
-// var g17 string = "foobar"
+var g17 [7]byte = "foobar"
 
 // var g40 [2]struct{ a int } = [2]struct{ a int }{{1}, {3}}
 // var g41 [3]struct{ a int; b int } = [3]struct{ a int;b int }{{1,2},{3,4},{5,6}}
@@ -23,7 +23,8 @@ package test
 // var g04 = [2][3]int{{1, 2, 3}, {4, 5, 6}}
 
 // Belows are not supported yet.
-// var g05 = "abc"
+var g05 = "abc"
+
 // var g06 = [2]string{"abc", "def"}
 // var g07 = [2]struct {
 // 	a int
@@ -238,7 +239,7 @@ func main() {
 
 	// assert(8, Sizeof(g17), "Sizeof(g17)")
 
-	// assert('f', g17[0], "g17[0]")
+	assert('f', g17[0], "g17[0]")
 
 	// assert(1, g40[0].a, "g40[0].a")
 	// assert(3, g40[1].a, "g40[1].a")
