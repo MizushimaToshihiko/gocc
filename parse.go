@@ -677,7 +677,6 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 	printCalledFunc()
 
 	length := min(init.Ty.ArrSz, tok.Ty.ArrSz)
-
 	for i := 0; i < length; i++ {
 		init.Children[i].Expr = newNum(int64(tok.Contents[i]), tok)
 	}
@@ -752,14 +751,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	printCalledFunc()
 
 	// If rhs is string literal.
-	if init.Ty.Kind == TY_ARRAY &&
-		tok.Kind == TK_STR {
-		init.Ty.Sz = init.Ty.Base.Sz * tok.ContLen
-		init.Ty.ArrSz = tok.ContLen
-		init.Children = make([]*Initializer, init.Ty.ArrSz)
-		for i := 0; i < init.Ty.ArrSz; i++ {
-			init.Children[i] = newInitializer(init.Ty.Base)
-		}
+	if init.Ty.Kind == TY_ARRAY && tok.Kind == TK_STR {
 		stringInitializer(rest, tok, init)
 		return
 	}
@@ -800,7 +792,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		var rhsTy *Type
 		if tok.Kind == TK_STR {
 			init.Ty = stringType()
-
 			initializer2(rest, tok, init)
 			return
 		}
@@ -828,6 +819,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			}
 
 			init.Children = make([]*Initializer, l)
+
 			for mem := init.Ty.Mems; mem != nil; mem = mem.Next {
 				init.Children[mem.Idx] = newInitializer(mem.Ty)
 			}
@@ -946,13 +938,12 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	// initializing it with user-supplied values.
 	lhs := newNode(ND_MEMZERO, tok)
 	lhs.Obj = v
-	fmt.Printf("lhs.Obj: %#v\n\n", lhs.Obj)
-	fmt.Printf("lhs.Obj.Ty: %#v\n\n", lhs.Obj.Ty)
 
 	rhs := createLvarInit(init, v.Ty, desg, tok)
 	return newBinary(ND_COMMA, lhs, rhs, tok)
 }
 
+// integer又はscalarの場合Ty.Sz分だけゼロ埋めする
 //
 func writeGvarData(
 	cur *Relocation, init *Initializer, ty *Type, buf *[]rune,
@@ -979,27 +970,23 @@ func writeGvarData(
 		return cur
 	}
 
-	var label *string
-	var val = eval2(init.Expr, label)
+	var label string
+	var val = eval2(init.Expr, &label)
 
-	if label == nil {
-		(*buf)[offset] = rune(eval(init.Expr))
+	if &label == nil {
+		(*buf)[offset] = rune(val)
 		return cur
 	}
 
 	rel := &Relocation{
 		Offset: offset,
-		Lbl:    *label,
+		Lbl:    label,
 		Addend: val,
 	}
 	cur.Next = rel
 	return cur.Next
 }
 
-// Initializers for global variables are evaluated at compile-time and
-// embedded to .data section. This function serializes Initializer
-// object to a flat byte array. It is a compile error if an
-// initializer list contains a non-sonctant expression.
 func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	printCurTok(tok)
 	printCalledFunc()
@@ -1387,17 +1374,17 @@ func expr(rest **Token, tok *Token) *Node {
 	return node
 }
 
+// Evaluate a given node as a constant expression.
+//
+// A constant expression is either just a number or ptr+n where ptr
+// number. The latter form is accept only as an initialization
+// expression for a global variable.
 func eval(node *Node) int64 {
 	printCalledFunc()
 
 	return eval2(node, nil)
 }
 
-// Evaluate a given node as a constant expression.
-//
-// A constant expression is either just a number or ptr+n where ptr
-// number. The latter form is accept only as an initialization
-// expression for a global variable.
 func eval2(node *Node, label *string) int64 {
 	printCalledFunc()
 
