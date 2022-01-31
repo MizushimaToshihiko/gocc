@@ -970,17 +970,18 @@ func writeGvarData(
 		return cur
 	}
 
-	var label string
+	var label *string = nil
+	// fmt.Printf("init.Expr.Kind: %d\n\n", init.Expr.Kind)
 	var val = eval2(init.Expr, &label)
 
-	if &label == nil {
+	if label == nil {
 		(*buf)[offset] = rune(val)
 		return cur
 	}
 
 	rel := &Relocation{
 		Offset: offset,
-		Lbl:    label,
+		Lbl:    *label,
 		Addend: val,
 	}
 	cur.Next = rel
@@ -1385,7 +1386,7 @@ func eval(node *Node) int64 {
 	return eval2(node, nil)
 }
 
-func eval2(node *Node, label *string) int64 {
+func eval2(node *Node, label **string) int64 {
 	printCalledFunc()
 
 	addType(node)
@@ -1487,7 +1488,7 @@ func eval2(node *Node, label *string) int64 {
 		if node.Obj.Ty.Kind != TY_ARRAY && node.Obj.Ty.Kind == TY_FUNC {
 			panic("\n" + errorTok(node.Tok, "invalid initializer"))
 		}
-		*label = node.Obj.Name
+		*label = &node.Obj.Name
 		return 0
 	case ND_NUM:
 		return node.Val
@@ -1496,7 +1497,7 @@ func eval2(node *Node, label *string) int64 {
 	}
 }
 
-func evalRval(node *Node, label *string) int64 {
+func evalRval(node *Node, label **string) int64 {
 	printCalledFunc()
 
 	switch node.Kind {
@@ -1504,7 +1505,7 @@ func evalRval(node *Node, label *string) int64 {
 		if node.Obj.IsLocal {
 			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
 		}
-		*label = node.Obj.Name
+		*label = &node.Obj.Name
 		return 0
 	case ND_DEREF:
 		return eval2(node.Lhs, label)

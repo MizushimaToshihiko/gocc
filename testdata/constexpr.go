@@ -54,7 +54,7 @@ func main() {
 	assert(3, Sizeof(x22), "var x22 [int(3)]byte; Sizeof(x22)")
 
 	var x23 [(1,3)]byte
-	assert(1, Sizeof(x23), "var x23 [(1,3)]byte; Sizeof(x23)")
+	assert(3, Sizeof(x23), "var x23 [(1,3)]byte; Sizeof(x23)")
 	var x24 [byte(0xffffff0f)]byte
 	assert(15, Sizeof(x24), "var x24 [byte(0xffffff0f)]byte; Sizeof(x24)")
 	var x25 [int16(0xffff010f)]byte
