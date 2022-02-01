@@ -204,21 +204,7 @@ func startsWithTermKw(p string) string {
 	return ""
 }
 
-func startsWithReserved(p string) string {
-	// reserved words
-	if k := startsWithTypeName(p); k != "" {
-		return k
-	}
-
-	if k := startsWithTermKw(p); k != "" {
-		return k
-	}
-
-	for _, k := range kw {
-		if startsWith(p, k) && len(p) >= len(k) && !isIdent2(rune(p[len(k)])) {
-			return k
-		}
-	}
+func startsWithPunctuator(p string) string {
 
 	// Multi-letter punctuator
 	ops := []string{"<<=", ">>=", "==", "!=", "<=", ">=", "->", "++", "--",
@@ -656,7 +642,7 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// keyword or multi-letter punctuator
-		kw := startsWithReserved(string(userInput[curIdx:]))
+		kw := startsWithPunctuator(string(userInput[curIdx:]))
 		if kw != "" {
 			cur = newToken(TK_RESERVED, cur, kw, len(kw))
 			curIdx += len(kw)
