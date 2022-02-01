@@ -240,10 +240,6 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	}
 
-	// fmt.Printf("node: %#v\n\n", node)
-	// if node != nil {
-	// 	fmt.Printf("node.Tok: %#v\n\n", node.Tok)
-	// }
 	c.println("	.loc 1 %d", node.Tok.LineNo)
 
 	switch node.Kind {

@@ -40,25 +40,45 @@ package test
 // var g05 = "abc"
 // var g06 = [2]string{"abc", "def"}
 
-// var g07 = [2]struct {
-// 	a int
-// 	b int
-// 	c int
-// }{
-// 	{1, 2, 3},
-// 	{4, 5, 6},
-// }
+var g07 = [2]struct {
+	a int
+	b int
+	c int
+}{
+	{1, 2, 3},
+	{4, 5, 6},
+}
 
 func main() {
 	// var x026 [3]int = [3]int{1, 2, 3}
 	// var x031 = x026
-	var x int = 3
 	// assert(1, x031[0], "var x026 [3]int=[3]int{1,2,3};var x031=x26;x031[0]")
 	// assert(2, x031[1], "var x026 [3]int=[3]int{1,2,3};var x031=x26;x031[1]")
 	// assert(3, x031[2], "var x026 [3]int=[3]int{1,2,3};var x031=x26;x031[2]")
 
 	x032 := 3
-	assert(1, x032, "x032:=3;x032")
+	assert(3, x032, "x032:=3;x032")
+
+	x033 := [3]int{1, 2, 3}
+	assert(1, x033[0], "x033:=[3]int{1,2,3};x033[0]")
+	assert(2, x033[1], "x033:=[3]int{1,2,3};x033[1]")
+	assert(3, x033[2], "x033:=[3]int{1,2,3};x033[2]")
+
+	x034 := [2]struct {
+		a int
+		b string
+	}{{1, "abc"}, {2, "def"}}
+	assert(1, x034[0].a, "x034 := [2]struct{a int;b string}{{1,\"abc\"},{2,\"def\"}};x034[0].a")
+	assert('a', x034[0].b[0], "x034 := [2]struct{a int;b string}{{1,\"abc\"},{2,\"def\"}};x034[0].b[0]")
+	assert('b', x034[0].b[1], "x034 := [2]struct{a int;b string}{{1,\"abc\"},{2,\"def\"}};x034[0].b[1]")
+	assert('c', x034[0].b[2], "x034 := [2]struct{a int;b string}{{1,\"abc\"},{2,\"def\"}};x034[0].b[2]")
+	assert(2, x034[1].a, "x034 := [2]struct{a int;b string}{{1,\"abc\"},{2,\"def\"}};x034[1].a")
+	assert('d', x034[1].b[0], "x034 := [2]struct{a int;b string}{{1,\"abc\"},{2,\"def\"}};x034[0].b[0]")
+	assert('e', x034[1].b[1], "x034 := [2]struct{a int;b string}{{1,\"abc\"},{2,\"def\"}};x034[1].b[1]")
+	assert('f', x034[1].b[2], "x034 := [2]struct{a int;b string}{{1,\"abc\"},{2,\"def\"}};x034[2].b[2]")
+
+	// comparing strings => unimplement yet.
+	// assert(1, x034[0].b == "abc", "x034[0].b==\"abc\"")
 
 	// var x01 = 3 + 1*2
 	// assert(5, x01, "var x01=3;x01")
