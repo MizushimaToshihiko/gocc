@@ -957,6 +957,7 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	lhs.Obj = v
 
 	rhs := createLvarInit(init, v.Ty, desg, tok)
+	fmt.Printf("rhs: %#v\n\n", rhs)
 	return newBinary(ND_COMMA, lhs, rhs, tok)
 }
 
@@ -1049,11 +1050,23 @@ func typename(rest **Token, tok *Token) *Type {
 	return abstructDeclarator(rest, tok, &Type{})
 }
 
+// ShortVarDecl = ident ":=" expr
+func shortVarDecl(rest **Token, tok *Token) *Node {
+	name := tok
+
+	v := newLvar(getIdent(name), ty_void)
+	expr := lvarInitializer(&tok, tok.Next.Next, v)
+	*rest = tok
+	node := newUnary(ND_EXPR_STMT, expr, tok)
+	// node2 := newNode(ND_BLOCK, tok)
+	// node2.Body = node
+	return node
+}
+
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl(unimplemented)
 // VarDecl = "var" ident type-prefix declspec ("=" expr)
+//         | "var" ident "=" expr
 // VarSpec = ident-list (type-preffix type-specifier [ "=" expr-list ] | "=" expr-list)
-// ShortVarDecl = "var" ident "=" expr => unimplemented
-//              | ident ":=" expr => unimplemented
 func declaration(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -2203,6 +2216,10 @@ func primary(rest **Token, tok *Token) *Node {
 		// Function call
 		if equal(tok.Next, "(") {
 			return funcall(rest, tok)
+		}
+
+		if equal(tok.Next, ":=") {
+			return shortVarDecl(rest, tok)
 		}
 
 		sc := findVar(tok)
