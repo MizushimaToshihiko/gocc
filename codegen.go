@@ -566,6 +566,7 @@ func (c *codeWriter) emitData(prog *Obj) {
 		}
 
 		c.println("	.globl %s", v.Name)
+		c.println("	.align %d", v.Ty.Align)
 
 		if v.InitData != nil {
 			c.println("	.data")
