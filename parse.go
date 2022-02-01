@@ -1049,12 +1049,24 @@ func typename(rest **Token, tok *Token) *Type {
 	return abstructDeclarator(rest, tok, &Type{})
 }
 
+// ShortVarDecl = ident ":=" expr
+func shortVarDecl(rest **Token, tok *Token) *Node {
+	name := tok
+
+	v := newLvar(getIdent(name), ty_void)
+	expr := lvarInitializer(&tok, tok.Next.Next, v)
+	*rest = tok
+	node := newUnary(ND_EXPR_STMT, expr, tok)
+	// node2 := newNode(ND_BLOCK, tok)
+	// node2.Body = node
+	return node
+}
+
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl(unimplemented)
 // VarDecl = "var" ident type-prefix declspec ("=" expr)
+//         | "var" ident "=" expr
 // VarSpec = ident-list (type-preffix type-specifier [ "=" expr-list ] | "=" expr-list)
-// ShortVarDecl = "var" ident "=" expr => unimplemented
-//              | ident ":=" expr => unimplemented
-func declaration(rest **Token, tok *Token) *Node {
+func declaration(rest **Token, tok *Token, isShort bool) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -1075,7 +1087,7 @@ func declaration(rest **Token, tok *Token) *Node {
 
 		v := newLvar(getIdent(ty.Name), ty)
 
-		if equal(tok, "=") {
+		if !isShort && equal(tok, "=") || isShort && equal(tok, ":=") {
 			expr := lvarInitializer(&tok, tok.Next, v)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
@@ -1346,9 +1358,14 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 		}
 
 		if consume(&tok, tok, "var") {
-			cur.Next = declaration(&tok, tok)
+			cur.Next = declaration(&tok, tok, false)
+
+		} else if tok.Kind == TK_IDENT && equal(tok.Next, ":=") {
+			cur.Next = declaration(&tok, tok, true)
+
 		} else {
 			cur.Next = stmt(&tok, tok)
+
 		}
 		cur = cur.Next
 		addType(cur) //
@@ -1692,6 +1709,7 @@ func bitand(rest **Token, tok *Token) *Node {
 }
 
 // equality   = relational ("==" relational | "!=" relational)*
+// Comparing strings is unimplemented yet.
 func equality(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()

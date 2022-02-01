@@ -159,6 +159,13 @@ func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
 	return tok
 }
 
+// make new token and append to the end of cur.
+func newToken2(kind TokenKind, cur *Token, str string, len int, loc int) *Token {
+	tok := &Token{Kind: kind, Str: str, Len: len, Loc: loc}
+	cur.Next = tok
+	return tok
+}
+
 // startsWith compare 'p' and 'q' , q is keyword
 func startsWith(p, q string) bool {
 	return len(p) >= len(q) && p[:len(q)] == q
@@ -499,7 +506,7 @@ func addSemiColn(head *Token) {
 	for cur != nil && cur.Kind != TK_EOF {
 		if isTermOfProd(cur) {
 			tmp := cur.Next
-			cur.Next = newToken(TK_RESERVED, cur, ";", 0)
+			cur.Next = newToken2(TK_RESERVED, cur, ";", 0, cur.Loc+cur.Len)
 			cur.Next.Next = tmp
 			cur = cur.Next.Next
 		}
