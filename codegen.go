@@ -565,11 +565,12 @@ func (c *codeWriter) emitData(prog *Obj) {
 			continue
 		}
 
-		c.println("	.data")
 		c.println("	.globl %s", v.Name)
-		c.println("%s:", v.Name)
 
 		if v.InitData != nil {
+			c.println("	.data")
+			c.println("%s:", v.Name)
+
 			rel := v.Rel
 			pos := 0
 			for pos < v.Ty.Sz {
@@ -578,14 +579,17 @@ func (c *codeWriter) emitData(prog *Obj) {
 					rel = rel.Next
 					pos += 8
 					continue
+				} else {
+					c.println("	.byte %d", v.InitData[pos])
+					pos++
 				}
-
-				c.println("	.byte %d", v.InitData[pos])
-				pos++
 			}
-		} else {
-			c.println("	.zero %d", v.Ty.Sz)
+			continue
 		}
+
+		c.println("	.bss")
+		c.println("%s:", v.Name)
+		c.println("	.zero %d", v.Ty.Sz)
 	}
 }
 
