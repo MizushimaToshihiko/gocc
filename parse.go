@@ -753,6 +753,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	// If rhs is string literal.
 	if init.Ty.Kind == TY_ARRAY && tok.Kind == TK_STR {
 		stringInitializer(rest, tok, init)
+		init.Ty.Init = init
 		return
 	}
 
@@ -760,6 +761,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	if init.Ty.Kind == TY_ARRAY {
 		readTypePreffix(&tok, tok, nil) // discard the return value for now.
 		arrayInitializer(rest, tok, init)
+		init.Ty.Init = init
 		return
 	}
 
@@ -805,9 +807,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
 		fmt.Printf("initializer2: rhsTy: %#v\n\n", rhsTy)
-		if rhsTy.Init != nil {
-			fmt.Printf("initializer2: rhsTy.Init: %#v\n\n", rhsTy.Init)
-		}
+		fmt.Printf("initializer2: rhsTy.Init: %#v\n\n", rhsTy.Init)
+
 		// fmt.Printf("init.Expr: %#v\n\n", init.Expr)
 		// if init.Expr != nil {
 		// 	fmt.Printf("init.Expr.Ty: %#v\n\n", init.Expr.Ty)
@@ -822,10 +823,14 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 					init.Children[i] = newInitializer(init.Ty.Base)
 				}
 				initializer2(rest, tok, init)
+				fmt.Printf("initializer2: init: %#v\n\n", init)
+				init.Ty.Init = init
 				return
 			}
 			// Copy Initializer from rhs, if array can be initialized by other array.
-			init = rhsTy.Init
+			if rhsTy.Init != nil {
+				*init = *rhsTy.Init
+			}
 			return
 		}
 
@@ -860,7 +865,7 @@ func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer 
 
 	init := newInitializer(ty)
 	initializer2(rest, tok, init)
-	ty.Init = init
+	fmt.Printf("initializer: init.Ty: %#v\n\n", init.Ty)
 
 	*newTy = init.Ty
 	return init
@@ -1013,7 +1018,9 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 	fmt.Printf("gvarInitializer: init: %#v\n\n", init)
+	fmt.Printf("gvarInitializer: v: %#v\n\n", v)
 	fmt.Printf("gvarInitializer: v.Ty: %#v\n\n", v.Ty)
+	fmt.Printf("gvarInitializer: v.Ty.Init: %#v\n\n", v.Ty.Init)
 	head := &Relocation{}
 	var buf []rune = make([]rune, v.Ty.Sz)
 	writeGvarData(head, init, v.Ty, &buf, 0)
