@@ -759,16 +759,15 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 	// If rhs is array literal.
 	if init.Ty.Kind == TY_ARRAY {
-		readTypePreffix(&tok, tok, nil) // discard the return value for now.
+		readTypePreffix(&tok, tok, nil) // I'll add type checking later
 		arrayInitializer(rest, tok, init)
 		init.Ty.Init = init
 		return
 	}
 
-	// fmt.Printf("init.Ty: %#v\n\n", init.Ty)
 	if init.Ty.Kind == TY_STRUCT {
 		if equal(tok.Next, "{") {
-			readTypePreffix(&tok, tok, nil) // discard the return value for now.
+			readTypePreffix(&tok, tok, nil) // I'll add type checking later
 			structInitializer(rest, tok, init)
 			return
 		}
@@ -806,14 +805,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			rhsTy = init.Expr.Ty
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
-		fmt.Printf("initializer2: rhsTy: %#v\n\n", rhsTy)
-		fmt.Printf("initializer2: rhsTy.Init: %#v\n\n", rhsTy.Init)
 
-		// fmt.Printf("init.Expr: %#v\n\n", init.Expr)
-		// if init.Expr != nil {
-		// 	fmt.Printf("init.Expr.Ty: %#v\n\n", init.Expr.Ty)
-		// 	fmt.Printf("init.Expr.Mem.Ty: %#v\n\n", init.Expr.Mem.Ty)
-		// }
 		init.Ty = rhsTy
 
 		if init.Ty.Kind == TY_ARRAY {
@@ -823,7 +815,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 					init.Children[i] = newInitializer(init.Ty.Base)
 				}
 				initializer2(rest, tok, init)
-				fmt.Printf("initializer2: init: %#v\n\n", init)
 				init.Ty.Init = init
 				return
 			}
@@ -865,7 +856,6 @@ func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer 
 
 	init := newInitializer(ty)
 	initializer2(rest, tok, init)
-	fmt.Printf("initializer: init.Ty: %#v\n\n", init.Ty)
 
 	*newTy = init.Ty
 	return init
@@ -1017,10 +1007,6 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	printCalledFunc()
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
-	fmt.Printf("gvarInitializer: init: %#v\n\n", init)
-	fmt.Printf("gvarInitializer: v: %#v\n\n", v)
-	fmt.Printf("gvarInitializer: v.Ty: %#v\n\n", v.Ty)
-	fmt.Printf("gvarInitializer: v.Ty.Init: %#v\n\n", v.Ty.Init)
 	head := &Relocation{}
 	var buf []rune = make([]rune, v.Ty.Sz)
 	writeGvarData(head, init, v.Ty, &buf, 0)
