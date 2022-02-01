@@ -54,9 +54,10 @@ type Type struct {
 type Member struct {
 	Next   *Member
 	Ty     *Type
-	Tok    *Token
+	Tok    *Token // for error message
 	Name   string
 	Idx    int
+	Align  int
 	Offset int
 }
 

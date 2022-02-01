@@ -548,7 +548,7 @@ func (c *codeWriter) assignLvarOffsets(prog *Obj) {
 		offset := 0
 		for v := fn.Locals; v != nil; v = v.Next {
 			offset += v.Ty.Sz
-			offset = alignTo(offset, v.Ty.Align)
+			offset = alignTo(offset, v.Align)
 			v.Offset = -offset
 		}
 		fn.StackSz = alignTo(offset, 16)
@@ -566,7 +566,7 @@ func (c *codeWriter) emitData(prog *Obj) {
 		}
 
 		c.println("	.globl %s", v.Name)
-		c.println("	.align %d", v.Ty.Align)
+		c.println("	.align %d", v.Align)
 
 		if v.InitData != nil {
 			c.println("	.data")

@@ -29,6 +29,7 @@ type Scope struct {
 // Variable attributes typedef.
 type VarAttr struct {
 	IsTydef bool
+	Align   int
 }
 
 // Variable or function
@@ -38,6 +39,7 @@ type Obj struct {
 	Ty      *Type  // Type
 	Tok     *Token // for error message
 	IsLocal bool   // local or global
+	Align   int    // alignment
 
 	// Local variables
 	Offset int // Offset from RBP
@@ -364,7 +366,7 @@ func newInitializer(ty *Type) *Initializer {
 func newVar(name string, ty *Type) *Obj {
 	printCalledFunc()
 
-	v := &Obj{Name: name, Ty: ty}
+	v := &Obj{Name: name, Ty: ty, Align: ty.Align}
 	pushScope(name).Obj = v
 	return v
 }
@@ -453,12 +455,12 @@ func pushTagScope(tok *Token, ty *Type) {
 	scope.Tags = sc
 }
 
-// typeSpecifier returns a pointer of Type struct.
+// declSpec returns a pointer of Type struct.
 // If the current tokens represents a typename,
 // it returns the Type struct with that typename.
 // Otherwise returns the Type struct with TY_VOID.
 //
-// type-specifier = "*"* builtin-type | struct-decl | typedef-name |
+// declspec = "*"* builtin-type | struct-decl | typedef-name |
 // builtin-type = void | "bool" | "byte"| "int16" | "int" | "int64" |
 //                "string"
 //
@@ -1072,6 +1074,7 @@ func declaration(rest **Token, tok *Token) *Node {
 		// }
 
 		v := newLvar(getIdent(ty.Name), ty)
+
 		if equal(tok, "=") {
 			expr := lvarInitializer(&tok, tok.Next, v)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
@@ -1964,9 +1967,10 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 
 			memTy := declarator(&tok, tok)
 			mem := &Member{
-				Name: getIdent(memTy.Name),
-				Ty:   memTy,
-				Idx:  idx,
+				Name:  getIdent(memTy.Name),
+				Ty:    memTy,
+				Idx:   idx,
+				Align: memTy.Align,
 			}
 			idx++
 			cur.Next = mem
@@ -2000,12 +2004,12 @@ func structDecl(rest **Token, tok *Token, name *Token) *Type {
 	// Assign offsers within the struct to members.
 	offset := 0
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
-		offset = alignTo(offset, mem.Ty.Align)
+		offset = alignTo(offset, mem.Align)
 		mem.Offset = offset
 		offset += mem.Ty.Sz
 
-		if ty.Align < mem.Ty.Align {
-			ty.Align = mem.Ty.Align
+		if ty.Align < mem.Align {
+			ty.Align = mem.Align
 		}
 	}
 	ty.Sz = alignTo(offset, ty.Align)
@@ -2058,15 +2062,6 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 	return newCast(newAdd(toAssign(newAdd(node, newNum(int64(addend), tok), tok)),
 		newNum(int64(addend)*-1, tok), tok),
 		node.Ty)
-}
-
-func findLhsVarNode(n *Node) *Node {
-	for ; n != nil; n = n.Lhs {
-		if n.Kind == ND_VAR {
-			return n
-		}
-	}
-	return nil
 }
 
 // postfix = primary ("[" expr "]" | "." ident | "++" | "--")*
@@ -2196,6 +2191,12 @@ func primary(rest **Token, tok *Token) *Node {
 		node := unary(rest, tok.Next)
 		addType(node)
 		return newNum(int64(node.Ty.Sz), tok)
+	}
+
+	if equal(tok, "Alignof") {
+		node := unary(rest, tok.Next)
+		addType(node)
+		return newNum(int64(node.Ty.Align), tok)
 	}
 
 	if tok.Kind == TK_IDENT {
