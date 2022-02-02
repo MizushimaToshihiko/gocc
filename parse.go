@@ -45,8 +45,9 @@ type Obj struct {
 	Offset int // Offset from RBP
 
 	// Global variable or function
-	IsFunc bool
-	IsDef  bool
+	IsFunc   bool
+	IsDef    bool
+	IsStatic bool
 
 	// Global variables
 	InitData []rune
@@ -385,10 +386,15 @@ func newGvar(name string, ty *Type) *Obj {
 	printCalledFunc()
 
 	v := newVar(name, ty)
-	v.IsLocal = false
 	if ty.Kind == TY_FUNC {
 		v.IsFunc = true
 	}
+	// If name[0] is not upper-case, the 'Obj' can't be exported.
+	if 'A' > name[0] || name[0] > 'Z' {
+		v.IsStatic = true
+	}
+
+	v.IsDef = true
 	v.Next = globals
 	globals = v
 	return v
