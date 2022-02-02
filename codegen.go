@@ -351,7 +351,14 @@ func (c *codeWriter) genExpr(node *Node) {
 		}
 
 		c.println("	mov $0, %%rax")
-		c.println("	call %s", node.FuncName)
+
+		if depth%2 == 0 {
+			c.println("	call %s", node.FuncName)
+		} else {
+			c.println("	sub $8, %%rsp")
+			c.println("	call %s", node.FuncName)
+			c.println("	add $8, %%rsp")
+		}
 		return
 	}
 

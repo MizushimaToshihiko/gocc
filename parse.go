@@ -389,7 +389,7 @@ func newGvar(name string, ty *Type) *Obj {
 	if ty.Kind == TY_FUNC {
 		v.IsFunc = true
 	}
-	// If name[0] is not upper-case, the 'Obj' can't be exported.
+	// If name[0] is not uppercase, the 'Obj' can't be exported.
 	if 'A' > name[0] || name[0] > 'Z' {
 		v.IsStatic = true
 	}
