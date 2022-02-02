@@ -1126,7 +1126,7 @@ func isForClause(tok *Token) bool {
 	return false
 }
 
-// stmt = "return" expr ";"
+// stmt = "return" expr? ";"
 //      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
 //      | "switch" "{" expr "}" stmt
 //      | "case" const-expr ":" stmt
@@ -1152,6 +1152,10 @@ func stmt(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "return") {
 		node := newNode(ND_RETURN, tok)
+		if consume(rest, tok.Next, ";") {
+			return node
+		}
+
 		exp := expr(&tok, tok.Next)
 		*rest = skip(tok, ";")
 

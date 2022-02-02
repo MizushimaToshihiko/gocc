@@ -66,6 +66,10 @@ func paramDecay(x []int) int {
 	return x[0]
 }
 
+func retNone() {
+	return
+}
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
@@ -99,6 +103,8 @@ func main() {
 	var x [2]int
 	x[0] = 3
 	assert(3, paramDecay(x), "var x [2]int ; x[0]=3; paramDecay(x)")
+
+	retNone()
 
 	println("OK")
 }

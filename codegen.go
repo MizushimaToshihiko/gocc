@@ -520,7 +520,9 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.genStmt(node.Lhs)
 		return
 	case ND_RETURN:
-		c.genExpr(node.Lhs)
+		if node.Lhs != nil {
+			c.genExpr(node.Lhs)
+		}
 		c.println("	jmp .L.return.%s", curFnInGen.Name)
 		return
 	case ND_EXPR_STMT:
