@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 func main() {
 	var x1 int = 3
 	assert(3, *&x1, "var x int=3; *&x1")

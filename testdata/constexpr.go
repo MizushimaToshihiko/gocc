@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 func main() {
 	var i int = 0
 	switch 3 {

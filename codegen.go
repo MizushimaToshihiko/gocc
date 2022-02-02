@@ -359,6 +359,21 @@ func (c *codeWriter) genExpr(node *Node) {
 			c.println("	call %s", node.FuncName)
 			c.println("	add $8, %%rsp")
 		}
+
+		// It looks like the most significant 48 or 56 bits int RAX may
+		// contain garbage if a function return type is short or bool/char,
+		// respectively. We clear the upper bits here.
+		switch node.Ty.Kind {
+		case TY_BOOL:
+			c.println("	movzx %%al, %%eax")
+			return
+		case TY_BYTE:
+			c.println("	movsbl %%al, %%eax")
+			return
+		case TY_SHORT:
+			c.println("	movswl %%ax, %%eax")
+			return
+		}
 		return
 	}
 
@@ -570,7 +585,7 @@ func (c *codeWriter) emitData(prog *Obj) {
 	}
 
 	for v := prog; v != nil; v = v.Next {
-		if v.IsFunc {
+		if v.IsFunc || !v.IsDef {
 			continue
 		}
 

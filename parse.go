@@ -587,6 +587,7 @@ func declarator(rest **Token, tok *Token) *Type {
 	return ty
 }
 
+// func-params = param ("," param)*? ")"
 // param = declarator
 // e.g.
 //  x int
@@ -595,7 +596,6 @@ func declarator(rest **Token, tok *Token) *Type {
 //  x [3]int
 //  x [3]*int
 //  x [2]**int
-// params = param ("," param)*
 func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	printCurTok(tok)
 	printCalledFunc()
@@ -1260,14 +1260,20 @@ func stmt(rest **Token, tok *Token) *Node {
 			contLabel = node.ContLabel
 
 			if !equal(tok.Next, ";") {
-				node.Init = exprStmt(&tok, tok.Next)
+				if tok.Next.Kind == TK_IDENT && equal(tok.Next.Next, ":=") {
+					node.Init = declaration(&tok, tok.Next, true)
+				} else {
+					node.Init = exprStmt(&tok, tok.Next)
+				}
 			} else {
 				tok = skip(tok.Next, ";")
 			}
+
 			if !equal(tok, ";") {
 				node.Cond = expr(&tok, tok)
 			}
 			tok = skip(tok, ";")
+
 			if !equal(tok, "{") {
 				node.Inc = expr(&tok, tok)
 			}
@@ -2363,11 +2369,6 @@ func parse(tok *Token) *Obj {
 	printCalledFunc()
 
 	globals = nil
-	// builtin libc-functions such as "printf"
-	newGvar("printf", funcType(ty_int))
-	newGvar("exit", funcType(ty_void))
-	newGvar("assert", funcType(ty_void))
-	newGvar("println", funcType(ty_void))
 
 	for !atEof(tok) {
 

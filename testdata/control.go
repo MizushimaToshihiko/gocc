@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 func main() {
 	var x int
 	if 0 {
@@ -32,7 +35,12 @@ func main() {
 	for i = 0; i <= 10; i = i + 1 {
 		j = i + j
 	}
-	assert(55, j, "for i=0; i<=10; i=i+1 {j=i+j;}")
+	assert(55, j, "var i int=0;var j int=0;for i=0; i<=10; i=i+1 {j=i+j;}")
+	var j int = 0
+	for i := 0; i <= 10; i = i + 1 {
+		j = i + j
+	}
+	assert(55, j, "for i:=0; i<=10; i=i+1 {j=i+j;}")
 	i = 0
 	for i < 10 {
 		i = i + 1

@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 func main() {
 	assert(int64(-5), -10+int64(5), "-10+int64(5)")
 	assert(int64(-15), -10-int64(5), "-10-int64(5)")

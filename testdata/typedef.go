@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 type MyInt int
 type MyInt2 [4]int
 

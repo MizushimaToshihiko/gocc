@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 func main() {
 	assert(0, 0, "0")
 	assert(42, 42, "42")

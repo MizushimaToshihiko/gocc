@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 func main() {
 	assert(1, Sizeof(byte), "Sizeof(byte)")
 	assert(2, Sizeof(int16), "Sizeof(int16)")

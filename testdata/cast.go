@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 func main() {
 	assert(131585, int(8590066177), "int(8590066177)")
 	assert(513, int16(8590066177), "int16(8590066177)")

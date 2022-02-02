@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 var g3 byte
 var g4 int16
 var g5 int
@@ -22,4 +25,6 @@ func main() {
 	assert(8, Alignof(g7), "Alignof(g7)")
 	assert(1, Alignof(g8), "Alignof(g8)")
 	assert(8, Alignof(g9), "Alignof(g9)")
+
+	println("OK")
 }

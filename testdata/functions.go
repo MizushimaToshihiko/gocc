@@ -1,5 +1,8 @@
 package test
 
+func assert(want int, act int, code string)
+func println(format string)
+
 func ret3() int {
 	return 3
 	return 5
@@ -70,6 +73,14 @@ func retNone() {
 	return
 }
 
+func falseFn() bool
+
+func trueFn() bool
+
+func charFn() byte
+
+func shortFn() int16
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
@@ -105,6 +116,11 @@ func main() {
 	assert(3, paramDecay(x), "var x [2]int ; x[0]=3; paramDecay(x)")
 
 	retNone()
+
+	assert(1, trueFn(), "trueFn()")
+	assert(0, falseFn(), "falseFn()")
+	assert(3, charFn(), "charFn()")
+	assert(5, shortFn(), "shortFn()")
 
 	println("OK")
 }

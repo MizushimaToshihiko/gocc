@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -19,3 +20,8 @@ void println(char *fmt, ...) {
   printf(fmt, ap);
   printf("\n");
 }
+
+int falseFn() { return 512; }
+int trueFn() { return 513; }
+int charFn() { return (2<<8)+3; }
+int shortFn() { return (2<<16)+5; }
