@@ -57,6 +57,7 @@ type Obj struct {
 	Params  *Obj
 	Body    *Node
 	Locals  *Obj
+	VaArea  *Obj
 	StackSz int
 }
 
@@ -610,12 +611,13 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 		}
 
 		ty2 := declarator(&tok, tok)
+		ty2name := ty2.Name
 		if ty2.Kind == TY_VOID {
 			if equal(tok, "...") {
 				isVariadic = true
 				ty2 = readTypePreffix(&tok, tok.Next, nil)
+				ty2.Name = ty2name
 				cur.Next = copyType(ty2)
-				tok = skip(tok, ")")
 				break
 			}
 
@@ -633,6 +635,10 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 		cur.Next = copyType(ty2)
 		cur = cur.Next
 	}
+
+	// if cur == head {
+	// 	isVariadic = true
+	// }
 
 	ty = funcType(ty)
 	ty.Params = head.Next
@@ -2188,6 +2194,10 @@ func funcall(rest **Token, tok *Token) *Node {
 		arg := assign(&tok, tok)
 		addType(arg)
 
+		if paramTy == nil && !ty.IsVariadic {
+			panic("\n" + errorTok(tok, "too many arguments"))
+		}
+
 		if paramTy != nil {
 			if paramTy.Kind == TY_STRUCT {
 				panic("\n" + errorTok(arg.Tok, "passing struct is not supported yet"))
@@ -2198,6 +2208,10 @@ func funcall(rest **Token, tok *Token) *Node {
 
 		cur.Next = arg
 		cur = cur.Next
+	}
+
+	if paramTy != nil {
+		panic("\n" + errorTok(tok, "too few arguments"))
 	}
 
 	*rest = skip(tok, ")")
@@ -2360,6 +2374,9 @@ func function(tok *Token) *Token {
 	enterScope()
 	createParamLvars(ty.Params)
 	fn.Params = locals
+	if ty.IsVariadic {
+		fn.VaArea = newLvar("__va_area__", arrayOf(ty_char, 136))
+	}
 
 	tok = skip(tok, "{")
 	fn.Body = compoundStmt(&tok, tok)

@@ -1,7 +1,7 @@
 package test
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(frmt ...string)
 
 func ret3() int {
 	return 3
@@ -81,7 +81,11 @@ func charFn() byte
 
 func shortFn() int16
 
-func addAll(n ...int) int
+// sliceの追加後
+// func addAll(n ...int) int
+// func printAll(s ...string) {
+// 	println(s)
+// }
 
 func main() {
 	assert(3, ret3(), "ret3()")
@@ -124,8 +128,11 @@ func main() {
 	assert(3, charFn(), "charFn()")
 	assert(5, shortFn(), "shortFn()")
 
-	assert(6, addAll(3, 1, 2, 3), "addAll(3,1,2,3)")
-	assert(5, addAll(4, 1, 2, 3, -1), "addAll(4,1,2,3,-1)")
+	// sliceの追加後
+	// assert(6, addAll(3, 1, 2, 3), "addAll(3,1,2,3)")
+	// assert(5, addAll(4, 1, 2, 3, -1), "addAll(4,1,2,3,-1)")
+	// printAll("1", "2", "3", "4")
+	// printAll("1", "2", "3", "4", "5", "6")
 
 	println("OK")
 }
