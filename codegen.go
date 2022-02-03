@@ -113,15 +113,22 @@ func (c *codeWriter) load(ty *Type) {
 		return
 	}
 
+	var insn string
+	if ty.IsUnsigned {
+		insn = "movz"
+	} else {
+		insn = "movs"
+	}
+
 	// When we load a char or a short value to a register, we always
 	// extend them to the size of int, so we can assume the lower half of a
 	// register for char, short and int may contain garbage. When we load
 	// a long value to a register, it simply occupies the entire register.
 	switch ty.Sz {
 	case 1:
-		c.println("	movsbl (%%rax), %%eax")
+		c.println("	%sbl (%%rax), %%eax", insn)
 	case 2:
-		c.println("	movswl (%%rax), %%eax")
+		c.println("	%swl (%%rax), %%eax", insn)
 	case 4:
 		c.println("	movsxd (%%rax), %%rax")
 	case 8:
@@ -186,30 +193,62 @@ const (
 	I16
 	I32
 	I64
+	U8
+	U16
+	U32
+	U64
 )
 
-func getTypeId(ty *Type) int {
+func (c *codeWriter) getTypeId(ty *Type) int {
 	switch ty.Kind {
 	case TY_BYTE:
+		if ty.IsUnsigned {
+			return U8
+		}
 		return I8
 	case TY_SHORT:
+		if ty.IsUnsigned {
+			return U16
+		}
 		return I16
 	case TY_INT:
+		if ty.IsUnsigned {
+			return U32
+		}
 		return I32
+	case TY_LONG:
+		if ty.IsUnsigned {
+			return U64
+		}
+		return I64
+	default:
+		if c.err == nil {
+			c.err = fmt.Errorf("internal error")
+		} else {
+			c.err = fmt.Errorf(c.err.Error() + "\ninternal error")
+		}
+		return 0
 	}
-	return I64
 }
 
 // The table for type casts
 const i32i8 string = "movsbl %al, %eax"
+const i32u8 string = "movzbl %al, %eax"
 const i32i16 string = "movswl %ax, %eax"
+const i32u16 string = "movzwl %ax, %eax"
 const i32i64 string = "movsxd %eax, %rax"
+const u32i64 string = "mov %eax, %eax"
 
-var castTable [4][4]string = [4][4]string{
-	{"", "", "", i32i64},        // i8
-	{i32i8, "", "", i32i64},     // i16
-	{i32i8, i32i16, "", i32i64}, // i32
-	{i32i8, i32i16, "", ""},     // i64
+var castTable = [8][8]string{
+	//i8 i16 i32 i64     u8     u16     u32 u64
+	{"", "", "", i32i64, i32u8, i32u16, "", i32i64},        // i8
+	{i32i8, "", "", i32i64, i32u8, i32u16, "", i32i64},     // i16
+	{i32i8, i32i16, "", i32i64, i32u8, i32u16, i32i64},     // i32
+	{i32i8, i32i16, "", "", i32u8, i32u16, "", ""},         // i64
+	{i32i8, "", "", i32i64, "", "", "", i32i64},            // u8
+	{i32i8, i32i16, "", i32i64, i32u8, "", "", i32i64},     // u16
+	{i32i8, i32i16, "", u32i64, i32u8, i32u16, "", u32i64}, // u32
+	{i32i8, i32i16, "", "", i32u8, i32u16, "", ""},         // u64
 }
 
 func (c *codeWriter) cast(from *Type, to *Type) {
@@ -228,8 +267,8 @@ func (c *codeWriter) cast(from *Type, to *Type) {
 		return
 	}
 
-	t1 := getTypeId(from)
-	t2 := getTypeId(to)
+	t1 := c.getTypeId(from)
+	t2 := c.getTypeId(to)
 	if castTable[t1][t2] != "" {
 		c.println("	%s", castTable[t1][t2])
 	}
@@ -368,9 +407,17 @@ func (c *codeWriter) genExpr(node *Node) {
 			c.println("	movzx %%al, %%eax")
 			return
 		case TY_BYTE:
+			if node.Ty.IsUnsigned {
+				c.println("	movzbl %%al, %%eax")
+				return
+			}
 			c.println("	movsbl %%al, %%eax")
 			return
 		case TY_SHORT:
+			if node.Ty.IsUnsigned {
+				c.println("	movzwl %%ax, %%eax")
+				return
+			}
 			c.println("	movswl %%ax, %%eax")
 			return
 		}
@@ -382,14 +429,16 @@ func (c *codeWriter) genExpr(node *Node) {
 	c.genExpr(node.Lhs)
 	c.pop("%rdi")
 
-	var ax, di string
+	var ax, di, dx string
 
 	if node.Lhs.Ty.Kind == TY_LONG || node.Lhs.Ty.Base != nil {
 		ax = "%rax"
 		di = "%rdi"
+		dx = "%rdi"
 	} else {
 		ax = "%eax"
 		di = "%edi"
+		dx = "%edx"
 	}
 
 	switch node.Kind {
@@ -403,12 +452,17 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println("	imul %s, %s", di, ax)
 		return
 	case ND_DIV, ND_MOD:
-		if node.Lhs.Ty.Sz == 8 {
-			c.println("	cqo")
+		if node.Ty.IsUnsigned {
+			c.println("	mov $0, %s", dx)
+			c.println("	div %s", di)
 		} else {
-			c.println("	cdq")
+			if node.Lhs.Ty.Sz == 8 {
+				c.println("	cqo")
+			} else {
+				c.println("	cdq")
+			}
+			c.println("	idiv %s", di)
 		}
-		c.println("	idiv %s", di)
 
 		if node.Kind == ND_MOD {
 			c.println("	mov %%rdx, %%rax")
@@ -432,9 +486,17 @@ func (c *codeWriter) genExpr(node *Node) {
 		case ND_NE:
 			c.println("	setne %%al")
 		case ND_LT:
-			c.println("	setl %%al")
+			if node.Lhs.Ty.IsUnsigned {
+				c.println("	setb %%al")
+			} else {
+				c.println("	setl %%al")
+			}
 		case ND_LE:
-			c.println("	setle %%al")
+			if node.Lhs.Ty.IsUnsigned {
+				c.println("	setbe %%al")
+			} else {
+				c.println("	setle %%al")
+			}
 		}
 
 		c.println("	movzb %%al, %%rax")
@@ -445,8 +507,8 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_SHR:
 		c.println("	mov %%rdi, %%rcx")
-		if node.Ty.Sz == 8 {
-			c.println("	sar %%cl, %s", ax)
+		if node.Lhs.Ty.IsUnsigned {
+			c.println("	shr %%cl, %s", ax)
 		} else {
 			c.println("	sar %%cl, %s", ax)
 		}
@@ -664,37 +726,6 @@ func (c *codeWriter) emitText(prog *Obj) {
 		c.println("	.text")
 		c.println("%s:", fn.Name)
 		curFnInGen = fn
-
-		// Save arg registers if function is variadic
-		if fn.VaArea != nil {
-			gp := 0
-			for v := fn.Params; v != nil; v = v.Next {
-				gp++
-			}
-			off := fn.VaArea.Offset
-
-			// va_elem
-			c.println("	movl $%d, %d(%%rbp)", gp*8, off)
-			c.println("	movl $0, %d(%%rbp)", off+4)
-			c.println("	movq %%rsp, %d(%%rbp)", off+16)
-			c.println("	addq $%d, %d(%%rbp)", off+24, off+16)
-
-			// __reg_save_area__
-			c.println("	movq %%rdi, %d(%%rbp)", off+24)
-			c.println("	movq %%rsi, %d(%%rbp)", off+32)
-			c.println("	movq %%rdx, %d(%%rbp)", off+40)
-			c.println("	movq %%rcx, %d(%%rbp)", off+48)
-			c.println("	movq %%r8, %d(%%rbp)", off+56)
-			c.println("	movq %%r9, %d(%%rbp)", off+64)
-			c.println("	movsd %%xmm0, %d(%%rbp)", off+72)
-			c.println("	movsd %%xmm1, %d(%%rbp)", off+80)
-			c.println("	movsd %%xmm2, %d(%%rbp)", off+88)
-			c.println("	movsd %%xmm3, %d(%%rbp)", off+96)
-			c.println("	movsd %%xmm4, %d(%%rbp)", off+104)
-			c.println("	movsd %%xmm5, %d(%%rbp)", off+112)
-			c.println("	movsd %%xmm6, %d(%%rbp)", off+120)
-			c.println("	movsd %%xmm7, %d(%%rbp)", off+128)
-		}
 
 		// Prologue
 		c.println("	push %%rbp")

@@ -63,16 +63,18 @@ type Member struct {
 	Offset int
 }
 
-var ty_void *Type = &Type{Kind: TY_VOID, Sz: 1, Align: 1, TyName: "void"}
-var ty_bool *Type = &Type{Kind: TY_BOOL, Sz: 1, Align: 1, TyName: "bool"}
+var ty_void = &Type{Kind: TY_VOID, Sz: 1, Align: 1, TyName: "void"}
+var ty_bool = &Type{Kind: TY_BOOL, Sz: 1, Align: 1, TyName: "bool"}
 
-var ty_char *Type = &Type{Kind: TY_BYTE, Sz: 1, Align: 1, TyName: "int8"}
-var ty_short *Type = &Type{Kind: TY_SHORT, Sz: 2, Align: 2, TyName: "int16"}
-var ty_int *Type = &Type{Kind: TY_INT, Sz: 4, Align: 4, TyName: "int"}
-var ty_long *Type = &Type{Kind: TY_LONG, Sz: 8, Align: 8, TyName: "int64"}
+var ty_char = &Type{Kind: TY_BYTE, Sz: 1, Align: 1, TyName: "int8"}
+var ty_short = &Type{Kind: TY_SHORT, Sz: 2, Align: 2, TyName: "int16"}
+var ty_int = &Type{Kind: TY_INT, Sz: 4, Align: 4, TyName: "int"}
+var ty_long = &Type{Kind: TY_LONG, Sz: 8, Align: 8, TyName: "int64"}
 
-var ty_uchar *Type = &Type{Kind: TY_BYTE, Sz: 1, Align: 1, TyName: "uint8", IsUnsigned: true}
-var ty_ushort *Type = &Type{Kind: TY_SHORT, Sz: 2}
+var ty_uchar = &Type{Kind: TY_BYTE, Sz: 1, Align: 1, TyName: "uint8", IsUnsigned: true}
+var ty_ushort = &Type{Kind: TY_SHORT, Sz: 2, Align: 2, TyName: "uint16", IsUnsigned: true}
+var ty_uint = &Type{Kind: TY_INT, Sz: 4, Align: 4, TyName: "uint", IsUnsigned: true}
+var ty_ulong = &Type{Kind: TY_LONG, Sz: 8, Align: 8, TyName: "uint32", IsUnsigned: true}
 
 func newType(kind TypeKind, size, align int, name string, isUnsign bool) *Type {
 	return &Type{Kind: kind, Sz: size, Align: align, TyName: name}
@@ -146,10 +148,26 @@ func getCommonType(ty1, ty2 *Type) *Type {
 	if ty1.Base != nil {
 		return pointerTo(ty1.Base)
 	}
-	if ty1.Sz == 8 || ty2.Sz == 8 {
-		return ty_long
+
+	if ty1.Sz < 4 {
+		ty1 = ty_int
 	}
-	return ty_int
+	if ty2.Sz < 4 {
+		ty2 = ty_int
+	}
+
+	if ty1.Sz != ty2.Sz {
+		if ty1.Sz < ty2.Sz {
+			return ty2
+		} else {
+			return ty1
+		}
+	}
+
+	if ty2.IsUnsigned {
+		return ty2
+	}
+	return ty1
 }
 
 // For many binary operators, we implicitly promote operands sp that
