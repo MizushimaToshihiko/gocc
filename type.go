@@ -29,9 +29,10 @@ const (
 )
 
 type Type struct {
-	Kind  TypeKind
-	Sz    int // Sizeof() value
-	Align int // alignment
+	Kind       TypeKind
+	Sz         int  // Sizeof() value
+	Align      int  // alignment
+	IsUnsigned bool // unsigned or signed
 
 	Base *Type // pointer or array
 
@@ -65,12 +66,15 @@ type Member struct {
 var ty_void *Type = &Type{Kind: TY_VOID, Sz: 1, Align: 1, TyName: "void"}
 var ty_bool *Type = &Type{Kind: TY_BOOL, Sz: 1, Align: 1, TyName: "bool"}
 
-var ty_char *Type = &Type{Kind: TY_BYTE, Sz: 1, Align: 1, TyName: "byte"}
+var ty_char *Type = &Type{Kind: TY_BYTE, Sz: 1, Align: 1, TyName: "int8"}
 var ty_short *Type = &Type{Kind: TY_SHORT, Sz: 2, Align: 2, TyName: "int16"}
 var ty_int *Type = &Type{Kind: TY_INT, Sz: 4, Align: 4, TyName: "int"}
 var ty_long *Type = &Type{Kind: TY_LONG, Sz: 8, Align: 8, TyName: "int64"}
 
-func newType(kind TypeKind, size, align int, name string) *Type {
+var ty_uchar *Type = &Type{Kind: TY_BYTE, Sz: 1, Align: 1, TyName: "uint8", IsUnsigned: true}
+var ty_ushort *Type = &Type{Kind: TY_SHORT, Sz: 2}
+
+func newType(kind TypeKind, size, align int, name string, isUnsign bool) *Type {
 	return &Type{Kind: kind, Sz: size, Align: align, TyName: name}
 }
 
@@ -98,7 +102,7 @@ func copyType(ty *Type) *Type {
 }
 
 func charType() *Type {
-	return newType(TY_BYTE, 1, 1, "byte")
+	return newType(TY_BYTE, 1, 1, "byte", true)
 }
 
 func pointerTo(base *Type) *Type {
@@ -135,7 +139,7 @@ func arrayOf(base *Type, len int) *Type {
 }
 
 func structType() *Type {
-	return newType(TY_STRUCT, 0, 1, "struct")
+	return newType(TY_STRUCT, 0, 1, "struct", false)
 }
 
 func getCommonType(ty1, ty2 *Type) *Type {
