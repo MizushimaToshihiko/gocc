@@ -645,24 +645,13 @@ func (c *codeWriter) storeGp(r, offset, sz int) {
 	}
 }
 
-func isImplicitFn(fnName string) bool {
-	var imFn []string = []string{
-		"printf", "exit", "assert", "println"}
-	for _, f := range imFn {
-		if fnName == f {
-			return true
-		}
-	}
-	return false
-}
-
 func (c *codeWriter) emitText(prog *Obj) {
 	if c.err != nil {
 		return
 	}
 
 	for fn := prog; fn != nil; fn = fn.Next {
-		if !fn.IsFunc || !fn.IsDef || isImplicitFn(fn.Name) {
+		if !fn.IsFunc || !fn.IsDef {
 			continue
 		}
 
