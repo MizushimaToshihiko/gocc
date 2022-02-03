@@ -1922,8 +1922,14 @@ func cast(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	if isTypename(tok) {
-		ty := readTypePreffix(&tok, tok, nil)
 		start := tok
+		ty := readTypePreffix(&tok, tok, nil)
+
+		// conmpound literal
+		if equal(tok, "{") {
+			return unary(rest, start)
+		}
+
 		node := newCast(cast(&tok, tok), ty)
 		node.Tok = start
 		*rest = tok
@@ -2082,10 +2088,27 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 		node.Ty)
 }
 
-// postfix = primary ("[" expr "]" | "." ident | "++" | "--")*
+// postfix = type-name "{" initializer-list "}"
+//         | primary ("[" expr "]" | "." ident | "++" | "--")*
 func postfix(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
+
+	if isTypename(tok) {
+		start := tok
+		ty := readTypePreffix(&tok, tok.Next, nil)
+
+		if scope.Next == nil {
+			v := newAnonGvar(ty)
+			gvarInitializer(rest, tok, v)
+			return newVarNode(v, start)
+		}
+
+		v := newLvar("", ty)
+		lhs := lvarInitializer(rest, tok, v)
+		rhs := newVarNode(v, tok)
+		return newBinary(ND_COMMA, lhs, rhs, start)
+	}
 
 	node := primary(&tok, tok)
 
