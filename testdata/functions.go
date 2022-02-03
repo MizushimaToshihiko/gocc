@@ -81,6 +81,8 @@ func charFn() byte
 
 func shortFn() int16
 
+func addAll(n ...int) int
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
@@ -121,6 +123,9 @@ func main() {
 	assert(0, falseFn(), "falseFn()")
 	assert(3, charFn(), "charFn()")
 	assert(5, shortFn(), "shortFn()")
+
+	assert(6, addAll(3, 1, 2, 3), "addAll(3,1,2,3)")
+	assert(5, addAll(4, 1, 2, 3, -1), "addAll(4,1,2,3,-1)")
 
 	println("OK")
 }

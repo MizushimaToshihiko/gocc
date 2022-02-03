@@ -587,7 +587,7 @@ func declarator(rest **Token, tok *Token) *Type {
 	return ty
 }
 
-// func-params = param ("," param)*? ")"
+// func-params = (param ("," param)* ("," "...")? ")"
 // param = declarator
 // e.g.
 //  x int
@@ -602,13 +602,23 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 
 	head := &Type{}
 	cur := head
+	isVariadic := false
 
 	for !equal(tok, ")") {
 		if cur != head {
 			tok = skip(tok, ",")
 		}
+
 		ty2 := declarator(&tok, tok)
 		if ty2.Kind == TY_VOID {
+			if equal(tok, "...") {
+				isVariadic = true
+				ty2 = readTypePreffix(&tok, tok.Next, nil)
+				cur.Next = copyType(ty2)
+				tok = skip(tok, ")")
+				break
+			}
+
 			panic(errorTok(tok, "type name expected"))
 		}
 
@@ -626,6 +636,7 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 
 	ty = funcType(ty)
 	ty.Params = head.Next
+	ty.IsVariadic = isVariadic
 	*rest = tok.Next
 	return ty
 }

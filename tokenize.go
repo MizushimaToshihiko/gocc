@@ -214,9 +214,11 @@ func startsWithTermKw(p string) string {
 func startsWithPunctuator(p string) string {
 
 	// Multi-letter punctuator
-	ops := []string{"<<=", ">>=", "==", "!=", "<=", ">=", "->", "++", "--",
+	ops := []string{
+		"<<=", ">>=", "==", "!=", "<=", ">=", "->", "++", "--",
 		"<<", ">>", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=",
-		":=", "&&", "||"}
+		":=", "&&", "||", "...",
+	}
 
 	for _, op := range ops {
 		if startsWith(p, op) {

@@ -44,9 +44,10 @@ type Type struct {
 	Mems  *Member // struct
 
 	// function
-	RetTy  *Type
-	Params *Type
-	Next   *Type
+	RetTy      *Type
+	Params     *Type
+	IsVariadic bool
+	Next       *Type
 
 	Init *Initializer
 }
