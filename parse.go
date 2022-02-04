@@ -482,17 +482,31 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 
 	var ty *Type
 	if equal(tok, "byte") {
-		ty = ty_char
-	} else if equal(tok, "string") {
-		ty = stringType()
+		ty = ty_uchar
 	} else if equal(tok, "bool") {
 		ty = ty_bool
+	} else if equal(tok, "int8") {
+		ty = ty_char
 	} else if equal(tok, "int16") {
 		ty = ty_short
 	} else if equal(tok, "int") {
 		ty = ty_int
+	} else if equal(tok, "int32") {
+		ty = ty_int
 	} else if equal(tok, "int64") {
 		ty = ty_long
+	} else if equal(tok, "uint8") {
+		ty = ty_uchar
+	} else if equal(tok, "uint16") {
+		ty = ty_ushort
+	} else if equal(tok, "uint32") {
+		ty = ty_uint
+	} else if equal(tok, "uint") {
+		ty = ty_uint
+	} else if equal(tok, "uint64") {
+		ty = ty_ulong
+	} else if equal(tok, "string") {
+		ty = stringType()
 	} else if equal(tok, "struct") { // struct type
 		ty = structDecl(&tok, tok.Next, name)
 	}
@@ -1122,12 +1136,8 @@ func isTypename(tok *Token) bool {
 		tok = tok.Next
 	}
 
-	kw := []string{
-		"byte", "bool", "int16", "int", "int64", "struct", "string",
-	}
-
-	for i := 0; i < len(kw); i++ {
-		if equal(tok, kw[i]) {
+	for i := 0; i < len(tyName); i++ {
+		if equal(tok, tyName[i]) {
 			return true
 		}
 	}

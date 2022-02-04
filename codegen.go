@@ -222,12 +222,7 @@ func (c *codeWriter) getTypeId(ty *Type) int {
 		}
 		return I64
 	default:
-		if c.err == nil {
-			c.err = fmt.Errorf("internal error")
-		} else {
-			c.err = fmt.Errorf(c.err.Error() + "\ninternal error")
-		}
-		return 0
+		return U64
 	}
 }
 
@@ -254,6 +249,7 @@ var castTable = [8][8]string{
 func (c *codeWriter) cast(from *Type, to *Type) {
 	if c.err != nil {
 		return
+
 	}
 
 	if to.Kind == TY_VOID {

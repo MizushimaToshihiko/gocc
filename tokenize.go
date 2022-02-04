@@ -172,26 +172,29 @@ func startsWith(p, q string) bool {
 }
 
 // reserved words
-var tyName = []string{"int16", "int64", "int",
-	"uint8", "byte", "bool", "rune", "string",
+var tyName = []string{
+	"int8", "int16", "int32", "int64", "int",
+	"uint8", "uint16", "uint32", "uint64", "uint",
+	"float32", "float64",
+	"complex64", "complex128",
+	"byte", "rune",
+	"string", "bool", "error",
+	"struct", // typeではないけどisTypenameで使うので
 } // <-順番が大事、intとint16ではint16が先
 
 var term = []string{"break", "continue", "fallthrough",
 	"return", "++", "--"}
 
 var kw = []string{
-	"if", "else", "for", "type", "var", "func", "struct",
-	"goto", "switch", "case", "default", "package", "import",
-	"true", "false", "nil", "Sizeof"}
-
-// unimplemented:
-// "chan", "const", "defer", "fallthrough", "interface", "map", "package", "range", "select"
-// "complex64", "complex128", "error",
-// "float32", "float64", "int8",
-// "uint", "uint16", "uint32", "uint64", "uintptr"
-// "iota"
-// "append", "cap", "close", "complex", "copy", "delete", "imag",
-// "len", "make", "new", "panic", "print", "println", "real", "recover"
+	"case", "chan", "const", "default", "defer", "else", "for",
+	"func", "go", "goto", "if", "import", "interface", "map",
+	"package", "range", "switch", "select", "type",
+	"var",
+	"true", "false", "iota", "nil",
+	"make", "len", "cap", "new", "append", "copy", "close",
+	"delete", "complex", "real", "imag", "panic", "recover",
+	"Sizeof",
+}
 
 func startsWithTypeName(p string) string {
 	for _, k := range tyName {

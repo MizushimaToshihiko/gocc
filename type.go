@@ -18,7 +18,7 @@ type errWriter struct {
 const (
 	TY_VOID  TypeKind = iota // void type
 	TY_BOOL                  // bool type
-	TY_BYTE                  // char type
+	TY_BYTE                  // char(int8) type
 	TY_SHORT                 // int16 type
 	TY_INT                   // int32 type
 	TY_LONG                  // int64 type
