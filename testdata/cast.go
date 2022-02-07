@@ -12,8 +12,6 @@ func main() {
 	// assert(513, x, "var x int=512; *(*byte)(&x)=1; x");
 	// assert(5, ({ int x=5; long y=(long)&x; *(int*)y; }));
 
-	// (void)1;
-
 	assert(-1, int8(255), "int8(255)")
 	assert(255, uint8(255), "uint8(255)")
 	assert(-1, int16(65535), "int16(65535)")

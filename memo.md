@@ -1,29 +1,22 @@
 
 ### チラ裏的なもの
 #### 【後回し】※順不同
- - Allow for-loops to define local variables  
-   => 型推論が終わってから。for-clauseのinitではShortVarDeclしか記載できない為  
- - Add flexible array member  
-   => とりあえず今のところはsiliceを長さ0の配列としている。後でsliceを定義してparse出来るようにする
- - tokenizer変更
-   公式のtoken packageに合わせてVARトークンやFUNCトークンを作り、FUNCトークンの子としてFUNC内のstatementをtokenizeする <= parseしやすくなるかもしれないので
  - parseの順番を変える
-   現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化), func(変数スコープ登録のみ)のparseの後にfunc内部のparseを行うように変更
- - 型推論  
-   "var x = expr"とか、"x := expr"とか
- - ~~initializerでの型名省略
-   "var x [2]T = [2]T{T{1,2},T{3,4}}"を"var x [2]T = [2]T{{1,2},{3,4}}"で可とする~~反映済
+   現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化)
  - RangeClause  
    "for x := range X"みたいなもの
- - 配列の宣言で"[...]int{1,2,3}"みたいなもの
- - 定数宣言
+ - const宣言
+ - 文字列の足し算
+ - *(*type-name)(unary)
+ - (*var-name)[n]
  - map型
  - slice
- - ~~Typeに型の名前を持たせて、pointer型とstring型を外面上は別物にする~~反映済
+ - Add flexible array member  
+   => とりあえず今のところはsiliceを長さ0の配列としている。後でsliceを定義してparse出来るようにする
+ - 配列の宣言で"[...]int{1,2,3}"みたいなもの(slice追加後)
  - 関数戻り値の型チェック(type checking)
- - goroutineは無理かな？
+ - goroutine
  - package
-    - main package
  - import
  - built-in functions
     - new
@@ -35,11 +28,12 @@
     - copy(slice)
     - panic
     - recover
- - "switch 変数 {"とか"switch 型 {"とか
- - blank identifiers => "_"
+ - switch ident.(type) {
+ - case case1,case2:
+ - blank identifiers : "_"
  - bool型でtrueやfalseを使用できるように
  - float
- - complex(複素数) いる?
+ - complex(複素数)
  - rune(int32のエイリアス)
  - rune literal => tokenizerのchar literalを変更する?
  - method set(メソッド集合)
@@ -140,7 +134,8 @@ func MerryXMas() {
  - このコンパイラでは、var x,y int = 1,2をparse.goの中でvar x int = 1; var y int = 2;としてfunction()内のstmtの後に繋げる -> declaration()とは別にvarspec()を作り、nodeをつなげたものをfunction()又はstmt()に返す?
 
 #### 配列変数から配列変数への代入
-- 現時点では配列から配列への代入ができない（not a lvalueエラーを出してしまう)
+- ~~現時点では配列変数から配列変数への代入ができない（not a lvalueエラーを出してしまう)~~  
+  Type構造体の要素にInitを追加し、Obj構造体の.Ty.InitにInitializerを保存し、左辺のnodeに.Tyを丸ごとコピーすることで実装済み
 - string変数からstring変数への代入も同様にできない。stringをbase typeがbyteの配列にしているため。⇒string型をarrayType()からpointerTo()にしたら通った。
 
 #### 型が違うので代入できないエラーを返す関数の書きかけ
@@ -185,4 +180,4 @@ func typeStr(ty *Type, tok *Token) string {
 2022/01/19
 - 引数付の関数定義?呼び出し?時にsegmentation faultが出る
 - testdata/commonにc言語で定義するとsegmentation faultにならない
-- 2022/01/20 PrologueとEpilogueのレジスタ名が間違っていた為
+- 2022/01/20 PrologueとEpilogueのレジスタ名が間違っていたのが原因
