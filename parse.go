@@ -859,7 +859,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			}
 			// Copy Initializer from rhs, if array can be initialized by other array.
 			if rhsTy.Init != nil {
-				*init = *rhsTy.Init
+				*init = *rhsTy.Init // copyType()使った方が良いかも、検証する時間なし
 			}
 			return
 		}
