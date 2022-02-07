@@ -1957,8 +1957,10 @@ func cast(rest **Token, tok *Token) *Node {
 			return unary(rest, start)
 		}
 
+		tok = skip(tok, "(")
 		node := newCast(cast(&tok, tok), ty)
 		node.Tok = start
+		tok = skip(tok, ")")
 		*rest = tok
 		return node
 	}
@@ -2263,7 +2265,7 @@ func primary(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "Sizeof") && equal(tok.Next, "(") {
 		// "(" 以降のtokenをunaryに渡して、
-		// unary -> postfix -> primaryと来て"(" expr ")"でparseする
+		// unary -> postfix -> primaryの"(" expr ")"でparseする
 		node := unary(rest, tok.Next)
 		addType(node)
 		return newNum(int64(node.Ty.Sz), tok)
