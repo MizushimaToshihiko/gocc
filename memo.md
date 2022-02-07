@@ -135,7 +135,7 @@ func MerryXMas() {
 
 #### 配列変数から配列変数への代入
 - ~~現時点では配列変数から配列変数への代入ができない（not a lvalueエラーを出してしまう)~~  
-  Type構造体の要素にInitを追加し、Obj構造体の.Ty.InitにInitializerを保存し、左辺のnodeに.Tyを丸ごとコピーすることで実装済み
+  Type構造体の要素にInitを追加し、Obj構造体の.Ty.InitにInitializerを保存し、代入時に右辺のObjから左辺のObjに.Tyを丸ごとコピーすることで実装済み、copyType()を使った方が良いかも
 - string変数からstring変数への代入も同様にできない。stringをbase typeがbyteの配列にしているため。⇒string型をarrayType()からpointerTo()にしたら通った。
 
 #### 型が違うので代入できないエラーを返す関数の書きかけ
