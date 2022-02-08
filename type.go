@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 )
 
@@ -211,11 +210,7 @@ func (e *errWriter) visit(node *Node) {
 
 	switch node.Kind {
 	case ND_NUM:
-		if node.Val <= int64(math.MaxInt32) {
-			node.Ty = ty_int
-			return
-		}
-		node.Ty = ty_long
+		node.Ty = ty_int
 		return
 	case ND_ADD,
 		ND_SUB,

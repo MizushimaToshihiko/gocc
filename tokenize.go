@@ -36,7 +36,7 @@ type Token struct {
 	Next *Token    // next
 	Val  int64     // if 'kind' is TK_NUM, it's integer
 	Loc  int       // the location in 'userInput'
-	Ty   *Type     // Used if TK_STR
+	Ty   *Type     // Used if TK_NUM or TK_STR
 	Str  string    // token string
 	Len  int       // length of token
 
@@ -273,39 +273,45 @@ func isIdent2(c rune) bool {
 }
 
 // for integer literal error
-func errMustSeparateSuccessiveDigits() error {
-	return errors.New(errorAt(curIdx, "'_' must separate successive digits"))
+func errMustSeparateSuccessiveDigits(idx int) error {
+	return errors.New(errorAt(idx, "'_' must separate successive digits"))
 }
 
 func readDigit(cur *Token) (*Token, error) {
 	var base int = 10
 
+	var sVal string
+	var err error
+	var errIdx = curIdx
+
 	if startsWith(string(userInput)[curIdx:curIdx+2], "0x") ||
 		startsWith(string(userInput)[curIdx:curIdx+2], "0X") {
+		base = 16
 		curIdx += 2
-		return readHexDigit(cur)
-	}
-
-	var sVal string
-
-	if startsWith(string(userInput)[curIdx:curIdx+2], "0b") ||
+		sVal, err = readHexDigit(cur)
+		if err != nil {
+			return nil, err
+		}
+	} else if startsWith(string(userInput)[curIdx:curIdx+2], "0b") ||
 		startsWith(string(userInput)[curIdx:curIdx+2], "0B") {
 		base = 2
 		curIdx += 2
-	}
-
-	if startsWith(string(userInput)[curIdx:curIdx+2], "0o") ||
+	} else if startsWith(string(userInput)[curIdx:curIdx+2], "0o") ||
 		startsWith(string(userInput)[curIdx:curIdx+2], "0O") ||
 		startsWith(string(userInput)[curIdx:curIdx+2], "0_") {
 		base = 8
 		curIdx += 2
+	} else if startsWith(string(userInput)[curIdx:curIdx+1], "0") &&
+		isDigit(userInput[curIdx+1]) {
+		base = 8
+		curIdx += 1
 	}
 
 	for ; curIdx < len(userInput) &&
 		(isDigit(userInput[curIdx]) || userInput[curIdx] == '_'); curIdx++ {
 
 		if userInput[curIdx-1] == '_' && userInput[curIdx] == '_' {
-			return nil, errMustSeparateSuccessiveDigits()
+			return nil, errMustSeparateSuccessiveDigits(errIdx)
 		}
 
 		if isDigit(userInput[curIdx]) {
@@ -314,50 +320,45 @@ func readDigit(cur *Token) (*Token, error) {
 	}
 
 	if userInput[curIdx-1] == '_' {
-		return nil, errMustSeparateSuccessiveDigits()
+		return nil, errMustSeparateSuccessiveDigits(errIdx)
 	}
 
 	cur = newToken(TK_NUM, cur, sVal, len(sVal))
 	v, err := strconv.ParseInt(sVal, base, 64)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(errorAt(errIdx, err.Error()))
 	}
 
 	cur.Val = v
+
+	cur.Ty = ty_long
+	if v <= 2147483647 {
+		cur.Ty = ty_int
+	}
+
 	return cur, nil
 }
 
-func isHexDigit(a rune) bool {
-	return ('0' <= a && a <= '9') ||
-		('A' <= a && a <= 'F') ||
-		('a' <= a && a <= 'f')
-}
-
-func readHexDigit(cur *Token) (*Token, error) {
+func readHexDigit(cur *Token) (string, error) {
 	var sVal string
-	for ; isHexDigit(userInput[curIdx]) ||
+	var errIdx = curIdx
+	for ; isxdigit(userInput[curIdx]) ||
 		userInput[curIdx] == '_'; curIdx++ {
 
 		if userInput[curIdx-1] == '_' && userInput[curIdx] == '_' {
-			return nil, errMustSeparateSuccessiveDigits()
+			return "", errMustSeparateSuccessiveDigits(errIdx)
 		}
 
-		if isHexDigit(userInput[curIdx]) {
+		if isxdigit(userInput[curIdx]) {
 			sVal += string(userInput[curIdx])
 		}
 	}
 
 	if userInput[curIdx-1] == '_' {
-		return nil, errMustSeparateSuccessiveDigits()
+		return "", errMustSeparateSuccessiveDigits(errIdx)
 	}
 
-	cur = newToken(TK_NUM, cur, sVal, len(sVal))
-	v, err := strconv.ParseInt(sVal, 16, 64)
-	if err != nil {
-		return nil, err
-	}
-	cur.Val = v
-	return cur, nil
+	return sVal, nil
 }
 
 func isxdigit(p rune) bool {

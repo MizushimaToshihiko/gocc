@@ -25,5 +25,47 @@ func main() {
 	assert(170141183460469, 170_141183_460469, "170_141183_460469")
 	assert(1000, 1_0_0_0, "1_0_0_0")
 
+	assert(4, Sizeof(0), "Sizeof(0)")
+	assert(4, Sizeof(2147483647), "Sizeof(2147483647)")
+	assert(8, Sizeof(2147483648), "Sizeof(2147483648)")
+
+	// cannot tokenize for strconv.ParseInt function in tokenize.go
+	// assert(-1, 0xffffffffffffffff, "0xffffffffffffffff")
+	// assert(8, Sizeof(0xffffffffffffffff), "Sizeof(0xffffffffffffffff)")
+	// assert(1, 0xffffffffffffffffl>>63, "0xffffffffffffffffl>>63");
+	// assert(1, 0xffffffffffffffffll>>63);
+	// assert(-1, 18446744073709551615, "18446744073709551615")
+	// assert(8, Sizeof(18446744073709551615))
+	// assert(-1, 18446744073709551615>>63)
+	// assert(-1, 0xffffffffffffffff)
+	// assert(8, Sizeof(0xffffffffffffffff))
+	// assert(1, 0xffffffffffffffff>>63)
+	// assert(-1, 01777777777777777777777)
+	// assert(8, Sizeof(01777777777777777777777))
+	// assert(1, 01777777777777777777777>>63)
+	// assert(-1, 0b1111111111111111111111111111111111111111111111111111111111111111)
+	// assert(8, Sizeof(0b1111111111111111111111111111111111111111111111111111111111111111))
+	// assert(1, 0b1111111111111111111111111111111111111111111111111111111111111111>>63)
+
+	assert(8, Sizeof(2147483648), "Sizeof(2147483648)")
+	assert(4, Sizeof(2147483647), "Sizeof(2147483647)")
+
+	assert(8, Sizeof(0x1ffffffff), "Sizeof(0x1ffffffff)")
+	assert(4, Sizeof(0x7ffffffe), "Sizeof(0xffffffff)")
+	assert(1, 0xffffffff>>31, "0xffffffff>>31")
+
+	assert(8, Sizeof(040000000000), "Sizeof(040000000000)")
+	assert(4, Sizeof(017777777775), "Sizeof(017777777775)")
+	assert(1, 037777777777>>31, "037777777777>>31")
+
+	assert(8, Sizeof(0b111111111111111111111111111111111), "Sizeof(0b111111111111111111111111111111111)")
+	assert(4, Sizeof(0b1111111111111111111111111111110), "Sizeof(0b11111111111111111111111111111111)")
+	assert(1, 0b11111111111111111111111111111111>>31, "0b11111111111111111111111111111111>>31")
+
+	assert(-1, 1<<31>>31, "1<<31>>31")
+	assert(-1, 01<<31>>31, "01<<31>>31")
+	assert(-1, 0x1<<31>>31, "0x1<<31>>31")
+	assert(-1, 0b1<<31>>31, "0b1<<31>>31")
+
 	println("OK")
 }
