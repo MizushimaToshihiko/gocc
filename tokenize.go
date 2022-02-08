@@ -5,6 +5,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -271,6 +272,11 @@ func isIdent2(c rune) bool {
 	return isIdent1(c) || isDigit(c)
 }
 
+// for integer literal error
+func errMustSeparateSuccessiveDigits() error {
+	return errors.New(errorAt(curIdx, "'_' must separate successive digits"))
+}
+
 func readDigit(cur *Token) (*Token, error) {
 	var base int = 10
 
@@ -289,13 +295,26 @@ func readDigit(cur *Token) (*Token, error) {
 	}
 
 	if startsWith(string(userInput)[curIdx:curIdx+2], "0o") ||
-		startsWith(string(userInput)[curIdx:curIdx+2], "0O") {
+		startsWith(string(userInput)[curIdx:curIdx+2], "0O") ||
+		startsWith(string(userInput)[curIdx:curIdx+2], "0_") {
 		base = 8
 		curIdx += 2
 	}
 
-	for ; curIdx < len(userInput) && isDigit(userInput[curIdx]); curIdx++ {
-		sVal += string(userInput[curIdx])
+	for ; curIdx < len(userInput) &&
+		(isDigit(userInput[curIdx]) || userInput[curIdx] == '_'); curIdx++ {
+
+		if userInput[curIdx-1] == '_' && userInput[curIdx] == '_' {
+			return nil, errMustSeparateSuccessiveDigits()
+		}
+
+		if isDigit(userInput[curIdx]) {
+			sVal += string(userInput[curIdx])
+		}
+	}
+
+	if userInput[curIdx-1] == '_' {
+		return nil, errMustSeparateSuccessiveDigits()
 	}
 
 	cur = newToken(TK_NUM, cur, sVal, len(sVal))
@@ -308,14 +327,30 @@ func readDigit(cur *Token) (*Token, error) {
 	return cur, nil
 }
 
+func isHexDigit(a rune) bool {
+	return ('0' <= a && a <= '9') ||
+		('A' <= a && a <= 'F') ||
+		('a' <= a && a <= 'f')
+}
+
 func readHexDigit(cur *Token) (*Token, error) {
 	var sVal string
-	for ('0' <= userInput[curIdx] && userInput[curIdx] <= '9') ||
-		('A' <= userInput[curIdx] && userInput[curIdx] <= 'F') ||
-		('a' <= userInput[curIdx] && userInput[curIdx] <= 'f') {
-		sVal += string(userInput[curIdx])
-		curIdx++
+	for ; isHexDigit(userInput[curIdx]) ||
+		userInput[curIdx] == '_'; curIdx++ {
+
+		if userInput[curIdx-1] == '_' && userInput[curIdx] == '_' {
+			return nil, errMustSeparateSuccessiveDigits()
+		}
+
+		if isHexDigit(userInput[curIdx]) {
+			sVal += string(userInput[curIdx])
+		}
 	}
+
+	if userInput[curIdx-1] == '_' {
+		return nil, errMustSeparateSuccessiveDigits()
+	}
+
 	cur = newToken(TK_NUM, cur, sVal, len(sVal))
 	v, err := strconv.ParseInt(sVal, 16, 64)
 	if err != nil {
