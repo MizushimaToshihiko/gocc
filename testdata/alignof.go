@@ -26,5 +26,9 @@ func main() {
 	assert(1, Alignof(g8), "Alignof(g8)")
 	assert(8, Alignof(g9), "Alignof(g9)")
 
+	var x int8
+	assert(1, Alignof(x)<<31>>31, "Alignof(x)<<31>>31")
+	assert(1, Alignof(x)<<63>>63, "Alignof(x)<<63>>63")
+
 	println("OK")
 }

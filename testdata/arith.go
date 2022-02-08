@@ -89,5 +89,13 @@ func main() {
 	assert(0, 0b1111^0b1111, "0b1111^0b1111")
 	assert(0b110100, 0b111000^0b001100, "0b111000^0b001100")
 
+	var x int
+	var p *int = &x
+	println("var x int;var p *int=&x")
+	assert(20, p+20-p, "p+20-p")
+	assert(1, p+20-p > 0, "p+20-p>0")
+	assert(-20, p-20-p, "p-20-p")
+	assert(1, p-20-p < 0, "p-20-p<0")
+
 	println("OK")
 }

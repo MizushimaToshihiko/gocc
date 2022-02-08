@@ -27,5 +27,8 @@ func main() {
 	var i byte
 	assert(1, Sizeof(i++), "var i byte; Sizeof(i++)")
 
+	assert(1, Sizeof(int8)<<31>>31, "Sizeof(int8)<<31>>31")
+	assert(1, Sizeof(int8)<<63>>63, "Sizeof(int8)<<63>>63")
+
 	println("OK")
 }

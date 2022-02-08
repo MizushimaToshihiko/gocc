@@ -263,6 +263,17 @@ func newLong(val int64, tok *Token) *Node {
 		Ty:   ty_long,
 	}
 }
+func newUlong(val int64, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
+	return &Node{
+		Kind: ND_NUM,
+		Tok:  tok,
+		Val:  val,
+		Ty:   ty_ulong,
+	}
+}
 
 func newVarNode(v *Obj, tok *Token) *Node {
 	printCurTok(tok)
@@ -1881,7 +1892,7 @@ func newSub(lhs, rhs *Node, tok *Token) *Node {
 	// ptr - ptr, which returns how many elements are between the two.
 	if lhs.Ty.Base != nil && rhs.Ty.Base != nil {
 		node := newBinary(ND_SUB, lhs, rhs, tok)
-		node.Ty = ty_int
+		node.Ty = ty_long
 		return newBinary(ND_DIV, node, newNum(int64(lhs.Ty.Base.Sz), tok), tok)
 	}
 
@@ -2260,7 +2271,7 @@ func primary(rest **Token, tok *Token) *Node {
 		isTypename(tok.Next.Next) && !equal(tok.Next.Next.Next, "(") {
 		ty := readTypePreffix(&tok, tok.Next.Next, nil)
 		*rest = skip(tok, ")")
-		return newNum(int64(ty.Sz), start)
+		return newUlong(int64(ty.Sz), start)
 	}
 
 	if equal(tok, "Sizeof") && equal(tok.Next, "(") {
@@ -2268,13 +2279,13 @@ func primary(rest **Token, tok *Token) *Node {
 		// unary -> postfix -> primaryの"(" expr ")"でparseする
 		node := unary(rest, tok.Next)
 		addType(node)
-		return newNum(int64(node.Ty.Sz), tok)
+		return newUlong(int64(node.Ty.Sz), tok)
 	}
 
 	if equal(tok, "Alignof") {
 		node := unary(rest, tok.Next)
 		addType(node)
-		return newNum(int64(node.Ty.Align), tok)
+		return newUlong(int64(node.Ty.Align), tok)
 	}
 
 	if tok.Kind == TK_IDENT {
