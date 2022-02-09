@@ -1,0 +1,4 @@
+func main() {
+  var x [2]int
+  (*x)[0]
+}

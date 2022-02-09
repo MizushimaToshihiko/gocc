@@ -847,17 +847,20 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			return
 		}
 		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
+		fmt.Printf("initializer2: rhsTy1: %#v\n\n", rhsTy)
 		var start *Token = tok
 		var startNext *Token = tok.Next
 		if rhsTy.Kind == TY_VOID {
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
 			rhsTy = init.Expr.Ty
+			fmt.Printf("initializer2: rhsTy2: %#v\n\n", rhsTy)
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
 
 		init.Ty = rhsTy
 
+		// Initialize the lhs.
 		if init.Ty.Kind == TY_ARRAY {
 			if equal(start, "{") || equal(startNext, "{") {
 				init.Children = make([]*Initializer, init.Ty.ArrSz)
@@ -1121,6 +1124,9 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 
 		if !isShort && equal(tok, "=") || isShort && equal(tok, ":=") {
 			expr := lvarInitializer(&tok, tok.Next, v)
+			fmt.Printf("declaration: v: %#v\n\n", v)
+			fmt.Printf("declaration: v.Ty: %#v\n\n", v.Ty)
+			fmt.Printf("declaration: v.Ty.Base: %#v\n\n", v.Ty.Base)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 		}
@@ -2108,6 +2114,7 @@ func structRef(lhs *Node, tok *Token) *Node {
 		if lhs.Ty.Base != nil && lhs.Ty.Base.Kind != TY_STRUCT {
 			panic("\n" + errorTok(lhs.Tok, "not a struct"))
 		}
+		// "->" in C.
 		lhs = newUnary(ND_DEREF, lhs, tok)
 		addType(lhs)
 	}
@@ -2135,6 +2142,7 @@ func postfix(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	if isTypename(tok) {
+		// Compound literal : type-name "{"
 		start := tok
 		ty := readTypePreffix(&tok, tok.Next, nil)
 
