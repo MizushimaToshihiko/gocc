@@ -9,8 +9,10 @@ func main() {
 		a int
 		b int
 	}
-	var y = &[2]x{{1, 2}, {3, 4}}
-	assert(1, y[0].a, "y[0].a")
+	var y1 = &x{1, 2}
+	assert(1, y1.a, "y1.a")
+	var y2 = &[2]x{{1, 2}, {3, 4}}
+	assert(1, y2[0].a, "y2[0].a")
 	// assert(3, *&x1, "var x int=3; *&x1")
 	// var x2 int = 3
 	// var y2 *int = &x2

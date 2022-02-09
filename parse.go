@@ -854,10 +854,10 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
 			rhsTy = init.Expr.Ty
-			fmt.Printf("initializer2: rhsTy2: %#v\n\n", rhsTy)
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
 
+		fmt.Printf("initializer2: rhsTy2: %#v\n\n", rhsTy)
 		init.Ty = rhsTy
 
 		// Initialize the lhs.
@@ -1965,19 +1965,16 @@ func cast(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
-	if isTypename(tok) {
-		start := tok
-		ty := readTypePreffix(&tok, tok, nil)
+	start := tok
+	if ty := readTypePreffix(&tok, tok, nil); ty.Kind != TY_VOID {
 
 		// conmpound literal
 		if equal(tok, "{") {
 			return unary(rest, start)
 		}
 
-		tok = skip(tok, "(")
 		node := newCast(cast(&tok, tok), ty)
 		node.Tok = start
-		tok = skip(tok, ")")
 		*rest = tok
 		return node
 	}
