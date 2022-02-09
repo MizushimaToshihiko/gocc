@@ -1,5 +1,5 @@
 
-### チラ裏的なもの
+### メモ
 #### 【後回し】※順不同
  - バッククオート
  - parseの順番を変える
@@ -182,3 +182,23 @@ func typeStr(ty *Type, tok *Token) string {
 - 引数付の関数定義?呼び出し?時にsegmentation faultが出る
 - testdata/commonにc言語で定義するとsegmentation faultにならない
 - 2022/01/20 PrologueとEpilogueのレジスタ名が間違っていたのが原因
+
+2022/02/09
+ - 下記の場合、nil pointerエラーになる。原因はyのtypeが*intになっているためと思われる。
+```Go
+var x = [2]int{1, 2}
+var y = &x
+assert(2, (*y)[1], "(*y)[1]")
+```
+ - 下記二つのケースではエラーにならない。
+```Go
+var x = [2]int{1, 2}
+var y *[2]int = &x
+assert(2, (*y)[1], "(*y)[1]")
+```
+```Go
+var x = [2]int{1, 2}
+var y = &x
+assert(2, y[1], "y[1]")
+```
+ - yのtypeが型推論でも *[2]int になるように、initializerを変更する必要がある。
