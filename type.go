@@ -118,6 +118,7 @@ func pointerTo(base *Type) *Type {
 			tyname += "*"
 		} else {
 			tyname += b.TyName
+			break
 		}
 	}
 	return &Type{Kind: TY_PTR, Base: base, Sz: 8, Align: 8, TyName: tyname}

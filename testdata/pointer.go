@@ -5,9 +5,12 @@ func println(format ...string)
 
 func main() {
 
-	var x = [2]int{1, 2}
-	var y *[2]int = &x
-	assert(2, (*y)[1], "(*y)[1]")
+	type x struct {
+		a int
+		b int
+	}
+	var y = &[2]x{{1, 2}, {3, 4}}
+	assert(1, y[0].a, "y[0].a")
 	// assert(3, *&x1, "var x int=3; *&x1")
 	// var x2 int = 3
 	// var y2 *int = &x2
