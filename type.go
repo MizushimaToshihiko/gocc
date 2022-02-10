@@ -283,6 +283,10 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = pointerTo(node.Lhs.Ty)
 		return
 	case ND_DEREF:
+		fmt.Printf("visit: node: %#v\n\n", node)
+		fmt.Printf("visit: node.Tok: %#v\n\n", node.Tok)
+		fmt.Printf("visit: node.Lhs: %#v\n\n", node.Lhs)
+		fmt.Printf("visit: node.Lhs.Tok: %#v\n\n", node.Lhs.Tok)
 		if node.Lhs.Ty.Base == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
 			return

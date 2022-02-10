@@ -293,6 +293,10 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_DEREF:
 		c.genExpr(node.Lhs)
+		fmt.Printf("node: %#v\n\n", node)
+		fmt.Printf("node.Tok: %#v\n\n", node.Tok)
+		fmt.Printf("node.Lhs: %#v\n\n", node.Lhs)
+		fmt.Printf("node.Lhs.Ty: %#v\n\n", node.Lhs.Ty)
 		c.load(node.Ty)
 		return
 	case ND_ADDR:

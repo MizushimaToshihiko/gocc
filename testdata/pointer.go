@@ -5,14 +5,22 @@ func println(format ...string)
 
 func main() {
 
-	type x struct {
+	type x01 struct {
 		a int
 		b int
 	}
-	var y1 = &x{1, 2}
-	assert(1, y1.a, "y1.a")
-	var y2 = &[2]x{{1, 2}, {3, 4}}
-	assert(1, y2[0].a, "y2[0].a")
+	var y01 = &x01{1, 2}
+	assert(1, y01.a, "y01.a")
+	var y02 = &[2]x01{{1, 2}, {3, 4}}
+	assert(1, y02[0].a, "y02[0].a")
+
+	var x03 = [2]int{1, 2}
+	var y03 *[2]int = &x03
+	// // (*y03)[0]
+	assert(1, y03[0], "y03[0]")
+	// assert(2, y03[1], "y03[1]")
+	// assert(1, (*y03)[0], "(*y03)[0]")
+	// assert(2, (*y03)[1], "(*y03)[1]")
 	// assert(3, *&x1, "var x int=3; *&x1")
 	// var x2 int = 3
 	// var y2 *int = &x2
