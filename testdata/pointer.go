@@ -13,15 +13,23 @@ func main() {
 	assert(1, y01.a, "y01.a")
 	var y02 = &[2]x01{{1, 2}, {3, 4}}
 	assert(1, y02[0].a, "y02[0].a")
+	assert(2, y02[0].b, "y02[0].b")
+	assert(3, y02[1].a, "y02[1].a")
+	assert(4, y02[1].b, "y02[1].b")
+	// assert(1, (*y02)[0].b, "(*y02)[0].b") // panic: runtime error: invalid memory address or nil pointer dereference
 
 	var x03 = [2]int{1, 2}
 	var y03 *[2]int = &x03
-	// // (*y03)[0]
-	assert(1, y03[0], "y03[0]")
-	// assert(2, y03[1], "y03[1]")
-	// assert(1, (*y03)[0], "(*y03)[0]")
-	// assert(2, (*y03)[1], "(*y03)[1]")
-	// assert(3, *&x1, "var x int=3; *&x1")
+	assert(1, (*y03)[0], "(*y03)[0]")
+	assert(2, (*y03)[1], "(*y03)[1]")
+	// assert(2, y03[1], "y03[1]") // panic: runtime error: invalid memory address or nil pointer dereference
+
+	// var y031 = &x03
+	// assert(1, (*y031)[0], "(*y03)[0]") // panic: runtime error: invalid memory address or nil pointer dereference
+	// assert(2, (*y031)[1], "(*y03)[1]") // panic: runtime error: invalid memory address or nil pointer dereference
+
+	// var x1 int = 3
+	// assert(3, *&x1, "var x1 int=3; *&x1")
 	// var x2 int = 3
 	// var y2 *int = &x2
 	// var z2 **int = &y2
