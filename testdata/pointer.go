@@ -5,24 +5,24 @@ func println(format ...string)
 
 func main() {
 
-	type x01 struct {
-		a int
-		b int
-	}
-	var y01 = &x01{1, 2}
-	assert(1, y01.a, "y01.a")
-	var y02 = &[2]x01{{1, 2}, {3, 4}}
-	assert(1, y02[0].a, "y02[0].a")
-	assert(2, y02[0].b, "y02[0].b")
-	assert(3, y02[1].a, "y02[1].a")
-	assert(4, y02[1].b, "y02[1].b")
+	// type x01 struct {
+	// 	a int
+	// 	b int
+	// }
+	// var y01 = &x01{1, 2}
+	// assert(1, y01.a, "y01.a")
+	// var y02 = &[2]x01{{1, 2}, {3, 4}}
+	// assert(1, y02[0].a, "y02[0].a")
+	// assert(2, y02[0].b, "y02[0].b")
+	// assert(3, y02[1].a, "y02[1].a")
+	// assert(4, y02[1].b, "y02[1].b")
 	// assert(1, (*y02)[0].b, "(*y02)[0].b") // panic: runtime error: invalid memory address or nil pointer dereference
 
 	var x03 = [2]int{1, 2}
 	var y03 *[2]int = &x03
 	assert(1, (*y03)[0], "(*y03)[0]")
 	assert(2, (*y03)[1], "(*y03)[1]")
-	// assert(2, y03[1], "y03[1]") // panic: runtime error: invalid memory address or nil pointer dereference
+	// assert(2, y03[1], "y03[1]") // y03[0] and y03[1] is pointer address?
 
 	// var y031 = &x03
 	// assert(1, (*y031)[0], "(*y03)[0]") // panic: runtime error: invalid memory address or nil pointer dereference
