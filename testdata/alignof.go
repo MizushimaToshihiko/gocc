@@ -8,7 +8,7 @@ var g4 int16
 var g5 int
 var g6 int64
 var g7 = "abcdef"
-var g8 = [2]struct {
+var g8 = &[2]struct {
 	a byte
 	b byte
 }{{1, 2}}
