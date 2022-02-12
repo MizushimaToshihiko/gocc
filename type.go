@@ -276,17 +276,21 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Mem.Ty
 		return
 	case ND_ADDR:
-		if node.Lhs.Ty.Kind == TY_ARRAY {
-			node.Ty = pointerTo(node.Lhs.Ty.Base)
-			return
-		}
+		// if node.Lhs.Ty.Kind == TY_ARRAY {
+		// 	node.Ty = pointerTo(node.Lhs.Ty.Base)
+		// 	return
+		// }
 		node.Ty = pointerTo(node.Lhs.Ty)
 		return
 	case ND_DEREF:
-		fmt.Printf("visit: node: %#v\n\n", node)
-		fmt.Printf("visit: node.Tok: %#v\n\n", node.Tok)
-		fmt.Printf("visit: node.Lhs: %#v\n\n", node.Lhs)
-		fmt.Printf("visit: node.Lhs.Tok: %#v\n\n", node.Lhs.Tok)
+		// fmt.Printf("visit: node: %#v\n\n", node)
+		// fmt.Printf("visit: node.Tok: %#v\n\n", node.Tok)
+		// fmt.Printf("visit: node.Lhs: %#v\n\n", node.Lhs)
+		// fmt.Printf("visit: node.Lhs.Tok: %#v\n\n", node.Lhs.Tok)
+		// fmt.Printf("visit: node.Lhs.Ty: %#v\n\n", node.Lhs.Ty)
+		// fmt.Printf("visit: node.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs)
+		// fmt.Printf("visit: node.Lhs.Lhs.Ty: %#v\n\n", node.Lhs.Lhs.Ty)
+		// fmt.Printf("visit: node.Lhs.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs.Lhs)
 		if node.Lhs.Ty.Base == nil {
 			e.err = fmt.Errorf(errorTok(node.Tok, "invalid pointer dereference"))
 			return

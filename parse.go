@@ -524,7 +524,6 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 
 	// Handle user-defined types.
 	ty2 := findTyDef(tok)
-	fmt.Println("ty2 == nil:", ty2 == nil)
 	if ty2 != nil {
 		ty = ty2
 	}
@@ -549,7 +548,6 @@ func findBase(rest **Token, tok *Token, name *Token) *Type {
 		!(isTypename2(tok) && !equal(tok.Next, "(")) {
 		tok = tok.Next
 	}
-	fmt.Printf("findBase: tok: %#v\n\n", tok)
 	ty := declSpec(&tok, tok, name)
 	*rest = tok // どこまでtokenを読んだか
 	return ty
@@ -587,9 +585,7 @@ func readTypePreffix(rest **Token, tok *Token, name *Token) *Type {
 	start := tok
 
 	base := findBase(&tok, tok, name)
-	fmt.Printf("readTypePreffix: base: %#v\n\n", base)
 	arrTy := readArr(start, base)
-	fmt.Printf("readTypePreffix: tok: %#v\n\n", tok)
 	*rest = tok
 	return arrTy
 }
@@ -757,6 +753,20 @@ func arrayInitializer(rest **Token, tok *Token, init *Initializer) {
 	}
 }
 
+// array-initializer2 = initializer ("," initializer)*
+func arrayInitializer2(rest **Token, tok *Token, init *Initializer) {
+	printCurTok(tok)
+	printCalledFunc()
+
+	for i := 0; i < init.Ty.ArrSz && !isEnd(tok); i++ {
+		if i > 0 {
+			tok = skip(tok, ",")
+		}
+		initializer2(&tok, tok, init.Children[i])
+	}
+	*rest = tok
+}
+
 // struct-initializer = "{" initializer ("," initializer)* ","? "}"
 func structInitializer(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
@@ -804,17 +814,21 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
 
-	// If rhs is string literal.
+	// If the rhs is string literal.
 	if init.Ty.Kind == TY_ARRAY && tok.Kind == TK_STR {
 		stringInitializer(rest, tok, init)
 		init.Ty.Init = init
 		return
 	}
 
-	// If rhs is array literal.
+	// If the rhs is array literal.
 	if init.Ty.Kind == TY_ARRAY {
 		readTypePreffix(&tok, tok, nil) // I'll add type checking later
-		arrayInitializer(rest, tok, init)
+		if equal(tok, "{") {
+			arrayInitializer(rest, tok, init)
+		} else {
+			arrayInitializer2(rest, tok, init)
+		}
 		init.Ty.Init = init
 		return
 	}
@@ -851,19 +865,15 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			return
 		}
 		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
-		fmt.Printf("initializer2: rhsTy1: %#v\n\n", rhsTy)
 		var start *Token = tok
 		var startNext *Token = tok.Next
 		if rhsTy.Kind == TY_VOID {
-			fmt.Printf("initializer2: tok: %#v\n\n", tok)
 			init.Expr = assign(rest, tok)
-			fmt.Printf("initializer2: tok2: %#v\n\n", tok)
 			addType(init.Expr)
 			rhsTy = init.Expr.Ty
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
 
-		fmt.Printf("initializer2: rhsTy2: %#v\n\n", rhsTy)
 		init.Ty = rhsTy
 
 		// Initialize the lhs.
@@ -1130,9 +1140,6 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 
 		if !isShort && equal(tok, "=") || isShort && equal(tok, ":=") {
 			expr := lvarInitializer(&tok, tok.Next, v)
-			fmt.Printf("declaration: v: %#v\n\n", v)
-			fmt.Printf("declaration: v.Ty: %#v\n\n", v.Ty)
-			fmt.Printf("declaration: v.Ty.Base: %#v\n\n", v.Ty.Base)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 		}
@@ -1140,7 +1147,8 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		if v.Ty.Sz < 0 {
 			panic("\n" + errorTok(ty.Name, "variable has incomplete type"))
 		}
-		if v.Ty.Kind == TY_VOID {
+		if v.Ty.Kind == TY_VOID ||
+			(v.Ty.Base != nil && v.Ty.Base.Kind == TY_VOID) {
 			panic("\n" + errorTok(ty.Name, "variable declared void"))
 		}
 	}
@@ -1186,7 +1194,6 @@ func isTypename(tok *Token) bool {
 		tok = tok.Next
 	}
 
-	// fmt.Printf("tok: %#v\n\n", tok)
 	return isTypename2(tok)
 }
 
@@ -1995,13 +2002,8 @@ func cast(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	start := tok
-	fmt.Printf("cast: tok1: %#v\n\n", tok)
 	if isTypename(tok) {
 		ty := readTypePreffix(&tok, tok, nil)
-		fmt.Printf("cast: tok2: %#v\n\n", tok)
-		fmt.Printf("cast: ty: %#v\n\n", ty)
-		// fmt.Printf("cast: ty.Base: %#v\n\n", ty.Base)
-		// fmt.Printf("cast: ty.Base.Kind==TY_VOID: %#v\n\n", ty.Base.Kind == TY_VOID)
 
 		// conmpound literal
 		if equal(tok, "{") {
@@ -2009,7 +2011,6 @@ func cast(rest **Token, tok *Token) *Node {
 		}
 
 		node := newCast(cast(&tok, tok), ty)
-		fmt.Printf("cast: node.Ty: %#v\n\n", node.Ty)
 		node.Tok = start
 		*rest = tok
 		return node
@@ -2178,7 +2179,6 @@ func postfix(rest **Token, tok *Token) *Node {
 	if isTypename(tok) {
 		// Compound literal : type-name "{"
 		ty := readTypePreffix(&tok, tok, nil)
-		fmt.Printf("postfix: ty: %#v\n\n", ty)
 		if scope.Next == nil {
 			v := newAnonGvar(ty)
 			gvarInitializer(rest, tok, v)
