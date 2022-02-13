@@ -5,6 +5,30 @@ func println(format ...string)
 
 func main() {
 
+	/*
+		#include <stdio.h>
+		int main(void){
+		    int x[2] = {1, 2};
+		    int (*y)[2] = &x;
+
+		    printf("%p\n", y[1]);
+		    printf("%d\n", (*y)[1]);
+
+		    typedef struct t01 t01;
+		    struct t01 {
+		        int a;
+		        int b;
+		    };
+
+		    t01 x01[2] = {{1,2},{3,4}};
+		    t01 (*y01)[2] = &x01;
+		    printf("%p\n", y01[0]);
+		    printf("%p\n", &x01[0]);
+		    printf("%p\n", y01[1]);
+		    printf("%d\n", (*y01)[0]);
+		    printf("%d\n", (*y01)[1]);
+		}
+	*/
 	type x01 struct {
 		a int
 		b int
@@ -12,14 +36,14 @@ func main() {
 	var y01 = &x01{1, 2}
 	assert(1, y01.a, "y01.a")
 	var y02 = &[2]x01{{1, 2}, {3, 4}}
-	assert(1, y02[0].a, "y02[0].a")
-	assert(2, y02[0].b, "y02[0].b")
-	// assert(3, y02[1].a, "y02[1].a")
-	// assert(4, y02[1].b, "y02[1].b")
-	assert(1, (*y02)[0].a, "(*y02)[0].a") // pointer address?
-	assert(2, (*y02)[0].b, "(*y02)[0].b") // pointer address?
-	assert(3, (*y02)[1].a, "(*y02)[1].a") // pointer address?
-	assert(4, (*y02)[1].b, "(*y02)[1].b") // pointer address?
+	// assert(1, y02[0].a, "y02[0].a")
+	// assert(2, y02[0].b, "y02[0].b")
+	// assert(3, y02[1].a, "y02[1].a") //
+	// assert(4, y02[1].b, "y02[1].b") //
+	assert(1, (*y02)[0].a, "(*y02)[0].a")
+	assert(2, (*y02)[0].b, "(*y02)[0].b")
+	assert(3, (*y02)[1].a, "(*y02)[1].a")
+	assert(4, (*y02)[1].b, "(*y02)[1].b")
 
 	var x03 = [2]int{1, 2}
 	var y03 *[2]int = &x03

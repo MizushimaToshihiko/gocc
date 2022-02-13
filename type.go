@@ -121,7 +121,14 @@ func pointerTo(base *Type) *Type {
 			break
 		}
 	}
-	return &Type{Kind: TY_PTR, Base: base, Sz: 8, Align: 8, TyName: tyname}
+	return &Type{
+		Kind:       TY_PTR,
+		Base:       base,
+		Sz:         8,
+		Align:      8,
+		TyName:     tyname,
+		IsUnsigned: true,
+	}
 }
 
 func funcType(retTy *Type) *Type {
@@ -276,10 +283,10 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Mem.Ty
 		return
 	case ND_ADDR:
-		// if node.Lhs.Ty.Kind == TY_ARRAY {
-		// 	node.Ty = pointerTo(node.Lhs.Ty.Base)
-		// 	return
-		// }
+		if node.Lhs.Ty.Kind == TY_ARRAY {
+			node.Ty = pointerTo(node.Lhs.Ty.Base)
+			return
+		}
 		node.Ty = pointerTo(node.Lhs.Ty)
 		return
 	case ND_DEREF:
