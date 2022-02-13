@@ -864,13 +864,22 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			initializer2(rest, tok, init)
 			return
 		}
+
 		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
+
 		var start *Token = tok
 		var startNext *Token = tok.Next
 		if rhsTy.Kind == TY_VOID {
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
-			rhsTy = init.Expr.Ty
+
+			if init.Expr.Ty.Kind == TY_PTR &&
+				init.Expr.Lhs != nil && init.Expr.Lhs.Ty.Kind == TY_ARRAY {
+				// the rhs is like "&" and variable.
+				rhsTy = pointerTo(init.Expr.Lhs.Ty)
+			} else {
+				rhsTy = init.Expr.Ty
+			}
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
 
@@ -889,7 +898,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			}
 			// Copy Initializer from rhs, if array can be initialized by other array.
 			if rhsTy.Init != nil {
-				*init = *rhsTy.Init // copyType()使った方が良いかも、検証する時間なし
+				fmt.Println("ここ")
+				*init = *rhsTy.Init // copyType()使った方が良いかもしれないが、検証する時間なし
 			}
 			return
 		}
