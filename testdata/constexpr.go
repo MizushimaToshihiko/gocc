@@ -73,5 +73,22 @@ func main() {
 	// assert(12, ({ char x[(int*)16-1]; Sizeof(x); }));
 	// assert(3, ({ char x[(int*)16-(int*)4]; Sizeof(x); }));
 
+	var x26 [(-1>>31)+5]int8
+  assert(4, Sizeof(x26), "var x26 [(-1>>31)+5]int8; Sizeof(x26)");
+	var x27 [uint8(0xffffffff)]int8
+  assert(255, Sizeof(x27), "var x27 [uint8(0xffffffff)]int8; Sizeof(x27)");
+  var x28 [uint16(0xffff800f)]int8
+	assert(0x800f, Sizeof(x28), "var x28 [uint16(0xffff800f)]int8; Sizeof(x28)");
+  var x29 [uint(0xfffffffffff)>>31]int8
+	assert(1, Sizeof(x29), "var x29 [uint(0xfffffffffff>>31)]int8; Sizeof(x29)");
+	var x30 [int64(-1)/(int64(1)<<62)+1]int8
+  assert(1, Sizeof(x30), "var x30 [int64(-1)/int64(1)]int8; Sizeof(x30)");
+	// var x31 [uint64(-1)/(int64(1)<<62)+1]int8
+  // assert(4, Sizeof(x31), "var x31 [uint64(-1)/(int64(1)<<62)+1]int8; Sizeof(x31)");
+  var x32 [uint(1)<-1]int8
+	assert(1, Sizeof(x32), "var x32 [uint(1)<-1]int8; Sizeof(x32)");
+	var x33 [uint(1)<=-1]int8
+  assert(1, Sizeof(x33), "var x33 [uint(1)<=-1]int8; Sizeof(x33)");
+
 	println("OK")
 }

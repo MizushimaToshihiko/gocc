@@ -1470,6 +1470,9 @@ func eval2(node *Node, label **string) int64 {
 	case ND_MUL:
 		return eval(node.Lhs) * eval(node.Rhs)
 	case ND_DIV:
+		if node.Ty.IsUnsigned {
+			return int64(uint64(eval(node.Lhs))) % eval(node.Rhs)
+		}
 		return eval(node.Lhs) / eval(node.Rhs)
 	case ND_NEG:
 		return -eval(node.Lhs)
@@ -1484,6 +1487,9 @@ func eval2(node *Node, label **string) int64 {
 	case ND_SHL:
 		return eval(node.Lhs) << eval(node.Rhs)
 	case ND_SHR:
+		if node.Ty.IsUnsigned && node.Ty.Sz == 8 {
+			return int64(uint64(eval(node.Lhs))) >> eval(node.Rhs)
+		}
 		return eval(node.Lhs) >> eval(node.Rhs)
 	case ND_EQ:
 		if eval(node.Lhs) == eval(node.Rhs) {
@@ -1496,11 +1502,19 @@ func eval2(node *Node, label **string) int64 {
 		}
 		return 0
 	case ND_LT:
+		if node.Lhs.Ty.IsUnsigned &&
+			int64(uint64(eval(node.Lhs))) < eval(node.Rhs) {
+			return 1
+		}
 		if eval(node.Lhs) < eval(node.Rhs) {
 			return 1
 		}
 		return 0
 	case ND_LE:
+		if node.Lhs.Ty.IsUnsigned &&
+			int64(uint64(eval(node.Lhs))) <= eval(node.Rhs) {
+			return 1
+		}
 		if eval(node.Lhs) <= eval(node.Rhs) {
 			return 1
 		}
@@ -1534,11 +1548,20 @@ func eval2(node *Node, label **string) int64 {
 		if isInteger(node.Ty) {
 			switch node.Ty.Sz {
 			case 1:
-				return int64(uint8(val))
+				if node.Ty.IsUnsigned {
+					return int64(uint8(val))
+				}
+				return int64(int8(val))
 			case 2:
-				return int64(uint16(val))
+				if node.Ty.IsUnsigned {
+					return int64(uint16(val))
+				}
+				return int64(int16(val))
 			case 4:
-				return int64(uint32(val))
+				if node.Ty.IsUnsigned {
+					return int64(uint32(val))
+				}
+				return int64(int32(val))
 			}
 		}
 		return val // If node.Ty.Sz is 8
