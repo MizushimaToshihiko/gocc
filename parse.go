@@ -152,8 +152,9 @@ type Node struct {
 	CaseLbl    int
 	CaseEndLbl string
 
-	Obj *Obj  // used if kind == ND_VAR
-	Val int64 // used if kind == ND_NUM
+	Obj  *Obj  // used if kind == ND_VAR
+	Val  int64 // used if kind == ND_NUM
+	FVal float64
 }
 
 var locals *Obj

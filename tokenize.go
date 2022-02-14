@@ -35,6 +35,7 @@ type Token struct {
 	Kind TokenKind // type of token
 	Next *Token    // next
 	Val  int64     // if 'kind' is TK_NUM, it's integer
+	FVal float64   // if 'kind' is TK_NUM, it's value
 	Loc  int       // the location in 'userInput'
 	Ty   *Type     // Used if TK_NUM or TK_STR
 	Str  string    // token string
