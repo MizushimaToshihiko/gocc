@@ -544,8 +544,8 @@ func findBase(rest **Token, tok *Token, name *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
-	for !(equal(tok, "*") && isTypename(tok.Next)) &&
-		!(isTypename(tok) && !equal(tok.Next, "(")) {
+	for !(equal(tok, "*") && isTypename2(tok.Next)) &&
+		!(isTypename2(tok) && !equal(tok.Next, "(")) {
 		tok = tok.Next
 	}
 	ty := declSpec(&tok, tok, name)
@@ -753,6 +753,20 @@ func arrayInitializer(rest **Token, tok *Token, init *Initializer) {
 	}
 }
 
+// array-initializer2 = initializer ("," initializer)*
+func arrayInitializer2(rest **Token, tok *Token, init *Initializer) {
+	printCurTok(tok)
+	printCalledFunc()
+
+	for i := 0; i < init.Ty.ArrSz && !isEnd(tok); i++ {
+		if i > 0 {
+			tok = skip(tok, ",")
+		}
+		initializer2(&tok, tok, init.Children[i])
+	}
+	*rest = tok
+}
+
 // struct-initializer = "{" initializer ("," initializer)* ","? "}"
 func structInitializer(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
@@ -800,17 +814,21 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
 
-	// If rhs is string literal.
+	// If the rhs is string literal.
 	if init.Ty.Kind == TY_ARRAY && tok.Kind == TK_STR {
 		stringInitializer(rest, tok, init)
 		init.Ty.Init = init
 		return
 	}
 
-	// If rhs is array literal.
+	// If the rhs is array literal.
 	if init.Ty.Kind == TY_ARRAY {
 		readTypePreffix(&tok, tok, nil) // I'll add type checking later
-		arrayInitializer(rest, tok, init)
+		if equal(tok, "{") {
+			arrayInitializer(rest, tok, init)
+		} else {
+			arrayInitializer2(rest, tok, init)
+		}
 		init.Ty.Init = init
 		return
 	}
@@ -846,18 +864,28 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			initializer2(rest, tok, init)
 			return
 		}
+
 		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
+
 		var start *Token = tok
 		var startNext *Token = tok.Next
 		if rhsTy.Kind == TY_VOID {
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
-			rhsTy = init.Expr.Ty
+
+			if init.Expr.Ty.Kind == TY_PTR &&
+				init.Expr.Lhs != nil && init.Expr.Lhs.Ty.Kind == TY_ARRAY {
+				// the rhs is like "&" and variable.
+				rhsTy = pointerTo(init.Expr.Lhs.Ty)
+			} else {
+				rhsTy = init.Expr.Ty
+			}
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
 
 		init.Ty = rhsTy
 
+		// Initialize the lhs.
 		if init.Ty.Kind == TY_ARRAY {
 			if equal(start, "{") || equal(startNext, "{") {
 				init.Children = make([]*Initializer, init.Ty.ArrSz)
@@ -870,7 +898,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			}
 			// Copy Initializer from rhs, if array can be initialized by other array.
 			if rhsTy.Init != nil {
-				*init = *rhsTy.Init // copyType()使った方が良いかも、検証する時間なし
+				fmt.Println("ここ")
+				*init = *rhsTy.Init // copyType()使った方が良いかもしれないが、検証する時間なし
 			}
 			return
 		}
@@ -1128,7 +1157,8 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		if v.Ty.Sz < 0 {
 			panic("\n" + errorTok(ty.Name, "variable has incomplete type"))
 		}
-		if v.Ty.Kind == TY_VOID {
+		if v.Ty.Kind == TY_VOID ||
+			(v.Ty.Base != nil && v.Ty.Base.Kind == TY_VOID) {
 			panic("\n" + errorTok(ty.Name, "variable declared void"))
 		}
 	}
@@ -1139,6 +1169,15 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 	return node
 }
 
+func isTypename2(tok *Token) bool {
+	for i := 0; i < len(tyName); i++ {
+		if equal(tok, tyName[i]) {
+			return true
+		}
+	}
+	return findTyDef(tok) != nil
+}
+
 func isTypename(tok *Token) bool {
 	printCurTok(tok)
 	printCalledFunc()
@@ -1147,12 +1186,25 @@ func isTypename(tok *Token) bool {
 		tok = tok.Next
 	}
 
-	for i := 0; i < len(tyName); i++ {
-		if equal(tok, tyName[i]) {
-			return true
+	if equal(tok, "[") {
+		for !equal(tok, ";") {
+			if equal(tok, "]") && equal(tok.Next, "[") {
+				tok = tok.Next.Next
+				continue
+			}
+			if equal(tok, "]") {
+				tok = tok.Next
+				break
+			}
+			tok = tok.Next
 		}
 	}
-	return findTyDef(tok) != nil
+
+	for equal(tok, "*") {
+		tok = tok.Next
+	}
+
+	return isTypename2(tok)
 }
 
 // isForClause returns true and exceeds the next token, if ";" will be found
@@ -1982,8 +2034,8 @@ func cast(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
+	start := tok
 	if isTypename(tok) {
-		start := tok
 		ty := readTypePreffix(&tok, tok, nil)
 
 		// conmpound literal
@@ -1991,10 +2043,8 @@ func cast(rest **Token, tok *Token) *Node {
 			return unary(rest, start)
 		}
 
-		tok = skip(tok, "(")
 		node := newCast(cast(&tok, tok), ty)
 		node.Tok = start
-		tok = skip(tok, ")")
 		*rest = tok
 		return node
 	}
@@ -2131,6 +2181,7 @@ func structRef(lhs *Node, tok *Token) *Node {
 		if lhs.Ty.Base != nil && lhs.Ty.Base.Kind != TY_STRUCT {
 			panic("\n" + errorTok(lhs.Tok, "not a struct"))
 		}
+		// "->" in C.
 		lhs = newUnary(ND_DEREF, lhs, tok)
 		addType(lhs)
 	}
@@ -2157,10 +2208,10 @@ func postfix(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
+	start := tok
 	if isTypename(tok) {
-		start := tok
-		ty := readTypePreffix(&tok, tok.Next, nil)
-
+		// Compound literal : type-name "{"
+		ty := readTypePreffix(&tok, tok, nil)
 		if scope.Next == nil {
 			v := newAnonGvar(ty)
 			gvarInitializer(rest, tok, v)

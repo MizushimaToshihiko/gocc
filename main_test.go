@@ -47,3 +47,35 @@ func TestGetTypeName(t *testing.T) {
 		})
 	}
 }
+
+func TestIsTypename(t *testing.T) {
+	cases := map[string]struct {
+		in   string
+		want bool
+	}{
+		"case 1": {"int", true},
+		"case 2": {"string", true},
+		"case 3": {"[2]int", true},
+		"case 4": {"[2][2]int", true},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+
+			userInput = append([]rune(c.in), 0)
+			curIdx = 0
+			var err error
+			var tok *Token
+			tok, err = tokenize("main_test")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			printTokens(tok)
+			act := isTypename(tok)
+			if act != c.want {
+				t.Fatalf("%s: %t expected, but got %t", c.in, c.want, act)
+			}
+		})
+	}
+}
