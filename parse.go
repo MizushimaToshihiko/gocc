@@ -596,11 +596,13 @@ func declarator(rest **Token, tok *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
-	if tok.Kind != TK_IDENT {
-		panic("\n" + errorTok(tok, "expected a variable name"))
+	var name *Token
+	var namePos *Token = tok
+
+	if tok.Kind == TK_IDENT {
+		name = tok
+		tok = tok.Next
 	}
-	name := tok
-	tok = tok.Next
 
 	var ty *Type
 	if equal(tok, "(") {
@@ -610,6 +612,7 @@ func declarator(rest **Token, tok *Token) *Type {
 	}
 	*rest = tok
 	ty.Name = name
+	ty.NamePos = namePos
 	return ty
 }
 
@@ -898,7 +901,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			}
 			// Copy Initializer from rhs, if array can be initialized by other array.
 			if rhsTy.Init != nil {
-				fmt.Println("ここ")
 				*init = *rhsTy.Init // copyType()使った方が良いかもしれないが、検証する時間なし
 			}
 			return
@@ -1160,6 +1162,9 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		if v.Ty.Kind == TY_VOID ||
 			(v.Ty.Base != nil && v.Ty.Base.Kind == TY_VOID) {
 			panic("\n" + errorTok(ty.Name, "variable declared void"))
+		}
+		if ty.Name == nil {
+			panic(errorTok(ty.NamePos, "variable name omitted"))
 		}
 	}
 
@@ -2412,6 +2417,9 @@ func parseTypedef(tok *Token) *Token {
 		first = false
 
 		ty := declarator(&tok, tok)
+		if ty.Name == nil {
+			panic("\n" + errorTok(ty.NamePos, "typedef name omitted"))
+		}
 		if ty.Kind != TY_STRUCT {
 			pushScope(getIdent(ty.Name)).TyDef = ty
 		}
@@ -2422,6 +2430,9 @@ func parseTypedef(tok *Token) *Token {
 func createParamLvars(param *Type) {
 	if param != nil {
 		createParamLvars(param.Next)
+		if param.Name == nil {
+			panic("\n" + errorTok(param.NamePos, "parameter name omitted"))
+		}
 		newLvar(getIdent(param.Name), param)
 	}
 }
@@ -2457,6 +2468,9 @@ func function(tok *Token) *Token {
 	printCalledFunc()
 
 	ty := declarator(&tok, tok)
+	if ty.Name == nil {
+		panic("\n" + errorTok(ty.NamePos, "function name omitted"))
+	}
 
 	ty.RetTy = readTypePreffix(&tok, tok, nil)
 	fn := newGvar(getIdent(ty.Name), ty)
@@ -2504,6 +2518,10 @@ func globalVar(tok *Token) *Token {
 		}
 		first = false
 		ty := declarator(&tok, tok)
+		if ty.Name == nil {
+			panic("\n" + errorTok(ty.NamePos, "variable name omitted"))
+		}
+
 		v := newGvar(getIdent(ty.Name), ty)
 		if equal(tok, "=") {
 			gvarInitializer(&tok, tok.Next, v)
