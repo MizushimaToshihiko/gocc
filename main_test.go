@@ -13,7 +13,7 @@ func TestGetTypeName(t *testing.T) {
 		"case1": {"[2]int", "[2]int", TY_ARRAY},
 		"case2": {"[2][3]int", "[2][3]int", TY_ARRAY},
 		"case3": {"****int", "****int", TY_PTR},
-		"case4": {"byte", "byte", TY_BYTE},
+		"case4": {"byte", "uint8", TY_BYTE},
 		"case5": {"string", "string", TY_PTR},
 		"case6": {"*string", "*string", TY_PTR},
 		"case7": {"[1 + 1]int", "[2]int", TY_ARRAY},
