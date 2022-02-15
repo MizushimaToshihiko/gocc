@@ -18,6 +18,7 @@ func TestGetTypeName(t *testing.T) {
 		"case6": {"*string", "*string", TY_PTR},
 		"case7": {"[1 + 1]int", "[2]int", TY_ARRAY},
 		"case8": {"[1 + 1]*int", "[2]*int", TY_ARRAY},
+		"case9": {"*[1 % 2]int", "*[1]int", TY_PTR},
 	}
 
 	for name, c := range cases {
