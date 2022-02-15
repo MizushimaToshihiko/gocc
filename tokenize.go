@@ -35,6 +35,7 @@ type Token struct {
 	Kind TokenKind // type of token
 	Next *Token    // next
 	Val  int64     // if 'kind' is TK_NUM, it's integer
+	FVal float64   // if 'kind' is TK_NUM, it's value
 	Loc  int       // the location in 'userInput'
 	Ty   *Type     // Used if TK_NUM or TK_STR
 	Str  string    // token string
@@ -277,18 +278,18 @@ func errMustSeparateSuccessiveDigits(idx int) error {
 	return errors.New(errorAt(idx, "'_' must separate successive digits"))
 }
 
-func readDigit(cur *Token) (*Token, error) {
+func readIntLiteral(cur *Token) (*Token, error) {
 	var base int = 10
 
 	var sVal string
 	var err error
-	var errIdx = curIdx
+	var startIdx = curIdx
 
 	if startsWith(string(userInput)[curIdx:curIdx+2], "0x") ||
 		startsWith(string(userInput)[curIdx:curIdx+2], "0X") {
 		base = 16
 		curIdx += 2
-		sVal, err = readHexDigit(cur)
+		sVal, err = readHexDigit()
 		if err != nil {
 			return nil, err
 		}
@@ -311,7 +312,7 @@ func readDigit(cur *Token) (*Token, error) {
 		(isDigit(userInput[curIdx]) || userInput[curIdx] == '_'); curIdx++ {
 
 		if userInput[curIdx-1] == '_' && userInput[curIdx] == '_' {
-			return nil, errMustSeparateSuccessiveDigits(errIdx)
+			return nil, errMustSeparateSuccessiveDigits(startIdx)
 		}
 
 		if isDigit(userInput[curIdx]) {
@@ -320,13 +321,16 @@ func readDigit(cur *Token) (*Token, error) {
 	}
 
 	if userInput[curIdx-1] == '_' {
-		return nil, errMustSeparateSuccessiveDigits(errIdx)
+		return nil, errMustSeparateSuccessiveDigits(startIdx)
 	}
 
-	cur = newToken(TK_NUM, cur, sVal, len(sVal))
-	v, err := strconv.ParseInt(sVal, base, 64)
+	cur = newToken(TK_NUM, cur, string(userInput[startIdx:curIdx]), curIdx-startIdx+1)
+	var v int64
+	if sVal != "" {
+		v, err = strconv.ParseInt(sVal, base, 64)
+	}
 	if err != nil {
-		return nil, errors.New(errorAt(errIdx, err.Error()))
+		return nil, errors.New(errorAt(startIdx, err.Error()))
 	}
 
 	cur.Val = v
@@ -339,7 +343,48 @@ func readDigit(cur *Token) (*Token, error) {
 	return cur, nil
 }
 
-func readHexDigit(cur *Token) (string, error) {
+func readNumber(cur *Token) (*Token, error) {
+	tok, err := readIntLiteral(cur)
+	if err != nil {
+		return nil, err
+	}
+
+	if !strings.Contains(".eEfF", string(userInput[curIdx])) {
+		return tok, nil
+	}
+
+	var sVal string = string(userInput[curIdx])
+	curIdx++
+	for isDigit(userInput[curIdx]) ||
+		strings.Contains("eEfFpP+-_", string(userInput[curIdx])) {
+
+		if (userInput[curIdx-1] == '_' && !isDigit(userInput[curIdx])) ||
+			(userInput[curIdx] == '_' && !isDigit(userInput[curIdx-1])) {
+			return nil, errMustSeparateSuccessiveDigits(curIdx)
+		}
+
+		sVal += string(userInput[curIdx])
+		curIdx++
+	}
+
+	fval, err := strconv.ParseFloat(tok.Str+sVal, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	ty := ty_double
+	// if math.SmallestNonzeroFloat32 <= float64(tok.Val)+fval &&
+	// 	float64(tok.Val)+fval <= math.MaxFloat32 {
+	// 	ty = ty_float
+	// }
+
+	tok.FVal = fval
+	tok.Str += sVal
+	tok.Ty = ty
+	return tok, nil
+}
+
+func readHexDigit() (string, error) {
 	var sVal string
 	var errIdx = curIdx
 	for ; isxdigit(userInput[curIdx]) ||
@@ -520,6 +565,7 @@ func readCharLiteral(cur *Token) (*Token, error) {
 
 	tok := newToken(TK_NUM, cur, string(userInput[start:idx]), idx-start)
 	tok.Val = int64(c)
+	tok.Ty = ty_int
 	curIdx += tok.Len
 	return tok, nil
 }
@@ -680,9 +726,10 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// number
-		if isDigit(userInput[curIdx]) {
+		if isDigit(userInput[curIdx]) ||
+			(userInput[curIdx] == '.' && isDigit(userInput[curIdx+1])) {
 			var err error
-			cur, err = readDigit(cur)
+			cur, err = readNumber(cur)
 			if err != nil {
 				return nil, err
 			}

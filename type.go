@@ -15,13 +15,15 @@ type errWriter struct {
 }
 
 const (
-	TY_VOID  TypeKind = iota // void type
-	TY_BOOL                  // bool type
-	TY_BYTE                  // char(int8) type
-	TY_SHORT                 // int16 type
-	TY_INT                   // int32 type
-	TY_LONG                  // int64 type
-	TY_PTR                   // pointer type
+	TY_VOID   TypeKind = iota // void type
+	TY_BOOL                   // bool type
+	TY_BYTE                   // char(int8) type
+	TY_SHORT                  // int16 type
+	TY_INT                    // int32 type
+	TY_LONG                   // int64 type
+	TY_FLOAT                  // float32 type
+	TY_DOUBLE                 // float64 type
+	TY_PTR                    // pointer type
 	TY_ARRAY
 	TY_STRUCT
 	TY_FUNC
@@ -76,6 +78,9 @@ var ty_ushort = &Type{Kind: TY_SHORT, Sz: 2, Align: 2, TyName: "uint16", IsUnsig
 var ty_uint = &Type{Kind: TY_INT, Sz: 4, Align: 4, TyName: "uint", IsUnsigned: true}
 var ty_ulong = &Type{Kind: TY_LONG, Sz: 8, Align: 8, TyName: "uint32", IsUnsigned: true}
 
+var ty_float = &Type{Kind: TY_FLOAT, Sz: 4, Align: 4, TyName: "float32"}
+var ty_double = &Type{Kind: TY_DOUBLE, Sz: 8, Align: 8, TyName: "float64"}
+
 func newType(kind TypeKind, size, align int, name string, isUnsign bool) *Type {
 	return &Type{Kind: kind, Sz: size, Align: align, TyName: name}
 }
@@ -84,6 +89,10 @@ func isInteger(ty *Type) bool {
 	k := ty.Kind
 	return k == TY_BOOL || k == TY_BYTE || k == TY_SHORT ||
 		k == TY_INT || k == TY_LONG
+}
+
+func isFlonum(ty *Type) bool {
+	return ty.Kind == TY_FLOAT || ty.Kind == TY_DOUBLE
 }
 
 func copyType(ty *Type) *Type {

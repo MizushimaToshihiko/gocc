@@ -152,8 +152,9 @@ type Node struct {
 	CaseLbl    int
 	CaseEndLbl string
 
-	Obj *Obj  // used if kind == ND_VAR
-	Val int64 // used if kind == ND_NUM
+	Obj  *Obj  // used if kind == ND_VAR
+	Val  int64 // used if kind == ND_NUM
+	FVal float64
 }
 
 var locals *Obj
@@ -2394,7 +2395,14 @@ func primary(rest **Token, tok *Token) *Node {
 	}
 
 	if tok.Kind == TK_NUM {
-		node := newNum(tok.Val, tok)
+		var node *Node
+		if isFlonum(tok.Ty) {
+			node = newNode(ND_NUM, tok)
+			node.FVal = tok.FVal
+		} else {
+			node = newNum(tok.Val, tok)
+		}
+
 		node.Ty = tok.Ty
 		*rest = tok.Next
 		return node
