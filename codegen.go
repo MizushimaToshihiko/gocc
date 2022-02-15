@@ -281,6 +281,19 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_NULL_EXPR:
 		return
 	case ND_NUM:
+		switch node.Ty.Kind {
+		case TY_FLOAT:
+			f32 := node.FVal
+			c.println("mov $0, %%eax  # float %f", f32)
+			c.println("movq %%rax, %%xmm0")
+			return
+		case TY_DOUBLE:
+			f64 := node.FVal
+			c.println("mov $0, %%eax  # double %f", f64)
+			c.println("movq %%rax, %%xmm0")
+			return
+		}
+
 		c.println("	mov $%d, %%rax", node.Val)
 		return
 	case ND_NEG:

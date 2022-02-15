@@ -67,5 +67,18 @@ func main() {
 	assert(-1, 0x1<<31>>31, "0x1<<31>>31")
 	assert(-1, 0b1<<31>>31, "0b1<<31>>31")
 
+	0.0
+	1.0
+	3e+8
+	0x10.1p0
+	.1e4
+
+	assert(4, Sizeof(8), "Sizeof(8)")
+	assert(8, Sizeof(0.3), "Sizeof(0.3)")
+	assert(8, Sizeof(0.), "Sizeof(0.)")
+	assert(8, Sizeof(.0), "Sizeof(.0)")
+	assert(8, Sizeof(5.), "Sizeof(5.)")
+	assert(8, Sizeof(2.0), "Sizeof(2.0)")
+
 	println("OK")
 }
