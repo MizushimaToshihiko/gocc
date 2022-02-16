@@ -103,13 +103,20 @@ func (c *codeWriter) load(ty *Type) {
 		return
 	}
 
-	if ty.Kind == TY_ARRAY || ty.Kind == TY_STRUCT {
+	switch ty.Kind {
+	case TY_ARRAY, TY_STRUCT:
 		// If it is an array, do not attempt to load a value to the
 		// register because in general we can't load an entire array to a
 		// register. As a result, the result of an evaluation of an array
 		// become not the array itself but the address of the array.
 		// This is where "array is automatically converted to a pointer to
 		// the first element of the array in C" occurs.
+		return
+	case TY_FLOAT:
+		c.println("	movss (%%rax), %%xmm0")
+		return
+	case TY_DOUBLE:
+		c.println("	movsd (%%rax), %%xmm0")
 		return
 	}
 
@@ -150,11 +157,18 @@ func (c *codeWriter) store(ty *Type) {
 
 	c.pop("%rdi")
 
-	if ty.Kind == TY_STRUCT {
+	switch ty.Kind {
+	case TY_STRUCT:
 		for i := 0; i < ty.Sz; i++ {
 			c.println("	mov %d(%%rax), %%r8b", i)
 			c.println("	mov %%r8b, %d(%%rdi)", i)
 		}
+		return
+	case TY_FLOAT:
+		c.println("	movss %%xmm0, (%%rdi)")
+		return
+	case TY_DOUBLE:
+		c.println("	movsd %%xmm0, (%%rdi)")
 		return
 	}
 
@@ -197,6 +211,8 @@ const (
 	U16
 	U32
 	U64
+	F32
+	F64
 )
 
 func (c *codeWriter) getTypeId(ty *Type) int {
@@ -221,29 +237,72 @@ func (c *codeWriter) getTypeId(ty *Type) int {
 			return U64
 		}
 		return I64
+	case TY_FLOAT:
+		return F32
+	case TY_DOUBLE:
+		return F64
 	default:
 		return U64
 	}
 }
 
 // The table for type casts
-const i32i8 string = "movsbl %al, %eax"
-const i32u8 string = "movzbl %al, %eax"
-const i32i16 string = "movswl %ax, %eax"
-const i32u16 string = "movzwl %ax, %eax"
-const i32i64 string = "movsxd %eax, %rax"
-const u32i64 string = "mov %eax, %eax"
+const (
+	i32i8  string = "movsbl %al, %eax"
+	i32u8  string = "movzbl %al, %eax"
+	i32i16 string = "movswl %ax, %eax"
+	i32u16 string = "movzwl %ax, %eax"
+	i32f32 string = "cvtsi2ssl %eax, %xmm0"
+	i32i64 string = "movsxd %eax, %rax"
+	i32f64 string = "cvtsi2sdl %eax, %xmm0"
 
-var castTable = [8][8]string{
-	//i8 i16 i32 i64     u8     u16     u32 u64
-	{"", "", "", i32i64, i32u8, i32u16, "", i32i64},        // i8
-	{i32i8, "", "", i32i64, i32u8, i32u16, "", i32i64},     // i16
-	{i32i8, i32i16, "", i32i64, i32u8, i32u16, i32i64},     // i32
-	{i32i8, i32i16, "", "", i32u8, i32u16, "", ""},         // i64
-	{i32i8, "", "", i32i64, "", "", "", i32i64},            // u8
-	{i32i8, i32i16, "", i32i64, i32u8, "", "", i32i64},     // u16
-	{i32i8, i32i16, "", u32i64, i32u8, i32u16, "", u32i64}, // u32
-	{i32i8, i32i16, "", "", i32u8, i32u16, "", ""},         // u64
+	u32f32 string = "mov %eax, %eax; cvtsi2ssq %rax, %xmm0"
+	u32i64 string = "mov %eax, %eax"
+	u32f64 string = "mov %eax, %eax; cvtsi2sdq %rax, %xmm0"
+
+	i64f32 string = "cvtsi2ssq %rax, %xmm0"
+	i64f64 string = "cvtsi2sdq %rax, %xmm0"
+
+	u64f32 string = "cvtsi2ssq %rax, %xmm0"
+	u64f64 string = "test %rax,%rax; js 1f; pxor %xmm0,%xmm0; cvtsi2sd %rax,%xmm0; jmp 2f; " +
+		"1: mov %rax,%rdi; and $1,%eax; pxor %xmm0,%xmm0; shr %rdi; " +
+		"or %rax,%rdi; cvtsi2sd %rdi,%xmm0; addsd %xmm0,xmm0; 2:"
+
+	f32i8  string = "cvttss2sil %xmm0, %eax; movsbl %al, %eax"
+	f32u8  string = "cvttss2sil %xmm0, %eax; movzbl %al, %eax"
+	f32i16 string = "cvttss2sil %xmm0, %eax; movswl %ax, %eax"
+	f32u16 string = "cvttss2sil %xmm0, %eax; movzwl %ax, %eax"
+	f32i32 string = "cvttss2sil %xmm0, %eax"
+	f32u32 string = "cvttss2siq %xmm0, %rax"
+	f32i64 string = "cvttss2siq %xmm0, %rax"
+	f32u64 string = "cvttss2siq %xmm0, %rax"
+	f32f64 string = "cvtss2sd %xmm0, %xmm0"
+
+	f64i8  string = "cvttsd2sil %xmm0, %eax; movsbl %al, %eax"
+	f64u8  string = "cvttsd2sil %xmm0, %eax; movzbl %al, %eax"
+	f64i16 string = "cvttsd2sil %xmm0, %eax; movswl %ax, %eax"
+	f64u16 string = "cvttsd2sil %xmm0, %eax; movzwl %ax, %eax"
+	f64i32 string = "cvttsd2sil %xmm0, %eax"
+	f64u32 string = "cvttsd2siq %xmm0, %rax"
+	f64f32 string = "cvtsd2ss %xmm0, %xmm0"
+	f64i64 string = "cvttsd2siq %xmm0, %rax"
+	f64u64 string = "cvttsd2siq %xmm0, %rax"
+)
+
+var castTable = [10][10]string{
+	//i8 i16 i32 i64     u8     u16     u32 u64     f32     f64
+	{"", "", "", i32i64, i32u8, i32u16, "", i32i64, i32f32, i32f64},    // i8
+	{i32i8, "", "", i32i64, i32u8, i32u16, "", i32i64, i32f32, i32f64}, // i16
+	{i32i8, i32i16, "", i32i64, i32u8, i32u16, i32i64, i32f32, i32f64}, // i32
+	{i32i8, i32i16, "", "", i32u8, i32u16, "", "", i64f32, i64f64},     // i64
+
+	{i32i8, "", "", i32i64, "", "", "", i32i64, i32f32, i32f64},            // u8
+	{i32i8, i32i16, "", i32i64, i32u8, "", "", i32i64, i32f32, i32f64},     // u16
+	{i32i8, i32i16, "", u32i64, i32u8, i32u16, "", u32i64, u32f32, u32f64}, // u32
+	{i32i8, i32i16, "", "", i32u8, i32u16, "", "", u64f32, u64f64},         // u64
+
+	{f32i8, f32i16, f32i32, f32i64, f32u8, f32u16, f32u32, f32u64, "", f32f64}, // f32
+	{f64i8, f64i16, f64i32, f64i64, f64u8, f64u16, f64i32, f64u64, f64f32, ""}, // f64
 }
 
 func (c *codeWriter) cast(from *Type, to *Type) {
@@ -284,13 +343,13 @@ func (c *codeWriter) genExpr(node *Node) {
 		switch node.Ty.Kind {
 		case TY_FLOAT:
 			f32 := node.FVal
-			c.println("mov $0, %%eax  # float %f", f32)
-			c.println("movq %%rax, %%xmm0")
+			c.println("	mov $%g, %%eax  # float %f", f32, f32)
+			c.println("	movq %%rax, %%xmm0")
 			return
 		case TY_DOUBLE:
 			f64 := node.FVal
-			c.println("mov $0, %%eax  # double %f", f64)
-			c.println("movq %%rax, %%xmm0")
+			c.println("	mov $%g, %%rax  # double %f", f64, f64)
+			c.println("	movq %%rax, %%xmm0")
 			return
 		}
 

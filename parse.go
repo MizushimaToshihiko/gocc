@@ -517,6 +517,10 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 		ty = ty_uint
 	} else if equal(tok, "uint64") {
 		ty = ty_ulong
+	} else if equal(tok, "float32") {
+		ty = ty_float
+	} else if equal(tok, "float64") {
+		ty = ty_double
 	} else if equal(tok, "string") {
 		ty = stringType()
 	} else if equal(tok, "struct") { // struct type
