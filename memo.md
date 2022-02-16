@@ -203,3 +203,28 @@ assert(2, y[1], "y[1]")
 ```
  - yのtypeが型推論でも *[2]int になるように、initializerを変更する必要がある。
  - 2022/02/10 struct配列へのポインタアドレス代入が可能になるよう変更
+ - 上記例で(*y)[0]は動いたが代わりにy[0]がおかしくなった。でも一旦これで。
+
+2022/02/16 Intelマニュアルの複数パラメータ受渡部分の抜粋(DQNEOさんが紹介していた部分)  
+
+From : https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html#combined  
+Copyright © 1997-2021, Intel Corporation. All Rights Reserved.  
+
+ - 6.4.3 Parameter Passing  
+Parameters can be passed between procedures in any of three ways: through general-purpose registers, in an argument list, or on the stack.  
+ - 6.4.3.1 Passing Parameters Through the General-Purpose Registers  
+The processor does not save the state of the general-purpose registers on procedure calls. A calling procedure can thus pass up to six parameters to the called procedure by copying the parameters into any of these registers (except the ESP and EBP registers) prior to executing the CALL instruction. The called procedure can likewise pass parameters back to the calling procedure through general-purpose registers.
+ - 6.4.3.2 Passing Parameters on the Stack  
+To pass a large number of parameters to the called procedure, the parameters can be placed on the stack, in the stack frame for the calling procedure. Here, it is useful to use the stack-frame base pointer (in the EBP register) to make a frame boundary for easy access to the parameters.  
+The stack can also be used to pass parameters back from the called procedure to the calling procedure.
+ - 6.4.3.3 Passing Parameters in an Argument List  
+An alternate method of passing a larger number of parameters (or a data structure) to the called procedure is to place the parameters in an argument list in one of the data segments in memory. A pointer to the argument list can then be passed to the called procedure through a general-purpose register or the stack. Parameters can also be passed back to the calling procedure in this same manner.  
+ - 6.4.3パラメータの受け渡し  
+パラメータは、汎用レジスタ、引数リスト、またはスタックの3つの方法のいずれかでプロシージャ間で渡すことができます。
+ - 6.4.3.1汎用レジスタを介したパラメータの受け渡し  
+プロセッサは、プロシージャ呼び出しで汎用レジスタの状態を保存しません。したがって、呼び出し元のプロシージャは、CALL命令を実行する前に、これらのレジスタ（ESPおよびEBPレジスタを除く）のいずれかにパラメータをコピーすることにより、呼び出されたプロシージャに最大6つのパラメータを渡すことができます。呼び出されたプロシージャも同様に、汎用レジスタを介してパラメータを呼び出し元のプロシージャに戻すことができます。
+ - 6.4.3.2スタックでのパラメータの受け渡し  
+呼び出されたプロシージャに多数のパラメータを渡すために、パラメータをスタックの呼び出し元のプロシージャのスタックフレームに配置できます。ここでは、（EBPレジスタ内の）スタックフレームベースポインタを使用して、パラメータに簡単にアクセスできるようにフレーム境界を作成すると便利です。
+スタックを使用して、呼び出されたプロシージャから呼び出し元のプロシージャにパラメータを戻すこともできます。
+ - 6.4.3.3引数リストでのパラメータの受け渡し  
+呼び出されたプロシージャに多数のパラメータ（またはデータ構造）を渡す別の方法は、メモリ内のデータセグメントの1つにある引数リストにパラメータを配置することです。次に、引数リストへのポインタを、汎用レジスタまたはスタックを介して呼び出されたプロシージャに渡すことができます。これと同じ方法で、パラメータを呼び出し元のプロシージャに戻すこともできます。
