@@ -299,7 +299,7 @@ output:
 
 Program exited.
 ```
- - 下記でいいみたいです。 https://pkg.go.dev/unsafe#Pointer
+ - 下記でいいみたいです。参照:https://pkg.go.dev/unsafe#Pointer , https://qiita.com/nia_tn1012/items/d26f0fc993895a09b30b#23-%E3%83%9D%E3%82%A4%E3%83%B3%E3%82%BF%E3%81%AE%E3%82%AD%E3%83%A3%E3%82%B9%E3%83%88%E5%A4%89%E6%8F%9B%E3%82%92%E5%88%A9%E7%94%A8%E3%81%97%E3%81%9F%E6%96%B9%E6%B3%95-c%E8%A8%80%E8%AA%9Ecc-
 ```Go
 package main
 

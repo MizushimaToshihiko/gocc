@@ -291,19 +291,19 @@ const (
 )
 
 var castTable = [10][10]string{
-	//i8 i16 i32 i64     u8     u16     u32 u64     f32     f64
-	{"", "", "", i32i64, i32u8, i32u16, "", i32i64, i32f32, i32f64},    // i8
-	{i32i8, "", "", i32i64, i32u8, i32u16, "", i32i64, i32f32, i32f64}, // i16
-	{i32i8, i32i16, "", i32i64, i32u8, i32u16, i32i64, i32f32, i32f64}, // i32
-	{i32i8, i32i16, "", "", i32u8, i32u16, "", "", i64f32, i64f64},     // i64
+	//i8    i16     i32    i64     u8     u16     u32     u64     f32     f64
+	{"nil", "null", "nil", i32i64, i32u8, i32u16, "null", i32i64, i32f32, i32f64}, // i8
+	{i32i8, "null", "nil", i32i64, i32u8, i32u16, "null", i32i64, i32f32, i32f64}, // i16
+	{i32i8, i32i16, "nil", i32i64, i32u8, i32u16, "null", i32i64, i32f32, i32f64}, // i32
+	{i32i8, i32i16, "nil", "null", i32u8, i32u16, "null", "null", i64f32, i64f64}, // i64
 
-	{i32i8, "", "", i32i64, "", "", "", i32i64, i32f32, i32f64},            // u8
-	{i32i8, i32i16, "", i32i64, i32u8, "", "", i32i64, i32f32, i32f64},     // u16
-	{i32i8, i32i16, "", u32i64, i32u8, i32u16, "", u32i64, u32f32, u32f64}, // u32
-	{i32i8, i32i16, "", "", i32u8, i32u16, "", "", u64f32, u64f64},         // u64
+	{i32i8, "null", "nil", i32i64, "nil", "null", "null", i32i64, i32f32, i32f64}, // u8
+	{i32i8, i32i16, "nil", i32i64, i32u8, "null", "null", i32i64, i32f32, i32f64}, // u16
+	{i32i8, i32i16, "nil", u32i64, i32u8, i32u16, "null", u32i64, u32f32, u32f64}, // u32
+	{i32i8, i32i16, "nil", "null", i32u8, i32u16, "null", "null", u64f32, u64f64}, // u64
 
-	{f32i8, f32i16, f32i32, f32i64, f32u8, f32u16, f32u32, f32u64, "", f32f64}, // f32
-	{f64i8, f64i16, f64i32, f64i64, f64u8, f64u16, f64i32, f64u64, f64f32, ""}, // f64
+	{f32i8, f32i16, f32i32, f32i64, f32u8, f32u16, f32u32, f32u64, "null", f32f64}, // f32
+	{f64i8, f64i16, f64i32, f64i64, f64u8, f64u16, f64i32, f64u64, f64f32, "null"}, // f64
 }
 
 func (c *codeWriter) cast(from *Type, to *Type) {
@@ -325,7 +325,7 @@ func (c *codeWriter) cast(from *Type, to *Type) {
 
 	t1 := c.getTypeId(from)
 	t2 := c.getTypeId(to)
-	if castTable[t1][t2] != "" {
+	if castTable[t1][t2] != "nil" && castTable[t1][t2] != "null" {
 		c.println("	%s", castTable[t1][t2])
 	}
 }
