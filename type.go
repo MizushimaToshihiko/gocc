@@ -168,6 +168,13 @@ func getCommonType(ty1, ty2 *Type) *Type {
 		return pointerTo(ty1.Base)
 	}
 
+	if ty1.Kind == TY_DOUBLE || ty2.Kind == TY_DOUBLE {
+		return ty_double
+	}
+	if ty1.Kind == TY_FLOAT || ty2.Kind == TY_FLOAT {
+		return ty_float
+	}
+
 	if ty1.Sz < 4 {
 		ty1 = ty_int
 	}

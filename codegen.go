@@ -56,6 +56,26 @@ func (c *codeWriter) pop(arg string) {
 	depth--
 }
 
+func (c *codeWriter) pushf() {
+	if c.err != nil {
+		return
+	}
+
+	c.println("	sub $8, %%rsp")
+	c.println("	movsd %%xmm0, (%%rsp)")
+	depth++
+}
+
+func (c *codeWriter) popf(arg string) {
+	if c.err != nil {
+		return
+	}
+
+	c.println("	movsd (%%rsp), %s", arg)
+	c.println("	add $8, %%rsp")
+	depth--
+}
+
 func alignTo(n, align int) int {
 	return (n + align - 1) / align * align
 }
@@ -267,7 +287,7 @@ const (
 	u64f32 string = "cvtsi2ssq %rax, %xmm0"
 	u64f64 string = "test %rax,%rax; js 1f; pxor %xmm0,%xmm0; cvtsi2sd %rax,%xmm0; jmp 2f; " +
 		"1: mov %rax,%rdi; and $1,%eax; pxor %xmm0,%xmm0; shr %rdi; " +
-		"or %rax,%rdi; cvtsi2sd %rdi,%xmm0; addsd %xmm0,xmm0; 2:"
+		"or %rax,%rdi; cvtsi2sd %rdi,%xmm0; addsd %xmm0,%xmm0; 2:"
 
 	f32i8  string = "cvttss2sil %xmm0, %eax; movsbl %al, %eax"
 	f32u8  string = "cvttss2sil %xmm0, %eax; movzbl %al, %eax"
@@ -491,6 +511,51 @@ func (c *codeWriter) genExpr(node *Node) {
 			return
 		}
 		return
+	}
+
+	if isFlonum(node.Lhs.Ty) {
+		c.genExpr(node.Rhs)
+		c.pushf()
+		c.genExpr(node.Lhs)
+		c.popf("%xmm1")
+
+		var sz string
+		if node.Lhs.Ty.Kind == TY_FLOAT {
+			sz = "ss"
+		} else {
+			sz = "sd"
+		}
+
+		switch node.Kind {
+		case ND_EQ, ND_NE, ND_LT, ND_LE:
+			c.println("	ucomi%s %%xmm0, %%xmm1", sz)
+
+			switch node.Kind {
+			case ND_EQ:
+				c.println("	sete %%al")
+				c.println("	setnp %%dl")
+				c.println("	and %%dl, %%al")
+			case ND_NE:
+				c.println("	setne %%al")
+				c.println("	setp %%dl")
+				c.println("	or %%dl, %%al")
+			case ND_LT:
+				c.println("	seta %%al")
+			default:
+				c.println("	setae %%al")
+			}
+
+			c.println("	and $1, %%al")
+			c.println("	movzb %%al, %%rax")
+			return
+		default:
+			if c.err == nil {
+				c.err = fmt.Errorf("invalid expression")
+			} else {
+				c.err = fmt.Errorf(c.err.Error() + "\ninvalid expression")
+			}
+			return
+		}
 	}
 
 	c.genExpr(node.Rhs)
