@@ -178,12 +178,12 @@ func typeStr(ty *Type, tok *Token) string {
 }
 ``` 
 
-2022/01/19
+#### 2022/01/19
 - 引数付の関数定義?呼び出し?時にsegmentation faultが出る
 - testdata/commonにc言語で定義するとsegmentation faultにならない
 - 2022/01/20 PrologueとEpilogueのレジスタ名が間違っていたのが原因
 
-2022/02/09
+#### 2022/02/09
  - 下記の場合、nil pointerエラーになる。原因はyのtypeが*intになっているためと思われる。
 ```Go
 var x = [2]int{1, 2}
@@ -228,3 +228,45 @@ An alternate method of passing a larger number of parameters (or a data structur
 スタックを使用して、呼び出されたプロシージャから呼び出し元のプロシージャにパラメータを戻すこともできます。
  - 6.4.3.3引数リストでのパラメータの受け渡し  
 呼び出されたプロシージャに多数のパラメータ（またはデータ構造）を渡す別の方法は、メモリ内のデータセグメントの1つにある引数リストにパラメータを配置することです。次に、引数リストへのポインタを、汎用レジスタまたはスタックを介して呼び出されたプロシージャに渡すことができます。これと同じ方法で、パラメータを呼び出し元のプロシージャに戻すこともできます。
+
+#### 2022/02/17 floating-pointを扱う
+ - chibiccのcodegen.cのgen_expr関数では、
+ 　1. union { float f32; double f64; uint32_t u32; uint64_t u64; } u;を定義
+ 　2. tokenのfvalに入っている小数の値をu.f32(floatの場合),又はu.f64(doubleの場合)に格納
+ 　3. 同じ大きさのuintのメンバ(u.f32->u.u32,u.f64->u.u64)の値をprintfで%uとして整数で取り出し、raxに入れている
+ - 上記3で取り出した値は、u.f32、u.f64の値をビットで表現した時の、仮数部分を10進数にしたものと同じ？
+   例：0.1（double、10進数）の場合、下記コードで調べるとu.u64は4591870180066957722（10進数）、これを2進数にすると0b10011001100110011001100110011010になる。
+
+```c
+#include <stdio.h>
+#include <stdint.h>
+#include <limits.h>
+
+void printb(unsigned int v) {
+  unsigned int mask = (int)1 << (sizeof(v) * CHAR_BIT - 1);
+  do putchar(mask & v ? '1' : '0');
+  while (mask >>= 1);
+}
+
+void putb(unsigned int v) {
+  putchar('0'), putchar('b'), printb(v), putchar('\n');
+}
+
+int main(void){
+    union { float f32; double f64; uint32_t u32; uint64_t u64; } u;
+    u.f64=0.1;
+    printf("u.f32: %p: %f\n", &u.f32, u.f32);  // u.f32: 0x7fff2119d0d0: -0.000000
+    printf("u.f64: %p: %f\n", &u.f64, u.f64);  // u.f64: 0x7fff2119d0d0: 0.100000
+    printf("u.u32: %p: %u\n", &u.u32, u.u32);  // u.u32: 0x7fff2119d0d0: 2576980378
+    printf("u.u64: %p: %lu\n", &u.u64, u.u64); // u.u64: 0x7fff2119d0d0: 4591870180066957722
+    printf("       ");
+    putb(u.u64);                               // 0b10011001100110011001100110011010
+}
+   ```
+   また0.1を[このサイト](https://tools.m-bsys.com/calculators/ieee754.php)でIEEE754内部表現にすると下図のようになる。
+   ![画像](img/20220217.png)
+
+ - このコンパイラで再現するにはどうするか？  
+   アセンブリ言語に小数は入れられない？  
+   小数の仮数部分を取り出して10進数の数字を得るには?  
+   例: 0.1の場合 -> 4591870180066957722を何らかの方法で算出する
