@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"unsafe"
 )
 
 type codeWriter struct {
@@ -343,12 +344,12 @@ func (c *codeWriter) genExpr(node *Node) {
 		switch node.Ty.Kind {
 		case TY_FLOAT:
 			f32 := node.FVal
-			c.println("	mov $%g, %%eax  # float %f", f32, f32)
+			c.println("	mov $%d, %%eax  # float %f", *(*uint32)(unsafe.Pointer(&f32)), f32)
 			c.println("	movq %%rax, %%xmm0")
 			return
 		case TY_DOUBLE:
 			f64 := node.FVal
-			c.println("	mov $%g, %%rax  # double %f", f64, f64)
+			c.println("	mov $%d, %%rax  # double %f", *(*uint64)(unsafe.Pointer(&f64)), f64)
 			c.println("	movq %%rax, %%xmm0")
 			return
 		}
