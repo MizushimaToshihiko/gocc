@@ -95,6 +95,10 @@ func isFlonum(ty *Type) bool {
 	return ty.Kind == TY_FLOAT || ty.Kind == TY_DOUBLE
 }
 
+func isNumeric(ty *Type) bool {
+	return isInteger(ty) || isFlonum(ty)
+}
+
 func copyType(ty *Type) *Type {
 	ret := &Type{
 		Kind:       ty.Kind,

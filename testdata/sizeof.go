@@ -30,5 +30,10 @@ func main() {
 	assert(1, Sizeof(int8)<<31>>31, "Sizeof(int8)<<31>>31")
 	assert(1, Sizeof(int8)<<63>>63, "Sizeof(int8)<<63>>63")
 
+  assert(8, Sizeof(1.0+2), "Sizeof(1.0+2)");
+  assert(8, Sizeof(1.0-2), "Sizeof(1.0-2)");
+  assert(8, Sizeof(1.0*2), "Sizeof(1.0*2)");
+  assert(8, Sizeof(1.0/2), "Sizeof(1.0/2)");
+
 	println("OK")
 }

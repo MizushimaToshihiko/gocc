@@ -378,6 +378,22 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_NEG:
 		c.genExpr(node.Lhs)
+
+		switch node.Ty.Kind {
+		case TY_FLOAT:
+			c.println("	mov $1, %%rax")
+			c.println("	shl $31, %%rax")
+			c.println("	movq %%rax, %%xmm1")
+			c.println("	xorps %%xmm1, %%xmm0")
+			return
+		case TY_DOUBLE:
+			c.println("	mov $1, %%rax")
+			c.println("	shl, $63, %%rax")
+			c.println("	movq %%rax, %%xmm1")
+			c.println("	xorpd %%xmm1, %%xmm0")
+			return
+		}
+
 		c.println("	neg %%rax")
 		return
 	case ND_VAR, ND_MEMBER:
@@ -531,6 +547,18 @@ func (c *codeWriter) genExpr(node *Node) {
 			c.println("	ucomi%s %%xmm0, %%xmm1", sz)
 
 			switch node.Kind {
+			case ND_ADD:
+				c.println("	add%s %%xmm1, %%xmm0", sz)
+				return
+			case ND_SUB:
+				c.println("	sub%s %%xmm1, %%xmm0", sz)
+				return
+			case ND_MUL:
+				c.println("	mul%s %%xmm1, %%xmm0", sz)
+				return
+			case ND_DIV:
+				c.println("	div%s %%xmm1, %%xmm0", sz)
+				return
 			case ND_EQ:
 				c.println("	sete %%al")
 				c.println("	setnp %%dl")
@@ -603,13 +631,13 @@ func (c *codeWriter) genExpr(node *Node) {
 		}
 		return
 	case ND_BITAND:
-		c.println("	and %%rdi, %%rax")
+		c.println("	and %s, %s", di, ax)
 		return
 	case ND_BITOR:
-		c.println("	or %%rdi, %%rax")
+		c.println("	or %s, %s", di, ax)
 		return
 	case ND_BITXOR:
-		c.println("	xor %%rdi, %%rax")
+		c.println("	xor %s, %s", di, ax)
 		return
 	case ND_EQ, ND_NE, ND_LT, ND_LE:
 		c.println("	cmp %s, %s", di, ax)
