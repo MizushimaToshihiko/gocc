@@ -356,7 +356,9 @@ func readNumber(cur *Token) (*Token, error) {
 	var sVal string = string(userInput[curIdx])
 	curIdx++
 	for isDigit(userInput[curIdx]) ||
-		strings.Contains("eEfFpP+-_", string(userInput[curIdx])) {
+		strings.Contains("eEfFpP_", string(userInput[curIdx])) ||
+		(strings.Contains("EePp", string(userInput[curIdx-1])) &&
+			strings.Contains("+-", string(userInput[curIdx]))) {
 
 		if (userInput[curIdx-1] == '_' && !isDigit(userInput[curIdx])) ||
 			(userInput[curIdx] == '_' && !isDigit(userInput[curIdx-1])) {
