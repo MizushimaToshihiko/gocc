@@ -373,10 +373,6 @@ func readNumber(cur *Token) (*Token, error) {
 	}
 
 	ty := ty_double
-	// if math.SmallestNonzeroFloat32 <= float64(tok.Val)+fval &&
-	// 	float64(tok.Val)+fval <= math.MaxFloat32 {
-	// 	ty = ty_float
-	// }
 
 	tok.FVal = fval
 	tok.Str += sVal

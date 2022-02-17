@@ -51,5 +51,16 @@ func main() {
 	var x T2 = 65535
 	assert(65535, int(x), "type T2 uint16;var x T2=65535;int(x)")
 
+	assert(0, bool(0.0), "bool(0.0)")
+	assert(1, bool(0.1), "bool(0.1)")
+	assert(3, int8(3.0), "int8(3.0)")
+	assert(1000, int16(1000.3), "int16(1000.3)")
+	assert(3, int(3.99), "int(3.99)")
+	assert(2000000000000000, int64(2e15), "int64(2e15)")
+	assert(3, float32(3.5), "float32(3.5)")
+	assert(5, float64(float32(5.5)), "float64(float32(5.5))")
+	assert(3, float32(3), "float32(3)")
+	assert(3, float64(3), "float64(3)")
+
 	println("OK")
 }
