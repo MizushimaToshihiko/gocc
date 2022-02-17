@@ -237,6 +237,10 @@ const (
 )
 
 func (c *codeWriter) getTypeId(ty *Type) int {
+	if c.err != nil {
+		return -1
+	}
+
 	switch ty.Kind {
 	case TY_BYTE:
 		if ty.IsUnsigned {
@@ -543,22 +547,22 @@ func (c *codeWriter) genExpr(node *Node) {
 		}
 
 		switch node.Kind {
+		case ND_ADD:
+			c.println("	add%s %%xmm1, %%xmm0", sz)
+			return
+		case ND_SUB:
+			c.println("	sub%s %%xmm1, %%xmm0", sz)
+			return
+		case ND_MUL:
+			c.println("	mul%s %%xmm1, %%xmm0", sz)
+			return
+		case ND_DIV:
+			c.println("	div%s %%xmm1, %%xmm0", sz)
+			return
 		case ND_EQ, ND_NE, ND_LT, ND_LE:
 			c.println("	ucomi%s %%xmm0, %%xmm1", sz)
 
 			switch node.Kind {
-			case ND_ADD:
-				c.println("	add%s %%xmm1, %%xmm0", sz)
-				return
-			case ND_SUB:
-				c.println("	sub%s %%xmm1, %%xmm0", sz)
-				return
-			case ND_MUL:
-				c.println("	mul%s %%xmm1, %%xmm0", sz)
-				return
-			case ND_DIV:
-				c.println("	div%s %%xmm1, %%xmm0", sz)
-				return
 			case ND_EQ:
 				c.println("	sete %%al")
 				c.println("	setnp %%dl")
