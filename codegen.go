@@ -392,7 +392,7 @@ func (c *codeWriter) genExpr(node *Node) {
 			return
 		case TY_DOUBLE:
 			c.println("	mov $1, %%rax")
-			c.println("	shl, $63, %%rax")
+			c.println("	shl $63, %%rax")
 			c.println("	movq %%rax, %%xmm1")
 			c.println("	xorpd %%xmm1, %%xmm0")
 			return
