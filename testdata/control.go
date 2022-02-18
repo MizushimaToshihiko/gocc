@@ -4,31 +4,31 @@ func assert(want int, act int, code string)
 func println(format string)
 
 func main() {
-	var x int
+	var x1 int
 	if 0 {
-		x = 2
+		x1 = 2
 	} else {
-		x = 3
+		x1 = 3
 	}
-	assert(3, x, "if (0) x=2; else x=3; x;")
+	assert(3, x1, "if (0) x=2; else x=3; x1;")
 	if 1 - 1 {
-		x = 2
+		x1 = 2
 	} else {
-		x = 3
+		x1 = 3
 	}
-	assert(3, x, "if (1-1) {x=2;} else {x=3;}")
+	assert(3, x1, "if (1-1) {x=2;} else {x=3;}; x1;")
 	if 1 {
-		x = 2
+		x1 = 2
 	} else {
-		x = 3
+		x1 = 3
 	}
-	assert(2, x, "if 1 {x=2;} else {x=3;}")
+	assert(2, x1, "if 1 {x=2;} else {x=3;}; x1;")
 	if 2 - 1 {
-		x = 2
+		x1 = 2
 	} else {
-		x = 3
+		x1 = 3
 	}
-	assert(2, x, "if 2-1 {x=2;} else {x=3;}")
+	assert(2, x1, "if 2-1 {x=2;} else {x=3;}; x1;")
 
 	var i int = 0
 	var j int = 0
@@ -264,6 +264,28 @@ foo:
 		i = 3
 	}
 	assert(3, i, "i=0; switch(-1) { case 0xffffffff: i=3; }; i")
+
+  assert(0, 0.0 && 0.0, "0.0 && 0.0");
+  assert(0, 0.0 && 0.1, "0.0 && 0.1");
+  assert(0, 0.3 && 0.0, "0.3 && 0.0");
+  assert(1, 0.3 && 0.5, "0.3 && 0.5");
+  assert(0, 0.0 || 0.0, "0.0 || 0.0");
+  assert(1, 0.0 || 0.1, "0.0 || 0.1");
+  assert(1, 0.3 || 0.0, "0.3 || 0.0");
+  assert(1, 0.3 || 0.5, "0.3 || 0.5");
+	var x2 int; if 0.0 {x2=3;}else{x2=5;};
+  assert(5, x2, "var x int; if 0.0{x=3;}else{x=5;}; x2");
+	var x3 int; if 0.1 {x3=3;}else{x3=5;};
+  assert(3, x3, "var x3 int; if 0.1{x3=3;}else{x3=5;};x3");
+	var x4=5; if 0.0{x4=3;};
+  assert(5, x4, "var x4=5; if 0.0{x4=3;}; x4");
+	var x5=5; if 0.1{x5=3;};
+  assert(3, x5, "var x5=5; if 0.1{x5=3;};x5");
+	i=10.0; j=0; for ;i!=0;i--,j++{};
+  assert(10, j, "i=10.0; j=0; for ;i!=0;i--,j++{}; j;");
+	i=10.0; j=0; for i!=0{i--;j++;};
+  assert(10, j, "i=10.0; j=0; for i!=0{i--;j++}; j;");
+
 
 	println("OK")
 }

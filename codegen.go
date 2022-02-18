@@ -216,6 +216,17 @@ func (c *codeWriter) cmpZero(ty *Type) {
 		return
 	}
 
+	switch ty.Kind {
+	case TY_FLOAT:
+		c.println("	xorps %%xmm1, xmm1")
+		c.println("	ucomiss %%xmm1, %%xmm0")
+		return
+	case TY_DOUBLE:
+		c.println("	xorpd %%xmm1, %%xmm1")
+		c.println("	ucomisd %%xmm1, %%xmm0")
+		return
+	}
+
 	if isInteger(ty) && ty.Sz <= 4 {
 		c.println("	cmp $0, %%eax")
 	} else {
@@ -440,7 +451,7 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_COND:
 		cnt := count()
 		c.genExpr(node.Cond)
-		c.println("	cmp $0, %%rax")
+		c.cmpZero(node.Cond.Ty)
 		c.println("	je .L.else.%d", cnt)
 		c.genExpr(node.Then)
 		c.println("	jmp .L.end.%d", cnt)
@@ -450,7 +461,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_NOT:
 		c.genExpr(node.Lhs)
-		c.println("	cmp $0, %%rax")
+		c.cmpZero(node.Lhs.Ty)
 		c.println("	sete %%al")
 		c.println("	movzx %%al, %%rax")
 		return
@@ -461,10 +472,10 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_LOGAND:
 		cnt := count()
 		c.genExpr(node.Lhs)
-		c.println("	cmp $0, %%rax")
+		c.cmpZero(node.Lhs.Ty)
 		c.println("	je  .L.false.%d", cnt)
 		c.genExpr(node.Rhs)
-		c.println("	cmp $0, %%rax")
+		c.cmpZero(node.Rhs.Ty)
 		c.println("	je  .L.false.%d", cnt)
 		c.println("	mov $1, %%rax")
 		c.println("	jmp  .L.end.%d", cnt)
@@ -475,10 +486,10 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_LOGOR:
 		cnt := count()
 		c.genExpr(node.Lhs)
-		c.println("	cmp $0, %%rax")
+		c.cmpZero(node.Lhs.Ty)
 		c.println("	jne  .L.true.%d", cnt)
 		c.genExpr(node.Rhs)
-		c.println("	cmp $0, %%rax")
+		c.cmpZero(node.Rhs.Ty)
 		c.println("	jne  .L.true.%d", cnt)
 		c.println("	mov $0, %%rax")
 		c.println("	jmp  .L.end.%d", cnt)
@@ -699,7 +710,7 @@ func (c *codeWriter) genStmt(node *Node) {
 	case ND_IF:
 		cnt := count()
 		c.genExpr(node.Cond)
-		c.println("	cmp $0, %%rax")
+		c.cmpZero(node.Cond.Ty)
 		c.println("	je .L.else.%d", cnt)
 		c.genStmt(node.Then)
 		c.println("	jmp .L.end.%d", cnt)
@@ -717,7 +728,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.println(".L.begin.%d:", cnt)
 		if node.Cond != nil {
 			c.genExpr(node.Cond)
-			c.println("	cmp $0, %%rax")
+			c.cmpZero(node.Cond.Ty)
 			c.println("	je %s", node.BrkLabel)
 		}
 		c.genStmt(node.Then)
