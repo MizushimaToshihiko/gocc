@@ -875,6 +875,31 @@ func (c *codeWriter) emitData(prog *Obj) {
 	}
 }
 
+func (c *codeWriter) unreachable() {
+	if c.err == nil {
+		c.err = fmt.Errorf("internal error")
+	} else {
+		c.err = fmt.Errorf(c.err.Error() + "\ninternal error")
+	}
+}
+
+func (c *codeWriter) storeFp(r int, offset int, sz int) {
+	if c.err != nil {
+		return
+	}
+
+	switch sz {
+	case 4:
+		c.println("	movss %%xmm%d, %d(%%rbp)", r, offset)
+		return
+	case 8:
+		c.println("	movsd %%xmm%d, %d(%%rbp)", r, offset)
+		return
+	default:
+		c.unreachable()
+	}
+}
+
 func (c *codeWriter) storeGp(r, offset, sz int) {
 	if c.err != nil {
 		return
@@ -894,11 +919,7 @@ func (c *codeWriter) storeGp(r, offset, sz int) {
 		c.println("	mov %s, %d(%%rbp)", argreg64[r], offset)
 		return
 	default:
-		if c.err == nil {
-			c.err = fmt.Errorf("internal error")
-		} else {
-			c.err = fmt.Errorf(c.err.Error() + "\ninternal error")
-		}
+		c.unreachable()
 	}
 }
 
@@ -928,10 +949,16 @@ func (c *codeWriter) emitText(prog *Obj) {
 		c.println("	sub $%d, %%rsp", int(fn.StackSz))
 
 		// Push arguments to the stack
-		i := 0
+		gp := 0
+		fp := 0
 		for v := fn.Params; v != nil; v = v.Next {
-			c.storeGp(i, v.Offset, v.Ty.Sz)
-			i++
+			if isFlonum(v.Ty) {
+				c.storeFp(fp, v.Offset, v.Ty.Sz)
+				fp++
+			} else {
+				c.storeGp(gp, v.Offset, v.Ty.Sz)
+				gp++
+			}
 		}
 
 		// Emit code
