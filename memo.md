@@ -314,3 +314,25 @@ func main() {
 	fmt.Println(s)
 }
 ```
+
+2022/02/18 左辺ポインタのキャスト変換&書き込みの例[URL](https://go.dev/play/p/FlES6L9lUOU)
+```Go
+package main
+
+import (
+	"fmt"
+	"unsafe"
+)
+
+func main() {
+	var x [2]int64
+
+	var idx int = 1
+	*(*float32)(unsafe.Pointer(uintptr(unsafe.Pointer(&x[0])) + idx*unsafe.Sizeof(x[0]))) = 11
+	*(*float32)(unsafe.Pointer(&x[idx])) = 11 // ↑の短縮版
+	// *(*float32)(&x[idx]) = 11 => c言語風の書き方はできない
+	fmt.Printf("%d\n", x)
+	s = *(*int32)(unsafe.Pointer(&x))
+	fmt.Println(s)
+}
+```

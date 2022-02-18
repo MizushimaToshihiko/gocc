@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"unsafe"
 )
 
 // Scope for local variables, global variables or typedefs
@@ -50,7 +51,7 @@ type Obj struct {
 	IsStatic bool
 
 	// Global variables
-	InitData []rune
+	InitData []int64
 	Rel      *Relocation
 
 	// Function
@@ -430,7 +431,7 @@ func newAnonGvar(ty *Type) *Obj {
 	return newGvar(newUniqueName(), ty)
 }
 
-func newStringLiteral(p []rune, ty *Type) *Obj {
+func newStringLiteral(p []int64, ty *Type) *Obj {
 	printCalledFunc()
 
 	v := newAnonGvar(ty)
@@ -467,7 +468,7 @@ func pushTagScope(tok *Token, ty *Type) {
 	printCalledFunc()
 
 	sc := &TagScope{
-		Name: string(strNdUp(tok.Contents, tok.Len)),
+		Name: tok.Str,
 		Ty:   ty,
 		Next: scope.Tags,
 	}
@@ -1044,10 +1045,25 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	return newBinary(ND_COMMA, lhs, rhs, tok)
 }
 
+func writeBuf(buf unsafe.Pointer, val int64, sz int) {
+	switch sz {
+	case 1:
+		*(*uint8)(buf) = uint8(val)
+	case 2:
+		*(*uint16)(buf) = uint16(val)
+	case 4:
+		*(*uint32)(buf) = uint32(val)
+	case 8:
+		*(*uint64)(buf) = uint64(val)
+	default:
+		panic("writeBuf: internal error")
+	}
+}
+
 // integer又はscalarの場合Ty.Sz分だけゼロ埋めする
 //
 func writeGvarData(
-	cur *Relocation, init *Initializer, ty *Type, buf *[]rune,
+	cur *Relocation, init *Initializer, ty *Type, buf *int64,
 	offset int) *Relocation {
 	printCalledFunc()
 
@@ -1075,7 +1091,7 @@ func writeGvarData(
 	var val = eval2(init.Expr, &label)
 
 	if label == nil {
-		(*buf)[offset] = rune(val)
+		writeBuf(unsafe.Pointer(uintptr(unsafe.Pointer(buf))+uintptr(offset)), val, ty.Sz)
 		return cur
 	}
 
@@ -1094,8 +1110,8 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 	head := &Relocation{}
-	var buf []rune = make([]rune, v.Ty.Sz)
-	writeGvarData(head, init, v.Ty, &buf, 0)
+	var buf []int64 = make([]int64, v.Ty.Sz)
+	writeGvarData(head, init, v.Ty, &buf[0], 0)
 	v.InitData = buf
 	v.Rel = head.Next
 }
@@ -2397,7 +2413,7 @@ func primary(rest **Token, tok *Token) *Node {
 	}
 
 	if tok.Kind == TK_STR {
-		v := newStringLiteral(tok.Contents, tok.Ty)
+		v := newStringLiteral([]int64(tok.Contents), tok.Ty)
 		*rest = tok.Next
 		return newVarNode(v, tok)
 	}

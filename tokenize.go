@@ -41,8 +41,8 @@ type Token struct {
 	Str  string    // token string
 	Len  int       // length of token
 
-	Contents []rune // string literal contents including terminating '\0'
-	ContLen  int    // string literal length
+	Contents []int64 // string literal contents including terminating '\0'
+	ContLen  int     // string literal length
 
 	LineNo int // Line number
 }
@@ -111,8 +111,8 @@ func errorTok(tok *Token, formt string, ap ...interface{}) string {
 }
 
 // strNdUp function returns the []rune terminates with '\0'
-func strNdUp(b []rune, len int) []rune {
-	res := make([]rune, len)
+func strNdUp(b []int64, len int) []int64 {
+	res := make([]int64, len)
 	copy(res, b)
 	res = append(res, 0)
 	return res
@@ -495,6 +495,14 @@ func stringLiteralEnd(idx int) (int, error) {
 	return idx, nil
 }
 
+func mustToString(s []int64) string {
+	var ret string
+	for i := 0; i < len(s); i++ {
+		ret += string(s[i])
+	}
+	return ret
+}
+
 func readStringLiteral(start int, cur *Token) (*Token, error) {
 	var end int
 	var err error
@@ -504,7 +512,7 @@ func readStringLiteral(start int, cur *Token) (*Token, error) {
 		return nil, err
 	}
 
-	buf := make([]rune, 0, 1024)
+	buf := make([]int64, 0, 1024)
 	for idx = start + 1; idx < end; idx++ {
 
 		var c rune
@@ -514,15 +522,15 @@ func readStringLiteral(start int, cur *Token) (*Token, error) {
 				return nil, err
 			}
 
-			buf = append(buf, c)
+			buf = append(buf, int64(c))
 			continue
 		}
 
-		buf = append(buf, userInput[idx])
+		buf = append(buf, int64(userInput[idx]))
 	}
 	idx++
 
-	tok := newToken(TK_STR, cur, string(buf), end-start+1)
+	tok := newToken(TK_STR, cur, mustToString(buf), end-start+1)
 	tok.Contents = strNdUp(buf, len(buf))
 	tok.ContLen = len(buf) + 1
 	tok.Ty = arrayOf(ty_char, len(buf)+1)
