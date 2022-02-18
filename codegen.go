@@ -66,12 +66,12 @@ func (c *codeWriter) pushf() {
 	depth++
 }
 
-func (c *codeWriter) popf(arg string) {
+func (c *codeWriter) popf(reg int) {
 	if c.err != nil {
 		return
 	}
 
-	c.println("	movsd (%%rsp), %s", arg)
+	c.println("	movsd (%%rsp), %%xmm%d", reg)
 	c.println("	add $8, %%rsp")
 	depth--
 }
@@ -365,6 +365,23 @@ func (c *codeWriter) cast(from *Type, to *Type) {
 	}
 }
 
+func (c *codeWriter) pushArgs(args *Node) {
+	if c.err != nil {
+		return
+	}
+
+	if args != nil {
+		c.pushArgs(args.Next)
+
+		c.genExpr(args)
+		if isFlonum(args.Ty) {
+			c.pushf()
+		} else {
+			c.push()
+		}
+	}
+}
+
 func (c *codeWriter) genExpr(node *Node) {
 	if c.err != nil {
 		return
@@ -498,18 +515,19 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println(".L.end.%d:", cnt)
 		return
 	case ND_FUNCALL:
-		nargs := 0
+		c.pushArgs(node.Args)
+
+		gp := 0
+		fp := 0
 		for arg := node.Args; arg != nil; arg = arg.Next {
-			c.genExpr(arg)
-			c.push()
-			nargs++
+			if isFlonum(arg.Ty) {
+				c.popf(fp)
+				fp++
+			} else {
+				c.pop(argreg64[gp])
+				gp++
+			}
 		}
-
-		for i := nargs - 1; i >= 0; i-- {
-			c.pop(argreg64[i])
-		}
-
-		c.println("	mov $0, %%rax")
 
 		if depth%2 == 0 {
 			c.println("	call %s", node.FuncName)
@@ -548,7 +566,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.genExpr(node.Rhs)
 		c.pushf()
 		c.genExpr(node.Lhs)
-		c.popf("%xmm1")
+		c.popf(1)
 
 		var sz string
 		if node.Lhs.Ty.Kind == TY_FLOAT {

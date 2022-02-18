@@ -3,6 +3,9 @@ package test
 func assert(want int, act int, code string)
 func println(frmt ...string)
 
+func add_double(x float64, y float64) float64
+func add_float(x float32, y float32) float32
+
 func ret3() int {
 	return 3
 	return 5
@@ -133,6 +136,9 @@ func main() {
 	// assert(5, addAll(4, 1, 2, 3, -1), "addAll(4,1,2,3,-1)")
 	// printAll("1", "2", "3", "4")
 	// printAll("1", "2", "3", "4", "5", "6")
+
+	assert(6, int(add_float(2.3, 3.8)), "int(add_float(2.3, 3.8))")
+	assert(6, int(add_double(2.3, 3.8)), "int(add_double(2.3, 3.8))")
 
 	println("OK")
 }
