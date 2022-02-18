@@ -98,6 +98,9 @@ func add_double3(x float64, y float64, z float64) float64 {
 	return x + y + z
 }
 
+func sprintf(buf string, format ...string) string
+func strcmp(s1 string, s2 string) int
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
@@ -150,6 +153,10 @@ func main() {
 
 	assert(7, int(add_float3(2.5, 2.5, 2.5)), "int(add_float3(2.5, 2.5, 2.5))")
 	assert(7, int(add_double3(2.5, 2.5, 2.5)), "int(add_double3(2.5, 2.5, 2.5))")
+
+	var buf string
+	sprintf(buf, "%.1f", float32(3.5))
+	assert(0, strcmp(buf, "3.5"), "var buf string;sprintf(buf,\"%.1f\",float32(3.5));strcmp(buf,\"3.5\")")
 
 	println("OK")
 }

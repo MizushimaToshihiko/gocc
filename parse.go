@@ -2311,6 +2311,10 @@ func funcall(rest **Token, tok *Token) *Node {
 			}
 			arg = newCast(arg, paramTy)
 			paramTy = paramTy.Next
+		} else if arg.Ty.Kind == TY_FLOAT {
+			// If parameter type is omitted (e.g. in "..."), float
+			// arguments are promoted to double.
+			arg = newCast(arg, ty_double)
 		}
 
 		cur.Next = arg
