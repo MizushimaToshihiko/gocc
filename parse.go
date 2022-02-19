@@ -1063,7 +1063,7 @@ func writeBuf(buf unsafe.Pointer, val int64, sz int) {
 // integer又はscalarの場合Ty.Sz分だけゼロ埋めする
 //
 func writeGvarData(
-	cur *Relocation, init *Initializer, ty *Type, buf *int64,
+	cur *Relocation, init *Initializer, ty *Type, buf *[]int64,
 	offset int) *Relocation {
 	printCalledFunc()
 
@@ -1091,7 +1091,7 @@ func writeGvarData(
 	var val = eval2(init.Expr, &label)
 
 	if label == nil {
-		writeBuf(unsafe.Pointer(uintptr(unsafe.Pointer(buf))+uintptr(offset)), val, ty.Sz)
+		writeBuf(unsafe.Pointer(&((*buf)[offset])), val, ty.Sz)
 		return cur
 	}
 
@@ -1111,7 +1111,8 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 	head := &Relocation{}
 	var buf []int64 = make([]int64, v.Ty.Sz)
-	writeGvarData(head, init, v.Ty, &buf[0], 0)
+	writeGvarData(head, init, v.Ty, &buf, 0)
+	fmt.Printf("buf: %#v\n\n", buf)
 	v.InitData = buf
 	v.Rel = head.Next
 }

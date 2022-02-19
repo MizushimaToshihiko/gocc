@@ -25,7 +25,7 @@ func println(format string)
 
 // var g24 int = 3
 // var g25 *int = &g24
-var g26 [3]int = [3]int{1, 2, 3}
+// var g26 [3]int = [3]int{1, 2, 3}
 
 // var g27 *int = g26 + 1
 // var g28 *int = &g11[1].a
