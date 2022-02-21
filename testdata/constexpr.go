@@ -1,7 +1,10 @@
 package test
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
+
+var g40 float32 = 1.5
+var g41 float64 = 1 + 1*5.0/2*float64(2)*int(2.0)
 
 func main() {
 	var i int = 0
@@ -62,7 +65,7 @@ func main() {
 	assert(15, Sizeof(x24), "var x24 [byte(0xffffff0f)]byte; Sizeof(x24)")
 	var x25 [int16(0xffff010f)]byte
 	assert(0x10f, Sizeof(x25), "var x25 [int16(0xffff010f)]byte; Sizeof(x25)")
-	
+
 	// error occures
 	// var x26 [int(0xfffffffffff)+5]byte
 	// assert(4, Sizeof(x26), "var x26 [int(0xfffffffffff)+5]byte; Sizeof(x26)");
@@ -74,21 +77,24 @@ func main() {
 	// assert(3, ({ char x[(int*)16-(int*)4]; Sizeof(x); }));
 
 	var x26 [(-1>>31)+5]int8
-  assert(4, Sizeof(x26), "var x26 [(-1>>31)+5]int8; Sizeof(x26)");
+	assert(4, Sizeof(x26), "var x26 [(-1>>31)+5]int8; Sizeof(x26)");
 	var x27 [uint8(0xffffffff)]int8
-  assert(255, Sizeof(x27), "var x27 [uint8(0xffffffff)]int8; Sizeof(x27)");
-  var x28 [uint16(0xffff800f)]int8
+	assert(255, Sizeof(x27), "var x27 [uint8(0xffffffff)]int8; Sizeof(x27)");
+	var x28 [uint16(0xffff800f)]int8
 	assert(0x800f, Sizeof(x28), "var x28 [uint16(0xffff800f)]int8; Sizeof(x28)");
-  var x29 [uint(0xfffffffffff)>>31]int8
+	var x29 [uint(0xfffffffffff)>>31]int8
 	assert(1, Sizeof(x29), "var x29 [uint(0xfffffffffff>>31)]int8; Sizeof(x29)");
 	var x30 [int64(-1)/(int64(1)<<62)+1]int8
-  assert(1, Sizeof(x30), "var x30 [int64(-1)/int64(1)]int8; Sizeof(x30)");
+	assert(1, Sizeof(x30), "var x30 [int64(-1)/int64(1)]int8; Sizeof(x30)");
 	// var x31 [uint64(-1)/(int64(1)<<62)+1]int8
-  // assert(4, Sizeof(x31), "var x31 [uint64(-1)/(int64(1)<<62)+1]int8; Sizeof(x31)");
-  var x32 [uint(1)<-1]int8
+	// assert(4, Sizeof(x31), "var x31 [uint64(-1)/(int64(1)<<62)+1]int8; Sizeof(x31)");
+	var x32 [uint(1)<-1]int8
 	assert(1, Sizeof(x32), "var x32 [uint(1)<-1]int8; Sizeof(x32)");
 	var x33 [uint(1)<=-1]int8
-  assert(1, Sizeof(x33), "var x33 [uint(1)<=-1]int8; Sizeof(x33)");
+	assert(1, Sizeof(x33), "var x33 [uint(1)<=-1]int8; Sizeof(x33)");
+
+	assert(1, g40 == 1.5, "g40==1.5")
+	assert(1, g41 == 11, "g41==11")
 
 	println("OK")
 }
