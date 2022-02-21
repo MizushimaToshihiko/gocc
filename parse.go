@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"unsafe"
 )
 
@@ -1060,6 +1061,39 @@ func writeBuf(buf unsafe.Pointer, val int64, sz int) {
 	}
 }
 
+// divFloat32: floatの内部表現を分割する
+// 例：1.5
+// => 00111111 11000000 00000000 00000000 2進数にする
+// => 00000000 00000000 11000000 00111111 リトルエンディアン
+// => 0, 0, 192, 63 それぞれintにする
+func divFloat32(target int32) []int64 {
+	t := fmt.Sprintf("%032b", target)
+	ret := make([]int64, 0, 1024)
+	for i := len(t) - 8; i >= 0; i -= 8 {
+		s := t[i : i+8]
+		num, err := strconv.ParseInt(s, 2, 64)
+		if err != nil {
+			panic(err)
+		}
+		ret = append(ret, num)
+	}
+	return ret
+}
+
+func divFloat64(target int64) []int64 {
+	t := fmt.Sprintf("%064b", target)
+	ret := make([]int64, 0, 1024)
+	for i := len(t) - 8; i >= 0; i -= 8 {
+		s := t[i : i+8]
+		num, err := strconv.ParseInt(s, 2, 64)
+		if err != nil {
+			panic(err)
+		}
+		ret = append(ret, num)
+	}
+	return ret
+}
+
 // integer又はscalarの場合Ty.Sz分だけゼロ埋めする
 //
 func writeGvarData(
@@ -1084,6 +1118,26 @@ func writeGvarData(
 	}
 
 	if init.Expr == nil {
+		return cur
+	}
+
+	if ty.Kind == TY_FLOAT {
+		fval := float32(evalDouble(init.Expr))
+		// float32(evalDouble(init.Expr))の内部表現(2進数で取得される)をintとして読んだものを取得し
+		// 分割してスライスにしてdiviedに保存
+		dived := divFloat32(*(*int32)(unsafe.Pointer(&fval)))
+		for i := offset; i < offset+ty.Sz; i++ {
+			(*buf)[i] = dived[i]
+		}
+		return cur
+	}
+
+	if ty.Kind == TY_DOUBLE {
+		fval := evalDouble(init.Expr)
+		dived := divFloat64(*(*int64)(unsafe.Pointer(&fval)))
+		for i := offset; i < offset+ty.Sz; i++ {
+			(*buf)[i] = dived[i]
+		}
 		return cur
 	}
 
@@ -1112,7 +1166,6 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	head := &Relocation{}
 	var buf []int64 = make([]int64, v.Ty.Sz)
 	writeGvarData(head, init, v.Ty, &buf, 0)
-	fmt.Printf("buf: %#v\n\n", buf)
 	v.InitData = buf
 	v.Rel = head.Next
 }
@@ -1541,6 +1594,11 @@ func eval2(node *Node, label **string) int64 {
 
 	addType(node)
 
+	if isFlonum(node.Ty) {
+		fval := evalDouble(node)
+		return int64(fval)
+	}
+
 	switch node.Kind {
 	case ND_ADD:
 		return eval2(node.Lhs, label) + eval(node.Rhs)
@@ -1550,7 +1608,7 @@ func eval2(node *Node, label **string) int64 {
 		return eval(node.Lhs) * eval(node.Rhs)
 	case ND_DIV:
 		if node.Ty.IsUnsigned {
-			return int64(uint64(eval(node.Lhs))) % eval(node.Rhs)
+			return int64(uint64(eval(node.Lhs))) / eval(node.Rhs)
 		}
 		return eval(node.Lhs) / eval(node.Rhs)
 	case ND_NEG:
@@ -1695,6 +1753,46 @@ func constExpr(rest **Token, tok *Token) int64 {
 	printCalledFunc()
 
 	return eval(logor(rest, tok))
+}
+
+func evalDouble(node *Node) float64 {
+	addType(node)
+
+	if isInteger(node.Ty) {
+		if node.Ty.IsUnsigned {
+			return float64(uint64(eval(node)))
+		}
+		return float64(eval(node))
+	}
+
+	switch node.Kind {
+	case ND_ADD:
+		return evalDouble(node.Lhs) + evalDouble(node.Rhs)
+	case ND_SUB:
+		return evalDouble(node.Lhs) - evalDouble(node.Rhs)
+	case ND_MUL:
+		return evalDouble(node.Lhs) * evalDouble(node.Rhs)
+	case ND_DIV:
+		return evalDouble(node.Lhs) / evalDouble(node.Rhs)
+	case ND_NEG:
+		return -evalDouble(node.Lhs)
+	case ND_COND:
+		if evalDouble(node.Cond) != 0 {
+			return evalDouble(node.Then)
+		}
+		return evalDouble(node.Els)
+	case ND_COMMA:
+		return evalDouble(node.Rhs)
+	case ND_CAST:
+		if isFlonum(node.Lhs.Ty) {
+			return evalDouble(node.Lhs)
+		}
+		return float64(eval(node.Lhs))
+	case ND_NUM:
+		return node.FVal
+	default:
+		panic("\n" + errorTok(node.Tok, "not a complie-time constant"))
+	}
 }
 
 // Convert `A op= B` to `*tmp = *tmp op B`

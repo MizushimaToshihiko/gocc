@@ -6,7 +6,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
 	"unsafe"
 )
 
@@ -108,15 +107,8 @@ func (c *codeWriter) genAddr(node *Node) {
 		c.println("	add $%d, %%rax", node.Mem.Offset)
 		return
 	default:
-		fmt.Fprintf(os.Stderr, "\nnode: %#v\n\n", node)
-		fmt.Fprintf(os.Stderr, "node.Lhs: %#v\n\n", node.Lhs)
-		if c.err == nil {
-			c.err = fmt.Errorf(errorTok(node.Tok, "not an lvalue"))
-		} else {
-			c.err = fmt.Errorf(c.err.Error() + "\n" + errorTok(node.Tok, "not an lvalue"))
-		}
+		c.unreachable(errorTok(node.Tok, "not a lvalue"))
 	}
-
 }
 
 func (c *codeWriter) load(ty *Type) {
@@ -162,11 +154,7 @@ func (c *codeWriter) load(ty *Type) {
 	case 8:
 		c.println("	mov (%%rax), %%rax")
 	default:
-		if c.err == nil {
-			c.err = fmt.Errorf("invalid size")
-		} else {
-			c.err = fmt.Errorf(c.err.Error() + "\ninvalid size")
-		}
+		c.unreachable("invalid size")
 		return
 	}
 }
@@ -203,11 +191,7 @@ func (c *codeWriter) store(ty *Type) {
 	case 8:
 		c.println("	mov %%rax, (%%rdi)")
 	default:
-		if c.err == nil {
-			c.err = fmt.Errorf("invalid size")
-		} else {
-			c.err = fmt.Errorf(c.err.Error() + "\ninvalid size")
-		}
+		c.unreachable("invalid size")
 	}
 }
 
@@ -300,7 +284,8 @@ const (
 	i64f64 string = "cvtsi2sdq %rax, %xmm0"
 
 	u64f32 string = "cvtsi2ssq %rax, %xmm0"
-	u64f64 string = "test %rax,%rax; js 1f; pxor %xmm0,%xmm0; cvtsi2sd %rax,%xmm0; jmp 2f; " +
+	u64f64 string = "" +
+		"test %rax,%rax; js 1f; pxor %xmm0,%xmm0; cvtsi2sd %rax,%xmm0; jmp 2f; " +
 		"1: mov %rax,%rdi; and $1,%eax; pxor %xmm0,%xmm0; shr %rdi; " +
 		"or %rax,%rdi; cvtsi2sd %rdi,%xmm0; addsd %xmm0,%xmm0; 2:"
 
@@ -610,11 +595,7 @@ func (c *codeWriter) genExpr(node *Node) {
 			c.println("	movzb %%al, %%rax")
 			return
 		default:
-			if c.err == nil {
-				c.err = fmt.Errorf("invalid expression")
-			} else {
-				c.err = fmt.Errorf(c.err.Error() + "\ninvalid expression")
-			}
+			c.unreachable(errorTok(node.Tok, "invalid expression"))
 			return
 		}
 	}
@@ -629,7 +610,7 @@ func (c *codeWriter) genExpr(node *Node) {
 	if node.Lhs.Ty.Kind == TY_LONG || node.Lhs.Ty.Base != nil {
 		ax = "%rax"
 		di = "%rdi"
-		dx = "%rdi"
+		dx = "%rdx"
 	} else {
 		ax = "%eax"
 		di = "%edi"
@@ -710,11 +691,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	}
 
-	if c.err == nil {
-		c.err = fmt.Errorf("invalid expression")
-	} else {
-		c.err = fmt.Errorf(c.err.Error() + "\ninvalid expression")
-	}
+	c.unreachable("invalid expression")
 }
 
 func (c *codeWriter) genStmt(node *Node) {
@@ -808,11 +785,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.genExpr(node.Lhs)
 		return
 	}
-	if c.err == nil {
-		c.err = fmt.Errorf(errorTok(node.Tok, "invalid statement"))
-	} else {
-		c.err = fmt.Errorf(c.err.Error() + "\n" + errorTok(node.Tok, "invalid statement"))
-	}
+	c.unreachable(errorTok(node.Tok, "invalid statement"))
 }
 
 // Assign offsets to local variables
@@ -875,11 +848,11 @@ func (c *codeWriter) emitData(prog *Obj) {
 	}
 }
 
-func (c *codeWriter) unreachable() {
+func (c *codeWriter) unreachable(s string) {
 	if c.err == nil {
-		c.err = fmt.Errorf("internal error")
+		c.err = fmt.Errorf("%s", s)
 	} else {
-		c.err = fmt.Errorf(c.err.Error() + "\ninternal error")
+		c.err = fmt.Errorf(c.err.Error()+"\n%s", s)
 	}
 }
 
@@ -896,7 +869,7 @@ func (c *codeWriter) storeFp(r int, offset int, sz int) {
 		c.println("	movsd %%xmm%d, %d(%%rbp)", r, offset)
 		return
 	default:
-		c.unreachable()
+		c.unreachable("internal error")
 	}
 }
 
@@ -919,7 +892,7 @@ func (c *codeWriter) storeGp(r, offset, sz int) {
 		c.println("	mov %s, %d(%%rbp)", argreg64[r], offset)
 		return
 	default:
-		c.unreachable()
+		c.unreachable("internal error")
 	}
 }
 
@@ -964,11 +937,7 @@ func (c *codeWriter) emitText(prog *Obj) {
 		// Emit code
 		c.genStmt(fn.Body)
 		if depth != 0 {
-			if c.err == nil {
-				c.err = fmt.Errorf("expected depth is 0, but %d", depth)
-			} else {
-				c.err = fmt.Errorf(c.err.Error()+"\nexpected depth is 0, but %d", depth)
-			}
+			c.unreachable(fmt.Sprintf("expected depth is 0, but %d", depth))
 			return
 		}
 
