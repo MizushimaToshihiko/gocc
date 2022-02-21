@@ -1123,7 +1123,7 @@ func writeGvarData(
 
 	if ty.Kind == TY_FLOAT {
 		fval := float32(evalDouble(init.Expr))
-		// float32(evalDouble(init.Expr))の内部表現(2進数で取得される)をintとして読んだものを取得し
+		// float32(evalDouble(init.Expr))の内部表現(2進数で取得)をintとして読んだものを取得し
 		// 分割してスライスにしてdiviedに保存
 		dived := divFloat32(*(*int32)(unsafe.Pointer(&fval)))
 		for i := offset; i < offset+ty.Sz; i++ {

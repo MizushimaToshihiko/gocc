@@ -1,6 +1,7 @@
 
 ### メモ
 #### 【後回し】※順不同
+ - [Add stage2 build](https://github.com/rui314/chibicc/commit/5d15431df1abab3a5cf596fabe0a77c030a10791)
  - バッククオート
  - parseの順番を変える
    現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化)
