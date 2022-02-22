@@ -80,5 +80,7 @@ func main() {
 	assert(8, Sizeof(5.), "Sizeof(5.)")
 	assert(8, Sizeof(2.0), "Sizeof(2.0)")
 
+	// assert(8, Sizeof("あいうえお"), "Sizeof(\"あいうえお\")")
+
 	println("OK")
 }
