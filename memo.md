@@ -3,46 +3,45 @@
 #### 【後回し】※順不同
  - [Add stage2 build](https://github.com/rui314/chibicc/commit/5d15431df1abab3a5cf596fabe0a77c030a10791)
  - バッククオート
- - parseの順番を変える
-   現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化)
- - RangeClause  
-   "for x := range X"みたいなもの
- - const宣言
- - 文字列の足し算
- - *(*type-name)(unary)
  - (*var-name)[n]
  - map型
- - slice
- - Add flexible array member  
-   => とりあえず今のところはsiliceを長さ0の配列としている。後でsliceを定義してparse出来るようにする
  - 配列の宣言で"[...]int{1,2,3}"みたいなもの(slice追加後)
  - 関数戻り値の型チェック(type checking)
  - goroutine
- - package
- - import
- - built-in functions
-    - new
-    - make
-    - len
-    - println
-    - cap
-    - append(slice)
-    - copy(slice)
-    - panic
-    - recover
  - switch ident.(type) {
- - case case1,case2:
- - blank identifiers : "_"
- - bool型でtrueやfalseを使用できるように
- - float
  - complex(複素数)
- - rune(int32のエイリアス)
- - rune literal => tokenizerのchar literalを変更する?
- - method set(メソッド集合)
- - 構造体埋め込みでメソッド集合も埋め込む
- - interface
  - クロージャ
  - gc
+ - セルフホストに必要と思われるもの
+   - method set(メソッド集合)
+   - interface
+   - package
+   - import
+   - slice
+   - rune(int32のエイリアス)
+   - rune literal => tokenizerのchar literalを変更する?
+   - case case1,case2:
+   - blank identifiers : "_"
+   - bool型でtrueやfalseを使用できるように
+   - 構造体埋め込みでメソッド集合も埋め込む
+   - built-in functions
+      - new
+      - make
+      - len(slice)
+      - cap(slice)
+      - append(slice)
+      - copy(slice)
+      - println
+      - panic
+      - recover
+   - parseの順番を変える  
+     現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化)
+   - RangeClause  
+     "for x := range X"みたいなもの
+   - const宣言
+   - 文字列の足し算
+   - *(*type-name)(unary)
+   - 値を二つ以上返す関数
  
 
 #### 【VarSpecの追加について】
