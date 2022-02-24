@@ -19,8 +19,8 @@ build: $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
 testdata/%.exe: testdata/%.go
-	$(BINARY_NAME) -o testdata/$*.s $^
-	$(CC) -static -o $@ testdata/$*.s -xc testdata/common
+	$(BINARY_NAME) -o $(^D)/$*.s $^
+	$(CC) -static -o $@ $(^D)/$*.s -xc $(^D)/common
 
 test: $(TESTS)
 	for i in $^; do echo $$i; ./$$i || exit 1; echo; done
