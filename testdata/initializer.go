@@ -364,6 +364,37 @@ func main() {
 	assert(3, a[2], "var a [3]int=[3]int{1,2,3,}; a[2]");
 	var x19 struct {a int;b int;c int;}={1,2,3,};
 	assert(1, x19.a, "var x19 struct {a int;b int;c int;}={1,2,3,}; x19.a");
+	
+	type T20 struct { a int; b int; }; var x20 = T20{b:3,a:4};
+  assert(4, x.a, "type T20 struct { a int; b int; }; var x20 =T20{1,2,b:3,a:4}; x.a;");
+  // assert(3, ({ struct { int a,b; } x={1,2,.b=3,.a=4}; x.b; }));
+
+  // assert(1, ({ struct { struct { int a,b; } c; } x={.c=1,2}; x.c.a; }));
+  // assert(2, ({ struct { struct { int a,b; } c; } x={.c=1,2}; x.c.b; }));
+
+  // assert(0, ({ struct { struct { int a,b; } c; } x={.c.b=1}; x.c.a; }));
+  // assert(1, ({ struct { struct { int a,b; } c; } x={.c.b=1}; x.c.b; }));
+
+  // assert(1, ({ struct { int a[2]; } x={.a=1,2}; x.a[0]; }));
+  // assert(2, ({ struct { int a[2]; } x={.a=1,2}; x.a[1]; }));
+
+  // assert(0, ({ struct { int a[2]; } x={.a[1]=1}; x.a[0]; }));
+  // assert(1, ({ struct { int a[2]; } x={.a[1]=1}; x.a[1]; }));
+
+  // assert(3, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].a; }));
+  // assert(4, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].b; }));
+  // assert(0, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[1].a; }));
+  // assert(1, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[1].b; }));
+  // assert(2, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[2].a; }));
+  // assert(0, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[2].b; }));
+
+  // assert(1, ({ typedef struct { int a,b; } T; T x={1,2}; T y[]={x}; y[0].a; }));
+  // assert(2, ({ typedef struct { int a,b; } T; T x={1,2}; T y[]={x}; y[0].b; }));
+  // assert(0, ({ typedef struct { int a,b; } T; T x={1,2}; T y[]={x, [0].b=3}; y[0].a; }));
+  // assert(3, ({ typedef struct { int a,b; } T; T x={1,2}; T y[]={x, [0].b=3}; y[0].b; }));
+
+  // assert(5, ((struct { int a,b,c; }){ .c=5 }).c);
+  // assert(0, ((struct { int a,b,c; }){ .c=5 }).a);
 
 	println("OK")
 }

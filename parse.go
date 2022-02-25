@@ -743,6 +743,35 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 	*rest = tok.Next
 }
 
+// struct-designator = ident ":"
+func structDesignator(rest **Token, tok *Token, ty *Type) *Member {
+	printCurTok(tok)
+	printCalledFunc()
+
+	for mem := ty.Mems; mem != nil; mem = mem.Next {
+		if mem.Name.Len == tok.Len && mem.Name.Str == tok.Str {
+			tok = skip(tok, ":")
+			*rest = tok.Next
+			return mem
+		}
+	}
+
+	panic("\n" + errorTok(tok, "struct has no such member"))
+}
+
+// designation = struct-designator initializer
+func designation(rest **Token, tok *Token, init *Initializer) {
+	printCurTok(tok)
+	printCalledFunc()
+
+	mem := structDesignator(&tok, tok, init.Ty)
+	designation(&tok, tok, init.Children[mem.Idx])
+	init.Expr = nil
+	structInitializer2(rest, tok, init, mem.Next)
+
+	initializer2(rest, tok, init)
+}
+
 // array-initializer = (type-preffix)? decl-spec "{" initializer ("," initializer)* ","? "}"
 func arrayInitializer(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
@@ -785,10 +814,19 @@ func structInitializer(rest **Token, tok *Token, init *Initializer) {
 	tok = skip(tok, "{")
 
 	mem := init.Ty.Mems
+	first := true
 
 	for !consumeEnd(rest, tok) {
-		if mem != init.Ty.Mems {
+		if !first {
 			tok = skip(tok, ",")
+		}
+		first = false
+
+		if tok.Kind == TK_IDENT && equal(tok, ":") {
+			mem = structDesignator(&tok, tok, init.Ty)
+			designation(&tok, tok, init.Children[mem.Idx])
+			mem = mem.Next
+			continue
 		}
 
 		if mem != nil {
@@ -801,17 +839,25 @@ func structInitializer(rest **Token, tok *Token, init *Initializer) {
 }
 
 // struct-initializer2 = initializer ("," initializer)*
-func structInitializer2(rest **Token, tok *Token, init *Initializer) {
+func structInitializer2(rest **Token, tok *Token, init *Initializer, mem *Member) {
 	printCurTok(tok)
 	printCalledFunc()
 
 	first := true
 
-	for mem := init.Ty.Mems; mem != nil && !isEnd(tok); mem = mem.Next {
+	for ; mem != nil && !isEnd(tok); mem = mem.Next {
+		start := tok
+
 		if !first {
 			tok = skip(tok, ",")
 		}
 		first = false
+
+		if tok.Kind == TK_IDENT && equal(tok, ":") {
+			*rest = start
+			return
+		}
+
 		initializer2(&tok, tok, init.Children[mem.Idx])
 	}
 	*rest = tok
@@ -863,7 +909,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			return
 		}
 
-		structInitializer2(rest, tok, init)
+		structInitializer2(rest, tok, init, init.Ty.Mems)
 		return
 	}
 
@@ -2229,7 +2275,7 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 
 			memTy := declarator(&tok, tok)
 			mem := &Member{
-				Name:  getIdent(memTy.Name),
+				Name:  memTy.Name,
 				Ty:    memTy,
 				Idx:   idx,
 				Align: memTy.Align,
@@ -2289,7 +2335,7 @@ func getStructMember(ty *Type, tok *Token) *Member {
 	}
 
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
-		if mem.Name == tok.Str {
+		if mem.Name.Str == tok.Str {
 			return mem
 		}
 	}
