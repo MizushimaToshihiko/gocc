@@ -744,6 +744,13 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 }
 
 // struct-designator = ident ":"
+//
+// Use `fieldname :` to move the cursor for a struct initializer. E.g.
+//
+//   type T struct { a int; b int; c int; };
+//   var x T = T{c: 5};
+//
+// The above initializer sets x.c to 5.
 func structDesignator(rest **Token, tok *Token, ty *Type) *Member {
 	printCurTok(tok)
 	printCalledFunc()
