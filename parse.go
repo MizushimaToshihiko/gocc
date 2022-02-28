@@ -757,8 +757,8 @@ func structDesignator(rest **Token, tok *Token, ty *Type) *Member {
 
 	for mem := ty.Mems; mem != nil; mem = mem.Next {
 		if mem.Name.Len == tok.Len && mem.Name.Str == tok.Str {
-			tok = skip(tok, ":")
-			*rest = tok.Next
+			tok = skip(tok.Next, ":")
+			*rest = tok
 			return mem
 		}
 	}
@@ -829,7 +829,9 @@ func structInitializer(rest **Token, tok *Token, init *Initializer) {
 		}
 		first = false
 
-		if tok.Kind == TK_IDENT && equal(tok, ":") {
+		fmt.Printf("tok: %#v\n\n", tok)
+		if tok.Kind == TK_IDENT && equal(tok.Next, ":") {
+			fmt.Println("ここ")
 			mem = structDesignator(&tok, tok, init.Ty)
 			designation(&tok, tok, init.Children[mem.Idx])
 			mem = mem.Next
