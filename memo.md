@@ -42,6 +42,15 @@
    - 文字列の足し算
    - *(*type-name)(unary)
    - 値を二つ以上返す関数
+     - parase.goの変更
+       - Type構造体のRetTyを連結リストにしてNextで繋げる
+         - function関数のRetTy登録時に"("が出てきたら.Nextで繋げて登録、出てこなかったら一つだけ
+       - assign関数で二つ以上代入できるようにする
+     - type.goの変更
+       - Type構造体のRetTyをそのまま使う
+     - codegenの変更
+       - 連結リストにしたRetTyをfor文でreturn valueを汎用レジスタに入れる
+    
  
 
 #### 【VarSpecの追加について】
