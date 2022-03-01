@@ -389,9 +389,11 @@ func main() {
   assert(1, x23.a[0], "var x23 = struct{ a [2]int;}{a: [2]int{1, 2}};x23.a[0]");
   assert(2, x23.a[1], "var x23 = struct{ a [2]int;}{a: [2]int{1, 2}};x23.a[1]");
 
-  // assert(0, ({ struct { int a[2]; } x={.a[1]=1}; x.a[0]; }));
-  // assert(1, ({ struct { int a[2]; } x={.a[1]=1}; x.a[1]; }));
+	var x24 = struct{ a [2]int }{a: [2]int{1}}
+  assert(1, x24.a[0], "var x24 = struct{ a [2]int }{a: [2]int{1}};x24.a[0]");
+  assert(0, x24.a[1], "var x24 = struct{ a [2]int }{a: [2]int{1}};x24.a[1]");
 
+	// 以下後回し案件
   // assert(3, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].a; }));
   // assert(4, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].b; }));
   // assert(0, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[1].a; }));
