@@ -1,4 +1,4 @@
-package test
+package test_constexpr
 
 func assert(want int, act int, code string)
 func println(format ...string)
