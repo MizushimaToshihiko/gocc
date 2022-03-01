@@ -58,6 +58,9 @@ func TestIsTypename(t *testing.T) {
 		"case 2": {"string", true},
 		"case 3": {"[2]int", true},
 		"case 4": {"[2][2]int", true},
+		"case 5": {"[int]", false},
+		"case 6": {"[[[[1]int", true},
+		"case 7": {"[[[[1int", false},
 	}
 
 	for name, c := range cases {

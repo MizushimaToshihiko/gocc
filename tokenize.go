@@ -498,7 +498,7 @@ func stringLiteralEnd(idx int) (int, error) {
 func mustToString(s []int64) string {
 	var ret string
 	for i := 0; i < len(s); i++ {
-		ret += string(s[i])
+		ret += string(rune(s[i]))
 	}
 	return ret
 }
