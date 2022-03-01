@@ -59,7 +59,7 @@ type Member struct {
 	Next   *Member
 	Ty     *Type
 	Tok    *Token // for error message
-	Name   string
+	Name   *Token
 	Idx    int
 	Align  int
 	Offset int
