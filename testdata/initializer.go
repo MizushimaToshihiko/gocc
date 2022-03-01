@@ -366,17 +366,28 @@ func main() {
 	assert(1, x19.a, "var x19 struct {a int;b int;c int;}={1,2,3,}; x19.a");
 	
 	type T20 struct { a int; b int; }; var x20 = T20{b:3,a:4};
-  assert(4, x.a, "type T20 struct { a int; b int; }; var x20 =T20{1,2,b:3,a:4}; x.a;");
-  // assert(3, ({ struct { int a,b; } x={1,2,.b=3,.a=4}; x.b; }));
+  assert(4, x20.a, "type T20 struct { a int; b int; }; var x20 =T20{1,2,b:3,a:4}; x20.a;");
+  assert(3, x20.b, "type T20 struct { a int; b int; }; var x20 =T20{1,2,b:3,a:4}; x20.b;");
 
-  // assert(1, ({ struct { struct { int a,b; } c; } x={.c=1,2}; x.c.a; }));
-  // assert(2, ({ struct { struct { int a,b; } c; } x={.c=1,2}; x.c.b; }));
+	var x020 = struct { a int; b int; }{b:3,a:4};
+  assert(4, x020.a, "var x020 = struct { a int; b int; }{b:3,a:4}; x020.a;");
+  assert(3, x020.b, "var x020 = struct { a int; b int; }{b:3,a:4}; x020.b;");
 
-  // assert(0, ({ struct { struct { int a,b; } c; } x={.c.b=1}; x.c.a; }));
-  // assert(1, ({ struct { struct { int a,b; } c; } x={.c.b=1}; x.c.b; }));
+	type T21 struct { c struct{ a int; b int; }; }; var x21 = T21{c: struct {a int;b int;}{a: 1, b: 2}};
+  assert(1, x21.c.a, "type T21 struct { c struct{ a int; b int; }; }; var x21 =  T21{c: struct {a int;b int;}{a: 1, b: 2}};x21.c.a");
+  assert(2, x21.c.b, "type T21 struct { c struct{ a int; b int; }; }; var x21 =  T21{c: struct {a int;b int;}{a: 1, b: 2}};x21.c.b");
 
-  // assert(1, ({ struct { int a[2]; } x={.a=1,2}; x.a[0]; }));
-  // assert(2, ({ struct { int a[2]; } x={.a=1,2}; x.a[1]; }));
+	type T21 struct { c struct{ a int; b int; }; }; var x21 = &T21{c: struct {a int;b int;}{a: 1, b: 2}};
+  assert(1, x21.c.a, "type T21 struct { c struct{ a int; b int; }; }; var x21 = &T21{c: struct {a int;b int;}{a:1,b:2}};x21.c.a");
+  assert(2, x21.c.b, "type T21 struct { c struct{ a int; b int; }; }; var x21 = &T21{c: struct {a int;b int;}{a:1,b:2}};x21.c.b");
+
+	var x22 = T21{c: struct {a int;b int;}{b:1},};
+  assert(0, x22.c.a, "var x22 = T21{c: struct {a int;b int;}{b:1}};x22.c.a");
+  assert(1, x22.c.b, "var x22 = T21{c: struct {a int;b int;}{b:1}};x22.c.b");
+
+	var x23 = struct{ a [2]int;}{a: [2]int{1, 2}}
+  assert(1, x23.a[0], "var x23 = struct{ a [2]int;}{a: [2]int{1, 2}};x23.a[0]");
+  assert(2, x23.a[1], "var x23 = struct{ a [2]int;}{a: [2]int{1, 2}};x23.a[1]");
 
   // assert(0, ({ struct { int a[2]; } x={.a[1]=1}; x.a[0]; }));
   // assert(1, ({ struct { int a[2]; } x={.a[1]=1}; x.a[1]; }));

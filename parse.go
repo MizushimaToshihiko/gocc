@@ -771,10 +771,12 @@ func designation(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
 
-	mem := structDesignator(&tok, tok, init.Ty)
-	designation(&tok, tok, init.Children[mem.Idx])
-	init.Expr = nil
-	structInitializer2(rest, tok, init, mem.Next)
+	if tok.Kind == TK_IDENT && equal(tok.Next, ":") {
+		mem := structDesignator(&tok, tok, init.Ty)
+		designation(&tok, tok, init.Children[mem.Idx])
+		init.Expr = nil
+		structInitializer2(rest, tok, init, mem.Next)
+	}
 
 	initializer2(rest, tok, init)
 }
@@ -829,9 +831,7 @@ func structInitializer(rest **Token, tok *Token, init *Initializer) {
 		}
 		first = false
 
-		fmt.Printf("tok: %#v\n\n", tok)
 		if tok.Kind == TK_IDENT && equal(tok.Next, ":") {
-			fmt.Println("ここ")
 			mem = structDesignator(&tok, tok, init.Ty)
 			designation(&tok, tok, init.Children[mem.Idx])
 			mem = mem.Next
