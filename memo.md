@@ -5,7 +5,7 @@
  - バッククオート
  - (*var-name)[n]
  - map型
- - 配列の宣言で"[...]int{1,2,3}"みたいなもの(slice追加後)
+ - 配列の宣言で"[...]int{1,2,3}"みたいなもの
  - 関数戻り値の型チェック(type checking)
  - goroutine
  - switch ident.(type) {
