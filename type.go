@@ -52,6 +52,10 @@ type Type struct {
 	IsVariadic bool
 	Next       *Type
 
+	// slice
+	Len int
+	Cap int
+
 	Init *Initializer
 }
 
@@ -165,6 +169,17 @@ func arrayOf(base *Type, len int) *Type {
 
 func structType() *Type {
 	return newType(TY_STRUCT, 0, 1, "struct", false)
+}
+
+func sliceType(base *Type, len int, cap int) *Type {
+	return &Type{
+		Kind:   TY_PTR,
+		Sz:     base.Sz * len,
+		Align:  base.Align,
+		Base:   base,
+		ArrSz:  len,
+		TyName: "[]" + base.Base.TyName,
+	}
 }
 
 func getCommonType(ty1, ty2 *Type) *Type {
