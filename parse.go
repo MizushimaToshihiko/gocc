@@ -935,12 +935,11 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		var start *Token = tok
 		var startNext *Token = tok.Next
 		if rhsTy.Kind == TY_VOID {
-			fmt.Println("ここ")
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
-			fmt.Printf("init.Expr: %#v\n\n", init.Expr)
-			fmt.Printf("init.Expr.Ty: %#v\n\n", init.Expr.Ty)
-			fmt.Printf("init.Expr.Lhs: %#v\n\n", init.Expr.Lhs)
+			// fmt.Printf("init.Expr: %#v\n\n", init.Expr)
+			// fmt.Printf("init.Expr.Ty: %#v\n\n", init.Expr.Ty)
+			// fmt.Printf("init.Expr.Lhs: %#v\n\n", init.Expr.Lhs)
 
 			if init.Expr.Ty.Kind == TY_PTR &&
 				init.Expr.Lhs != nil && init.Expr.Lhs.Ty.Kind == TY_ARRAY {
@@ -2388,13 +2387,13 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 
 // slice-expr = primary "[" expr ":" expr "]"
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
-	fmt.Printf("cur: %#v\n\n", cur)
-	fmt.Printf("cur.Obj.Ty: %#v\n\n", cur.Obj.Ty)
+	// fmt.Printf("cur: %#v\n\n", cur)
+	// fmt.Printf("cur.Obj.Ty: %#v\n\n", cur.Obj.Ty)
 	// first := eval(idx)
-	end := constExpr(rest, tok.Next)
+	constExpr(rest, tok.Next) // end :=
 	// cur.Obj.Ty.Cap = cur.Obj.Ty.ArrSz - int(first)
 	// cur.Obj.Ty.Len = int(end - first)
-	fmt.Println("end:", end)
+	// fmt.Println("end:", end)
 	node := newUnary(ND_ADDR, newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	return node
 }

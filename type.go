@@ -150,7 +150,7 @@ func pointerTo(base *Type) *Type {
 }
 
 func funcType(retTy *Type) *Type {
-	return &Type{Kind: TY_FUNC, Align: 1, RetTy: retTy, TyName: "func"}
+	return &Type{Kind: TY_FUNC, Align: 1, RetTy: retTy, TyName: "func()"}
 }
 
 func stringType() *Type {
