@@ -2746,13 +2746,12 @@ func parse(tok *Token) *Obj {
 
 	globals = nil
 
-	for !atEof(tok) {
+	// package statement 読み飛ばし
+	if consume(&tok, tok, "package") {
+		tok = tok.Next.Next
+	}
 
-		// package statement 読み飛ばし
-		if consume(&tok, tok, "package") {
-			tok = tok.Next.Next
-			continue
-		}
+	for !atEof(tok) {
 
 		if tok.Kind == TK_COMM {
 			tok = tok.Next
