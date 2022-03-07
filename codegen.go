@@ -95,7 +95,40 @@ func (c *codeWriter) genAddr(node *Node) {
 
 		// Here, we generate an absolute address of a function or global
 		// variable, Even though they exist at a certain address at runtime,
-		// their addresses are not known at a link-time
+		// their addresses are not known at a link-time for the following
+		// two reasons.
+		//
+		//  - Address randomization: Executables are loaded to memory as a
+		//    whole but it is not know what assress they are loaded to.
+		//    Therefore, at link-time, relative address in the same
+		//    executable (i.e. the distance between two functions in the
+		//    same executable) is known, but the absolute address is not
+		//    known.
+		//
+		//  - Dynamic linking: Dynamic shared objects (DSOs) or .so files
+		//    are loaded to mwmory alongside an aexecutable at runtime and
+		//    linked by the runtime loader in memory. We know nothing
+		//    about address of global stuff that may be defined by DSOs
+		//    until the runtime relocation is complete.
+		//
+		// In order to deal with the former case, we use RIP-relative
+		// addressing, denoted by `(%rip)`. For the latter, we obtain an
+		// address of a stuff that may be in a shared object file from the
+		// Global Offset Table using `@GOTPCREL(%rip)` notation.
+
+		// Function
+		if node.Ty.Kind == TY_FUNC {
+			if node.Obj.IsDef {
+				c.println("	lea %s(%%rip), %%rax", node.Obj.Name)
+			} else {
+				c.println("	mov %s`GOTPCREL(%%rip), %%rax", node.Obj.Name)
+			}
+			return
+		}
+
+		// Global variable
+		c.println("	lea %s(%%rip), %%rax", node.Obj.Name)
+		return
 	case ND_DEREF:
 		c.genExpr(node.Lhs)
 		return
@@ -118,7 +151,7 @@ func (c *codeWriter) load(ty *Type) {
 	}
 
 	switch ty.Kind {
-	case TY_ARRAY, TY_STRUCT:
+	case TY_ARRAY, TY_STRUCT, TY_FUNC:
 		// If it is an array, do not attempt to load a value to the
 		// register because in general we can't load an entire array to a
 		// register. As a result, the result of an evaluation of an array
@@ -516,10 +549,10 @@ func (c *codeWriter) genExpr(node *Node) {
 		}
 
 		if depth%2 == 0 {
-			c.println("	call %s", node.FuncName)
+			c.println("	call *%%rax")
 		} else {
 			c.println("	sub $8, %%rsp")
-			c.println("	call %s", node.FuncName)
+			c.println("	call *%%rax")
 			c.println("	add $8, %%rsp")
 		}
 

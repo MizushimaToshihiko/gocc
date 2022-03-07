@@ -2398,8 +2398,16 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 	return node
 }
 
-// postfix = type-name "{" initializer-list "}"
-//         | primary ("[" expr "]" | slice-expr | "." ident | "++" | "--")*
+// postfix = "(" type-name ")" "{" initializer-list "}"
+//         = ident "(" func-args ")" postfix-tail*
+//         | primary postfix-tail*
+//
+// postfix-tail = "[" expr "]"
+//              | "(" func-args ")"
+//              | slice-expr
+//              | "." ident
+//              | "++"
+//              | "--"
 func postfix(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
