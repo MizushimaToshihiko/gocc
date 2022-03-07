@@ -336,11 +336,12 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Mem.Ty
 		return
 	case ND_ADDR:
-		if node.Lhs.Ty.Kind == TY_ARRAY {
+		ty := node.Lhs.Ty
+		if ty.Kind == TY_ARRAY {
 			node.Ty = pointerTo(node.Lhs.Ty.Base)
 			return
 		}
-		node.Ty = pointerTo(node.Lhs.Ty)
+		node.Ty = pointerTo(ty)
 		return
 	case ND_DEREF:
 		if node.Lhs.Ty.Base == nil {

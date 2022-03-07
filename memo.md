@@ -346,18 +346,21 @@ func main() {
 }
 ```
 
-2022/03/07 関数名を引数に取る関数の定義の例[URL](https://go.dev/play/p/RB9w9pKb3od)
+2022/03/07 関数名を引数に取る関数の定義の例[URL](https://go.dev/play/p/xctRHJDCJJn)
 ```Go
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"unsafe"
+)
 
 func ret3(b int) int {
 	return 3 + b
 }
 
-func add2(a int, b int) int {
-	return a + b
+func add2(a int, b int) int8 {
+	return int8(a + b)
 }
 
 func param_decay(f func(int) int, a int) int {
@@ -366,10 +369,13 @@ func param_decay(f func(int) int, a int) int {
 
 func main() {
 	fmt.Println(param_decay(ret3, 100))
-	var a func(int, int) int = add2
+	var a func(int, int) int8 = add2
 	fmt.Println(a(1, 2))
-}
+	fmt.Printf("a: %T\n", a)
 
+	fmt.Println(unsafe.Sizeof(a))
+	fmt.Println(unsafe.Sizeof(a(1, 2)))
+}
 ```
 ```C
 #include <stdio.h>

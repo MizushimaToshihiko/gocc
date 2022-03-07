@@ -87,14 +87,15 @@ func (c *codeWriter) genAddr(node *Node) {
 
 	switch node.Kind {
 	case ND_VAR:
+		//  Local variable
 		if node.Obj.IsLocal {
-			//  Local variable
 			c.println("	lea %d(%%rbp), %%rax", node.Obj.Offset)
 			return
 		}
-		// Global variable
-		c.println("	lea %s(%%rip), %%rax", node.Obj.Name)
-		return
+
+		// Here, we generate an absolute address of a function or global
+		// variable, Even though they exist at a certain address at runtime,
+		// their addresses are not known at a link-time
 	case ND_DEREF:
 		c.genExpr(node.Lhs)
 		return

@@ -2423,6 +2423,11 @@ func postfix(rest **Token, tok *Token) *Node {
 	node := primary(&tok, tok)
 
 	for {
+		if equal(tok, "(") {
+			node = funcall(&tok, tok.Next, node)
+			continue
+		}
+
 		if equal(tok, "[") {
 			// x[y:z] is slice
 			// x[y] is short for *(x+y)
@@ -2462,25 +2467,26 @@ func postfix(rest **Token, tok *Token) *Node {
 	}
 }
 
-// funcall = ident "(" (assign ("," assign)*)? ")"
+// funcall = "(" (assign ("," assign)*)? ")"
 //
 //
-func funcall(rest **Token, tok *Token) *Node {
+func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
-	start := tok
-	tok = tok.Next.Next // skip '('
+	addType(fn)
 
-	sc := findVar(start)
-	if sc == nil {
-		panic("\n" + errorTok(start, "implicit declaration of a function"))
-	}
-	if sc.Obj == nil || sc.Obj.Ty.Kind != TY_FUNC {
-		panic("\n" + errorTok(start, "not a function"))
+	if fn.Ty.Kind != TY_FUNC &&
+		fn.Ty.Kind != TY_PTR || fn.Ty.Kind != TY_FUNC {
+		panic(errorTok(fn.Tok, "not a function"))
 	}
 
-	ty := sc.Obj.Ty
+	var ty *Type
+	if fn.Ty.Kind == TY_FUNC {
+		ty = fn.Ty
+	} else {
+		ty = fn.Ty.Base
+	}
 	paramTy := ty.Params
 
 	head := &Node{}
@@ -2520,8 +2526,7 @@ func funcall(rest **Token, tok *Token) *Node {
 
 	*rest = skip(tok, ")")
 
-	node := newNode(ND_FUNCALL, start)
-	node.FuncName = start.Str
+	node := newUnary(ND_FUNCALL, fn, tok)
 	node.FuncTy = ty
 	node.Ty = ty.RetTy
 	node.Args = head.Next
@@ -2531,7 +2536,7 @@ func funcall(rest **Token, tok *Token) *Node {
 // primary = "(" expr ")"
 //         | "sizeof" "(" type-name ")"
 //         | "sizeof" unary
-//         | ident func-args?
+//         | ident
 //         | str
 //         | num
 func primary(rest **Token, tok *Token) *Node {
@@ -2570,23 +2575,18 @@ func primary(rest **Token, tok *Token) *Node {
 	}
 
 	if tok.Kind == TK_IDENT {
-		// Function call
-		if equal(tok.Next, "(") {
-			return funcall(rest, tok)
-		}
-
+		// Variable
 		sc := findVar(tok)
-		if sc == nil {
-			panic("\n" + errorTok(tok, "undefined variable"))
-		}
-
-		var node *Node
-		if sc.Obj != nil {
-			node = newVarNode(sc.Obj, tok)
-		}
-
 		*rest = tok.Next
-		return node
+
+		if sc != nil && sc.Obj != nil {
+			return newVarNode(sc.Obj, tok)
+		}
+
+		if equal(tok.Next, "(") {
+			panic(errorTok(tok, "implicit declaration of a function"))
+		}
+		panic(errorTok(tok, "undefined variable"))
 	}
 
 	if tok.Kind == TK_STR {
