@@ -675,8 +675,8 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	// 	isVariadic = true
 	// }
 
-	ty = funcType(ty)
-	ty.Params = head.Next
+	ty = funcType(ty, head.Next)
+	// ty.Params = head.Next
 	ty.IsVariadic = isVariadic
 	*rest = tok.Next
 	return ty
