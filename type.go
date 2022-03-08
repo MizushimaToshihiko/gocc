@@ -163,8 +163,6 @@ func funcType(retTy *Type, params *Type) *Type {
 
 	return &Type{
 		Kind:   TY_FUNC,
-		Sz:     1,
-		Align:  1,
 		RetTy:  retTy,
 		Params: head,
 		TyName: "func(" + typarams + ")" + retty,

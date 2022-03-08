@@ -154,9 +154,9 @@ func main() {
 	assert(7, int(add_float3(2.5, 2.5, 2.5)), "int(add_float3(2.5, 2.5, 2.5))")
 	assert(7, int(add_double3(2.5, 2.5, 2.5)), "int(add_double3(2.5, 2.5, 2.5))")
 
-	// var buf string
-	// sprintf(buf, "%.1f", float32(3.5))
-	// assert(0, strcmp(buf, "3.5"), "var buf string;sprintf(buf,\"%.1f\",float32(3.5));strcmp(buf,\"3.5\")")
+	var buf string = "" // 2022/03/08 今は初期化が必要、"Segmentation falut"になってしまう
+	sprintf(buf, "%.1f", float32(3.5))
+	assert(0, strcmp(buf, "3.5"), "var buf string;sprintf(buf,\"%.1f\",float32(3.5));strcmp(buf,\"3.5\")")
 
 	assert(&ret3, ret3, "ret3")
 	var fn func() int = ret3

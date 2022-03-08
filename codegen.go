@@ -83,7 +83,9 @@ func (c *codeWriter) popf(reg int) {
 	depth--
 }
 
-func alignTo(n, align int) int {
+// Round up `n` to the nearest multiple of `align`. For instance,
+// alignTo(5,8) returns 8 and alignTo(11,8) returns 16.
+func alignTo(n int, align int) int {
 	return (n + align - 1) / align * align
 }
 
@@ -193,10 +195,8 @@ func (c *codeWriter) load(ty *Type) {
 		c.println("	%swl (%%rax), %%eax", insn)
 	case 4:
 		c.println("	movsxd (%%rax), %%rax")
-	case 8:
-		c.println("	mov (%%rax), %%rax")
 	default:
-		c.unreachable("in load(): ty.Kind: %d: ty.Sz: %d: invalid size", ty.Kind, ty.Sz)
+		c.println("	mov (%%rax), %%rax")
 		return
 	}
 }
@@ -230,10 +230,8 @@ func (c *codeWriter) store(ty *Type) {
 		c.println("	mov %%ax, (%%rdi)")
 	case 4:
 		c.println("	mov %%eax, (%%rdi)")
-	case 8:
-		c.println("	mov %%rax, (%%rdi)")
 	default:
-		c.unreachable("in store(): ty.Kind: %d: ty.Sz: %d: invalid size", ty.Kind, ty.Sz)
+		c.println("	mov %%rax, (%%rdi)")
 	}
 }
 
