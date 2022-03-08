@@ -121,7 +121,7 @@ func (c *codeWriter) genAddr(node *Node) {
 			if node.Obj.IsDef {
 				c.println("	lea %s(%%rip), %%rax", node.Obj.Name)
 			} else {
-				c.println("	mov %s`GOTPCREL(%%rip), %%rax", node.Obj.Name)
+				c.println("	mov %s@GOTPCREL(%%rip), %%rax", node.Obj.Name)
 			}
 			return
 		}
@@ -535,6 +535,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_FUNCALL:
 		c.pushArgs(node.Args)
+		c.genExpr(node.Lhs)
 
 		gp := 0
 		fp := 0
