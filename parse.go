@@ -527,6 +527,8 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 		ty = stringType()
 	} else if equal(tok, "struct") { // struct type
 		ty = structDecl(&tok, tok.Next, name)
+	} else if equal(tok, "func") { // func type ,like: "func(int,string) int8"
+		ty = funcDecl(&tok, tok.Next, name)
 	}
 
 	// Handle user-defined types.
@@ -543,6 +545,8 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 		ty = pointerTo(ty)
 	}
 
+	// fmt.Printf("declSpec: tok: %#v\n\n", tok)
+	// fmt.Printf("declSpec: tok.Next: %#v\n\n", tok.Next)
 	*rest = tok.Next
 	return ty
 }
@@ -2268,6 +2272,37 @@ func unary(rest **Token, tok *Token) *Node {
 	return postfix(rest, tok)
 }
 
+// func-decl = "func(" param-type* ")" return-type
+func funcDecl(rest **Token, tok *Token, name *Token) *Type {
+	printCurTok(tok)
+	printCalledFunc()
+
+	tok = skip(tok, "(")
+
+	paramty := &Type{}
+	head := paramty
+	for !equal(tok, ")") {
+		if head != paramty {
+			skip(tok, ",")
+		}
+		paramty.Next = readTypePreffix(&tok, tok, name)
+		paramty = paramty.Next
+	}
+	tok = skip(tok, ")")
+	retty := readTypePreffix(rest, tok, name)
+	*rest = tok
+	// fmt.Printf("funcDecl: tok: %#v\n\n", tok)
+	ty := pointerTo(funcType(retty, head.Next))
+
+	if name != nil {
+		pushScope(getIdent(name)).TyDef = ty
+	} else {
+		pushScope(newUniqueName()).TyDef = ty
+	}
+
+	return ty
+}
+
 // struct-member = ident type-prefix type-specifier
 func structMems(rest **Token, tok *Token, ty *Type) *Member {
 	printCurTok(tok)
@@ -2485,7 +2520,7 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	addType(fn)
 
 	if fn.Ty.Kind != TY_FUNC &&
-		fn.Ty.Kind != TY_PTR || fn.Ty.Kind != TY_FUNC {
+		(fn.Ty.Kind != TY_PTR || fn.Ty.Base.Kind != TY_FUNC) {
 		panic(errorTok(fn.Tok, "not a function"))
 	}
 

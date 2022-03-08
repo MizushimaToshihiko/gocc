@@ -22,6 +22,14 @@ func (c *codeWriter) println(frmt string, a ...interface{}) {
 	_, c.err = fmt.Fprintln(c.w)
 }
 
+func (c *codeWriter) unreachable(frmt string, a ...interface{}) {
+	if c.err == nil {
+		c.err = fmt.Errorf(frmt, a)
+	} else {
+		c.err = fmt.Errorf(c.err.Error()+"\n"+frmt, a)
+	}
+}
+
 var i int = 1
 
 func count() int {
@@ -188,7 +196,7 @@ func (c *codeWriter) load(ty *Type) {
 	case 8:
 		c.println("	mov (%%rax), %%rax")
 	default:
-		c.unreachable("invalid size")
+		c.unreachable("in load(): ty.Kind: %d: ty.Sz: %d: invalid size", ty.Kind, ty.Sz)
 		return
 	}
 }
@@ -225,7 +233,7 @@ func (c *codeWriter) store(ty *Type) {
 	case 8:
 		c.println("	mov %%rax, (%%rdi)")
 	default:
-		c.unreachable("invalid size")
+		c.unreachable("in store(): ty.Kind: %d: ty.Sz: %d: invalid size", ty.Kind, ty.Sz)
 	}
 }
 
@@ -880,14 +888,6 @@ func (c *codeWriter) emitData(prog *Obj) {
 		c.println("	.bss")
 		c.println("%s:", v.Name)
 		c.println("	.zero %d", v.Ty.Sz)
-	}
-}
-
-func (c *codeWriter) unreachable(s string) {
-	if c.err == nil {
-		c.err = fmt.Errorf("%s", s)
-	} else {
-		c.err = fmt.Errorf(c.err.Error()+"\n%s", s)
 	}
 }
 
