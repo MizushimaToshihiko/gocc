@@ -997,6 +997,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 	if init.Expr == nil {
 		init.Expr = assign(rest, tok)
+		fmt.Printf("init.Expr: %#v\n\n", init.Expr)
+		fmt.Printf("init.Expr.Obj.Ty: %#v\n\n", init.Expr.Obj.Ty)
 	}
 }
 
@@ -1265,6 +1267,64 @@ func typename(rest **Token, tok *Token) *Type {
 	return abstructDeclarator(rest, tok, &Type{})
 }
 
+func strZeroInit(init *Initializer, tok *Token) {
+	printCurTok(tok)
+	printCalledFunc()
+
+	child := &Initializer{
+		Tok:  tok,
+		Ty:   init.Ty.Base,
+		Expr: newNum(0, tok),
+	}
+	init.Children = append(init.Children, child)
+}
+
+func zeroInit2(init *Initializer, tok *Token) {
+	printCurTok(tok)
+	printCalledFunc()
+
+	// If init.Ty is string.
+	if init.Ty.TyName == "string" {
+		fmt.Println("ここ")
+		strZeroInit(init, tok)
+		tokTy := arrayOf(ty_char, 1)
+		tokConts := []int64{0}
+		v := newStringLiteral(tokConts, tokTy)
+		init.Expr = newVarNode(v, tok)
+		init.Ty.Init = init
+		return
+	}
+}
+
+func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
+	printCurTok(tok)
+	printCalledFunc()
+
+	init := newInitializer(ty)
+	zeroInit2(init, tok)
+
+	*newTy = init.Ty
+	return init
+}
+
+func lvarZeroInit(v *Obj, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
+	init := zeroInit(v.Ty, &v.Ty, tok)
+	desg := &InitDesg{nil, 0, nil, v}
+
+	// If a partial initializer list is given, the standard requires
+	// that unspecified elements are set to 0. Here, we simply
+	// zero-inilialize the entire memory region of a variable defore
+	// initializing it with user-supplied values.
+	lhs := newNode(ND_MEMZERO, tok)
+	lhs.Obj = v
+
+	rhs := createLvarInit(init, v.Ty, desg, tok)
+	return newBinary(ND_COMMA, lhs, rhs, tok)
+}
+
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl
 // VarDecl = "var" ident type-prefix declspec ("=" expr)
 //         | "var" ident "=" expr
@@ -1289,6 +1349,10 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 
 		if !isShort && equal(tok, "=") || isShort && equal(tok, ":=") {
 			expr := lvarInitializer(&tok, tok.Next, v)
+			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+			cur = cur.Next
+		} else {
+			expr := lvarZeroInit(v, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 		}
