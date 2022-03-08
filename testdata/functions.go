@@ -158,5 +158,9 @@ func main() {
 	sprintf(buf, "%.1f", float32(3.5))
 	assert(0, strcmp(buf, "3.5"), "var buf string;sprintf(buf,\"%.1f\",float32(3.5));strcmp(buf,\"3.5\")")
 
+	assert(&ret3, ret3, "ret3")
+	// var fn func() int = ret3
+	// assert(&ret3, fn, "fn")
+
 	println("OK")
 }
