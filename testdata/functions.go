@@ -101,6 +101,8 @@ func println(frmt ...string)
 func sprintf(buf string, format ...string) string
 func strcmp(s1 string, s2 string) int
 
+var gbuf string
+
 func main() {
 	// assert(3, ret3(), "ret3()")
 	// assert(8, add2(3, 5), "add2(3, 5)")
@@ -154,9 +156,11 @@ func main() {
 	// assert(7, int(add_float3(2.5, 2.5, 2.5)), "int(add_float3(2.5, 2.5, 2.5))")
 	// assert(7, int(add_double3(2.5, 2.5, 2.5)), "int(add_double3(2.5, 2.5, 2.5))")
 
-	var buf string //= "" // 2022/03/08 今は初期化が必要、"Segmentation falut"になってしまう
+	var buf string
 	sprintf(buf, "%.1f", float32(3.5))
 	assert(0, strcmp(buf, "3.5"), "var buf string;sprintf(buf,\"%.1f\",float32(3.5));strcmp(buf,\"3.5\")")
+
+	// assert(0, gbuf[0], "gbuf[0]")
 
 	// assert(&ret3, ret3, "ret3")
 	// var fn func() int = ret3

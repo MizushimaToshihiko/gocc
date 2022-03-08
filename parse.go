@@ -997,8 +997,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 	if init.Expr == nil {
 		init.Expr = assign(rest, tok)
-		fmt.Printf("init.Expr: %#v\n\n", init.Expr)
-		fmt.Printf("init.Expr.Obj.Ty: %#v\n\n", init.Expr.Obj.Ty)
+		// fmt.Printf("init.Expr: %#v\n\n", init.Expr)
+		// fmt.Printf("init.Expr.Obj.Ty: %#v\n\n", init.Expr.Obj.Ty)
 	}
 }
 
@@ -1285,7 +1285,6 @@ func zeroInit2(init *Initializer, tok *Token) {
 
 	// If init.Ty is string.
 	if init.Ty.TyName == "string" {
-		fmt.Println("ここ")
 		strZeroInit(init, tok)
 		tokTy := arrayOf(ty_char, 1)
 		tokConts := []int64{0}
@@ -1351,7 +1350,7 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 			expr := lvarInitializer(&tok, tok.Next, v)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
-		} else {
+		} else if v.Ty.TyName == "string" {
 			expr := lvarZeroInit(v, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
