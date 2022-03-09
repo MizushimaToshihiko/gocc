@@ -1168,7 +1168,7 @@ func divFloat64(target int64) []int64 {
 	return ret
 }
 
-// integer又はscalarの場合Ty.Sz分だけゼロ埋めする
+//
 //
 func writeGvarData(
 	cur *Relocation, init *Initializer, ty *Type, buf *[]int64,
@@ -1237,6 +1237,18 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	printCalledFunc()
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
+	head := &Relocation{}
+	var buf []int64 = make([]int64, v.Ty.Sz)
+	writeGvarData(head, init, v.Ty, &buf, 0)
+	v.InitData = buf
+	v.Rel = head.Next
+}
+
+func gvarZeroInit(v *Obj, tok *Token) {
+	printCurTok(tok)
+	printCalledFunc()
+
+	init := zeroInit(v.Ty, &v.Ty, tok)
 	head := &Relocation{}
 	var buf []int64 = make([]int64, v.Ty.Sz)
 	writeGvarData(head, init, v.Ty, &buf, 0)
@@ -1334,10 +1346,6 @@ func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
 	init := newInitializer(ty)
 	// fmt.Printf("zeroInit: init: %#v\n\n", init)
 	// fmt.Printf("zeroInit: init.Ty: %#v\n\n", init.Ty)
-	// fmt.Printf("zeroInit: init.Children[0]: %#v\n\n", init.Children[0])
-	// fmt.Printf("zeroInit: init.Children[0].Ty: %#v\n\n", init.Children[0].Ty)
-	// fmt.Printf("zeroInit: init.Children[1]: %#v\n\n", init.Children[1])
-	// fmt.Printf("zeroInit: init.Children[1].Ty: %#v\n\n", init.Children[1].Ty)
 	zeroInit2(init, tok)
 
 	*newTy = init.Ty
@@ -2888,6 +2896,8 @@ func globalVar(tok *Token) *Token {
 		v := newGvar(getIdent(ty.Name), ty)
 		if equal(tok, "=") {
 			gvarInitializer(&tok, tok.Next, v)
+		} else {
+			gvarZeroInit(v, v.Ty.Name)
 		}
 	}
 	return tok
