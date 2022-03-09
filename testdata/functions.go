@@ -3,14 +3,14 @@ package test_function
 func assert(want int, act int, code string)
 func println(frmt ...string)
 
-// func ret3() int {
-// 	return 3
-// 	return 5
-// }
+func ret3() int {
+	return 3
+	return 5
+}
 
-// func add2(x int, y int) int {
-// 	return x + y
-// }
+func add2(x int, y int) int {
+	return x + y
+}
 
 // func sub2(x int, y int) int {
 // 	return x - y
@@ -101,8 +101,6 @@ func println(frmt ...string)
 func sprintf(buf string, format ...string) string
 func strcmp(s1 string, s2 string) int
 
-var gbuf string
-
 func main() {
 	// assert(3, ret3(), "ret3()")
 	// assert(8, add2(3, 5), "add2(3, 5)")
@@ -156,17 +154,21 @@ func main() {
 	// assert(7, int(add_float3(2.5, 2.5, 2.5)), "int(add_float3(2.5, 2.5, 2.5))")
 	// assert(7, int(add_double3(2.5, 2.5, 2.5)), "int(add_double3(2.5, 2.5, 2.5))")
 
-	var buf string
-	sprintf(buf, "%.1f", float32(3.5))
-	assert(0, strcmp(buf, "3.5"), "var buf string;sprintf(buf,\"%.1f\",float32(3.5));strcmp(buf,\"3.5\")")
+	// var buf string
+	// sprintf(buf, "%.1f", float32(3.5))
+	// assert(0, strcmp(buf, "3.5"), "var buf string;sprintf(buf,\"%.1f\",float32(3.5));strcmp(buf,\"3.5\")")
 
-	// assert(0, gbuf[0], "gbuf[0]")
+	// // assert(0, gbuf[0], "gbuf[0]")
 
 	// assert(&ret3, ret3, "ret3")
 	// var fn func() int = ret3
 	// assert(3, fn(), "fn()")
-	// // var fn01 = ret3
-	// // assert(3, fn01(), "fn01()")
+	var fn01 = ret3
+	assert(3, fn01(), "fn01()")
+	fn02 := ret3
+	assert(3, fn02(), "fn02()")
+	fn03 := add2
+	assert(3, fn03(1, 2), "fn03(1,2)")
 
 	println("OK")
 }

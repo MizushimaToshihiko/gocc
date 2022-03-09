@@ -926,6 +926,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		return
 	}
 
+	// If type-name is omitted.
 	if init.Ty.Kind == TY_VOID {
 		var rhsTy *Type
 		if tok.Kind == TK_STR {
@@ -934,21 +935,26 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			return
 		}
 
-		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
+		// Get the type from rhs. If type-name is written.
+		// like: [2]int{1,2,3}
+		rhsTy = readTypePreffix(&tok, tok, nil)
 
+		// If type-name isn't written.
 		var start *Token = tok
 		var startNext *Token = tok.Next
 		if rhsTy.Kind == TY_VOID {
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
-			// fmt.Printf("init.Expr: %#v\n\n", init.Expr)
-			// fmt.Printf("init.Expr.Ty: %#v\n\n", init.Expr.Ty)
-			// fmt.Printf("init.Expr.Lhs: %#v\n\n", init.Expr.Lhs)
+			// fmt.Printf("initializer2: init.Expr: %#v\n\n", init.Expr)
+			// fmt.Printf("initializer2: init.Expr.Ty: %#v\n\n", init.Expr.Ty)
+			// fmt.Printf("initializer2: init.Expr.Lhs: %#v\n\n", init.Expr.Lhs)
 
 			if init.Expr.Ty.Kind == TY_PTR &&
 				init.Expr.Lhs != nil && init.Expr.Lhs.Ty.Kind == TY_ARRAY {
 				// the rhs is like "&" and variable.
 				rhsTy = pointerTo(init.Expr.Lhs.Ty)
+			} else if init.Expr.Ty.Kind == TY_FUNC {
+				rhsTy = pointerTo(init.Expr.Ty)
 			} else {
 				rhsTy = init.Expr.Ty
 			}
@@ -968,6 +974,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 				init.Ty.Init = init
 				return
 			}
+
 			// Copy Initializer from rhs, if array can be initialized by other array.
 			if rhsTy.Init != nil {
 				*init = *rhsTy.Init // copyType()使った方が良いかもしれないが、検証する時間なし
@@ -1350,7 +1357,7 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 			expr := lvarInitializer(&tok, tok.Next, v)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
-		} else if v.Ty.TyName == "string" {
+		} else if v.Ty.TyName == "string" { // Initialize empty string.
 			expr := lvarZeroInit(v, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
