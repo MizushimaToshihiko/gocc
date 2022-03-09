@@ -883,6 +883,7 @@ func (c *codeWriter) emitData(prog *Obj) {
 			continue
 		}
 
+		// Initialize with 0(?).
 		c.println("	.bss")
 		c.println("%s:", v.Name)
 		c.println("	.zero %d", v.Ty.Sz)
