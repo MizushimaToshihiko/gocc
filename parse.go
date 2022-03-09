@@ -663,10 +663,11 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 			panic(errorTok(tok, "type name expected"))
 		}
 
-		// "array of T" is converted tot "pointer to T" only in the parameter
-		// context. For example, *argv[] is converted to **argv by this.
+		name := ty2.Name
+
 		if ty2.Kind == TY_ARRAY {
-			name := ty2.Name
+			// "array of T" is converted tot "pointer to T" only in the parameter
+			// context. For example, *argv[] is converted to **argv by this.
 			ty2 = pointerTo(ty2.Base)
 			ty2.Name = name
 		}
