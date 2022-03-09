@@ -50,8 +50,16 @@
        - Type構造体のRetTyをそのまま使う
      - codegenの変更
        - 連結リストにしたRetTyをfor文でreturn valueを汎用レジスタに入れる
+   - 変数宣言時のゼロ初期化
+     - local
+       - string -> 完了
+       - array
+       - struct
+     - global
+       - string
+       - array
+       - struct
     
- 
 
 #### 【VarSpecの追加について】
  - EBNF:VarSpec = ident-list (type-preffix type-specifier [ "=" expr-list ] | "=" expr-list)
