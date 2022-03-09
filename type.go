@@ -151,9 +151,10 @@ func pointerTo(base *Type) *Type {
 
 func funcType(retTy *Type, params *Type) *Type {
 	head := params
+	cur := head
 	var typarams string
-	for ; params != nil; params = params.Next {
-		typarams += params.TyName + ","
+	for ; cur != nil; cur = cur.Next {
+		typarams += cur.TyName + ","
 	}
 
 	var retty string

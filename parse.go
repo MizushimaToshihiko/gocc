@@ -953,8 +953,10 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 				init.Expr.Lhs != nil && init.Expr.Lhs.Ty.Kind == TY_ARRAY {
 				// the rhs is like "&" and variable.
 				rhsTy = pointerTo(init.Expr.Lhs.Ty)
+
 			} else if init.Expr.Ty.Kind == TY_FUNC {
 				rhsTy = pointerTo(init.Expr.Ty)
+
 			} else {
 				rhsTy = init.Expr.Ty
 			}
@@ -2349,19 +2351,28 @@ func funcDecl(rest **Token, tok *Token, name *Token) *Type {
 
 	tok = skip(tok, "(")
 
-	paramty := &Type{}
-	head := paramty
+	head := &Type{}
+	cur := head
+	first := true
+
 	for !equal(tok, ")") {
-		if head != paramty {
-			skip(tok, ",")
+		if !first {
+			tok = skip(tok, ",")
 		}
-		paramty.Next = readTypePreffix(&tok, tok, name)
-		paramty = paramty.Next
+		first = false
+
+		paramty := readTypePreffix(&tok, tok, name)
+		if paramty == nil {
+			panic("\n" + errorTok(tok, "is not typename"))
+		}
+		cur.Next = copyType(paramty)
+		cur = cur.Next
 	}
+
 	tok = skip(tok, ")")
 	retty := readTypePreffix(rest, tok, name)
 	*rest = tok
-	// fmt.Printf("funcDecl: tok: %#v\n\n", tok)
+
 	ty := pointerTo(funcType(retty, head.Next))
 
 	if name != nil {
