@@ -53,8 +53,8 @@
    - 変数宣言時のゼロ初期化
      - local
        - string -> 完了
-       - array
-       - struct
+       - array -> 完了
+       - struct -> 完了
      - global
        - string
        - array

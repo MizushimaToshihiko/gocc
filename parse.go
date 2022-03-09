@@ -1310,6 +1310,16 @@ func zeroInit2(init *Initializer, tok *Token) {
 			zeroInit2(init.Children[i], tok)
 		}
 		init.Ty.Init = init
+		return
+	}
+
+	// If init.Ty is struct.
+	if init.Ty.Kind == TY_STRUCT {
+		for mem := init.Ty.Mems; mem != nil; mem = mem.Next {
+			zeroInit2(init.Children[mem.Idx], tok)
+		}
+		init.Ty.Init = init
+		return
 	}
 
 	if init.Expr == nil {
@@ -1324,6 +1334,10 @@ func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
 	init := newInitializer(ty)
 	// fmt.Printf("zeroInit: init: %#v\n\n", init)
 	// fmt.Printf("zeroInit: init.Ty: %#v\n\n", init.Ty)
+	// fmt.Printf("zeroInit: init.Children[0]: %#v\n\n", init.Children[0])
+	// fmt.Printf("zeroInit: init.Children[0].Ty: %#v\n\n", init.Children[0].Ty)
+	// fmt.Printf("zeroInit: init.Children[1]: %#v\n\n", init.Children[1])
+	// fmt.Printf("zeroInit: init.Children[1].Ty: %#v\n\n", init.Children[1].Ty)
 	zeroInit2(init, tok)
 
 	*newTy = init.Ty
@@ -1374,8 +1388,8 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 			expr := lvarInitializer(&tok, tok.Next, v)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
-		} else if v.Ty.TyName == "string" || v.Ty.Kind == TY_ARRAY {
-			// Initialize empty strings or arrays.
+		} else {
+			// Initialize empty variables.
 			expr := lvarZeroInit(v, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next

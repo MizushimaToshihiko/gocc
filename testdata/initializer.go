@@ -409,32 +409,62 @@ func main() {
 	// assert(1, x24.a[0], "var x24 = struct{ a [2]int }{a: [2]int{1}};x24.a[0]");
 	// assert(0, x24.a[1], "var x24 = struct{ a [2]int }{a: [2]int{1}};x24.a[1]");
 
+	// // Initializing with 0
 	// var x25 string
 	// assert(0, x25[0], "x25[0]")
 
-	var x26 [4]int
-	assert(0, x26[0], "x26[0]")
-	assert(0, x26[1], "x26[1]")
-	assert(0, x26[2], "x26[2]")
-	assert(0, x26[3], "x26[3]")
+	// var x26 [4]int
+	// assert(0, x26[0], "x26[0]")
+	// assert(0, x26[1], "x26[1]")
+	// assert(0, x26[2], "x26[2]")
+	// assert(0, x26[3], "x26[3]")
 
-	var x27 [10]int
-	assert(0, x27[0], "x27[0]")
-	assert(0, x27[1], "x27[1]")
-	assert(0, x27[2], "x27[2]")
-	assert(0, x27[3], "x27[3]")
-	assert(0, x27[4], "x27[4]")
-	assert(0, x27[5], "x27[5]")
-	assert(0, x27[6], "x27[6]")
-	assert(0, x27[7], "x27[7]")
-	assert(0, x27[8], "x27[8]")
-	assert(0, x27[9], "x27[9]")
+	// var x27 [10]int
+	// assert(0, x27[0], "x27[0]")
+	// assert(0, x27[1], "x27[1]")
+	// assert(0, x27[2], "x27[2]")
+	// assert(0, x27[3], "x27[3]")
+	// assert(0, x27[4], "x27[4]")
+	// assert(0, x27[5], "x27[5]")
+	// assert(0, x27[6], "x27[6]")
+	// assert(0, x27[7], "x27[7]")
+	// assert(0, x27[8], "x27[8]")
+	// assert(0, x27[9], "x27[9]")
 
-	var x28 [4]string
-	assert(0, x28[0][0], "x28[0][0]")
-	assert(0, x28[1][0], "x28[1][0]")
-	assert(0, x28[2][0], "x28[2][0]")
-	assert(0, x28[3][0], "x28[3][0]")
+	// var x28 [4]string
+	// assert(0, x28[0][0], "x28[0][0]")
+	// assert(0, x28[1][0], "x28[1][0]")
+	// assert(0, x28[2][0], "x28[2][0]")
+	// assert(0, x28[3][0], "x28[3][0]")
+
+	var x29 struct {
+		a int
+		b string
+	}
+	assert(0, x29.a, "x29.a")
+	assert(0, x29.b[0], "x29.b[0]")
+
+	var x30 struct {
+		a [4]int
+		b [4]string
+	}
+	assert(0, x30.a[0], "x30.a[0]")
+	assert(0, x30.a[1], "x30.a[1]")
+	assert(0, x30.a[2], "x30.a[2]")
+	assert(0, x30.a[3], "x30.a[3]")
+	assert(0, x30.b[0][0], "x30.b[0][0]")
+	assert(0, x30.b[1][0], "x30.b[1][0]")
+	assert(0, x30.b[2][0], "x30.b[2][0]")
+	assert(0, x30.b[3][0], "x30.b[3][0]")
+
+	var x31 int64
+	assert(1, x31 == 0, "x31==0")
+	var x32 byte
+	assert(1, x32 == 0, "x32==0")
+	var x33 bool
+	assert(1, x33 == 0, "x33==0")
+	var x34 float64
+	assert(1, x34 == 0, "x34==0")
 
 	// 以下後回し案件
 	// assert(3, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].a; }));
