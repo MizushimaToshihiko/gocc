@@ -1303,6 +1303,18 @@ func zeroInit2(init *Initializer, tok *Token) {
 		init.Ty.Init = init
 		return
 	}
+
+	// If init.Ty is array.
+	if init.Ty.Kind == TY_ARRAY {
+		for i := 0; i < init.Ty.ArrSz; i++ {
+			zeroInit2(init.Children[i], tok)
+		}
+		init.Ty.Init = init
+	}
+
+	if init.Expr == nil {
+		init.Expr = newNum(0, tok)
+	}
 }
 
 func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
@@ -1310,6 +1322,8 @@ func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
 	printCalledFunc()
 
 	init := newInitializer(ty)
+	// fmt.Printf("zeroInit: init: %#v\n\n", init)
+	// fmt.Printf("zeroInit: init.Ty: %#v\n\n", init.Ty)
 	zeroInit2(init, tok)
 
 	*newTy = init.Ty
@@ -1360,7 +1374,8 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 			expr := lvarInitializer(&tok, tok.Next, v)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
-		} else if v.Ty.TyName == "string" { // Initialize empty string.
+		} else if v.Ty.TyName == "string" || v.Ty.Kind == TY_ARRAY {
+			// Initialize empty strings or arrays.
 			expr := lvarZeroInit(v, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
