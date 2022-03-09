@@ -409,6 +409,15 @@ func main() {
   assert(1, x24.a[0], "var x24 = struct{ a [2]int }{a: [2]int{1}};x24.a[0]");
   assert(0, x24.a[1], "var x24 = struct{ a [2]int }{a: [2]int{1}};x24.a[1]");
 
+	var x25 string
+	assert(0, x25[0], "x25[0]")
+
+	// var x26 [4]int
+	// assert(0, x26[0], "x26[0]")
+	// assert(0, x26[1], "x26[1]")
+	// assert(0, x26[2], "x26[2]")
+	// assert(0, x26[3], "x26[3]")
+
 	// 以下後回し案件
   // assert(3, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].a; }));
   // assert(4, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].b; }));

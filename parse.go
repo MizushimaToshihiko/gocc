@@ -527,6 +527,8 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 		ty = stringType()
 	} else if equal(tok, "struct") { // struct type
 		ty = structDecl(&tok, tok.Next, name)
+	} else if equal(tok, "func") { // func type ,like: "func(int,string) int8"
+		ty = funcDecl(&tok, tok.Next, name)
 	}
 
 	// Handle user-defined types.
@@ -543,6 +545,8 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 		ty = pointerTo(ty)
 	}
 
+	// fmt.Printf("declSpec: tok: %#v\n\n", tok)
+	// fmt.Printf("declSpec: tok.Next: %#v\n\n", tok.Next)
 	*rest = tok.Next
 	return ty
 }
@@ -659,10 +663,11 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 			panic(errorTok(tok, "type name expected"))
 		}
 
-		// "array of T" is converted tot "pointer to T" only in the parameter
-		// context. For example, *argv[] is converted to **argv by this.
+		name := ty2.Name
+
 		if ty2.Kind == TY_ARRAY {
-			name := ty2.Name
+			// "array of T" is converted tot "pointer to T" only in the parameter
+			// context. For example, *argv[] is converted to **argv by this.
 			ty2 = pointerTo(ty2.Base)
 			ty2.Name = name
 		}
@@ -675,8 +680,8 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	// 	isVariadic = true
 	// }
 
-	ty = funcType(ty)
-	ty.Params = head.Next
+	ty = funcType(ty, head.Next)
+	// ty.Params = head.Next
 	ty.IsVariadic = isVariadic
 	*rest = tok.Next
 	return ty
@@ -922,6 +927,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		return
 	}
 
+	// If type-name is omitted.
 	if init.Ty.Kind == TY_VOID {
 		var rhsTy *Type
 		if tok.Kind == TK_STR {
@@ -930,22 +936,28 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			return
 		}
 
-		rhsTy = readTypePreffix(&tok, tok, nil) // Get the type from rhs.
+		// Get the type from rhs. If type-name is written.
+		// like: [2]int{1,2,3}
+		rhsTy = readTypePreffix(&tok, tok, nil)
 
+		// If type-name isn't written.
 		var start *Token = tok
 		var startNext *Token = tok.Next
 		if rhsTy.Kind == TY_VOID {
-			fmt.Println("ここ")
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
-			fmt.Printf("init.Expr: %#v\n\n", init.Expr)
-			fmt.Printf("init.Expr.Ty: %#v\n\n", init.Expr.Ty)
-			fmt.Printf("init.Expr.Lhs: %#v\n\n", init.Expr.Lhs)
+			// fmt.Printf("initializer2: init.Expr: %#v\n\n", init.Expr)
+			// fmt.Printf("initializer2: init.Expr.Ty: %#v\n\n", init.Expr.Ty)
+			// fmt.Printf("initializer2: init.Expr.Lhs: %#v\n\n", init.Expr.Lhs)
 
 			if init.Expr.Ty.Kind == TY_PTR &&
 				init.Expr.Lhs != nil && init.Expr.Lhs.Ty.Kind == TY_ARRAY {
 				// the rhs is like "&" and variable.
 				rhsTy = pointerTo(init.Expr.Lhs.Ty)
+
+			} else if init.Expr.Ty.Kind == TY_FUNC {
+				rhsTy = pointerTo(init.Expr.Ty)
+
 			} else {
 				rhsTy = init.Expr.Ty
 			}
@@ -965,6 +977,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 				init.Ty.Init = init
 				return
 			}
+
 			// Copy Initializer from rhs, if array can be initialized by other array.
 			if rhsTy.Init != nil {
 				*init = *rhsTy.Init // copyType()使った方が良いかもしれないが、検証する時間なし
@@ -994,6 +1007,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 	if init.Expr == nil {
 		init.Expr = assign(rest, tok)
+		// fmt.Printf("init.Expr: %#v\n\n", init.Expr)
+		// fmt.Printf("init.Expr.Obj.Ty: %#v\n\n", init.Expr.Obj.Ty)
 	}
 }
 
@@ -1262,6 +1277,63 @@ func typename(rest **Token, tok *Token) *Type {
 	return abstructDeclarator(rest, tok, &Type{})
 }
 
+func strZeroInit(init *Initializer, tok *Token) {
+	printCurTok(tok)
+	printCalledFunc()
+
+	child := &Initializer{
+		Tok:  tok,
+		Ty:   init.Ty.Base,
+		Expr: newNum(0, tok),
+	}
+	init.Children = append(init.Children, child)
+}
+
+func zeroInit2(init *Initializer, tok *Token) {
+	printCurTok(tok)
+	printCalledFunc()
+
+	// If init.Ty is string.
+	if init.Ty.TyName == "string" {
+		strZeroInit(init, tok)
+		tokTy := arrayOf(ty_char, 1)
+		tokConts := []int64{0}
+		v := newStringLiteral(tokConts, tokTy)
+		init.Expr = newVarNode(v, tok)
+		init.Ty.Init = init
+		return
+	}
+}
+
+func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
+	printCurTok(tok)
+	printCalledFunc()
+
+	init := newInitializer(ty)
+	zeroInit2(init, tok)
+
+	*newTy = init.Ty
+	return init
+}
+
+func lvarZeroInit(v *Obj, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
+	init := zeroInit(v.Ty, &v.Ty, tok)
+	desg := &InitDesg{nil, 0, nil, v}
+
+	// If a partial initializer list is given, the standard requires
+	// that unspecified elements are set to 0. Here, we simply
+	// zero-inilialize the entire memory region of a variable defore
+	// initializing it with user-supplied values.
+	lhs := newNode(ND_MEMZERO, tok)
+	lhs.Obj = v
+
+	rhs := createLvarInit(init, v.Ty, desg, tok)
+	return newBinary(ND_COMMA, lhs, rhs, tok)
+}
+
 // declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl
 // VarDecl = "var" ident type-prefix declspec ("=" expr)
 //         | "var" ident "=" expr
@@ -1286,6 +1358,10 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 
 		if !isShort && equal(tok, "=") || isShort && equal(tok, ":=") {
 			expr := lvarInitializer(&tok, tok.Next, v)
+			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+			cur = cur.Next
+		} else if v.Ty.TyName == "string" { // Initialize empty string.
+			expr := lvarZeroInit(v, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 		}
@@ -2269,6 +2345,46 @@ func unary(rest **Token, tok *Token) *Node {
 	return postfix(rest, tok)
 }
 
+// func-decl = "func(" param-type* ")" return-type
+func funcDecl(rest **Token, tok *Token, name *Token) *Type {
+	printCurTok(tok)
+	printCalledFunc()
+
+	tok = skip(tok, "(")
+
+	head := &Type{}
+	cur := head
+	first := true
+
+	for !equal(tok, ")") {
+		if !first {
+			tok = skip(tok, ",")
+		}
+		first = false
+
+		paramty := readTypePreffix(&tok, tok, name)
+		if paramty == nil {
+			panic("\n" + errorTok(tok, "is not typename"))
+		}
+		cur.Next = copyType(paramty)
+		cur = cur.Next
+	}
+
+	tok = skip(tok, ")")
+	retty := readTypePreffix(rest, tok, name)
+	*rest = tok
+
+	ty := pointerTo(funcType(retty, head.Next))
+
+	if name != nil {
+		pushScope(getIdent(name)).TyDef = ty
+	} else {
+		pushScope(newUniqueName()).TyDef = ty
+	}
+
+	return ty
+}
+
 // struct-member = ident type-prefix type-specifier
 func structMems(rest **Token, tok *Token, ty *Type) *Member {
 	printCurTok(tok)
@@ -2388,19 +2504,27 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 
 // slice-expr = primary "[" expr ":" expr "]"
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
-	fmt.Printf("cur: %#v\n\n", cur)
-	fmt.Printf("cur.Obj.Ty: %#v\n\n", cur.Obj.Ty)
+	// fmt.Printf("cur: %#v\n\n", cur)
+	// fmt.Printf("cur.Obj.Ty: %#v\n\n", cur.Obj.Ty)
 	// first := eval(idx)
-	end := constExpr(rest, tok.Next)
+	constExpr(rest, tok.Next) // end :=
 	// cur.Obj.Ty.Cap = cur.Obj.Ty.ArrSz - int(first)
 	// cur.Obj.Ty.Len = int(end - first)
-	fmt.Println("end:", end)
+	// fmt.Println("end:", end)
 	node := newUnary(ND_ADDR, newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	return node
 }
 
-// postfix = type-name "{" initializer-list "}"
-//         | primary ("[" expr "]" | slice-expr | "." ident | "++" | "--")*
+// postfix = "(" type-name ")" "{" initializer-list "}"
+//         = ident "(" func-args ")" postfix-tail*
+//         | primary postfix-tail*
+//
+// postfix-tail = "[" expr "]"
+//              | "(" func-args ")"
+//              | slice-expr
+//              | "." ident
+//              | "++"
+//              | "--"
 func postfix(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -2424,6 +2548,11 @@ func postfix(rest **Token, tok *Token) *Node {
 	node := primary(&tok, tok)
 
 	for {
+		if equal(tok, "(") {
+			node = funcall(&tok, tok.Next, node)
+			continue
+		}
+
 		if equal(tok, "[") {
 			// x[y:z] is slice
 			// x[y] is short for *(x+y)
@@ -2463,25 +2592,26 @@ func postfix(rest **Token, tok *Token) *Node {
 	}
 }
 
-// funcall = ident "(" (assign ("," assign)*)? ")"
+// funcall = "(" (assign ("," assign)*)? ")"
 //
 //
-func funcall(rest **Token, tok *Token) *Node {
+func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
-	start := tok
-	tok = tok.Next.Next // skip '('
+	addType(fn)
 
-	sc := findVar(start)
-	if sc == nil {
-		panic("\n" + errorTok(start, "implicit declaration of a function"))
-	}
-	if sc.Obj == nil || sc.Obj.Ty.Kind != TY_FUNC {
-		panic("\n" + errorTok(start, "not a function"))
+	if fn.Ty.Kind != TY_FUNC &&
+		(fn.Ty.Kind != TY_PTR || fn.Ty.Base.Kind != TY_FUNC) {
+		panic(errorTok(fn.Tok, "not a function"))
 	}
 
-	ty := sc.Obj.Ty
+	var ty *Type
+	if fn.Ty.Kind == TY_FUNC {
+		ty = fn.Ty
+	} else {
+		ty = fn.Ty.Base
+	}
 	paramTy := ty.Params
 
 	head := &Node{}
@@ -2521,8 +2651,7 @@ func funcall(rest **Token, tok *Token) *Node {
 
 	*rest = skip(tok, ")")
 
-	node := newNode(ND_FUNCALL, start)
-	node.FuncName = start.Str
+	node := newUnary(ND_FUNCALL, fn, tok)
 	node.FuncTy = ty
 	node.Ty = ty.RetTy
 	node.Args = head.Next
@@ -2532,7 +2661,7 @@ func funcall(rest **Token, tok *Token) *Node {
 // primary = "(" expr ")"
 //         | "sizeof" "(" type-name ")"
 //         | "sizeof" unary
-//         | ident func-args?
+//         | ident
 //         | str
 //         | num
 func primary(rest **Token, tok *Token) *Node {
@@ -2571,23 +2700,18 @@ func primary(rest **Token, tok *Token) *Node {
 	}
 
 	if tok.Kind == TK_IDENT {
-		// Function call
-		if equal(tok.Next, "(") {
-			return funcall(rest, tok)
-		}
-
+		// Variable
 		sc := findVar(tok)
-		if sc == nil {
-			panic("\n" + errorTok(tok, "undefined variable"))
-		}
-
-		var node *Node
-		if sc.Obj != nil {
-			node = newVarNode(sc.Obj, tok)
-		}
-
 		*rest = tok.Next
-		return node
+
+		if sc != nil && sc.Obj != nil {
+			return newVarNode(sc.Obj, tok)
+		}
+
+		if equal(tok.Next, "(") {
+			panic(errorTok(tok, "implicit declaration of a function"))
+		}
+		panic(errorTok(tok, "undefined variable"))
 	}
 
 	if tok.Kind == TK_STR {

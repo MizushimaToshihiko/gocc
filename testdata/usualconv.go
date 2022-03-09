@@ -3,6 +3,10 @@ package test_usualconv
 func assert(want int, act int, code string)
 func println(format string)
 
+func ret10() int {
+	return 10
+}
+
 func main() {
 	assert(int64(-5), -10+int64(5), "-10+int64(5)")
 	assert(int64(-15), -10-int64(5), "-10-int64(5)")
@@ -37,6 +41,8 @@ func main() {
 	x3.a = 5
 	y3 = x3
 	assert(5, y3.a, "type t3 struct{a byte;};var x t3,var y3 t3; x3.a=5; y3=x3; y3.a")
+
+	assert(0, ret10 == println, "ret10==println")
 
 	println("OK")
 }

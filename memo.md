@@ -345,3 +345,57 @@ func main() {
 	fmt.Println(s)
 }
 ```
+
+2022/03/07 関数名を引数に取る関数の定義の例[URL](https://go.dev/play/p/xctRHJDCJJn)
+```Go
+package main
+
+import (
+	"fmt"
+	"unsafe"
+)
+
+func ret3(b int) int {
+	return 3 + b
+}
+
+func add2(a int, b int) int8 {
+	return int8(a + b)
+}
+
+func param_decay(f func(int) int, a int) int {
+	return f(a)
+}
+
+func main() {
+	fmt.Println(param_decay(ret3, 100))
+	var a func(int, int) int8 = add2
+	fmt.Println(a(1, 2))
+	fmt.Printf("a: %T\n", a)
+
+	fmt.Println(unsafe.Sizeof(a))
+	fmt.Println(unsafe.Sizeof(a(1, 2)))
+}
+```
+```C
+#include <stdio.h>
+
+int add2(int a, int b) {
+    return a + b;
+}
+
+int ret3() {
+    return 3;
+}
+
+int main(void){
+    int (*fn)(int,int)=add2;
+    printf("%d\n", fn(1,2));
+    printf("%u\n",fn);
+    
+    int (*fn2)()=ret3;
+    printf("%d\n", fn2());
+    printf("%u\n",fn2);
+}
+```
+https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html

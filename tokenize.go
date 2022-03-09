@@ -181,7 +181,7 @@ var tyName = []string{
 	"complex64", "complex128",
 	"byte", "rune",
 	"string", "bool", "error",
-	"struct", // typeではないけどisTypenameで使うので
+	"struct", "func",
 } // <-順番が大事、intとint16ではint16が先
 
 var term = []string{"break", "continue", "fallthrough",

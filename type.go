@@ -149,8 +149,25 @@ func pointerTo(base *Type) *Type {
 	}
 }
 
-func funcType(retTy *Type) *Type {
-	return &Type{Kind: TY_FUNC, Align: 1, RetTy: retTy, TyName: "func"}
+func funcType(retTy *Type, params *Type) *Type {
+	head := params
+	cur := head
+	var typarams string
+	for ; cur != nil; cur = cur.Next {
+		typarams += cur.TyName + ","
+	}
+
+	var retty string
+	if retTy != nil {
+		retty = retTy.TyName
+	}
+
+	return &Type{
+		Kind:   TY_FUNC,
+		RetTy:  retTy,
+		Params: head,
+		TyName: "func(" + typarams + ")" + retty,
+	}
 }
 
 func stringType() *Type {
@@ -185,6 +202,13 @@ func sliceType(base *Type, len int, cap int) *Type {
 func getCommonType(ty1, ty2 *Type) *Type {
 	if ty1.Base != nil {
 		return pointerTo(ty1.Base)
+	}
+
+	if ty1.Kind == TY_FUNC {
+		return pointerTo(ty1)
+	}
+	if ty2.Kind == TY_FUNC {
+		return pointerTo(ty2)
 	}
 
 	if ty1.Kind == TY_DOUBLE || ty2.Kind == TY_DOUBLE {
@@ -319,11 +343,12 @@ func (e *errWriter) visit(node *Node) {
 		node.Ty = node.Mem.Ty
 		return
 	case ND_ADDR:
-		if node.Lhs.Ty.Kind == TY_ARRAY {
+		ty := node.Lhs.Ty
+		if ty.Kind == TY_ARRAY {
 			node.Ty = pointerTo(node.Lhs.Ty.Base)
 			return
 		}
-		node.Ty = pointerTo(node.Lhs.Ty)
+		node.Ty = pointerTo(ty)
 		return
 	case ND_DEREF:
 		if node.Lhs.Ty.Base == nil {
