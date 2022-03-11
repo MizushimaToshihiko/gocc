@@ -44,5 +44,17 @@ func main() {
 	assert(0, strcmp(x16, "3"), "strcmp(x16, \"3\")")
 	assert(0, strcmp(x17, "4"), "strcmp(x17, \"4\")")
 
+	x18, x19, x20 := 1, 2, 3
+	assert(1, x18, "x18")
+	assert(2, x19, "x19")
+	assert(3, x20, "x20")
+
+	x21, x22, x23, x24 := "1", "2", "3", "4"
+	assert(8, Sizeof(x21), "Sizeof(x21)")
+	assert(0, strcmp(x21, "1"), "strcmp(x21, \"1\")")
+	assert(0, strcmp(x22, "2"), "strcmp(x22, \"2\")")
+	assert(0, strcmp(x23, "3"), "strcmp(x23, \"3\")")
+	assert(0, strcmp(x24, "4"), "strcmp(x24, \"4\")")
+
 	println("OK")
 }

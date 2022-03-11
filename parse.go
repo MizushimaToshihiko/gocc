@@ -1711,6 +1711,21 @@ func stmt(rest **Token, tok *Token) *Node {
 	return exprStmt(rest, tok)
 }
 
+func isShortVarSpec(tok *Token) bool {
+	for !equal(tok, ";") {
+		if equal(tok, ":=") {
+			return true
+		}
+
+		if equal(tok, ",") && tok.Next.Kind == TK_IDENT {
+			tok = tok.Next.Next
+			continue
+		}
+		break
+	}
+	return false
+}
+
 // compound-stmt = (typedef | declaration | stmt)* "}"
 func compoundStmt(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
@@ -1737,7 +1752,7 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 		if consume(&tok, tok, "var") {
 			cur.Next = declaration(&tok, tok, false)
 
-		} else if tok.Kind == TK_IDENT && equal(tok.Next, ":=") {
+		} else if tok.Kind == TK_IDENT && isShortVarSpec(tok.Next) {
 			cur.Next = declaration(&tok, tok, true)
 
 		} else {
