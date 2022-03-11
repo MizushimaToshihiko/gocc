@@ -8,7 +8,8 @@
  - 配列の宣言で"[...]int{1,2,3}"みたいなもの
  - 関数戻り値の型チェック(type checking)
  - goroutine
- - switch ident.(type) {
+ - "switch" ident.(type) { ... }
+ - "switch" Init ";" Condition { ... }
  - complex(複素数)
  - クロージャ
  - gc
@@ -20,7 +21,6 @@
    - slice
    - rune(int32のエイリアス)
    - rune literal => tokenizerのchar literalを変更する?
-   - case case1,case2:
    - blank identifiers : "_"
    - bool型でtrueやfalseを使用できるように
    - 構造体埋め込みでメソッド集合も埋め込む
