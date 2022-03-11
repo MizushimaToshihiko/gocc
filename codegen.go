@@ -801,8 +801,10 @@ func (c *codeWriter) genStmt(node *Node) {
 		return
 	case ND_CASE:
 		c.println("%s:", node.Lbl)
-		c.genStmt(node.Lhs)
-		c.println("	jmp %s", node.CaseEndLbl)
+		if node.Lhs != nil {
+			c.genStmt(node.Lhs)
+			c.println("	jmp %s", node.CaseEndLbl)
+		}
 		return
 	case ND_BLOCK:
 		for n := node.Body; n != nil; n = n.Next {

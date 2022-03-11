@@ -1,3 +1,3 @@
 module github.com/MizushimaToshihiko/gocc
 
-go 1.16
+go 1.17

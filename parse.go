@@ -1545,14 +1545,32 @@ func stmt(rest **Token, tok *Token) *Node {
 		if curSwitch == nil {
 			panic("\n" + errorTok(tok, "stray case"))
 		}
-		node := newNode(ND_CASE, tok)
-		val := constExpr(&tok, tok.Next)
+
+		tok = skip(tok, "case")
+		var head = &Node{}
+		var cur = head
+		var first = true
+
+		for !equal(tok, ":") {
+			if !first {
+				tok = skip(tok, ",")
+			}
+			first = false
+
+			node := newNode(ND_CASE, tok)
+			node.Val = constExpr(&tok, tok)
+			node.Lbl = newUniqueName()
+			node.CaseNext = curSwitch.CaseNext
+			curSwitch.CaseNext = node
+
+			cur.Next = node
+			cur = cur.Next
+		}
+
 		tok = skip(tok, ":")
-		node.Lbl = newUniqueName()
-		node.Lhs = stmt(rest, tok)
-		node.Val = val
-		node.CaseNext = curSwitch.CaseNext
-		curSwitch.CaseNext = node
+		cur.Lhs = stmt(rest, tok)
+		node := newNode(ND_BLOCK, tok)
+		node.Body = head.Next
 		return node
 	}
 
