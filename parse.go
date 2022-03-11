@@ -1383,35 +1383,52 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 	cur := head
 	var i int
 
-	for !equal(tok, ";") {
+	identList := make([]*Obj, 0)
+
+	for !equal(tok, "=") && !equal(tok, ":=") && !equal(tok, ";") {
 		if i > 0 {
 			tok = skip(tok, ",")
 		}
 		i++
 		ty := declarator(&tok, tok)
+		if ty.Name == nil {
+			panic(errorTok(ty.NamePos, "variable name omitted"))
+		}
 
 		v := newLvar(getIdent(ty.Name), ty)
+		identList = append(identList, v)
+	}
 
-		if !isShort && equal(tok, "=") || isShort && equal(tok, ":=") {
+	ty := copyType(identList[len(identList)-1].Ty)
+	for j := len(identList) - 2; j >= 0; j-- {
+		identList[j].Ty = ty
+	}
+
+	if !isShort && equal(tok, "=") || isShort && equal(tok, ":=") {
+		j := 0
+		for !equal(tok, ";") {
+			v := identList[j]
 			expr := lvarInitializer(&tok, tok.Next, v)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
-		} else {
+			j++
+
+			if v.Ty.Sz < 0 {
+				panic("\n" + errorTok(v.Ty.Name, "variable has incomplete type"))
+			}
+			if v.Ty.Kind == TY_VOID ||
+				(v.Ty.Base != nil && v.Ty.Base.Kind == TY_VOID) {
+				panic("\n" + errorTok(v.Ty.Name, "variable declared void"))
+			}
+		}
+
+	} else {
+		for j := 0; j < len(identList); j++ {
+			v := identList[j]
 			// Initialize empty variables.
 			expr := lvarZeroInit(v, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
-		}
-
-		if v.Ty.Sz < 0 {
-			panic("\n" + errorTok(ty.Name, "variable has incomplete type"))
-		}
-		if v.Ty.Kind == TY_VOID ||
-			(v.Ty.Base != nil && v.Ty.Base.Kind == TY_VOID) {
-			panic("\n" + errorTok(ty.Name, "variable declared void"))
-		}
-		if ty.Name == nil {
-			panic(errorTok(ty.NamePos, "variable name omitted"))
 		}
 	}
 
