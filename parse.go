@@ -1750,8 +1750,8 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 
 		if equal(tok, "var") && equal(tok.Next, "(") {
 			tok = tok.Next.Next
-			for !equal(tok, ")") {
 
+			for !equal(tok, ")") {
 				if tok.Kind == TK_COMM {
 					// skip line comment
 					tok = tok.Next
@@ -3018,6 +3018,26 @@ func parse(tok *Token) *Obj {
 
 		if consume(&tok, tok, "func") {
 			tok = function(tok)
+			continue
+		}
+
+		if equal(tok, "var") && equal(tok.Next, "(") {
+			tok = tok.Next.Next
+
+			for !equal(tok, ")") {
+				if tok.Kind == TK_COMM {
+					// skip line comment
+					tok = tok.Next
+					continue
+				}
+
+				if tok.Kind != TK_IDENT {
+					panic("\n" + errorTok(tok, "unexpected expression"))
+				}
+				tok = globalVar(tok)
+			}
+			tok = skip(tok, ")")
+			tok = skip(tok, ";")
 			continue
 		}
 

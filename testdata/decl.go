@@ -8,6 +8,11 @@ func strcmp(s1 string, s2 string) int
 var g1, g2, g3 bool
 var g4, g5, g6 = 2.0, 8, "foo"
 
+var (
+	g7          int
+	g8, g9, g10 = 2.0, 3.0, "bar"
+)
+
 func main() {
 	var x1 byte
 	assert(1, Sizeof(x1), "var x1 byte; Sizeof(x1)")
@@ -74,6 +79,11 @@ func main() {
 	assert(2.0, g4, "g4")
 	assert(8, g5, "g5")
 	assert(0, strcmp(g6, "foo"), "strcmp(g6, \"foo\")")
+
+	assert(0, g7, "g7")
+	assert(2.0, g8, "g8")
+	assert(3.0, g9, "g9")
+	assert(0, strcmp(g10, "bar"), "strcmp(g10, \"bar\")")
 
 	println("OK")
 }
