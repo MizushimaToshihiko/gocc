@@ -109,6 +109,21 @@ func add10_int(x1 int, x2 int, x3 int, x4 int, x5 int, x6 int, x7 int, x8 int, x
 func add10_float(x1 float32, x2 float32, x3 float32, x4 float32, x5 float32, x6 float32, x7 float32, x8 float32, x9 float32, x10 float32) float32
 func add10_double(x1 float64, x2 float64, x3 float64, x4 float64, x5 float64, x6 float64, x7 float64, x8 float64, x9 float64, x10 float64) float64
 
+func many_args1(a int, b int, c int, d int, e int, f int, g int, h int) int {
+	return g / h
+}
+
+func many_args2(a float64, b float64, c float64, d float64, e float64,
+	f float64, g float64, h float64, i float64, j float64) float64 {
+	return i / j
+}
+
+func many_args3(a int, b float64, c int, d int, e float64, f int,
+	g float64, h int, i float64, j float64, k float64,
+	l float64, m float64, n int, o int, p float64) int {
+	return o / p
+}
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
@@ -184,6 +199,10 @@ func main() {
 	var buf2 string
 	sprintf(buf2, "%d %.1f %.1f %.1f %d %d %.1f %d %d %d %d %.1f %d %d %.1f %.1f %.1f %.1f %d", 1, 1.0, 1.0, 1.0, 1, 1, 1.0, 1, 1, 1, 1, 1.0, 1, 1, 1.0, 1.0, 1.0, 1.0, 1)
 	assert(0, strcmp(buf2, "1 1.0 1.0 1.0 1 1 1.0 1 1 1 1 1.0 1 1 1.0 1.0 1.0 1.0 1"), "strcmp(buf2, \"1 1.0 1.0 1.0 1 1 1.0 1 1 1 1 1.0 1 1 1.0 1.0 1.0 1.0 1\")")
+
+	assert(4, many_args1(1, 2, 3, 4, 5, 6, 40, 10), "many_args1(1,2,3,4,5,6,40,10)")
+	assert(4, many_args2(1, 2, 3, 4, 5, 6, 7, 8, 40, 10), "many_args2(1,2,3,4,5,6,7,8,40,10)")
+	assert(8, many_args3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 80, 10), "many_args3(1,2,3,4,5,6,7,8,9,10,11,12,13,14,80,10)")
 
 	println("OK")
 }

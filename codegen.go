@@ -909,13 +909,48 @@ func (c *codeWriter) assignLvarOffsets(prog *Obj) {
 			continue
 		}
 
-		offset := 0
-		for v := fn.Locals; v != nil; v = v.Next {
-			offset += v.Ty.Sz
-			offset = alignTo(offset, v.Align)
-			v.Offset = -offset
+		// If a function has many parameters, some parameters are
+		// inevitably passed by stack rather than by register.
+		// The first passed-by-stack parameter resides at RBP+16.
+		top := 16
+		bottom := 0
+
+		gp := 0
+		fp := 0
+
+		// Assign offsets to pass-by-stack parameters.
+		for v := fn.Params; v != nil; v = v.Next {
+			if isFlonum(v.Ty) {
+				if fp < FP_MAX {
+					fp++
+					continue
+				}
+				fp++
+			} else {
+				if gp < GP_MAX {
+					gp++
+					continue
+				}
+				gp++
+			}
+
+			top = alignTo(top, 8)
+			v.Offset = top
+			top += v.Ty.Sz
 		}
-		fn.StackSz = alignTo(offset, 16)
+
+		// Assign offset to pass-by-register parameters and local variables.
+		for v := fn.Locals; v != nil; v = v.Next {
+			if v.Offset != 0 {
+				continue
+			}
+
+			bottom += v.Ty.Sz
+			bottom = alignTo(bottom, v.Align)
+			v.Offset = -bottom
+		}
+
+		fn.StackSz = alignTo(bottom, 16)
 	}
 }
 
@@ -1028,6 +1063,10 @@ func (c *codeWriter) emitText(prog *Obj) {
 		gp := 0
 		fp := 0
 		for v := fn.Params; v != nil; v = v.Next {
+			if v.Offset > 0 {
+				continue
+			}
+
 			if isFlonum(v.Ty) {
 				c.storeFp(fp, v.Offset, v.Ty.Sz)
 				fp++
