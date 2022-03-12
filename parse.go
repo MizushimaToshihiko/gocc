@@ -1007,8 +1007,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 	if init.Expr == nil {
 		init.Expr = assign(rest, tok)
-		// fmt.Printf("init.Expr: %#v\n\n", init.Expr)
-		// fmt.Printf("init.Expr.Obj.Ty: %#v\n\n", init.Expr.Obj.Ty)
 	}
 }
 
@@ -1336,6 +1334,7 @@ func zeroInit2(init *Initializer, tok *Token) {
 
 	if init.Expr == nil {
 		init.Expr = newNum(0, tok)
+		init.Expr.Ty = init.Ty
 	}
 }
 
@@ -1344,8 +1343,6 @@ func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
 	printCalledFunc()
 
 	init := newInitializer(ty)
-	// fmt.Printf("zeroInit: init: %#v\n\n", init)
-	// fmt.Printf("zeroInit: init.Ty: %#v\n\n", init.Ty)
 	zeroInit2(init, tok)
 
 	*newTy = init.Ty
@@ -1359,22 +1356,20 @@ func lvarZeroInit(v *Obj, tok *Token) *Node {
 	init := zeroInit(v.Ty, &v.Ty, tok)
 	desg := &InitDesg{nil, 0, nil, v}
 
-	// If a partial initializer list is given, the standard requires
-	// that unspecified elements are set to 0. Here, we simply
-	// zero-inilialize the entire memory region of a variable defore
-	// initializing it with user-supplied values.
+	// If no initializer list is given, the variable is initialized
+	// with 0.
 	lhs := newNode(ND_MEMZERO, tok)
 	lhs.Obj = v
 
 	rhs := createLvarInit(init, v.Ty, desg, tok)
+	addType(rhs)
 	return newBinary(ND_COMMA, lhs, rhs, tok)
 }
 
-// declaration = VarDecl | VarSpec(unimplemented) | ShortVarDecl
-// VarDecl = "var" ident type-prefix declspec ("=" expr)
-//         | "var" ident "=" expr
-// VarSpec = ident-list (type-preffix type-specifier [ "=" expr-list ] | "=" expr-list)
-// ShortVarDecl = ident ":=" expr
+// declaration = VarDecl | VarSpec | ShortVarDecl
+// VarDecl = "var" ( VarSpec | "("  { VarSpec ";" } ")" ) .
+// VarSpec = IdentifierList (Type [ "=" ExpressionList ] | "=" ExpressionList)
+// ShortVarDecl = IdentifierList ":=" ExpressionList .
 func declaration(rest **Token, tok *Token, isShort bool) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -1409,6 +1404,7 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		for !equal(tok, ";") {
 			v := identList[j]
 			expr := lvarInitializer(&tok, tok.Next, v)
+			addType(expr)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 			j++
@@ -1423,13 +1419,16 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		}
 
 	} else {
+
 		for j := 0; j < len(identList); j++ {
 			v := identList[j]
 			// Initialize empty variables.
 			expr := lvarZeroInit(v, tok)
+			addType(expr)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 		}
+
 	}
 
 	node := newNode(ND_BLOCK, tok)
@@ -1746,6 +1745,27 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 
 		if consume(&tok, tok, "type") {
 			tok = parseTypedef(tok)
+			continue
+		}
+
+		if equal(tok, "var") && equal(tok.Next, "(") {
+			tok = tok.Next.Next
+			for !equal(tok, ")") {
+
+				if tok.Kind == TK_COMM {
+					// skip line comment
+					tok = tok.Next
+					continue
+				}
+
+				if tok.Kind != TK_IDENT {
+					panic("\n" + errorTok(tok, "unexpected expression"))
+				}
+
+				cur.Next = declaration(&tok, tok, false)
+				cur = cur.Next
+			}
+			tok = skip(tok, ")")
 			continue
 		}
 

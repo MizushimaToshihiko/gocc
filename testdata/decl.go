@@ -56,5 +56,14 @@ func main() {
 	assert(0, strcmp(x23, "3"), "strcmp(x23, \"3\")")
 	assert(0, strcmp(x24, "4"), "strcmp(x24, \"4\")")
 
+	var (
+		i25           int
+		u25, v25, s25 = 2.0, 3.0, "bar"
+	)
+	assert(0, i25, "i25")
+	assert(2.0, u25, "u25")
+	assert(3.0, v25, "v25")
+	assert(0, strcmp(s25, "bar"), "strcmp(s25, \"bar\")")
+
 	println("OK")
 }
