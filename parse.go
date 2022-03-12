@@ -2952,24 +2952,48 @@ func globalVar(tok *Token) *Token {
 	printCurTok(tok)
 	printCalledFunc()
 
-	first := true
-	for !consume(&tok, tok, ";") {
-		if !first {
+	var i int
+
+	identList := make([]*Obj, 0)
+
+	for !equal(tok, "=") && !equal(tok, ":=") && !equal(tok, ";") {
+		if i > 0 {
 			tok = skip(tok, ",")
 		}
-		first = false
+		i++
+
 		ty := declarator(&tok, tok)
 		if ty.Name == nil {
 			panic("\n" + errorTok(ty.NamePos, "variable name omitted"))
 		}
 
 		v := newGvar(getIdent(ty.Name), ty)
-		if equal(tok, "=") {
+		identList = append(identList, v)
+	}
+
+	ty := copyType(identList[len(identList)-1].Ty)
+	for j := len(identList) - 2; j >= 0; j-- {
+		identList[j].Ty = ty
+	}
+
+	if equal(tok, "=") {
+		j := 0
+		for !equal(tok, ";") {
+			v := identList[j]
 			gvarInitializer(&tok, tok.Next, v)
-		} else {
+			j++
+		}
+
+	} else {
+		for j := 0; j < len(identList); j++ {
+			v := identList[j]
+			// Initialize empty variables.
 			gvarZeroInit(v, v.Ty.Name)
 		}
 	}
+
+	// fmt.Printf("globalVar: tok: %#v\n\n", tok)
+	tok = skip(tok, ";")
 	return tok
 }
 
