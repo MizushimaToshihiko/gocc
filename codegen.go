@@ -393,6 +393,59 @@ func (c *codeWriter) cast(from *Type, to *Type) {
 	}
 }
 
+// Struct equal or smaller than 16 bytes are passed
+// using up to two registers.
+//
+// If the first 8 bytes contains only floating-point type members,
+// they are passed in an XMM register. Otherwise, they are passed
+// in a general-purpose register.
+//
+// If a struct is larger than 8 bytes, the same rule is
+// applied to the next 8 bytes chunk.
+//
+// This function returns true if `ty` has only floating-point
+// member in its byte tange [lo hi).
+func hasFlonum(ty *Type, lo int, hi int, offset int) bool {
+	if ty.Kind == TY_STRUCT {
+		for mem := ty.Mems; mem != nil; mem = mem.Next {
+			if !hasFlonum(mem.Ty, lo, hi, offset+mem.Offset) {
+				return false
+			}
+		}
+		return true
+	}
+
+	if ty.Kind == TY_ARRAY {
+		for i := 0; i < ty.ArrSz; i++ {
+			if !hasFlonum(ty.Base, lo, hi, offset+ty.Base.Sz*i) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return offset < lo || hi <= offset || isFlonum(ty)
+}
+
+func hasFlonum1(ty *Type) bool {
+	return hasFlonum(ty, 0, 8, 0)
+}
+
+func hasFlonum2(ty *Type) bool {
+	return hasFlonum(ty, 8, 16, 0)
+}
+
+func (c *codeWriter) pushStruct(ty *Type) {
+	sz := alignTo(ty.Sz, 8)
+	c.println("	sub $%d, %%rsp", sz)
+	depth += sz / 8
+
+	for i := 0; i < ty.Sz; i++ {
+		c.println("	mov %d(%%rax), %%r10b", i)
+		c.println("	mov %%r10b, %d(%%rsp)", i)
+	}
+}
+
 func (c *codeWriter) pushArgs2(args *Node, firstPass bool) {
 	if c.err != nil {
 		return
@@ -411,9 +464,12 @@ func (c *codeWriter) pushArgs2(args *Node, firstPass bool) {
 
 	c.genExpr(args)
 
-	if isFlonum(args.Ty) {
+	switch args.Ty.Kind {
+	case TY_STRUCT:
+		c.pushStruct(args.Ty)
+	case TY_FLOAT, TY_DOUBLE:
 		c.pushf()
-	} else {
+	default:
 		c.push()
 	}
 }
@@ -445,13 +501,40 @@ func (c *codeWriter) pushArgs(args *Node) int {
 	var stack, gp, fp int
 
 	for arg := args; arg != nil; arg = arg.Next {
-		if isFlonum(arg.Ty) {
+		ty := arg.Ty
+
+		switch ty.Kind {
+		case TY_STRUCT:
+			if ty.Sz > 16 {
+				arg.PassByStack = true
+				stack += alignTo(ty.Sz, 8) / 8
+			} else {
+				var fp1, fp2 int
+				var notfp1, notfp2 int = 1, 1
+				if hasFlonum1(ty) {
+					fp1 = 1
+					notfp1 = 0
+				}
+				if hasFlonum2(ty) {
+					fp2 = 1
+					notfp2 = 0
+				}
+
+				if fp+fp1+fp2 < FP_MAX && gp+notfp1+notfp2 < GP_MAX {
+					fp = fp + fp1 + fp2
+					gp = gp + notfp1 + notfp2
+				} else {
+					arg.PassByStack = true
+					stack += alignTo(ty.Sz, 8) / 8
+				}
+			}
+		case TY_FLOAT, TY_DOUBLE:
 			if fp >= FP_MAX {
 				arg.PassByStack = true
 				stack++
 			}
 			fp++
-		} else {
+		default:
 			if gp >= GP_MAX {
 				arg.PassByStack = true
 				stack++
@@ -610,12 +693,50 @@ func (c *codeWriter) genExpr(node *Node) {
 		gp := 0
 		fp := 0
 		for arg := node.Args; arg != nil; arg = arg.Next {
-			if isFlonum(arg.Ty) {
+			ty := arg.Ty
+
+			switch ty.Kind {
+			case TY_STRUCT:
+				if ty.Sz > 16 {
+					continue
+				}
+
+				var fp1, fp2 int
+				var notfp1, notfp2 int = 1, 1
+				if hasFlonum1(ty) {
+					fp1 = 1
+					notfp1 = 0
+				}
+				if hasFlonum2(ty) {
+					fp2 = 1
+					notfp2 = 0
+				}
+
+				if fp+fp1+fp2 < FP_MAX && gp+notfp1+notfp2 < GP_MAX {
+					if fp1 != 0 {
+						c.popf(fp)
+						fp++
+					} else {
+						c.pop(argreg64[gp])
+						gp++
+					}
+
+					if ty.Sz > 8 {
+						if fp2 != 0 {
+							c.popf(fp)
+							fp++
+						} else {
+							c.pop(argreg64[gp])
+							gp++
+						}
+					}
+				}
+			case TY_FLOAT, TY_DOUBLE:
 				if fp < FP_MAX {
 					c.popf(fp)
 					fp++
 				}
-			} else {
+			default:
 				if gp < GP_MAX {
 					c.pop(argreg64[gp])
 					gp++

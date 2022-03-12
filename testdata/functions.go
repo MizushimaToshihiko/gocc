@@ -124,6 +124,34 @@ func many_args3(a int, b float64, c int, d int, e float64, f int,
 	return o / p
 }
 
+type Ty4 struct {
+	a int
+	b int
+	c int16
+	d int8
+}
+
+type Ty5 struct {
+	a int
+	b float32
+	c float64
+}
+
+type Ty6 struct {
+	a [3]uint8
+}
+
+type Ty7 struct {
+	a int64
+	b int64
+	c int64
+}
+
+func struct_test5(x Ty5, n int) int
+func struct_test4(x Ty4, n int) int
+func struct_test6(x Ty6, n int) int
+func struct_test7(x Ty7, n int) int
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
@@ -203,6 +231,28 @@ func main() {
 	assert(4, many_args1(1, 2, 3, 4, 5, 6, 40, 10), "many_args1(1,2,3,4,5,6,40,10)")
 	assert(4, many_args2(1, 2, 3, 4, 5, 6, 7, 8, 40, 10), "many_args2(1,2,3,4,5,6,7,8,40,10)")
 	assert(8, many_args3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 80, 10), "many_args3(1,2,3,4,5,6,7,8,9,10,11,12,13,14,80,10)")
+
+	x4 := Ty4{10, 20, 30, 40}
+	assert(10, x4.a, "x1.a")
+	assert(10, struct_test4(x4, 0), "x4:=Ty4{10,20,30,40};struct_test4(x4,0)")
+	assert(20, struct_test4(x4, 1), "x4:=Ty4{10,20,30,40};struct_test4(x4,1)")
+	assert(30, struct_test4(x4, 2), "x4:=Ty4{10,20,30,40};struct_test4(x4,2)")
+	assert(40, struct_test4(x4, 3), "x4:=Ty4{10,20,30,40};struct_test4(x4,3)")
+
+	x5 := Ty5{10, 20, 30}
+	assert(10, struct_test5(x5, 0), "x5:=Ty5{10,20,30};struct_test5(x5,0)")
+	assert(20, struct_test5(x5, 1), "x5:=Ty5{10,20,30};struct_test5(x5,1)")
+	assert(30, struct_test5(x5, 2), "x5:=Ty5{10,20,30};struct_test5(x5,2)")
+
+	x6 := Ty6{10, 20, 30}
+	assert(10, struct_test6(x6, 0), "x6:=Ty6{10,20,30};struct_test6(x6,0)")
+	assert(20, struct_test6(x6, 1), "x6:=Ty6{10,20,30};struct_test6(x6,1)")
+	assert(30, struct_test6(x6, 2), "x6:=Ty6{10,20,30};struct_test6(x6,2)")
+
+	x7 := Ty7{10, 20, 30}
+	assert(10, struct_test7(x7, 0), "x7:=Ty7{10,20,30};struct_test7(x7,0)")
+	assert(20, struct_test7(x7, 1), "x7:=Ty7{10,20,30};struct_test7(x7,1)")
+	assert(30, struct_test7(x7, 2), "x7:=Ty7{10,20,30};struct_test7(x7,2)")
 
 	println("OK")
 }
