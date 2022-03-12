@@ -37,6 +37,9 @@ func count() int {
 	return i
 }
 
+const GP_MAX = 6
+const FP_MAX = 8
+
 var depth int
 var argreg8 = []string{"%dil", "%sil", "%dl", "%cl", "%r8b", "%r9b"}
 var argreg16 = []string{"%di", "%si", "%dx", "%cx", "%r8w", "%r9w"}
@@ -390,21 +393,82 @@ func (c *codeWriter) cast(from *Type, to *Type) {
 	}
 }
 
-func (c *codeWriter) pushArgs(args *Node) {
+func (c *codeWriter) pushArgs2(args *Node, firstPass bool) {
 	if c.err != nil {
 		return
 	}
 
-	if args != nil {
-		c.pushArgs(args.Next)
+	if args == nil {
+		return
+	}
 
-		c.genExpr(args)
-		if isFlonum(args.Ty) {
-			c.pushf()
+	c.pushArgs2(args.Next, firstPass)
+
+	if (firstPass && !args.PassByStack) ||
+		(!firstPass && args.PassByStack) {
+		return
+	}
+
+	c.genExpr(args)
+
+	if isFlonum(args.Ty) {
+		c.pushf()
+	} else {
+		c.push()
+	}
+}
+
+// pushArgs loads function call arguments. Arguments are already evaluated and
+// stored to the stack as local variables. What we need to do in this
+// function is to load them to registers or push them to the stack as
+// specified by the x86-64 psABI. Here is what the spec says:
+//
+//  - Up to 6 arguments of integral type are passed using RDI, RSI,
+//    RDX, RCX, R8 and R9.
+//
+//  - UP tp 8 arguments of floating-point type are passed using XMM0 to
+//    XMM7.
+//
+//  - If all registers of an appropriate type are already used, push an
+//    argument to the stack in the right-to-left order.
+//
+//  - Each argument passed on the stack takes 8 bytes, and the end of
+//    the argument area must be aligned to a 16 bytes boundary.
+//
+//  - If a function is variadic, set the number of floating-point type
+//    arguments to RAX.
+func (c *codeWriter) pushArgs(args *Node) int {
+	if c.err != nil {
+		return -1
+	}
+
+	var stack, gp, fp int
+
+	for arg := args; arg != nil; arg = arg.Next {
+		if isFlonum(arg.Ty) {
+			if fp >= FP_MAX {
+				arg.PassByStack = true
+				stack++
+			}
+			fp++
 		} else {
-			c.push()
+			if gp >= GP_MAX {
+				arg.PassByStack = true
+				stack++
+			}
+			gp++
 		}
 	}
+
+	if (depth+stack)%2 == 1 {
+		c.println("	sub $8, %%rsp")
+		depth++
+		stack++
+	}
+
+	c.pushArgs2(args, true)
+	c.pushArgs2(args, false)
+	return stack
 }
 
 func (c *codeWriter) genExpr(node *Node) {
@@ -540,28 +604,31 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println(".L.end.%d:", cnt)
 		return
 	case ND_FUNCALL:
-		c.pushArgs(node.Args)
+		stackArgs := c.pushArgs(node.Args)
 		c.genExpr(node.Lhs)
 
 		gp := 0
 		fp := 0
 		for arg := node.Args; arg != nil; arg = arg.Next {
 			if isFlonum(arg.Ty) {
-				c.popf(fp)
-				fp++
+				if fp < FP_MAX {
+					c.popf(fp)
+					fp++
+				}
 			} else {
-				c.pop(argreg64[gp])
-				gp++
+				if gp < GP_MAX {
+					c.pop(argreg64[gp])
+					gp++
+				}
 			}
 		}
 
-		if depth%2 == 0 {
-			c.println("	call *%%rax")
-		} else {
-			c.println("	sub $8, %%rsp")
-			c.println("	call *%%rax")
-			c.println("	add $8, %%rsp")
-		}
+		c.println("	mov %%rax, %%r10")
+		c.println("	mov $%d, %%rax", fp)
+		c.println("	call *%%r10")
+		c.println("	add $%d, %%rsp", stackArgs*8)
+
+		depth -= stackArgs
 
 		// It looks like the most significant 48 or 56 bits int RAX may
 		// contain garbage if a function return type is short or bool/char,

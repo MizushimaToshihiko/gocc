@@ -139,9 +139,10 @@ type Node struct {
 	Mem     *Member
 
 	// Function call
-	FuncName string
-	FuncTy   *Type
-	Args     *Node
+	FuncName    string
+	FuncTy      *Type
+	Args        *Node
+	PassByStack bool
 
 	// Goto or labeled statement
 	Lbl       string

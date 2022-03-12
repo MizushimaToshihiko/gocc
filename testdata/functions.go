@@ -105,6 +105,10 @@ func fnptr(fn func(int, int) int, a int, b int) int {
 	return fn(a, b)
 }
 
+func add10_int(x1 int, x2 int, x3 int, x4 int, x5 int, x6 int, x7 int, x8 int, x9 int, x10 int) int
+func add10_float(x1 float32, x2 float32, x3 float32, x4 float32, x5 float32, x6 float32, x7 float32, x8 float32, x9 float32, x10 float32) float32
+func add10_double(x1 float64, x2 float64, x3 float64, x4 float64, x5 float64, x6 float64, x7 float64, x8 float64, x9 float64, x10 float64) float64
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
@@ -172,6 +176,14 @@ func main() {
 	fn03 := add2
 	assert(3, fn03(1, 2), "fn03(1,2)")
 	assert(3, fnptr(add2, 1, 2), "fnptr(add2, 1,2)")
+
+	assert(55, add10_int(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_int(1,2,3,4,5,6,7,8,9,10)")
+	assert(55, add10_float(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_float(1,2,3,4,5,6,7,8,9,10)")
+	assert(55, add10_double(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_double(1,2,3,4,5,6,7,8,9,10)")
+
+	var buf2 string
+	sprintf(buf2, "%d %.1f %.1f %.1f %d %d %.1f %d %d %d %d %.1f %d %d %.1f %.1f %.1f %.1f %d", 1, 1.0, 1.0, 1.0, 1, 1, 1.0, 1, 1, 1, 1, 1.0, 1, 1, 1.0, 1.0, 1.0, 1.0, 1)
+	assert(0, strcmp(buf2, "1 1.0 1.0 1.0 1 1 1.0 1 1 1 1 1.0 1 1 1.0 1.0 1.0 1.0 1"), "strcmp(buf2, \"1 1.0 1.0 1.0 1 1 1.0 1 1 1 1 1.0 1 1 1.0 1.0 1.0 1.0 1\")")
 
 	println("OK")
 }
