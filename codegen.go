@@ -1041,13 +1041,35 @@ func (c *codeWriter) assignLvarOffsets(prog *Obj) {
 
 		// Assign offsets to pass-by-stack parameters.
 		for v := fn.Params; v != nil; v = v.Next {
-			if isFlonum(v.Ty) {
+			ty := v.Ty
+
+			switch ty.Kind {
+			case TY_STRUCT:
+				if ty.Sz <= 16 {
+					var fp1, fp2 int
+					var notfp1, notfp2 int = 1, 1
+					if hasFlonum(ty, 0, 8, 0) {
+						fp1 = 1
+						notfp1 = 0
+					}
+					if hasFlonum(ty, 8, 16, 8) {
+						fp2 = 1
+						notfp2 = 0
+					}
+
+					if fp+fp1+fp2 < FP_MAX && gp+notfp1+notfp2 < GP_MAX {
+						fp = fp + fp1 + fp2
+						gp = gp + notfp1 + notfp2
+						continue
+					}
+				}
+			case TY_FLOAT, TY_DOUBLE:
 				if fp < FP_MAX {
 					fp++
 					continue
 				}
 				fp++
-			} else {
+			default:
 				if gp < GP_MAX {
 					gp++
 					continue
@@ -1151,7 +1173,10 @@ func (c *codeWriter) storeGp(r, offset, sz int) {
 		c.println("	mov %s, %d(%%rbp)", argreg64[r], offset)
 		return
 	default:
-		c.unreachable("internal error")
+		for i := 0; i < sz; i++ {
+			c.println("	mov %s, %d(%%rbp)", argreg8[r], offset+i)
+			c.println("	shr $8, %s", argreg64[r])
+		}
 	}
 }
 
@@ -1188,11 +1213,36 @@ func (c *codeWriter) emitText(prog *Obj) {
 				continue
 			}
 
-			if isFlonum(v.Ty) {
-				c.storeFp(fp, v.Offset, v.Ty.Sz)
+			ty := v.Ty
+
+			switch ty.Kind {
+			case TY_STRUCT:
+				if ty.Sz > 16 {
+					c.unreachable("internal error")
+					return
+				}
+				if hasFlonum(ty, 0, 8, 0) {
+					c.storeFp(fp, v.Offset, min(8, ty.Sz))
+					fp++
+				} else {
+					c.storeGp(gp, v.Offset, min(8, ty.Sz))
+					gp++
+				}
+
+				if ty.Sz > 8 {
+					if hasFlonum(ty, 8, 16, 0) {
+						c.storeFp(fp, v.Offset+8, ty.Sz-8)
+						fp++
+					} else {
+						c.storeGp(gp, v.Offset+8, ty.Sz-8)
+						gp++
+					}
+				}
+			case TY_FLOAT, TY_DOUBLE:
+				c.storeFp(fp, v.Offset, ty.Sz)
 				fp++
-			} else {
-				c.storeGp(gp, v.Offset, v.Ty.Sz)
+			default:
+				c.storeGp(gp, v.Offset, ty.Sz)
 				gp++
 			}
 		}

@@ -152,6 +152,30 @@ func struct_test4(x Ty4, n int) int
 func struct_test6(x Ty6, n int) int
 func struct_test7(x Ty7, n int) int
 
+func structTest14(x Ty4, n int) int {
+	switch n {
+	case 0:
+		return x.a
+	case 1:
+		return x.b
+	case 2:
+		return x.c
+	default:
+		return x.d
+	}
+}
+
+func structTest15(x Ty5, n int) int {
+	switch n {
+	case 0:
+		return x.a
+	case 1:
+		return x.b
+	default:
+		return x.c
+	}
+}
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
@@ -253,6 +277,17 @@ func main() {
 	assert(10, struct_test7(x7, 0), "x7:=Ty7{10,20,30};struct_test7(x7,0)")
 	assert(20, struct_test7(x7, 1), "x7:=Ty7{10,20,30};struct_test7(x7,1)")
 	assert(30, struct_test7(x7, 2), "x7:=Ty7{10,20,30};struct_test7(x7,2)")
+
+	x8 := Ty4{10, 20, 30, 40}
+	assert(10, structTest14(x8, 0), "x8:=Ty4{10,20,30,40};structTest14(x8,0)")
+	assert(20, structTest14(x8, 1), "x8:=Ty4{10,20,30,40};structTest14(x8,1)")
+	assert(30, structTest14(x8, 2), "x8:=Ty4{10,20,30,40};structTest14(x8,2)")
+	assert(40, structTest14(x8, 3), "x8:=Ty4{10,20,30,40};structTest14(x8,3)")
+
+	x9 := Ty5{10, 20, 30}
+	assert(10, structTest15(x9, 0), "x9:=Ty5{10,20,30};structTest15(x9,0)")
+	assert(20, structTest15(x9, 1), "x9:=Ty5{10,20,30};structTest15(x9,1)")
+	assert(30, structTest15(x9, 2), "x9:=Ty5{10,20,30};structTest15(x9,2)")
 
 	println("OK")
 }
