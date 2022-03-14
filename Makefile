@@ -20,7 +20,7 @@ build: $(SRCS)
 
 testdata/%.exe: testdata/%.go
 	$(BINARY_NAME) -o $(^D)/$*.s $^
-	$(CC) -static -o $@ $(^D)/$*.s -xc $(^D)/common
+	$(CC) -static -g -o $@ $(^D)/$*.s -xc $(^D)/common
 
 test: $(TESTS)
 	for i in $^; do echo $$i; ./$$i || exit 1; echo; done

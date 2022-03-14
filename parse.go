@@ -143,6 +143,7 @@ type Node struct {
 	FuncTy      *Type
 	Args        *Node
 	PassByStack bool
+	RetBuf      *Obj
 
 	// Goto or labeled statement
 	Lbl       string
@@ -406,7 +407,7 @@ func newGvar(name string, ty *Type) *Obj {
 		v.IsFunc = true
 	}
 	// If name[0] is not uppercase, the 'Obj' can't be exported.
-	if 'A' > name[0] || name[0] > 'Z' {
+	if ('A' > name[0] || name[0] > 'Z') && name != "main" {
 		v.IsStatic = true
 	}
 
@@ -677,9 +678,9 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 		cur = cur.Next
 	}
 
-	// if cur == head {
-	// 	isVariadic = true
-	// }
+	if cur == head {
+		isVariadic = true
+	}
 
 	ty = funcType(ty, head.Next)
 	// ty.Params = head.Next
@@ -2762,6 +2763,12 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	node.FuncTy = ty
 	node.Ty = ty.RetTy
 	node.Args = head.Next
+
+	// If a function returns a struct, it is caller's responsibility
+	// to allocate a space for the return value.
+	if node.Ty.Kind == TY_STRUCT {
+		node.RetBuf = newLvar("", node.Ty)
+	}
 	return node
 }
 

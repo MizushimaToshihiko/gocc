@@ -153,9 +153,14 @@ func (c *codeWriter) genAddr(node *Node) {
 		c.genAddr(node.Lhs)
 		c.println("	add $%d, %%rax", node.Mem.Offset)
 		return
-	default:
-		c.unreachable(errorTok(node.Tok, "not a lvalue"))
+	case ND_FUNCALL:
+		if node.RetBuf != nil {
+			c.genExpr(node)
+			return
+		}
 	}
+
+	c.unreachable(errorTok(node.Tok, "not a lvalue"))
 }
 
 func (c *codeWriter) load(ty *Type) {
@@ -493,14 +498,21 @@ func (c *codeWriter) pushArgs2(args *Node, firstPass bool) {
 //
 //  - If a function is variadic, set the number of floating-point type
 //    arguments to RAX.
-func (c *codeWriter) pushArgs(args *Node) int {
+func (c *codeWriter) pushArgs(node *Node) int {
 	if c.err != nil {
 		return -1
 	}
 
 	var stack, gp, fp int
 
-	for arg := args; arg != nil; arg = arg.Next {
+	// If the return type is a large struct, the caller passes
+	// a pointer to a buffer as if it were the first argument.
+	if node.RetBuf != nil && node.Ty.Sz > 16 {
+		gp++
+	}
+
+	// Load as many arguments to the registers as possible.
+	for arg := node.Args; arg != nil; arg = arg.Next {
 		ty := arg.Ty
 
 		switch ty.Kind {
@@ -549,9 +561,67 @@ func (c *codeWriter) pushArgs(args *Node) int {
 		stack++
 	}
 
-	c.pushArgs2(args, true)
-	c.pushArgs2(args, false)
+	c.pushArgs2(node.Args, true)
+	c.pushArgs2(node.Args, false)
+
+	// If the return type is a large struct, the caller passes
+	// a pointer to a buffer as if it were the first argument.
+	if node.RetBuf != nil && node.Ty.Sz > 16 {
+		c.println("	lea %d(%%rbp), %%rax", node.RetBuf.Offset)
+		c.push()
+	}
+
 	return stack
+}
+
+func (c *codeWriter) copyRetBuf(v *Obj) {
+	ty := v.Ty
+	var gp, fp int
+
+	if hasFlonum1(ty) {
+		if ty.Sz != 4 && 8 > ty.Sz {
+			c.unreachable("internal error")
+			return
+		}
+
+		if ty.Sz == 4 {
+			c.println("	movss %%xmm0, %d(%%rbp)", v.Offset)
+		} else {
+			c.println("	movsd %%xmm0, %d(%%rbp)", v.Offset)
+		}
+		fp++
+	} else {
+		for i := 0; i < min(8, ty.Sz); i++ {
+			c.println("	mov %%al, %d(%%rbp)", v.Offset+i)
+			c.println("	shr $8, %%rax")
+		}
+		gp++
+	}
+
+	if ty.Sz > 8 {
+		if hasFlonum2(ty) {
+			if ty.Sz != 12 && ty.Sz != 16 {
+				c.unreachable("internal error")
+				return
+			}
+			if ty.Sz == 12 {
+				c.println("	movss %%xmm%d, %d(%%rbp)", fp, v.Offset+8)
+			} else {
+				c.println("	movsd %%xmm%d, %d(%%rbp)", fp, v.Offset+8)
+			}
+		} else {
+			var reg1 string = "%al"
+			var reg2 string = "%rax"
+			if gp != 0 {
+				reg1 = "%dl"
+				reg2 = "%rdx"
+			}
+			for i := 8; i < min(16, ty.Sz); i++ {
+				c.println("	mov %s, %d(%%rbp)", reg1, v.Offset+i)
+				c.println("	shr $8, %s", reg2)
+			}
+		}
+	}
 }
 
 func (c *codeWriter) genExpr(node *Node) {
@@ -687,11 +757,19 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println(".L.end.%d:", cnt)
 		return
 	case ND_FUNCALL:
-		stackArgs := c.pushArgs(node.Args)
+		stackArgs := c.pushArgs(node)
 		c.genExpr(node.Lhs)
 
 		gp := 0
 		fp := 0
+
+		// IF the return type is a large struct, the caller passes
+		// a pointer to a buffer as if it were the first argument.
+		if node.RetBuf != nil && node.Ty.Sz > 16 {
+			c.pop(argreg64[gp])
+			gp++
+		}
+
 		for arg := node.Args; arg != nil; arg = arg.Next {
 			ty := arg.Ty
 
@@ -773,6 +851,14 @@ func (c *codeWriter) genExpr(node *Node) {
 			c.println("	movswl %%ax, %%eax")
 			return
 		}
+
+		// If the return type is a small struct, a value is returned
+		// using up to two registers.
+		if node.RetBuf != nil && node.Ty.Sz <= 16 {
+			c.copyRetBuf(node.RetBuf)
+			c.println("	lea %d(%%rbp), %%rax", node.RetBuf.Offset)
+		}
+
 		return
 	}
 
@@ -1107,7 +1193,11 @@ func (c *codeWriter) emitData(prog *Obj) {
 			continue
 		}
 
-		c.println("	.globl %s", v.Name)
+		if v.IsStatic {
+			c.println("	.local %s", v.Name)
+		} else {
+			c.println("	.globl %s", v.Name)
+		}
 		c.println("	.align %d", v.Align)
 
 		if v.InitData != nil {
@@ -1190,7 +1280,7 @@ func (c *codeWriter) emitText(prog *Obj) {
 			continue
 		}
 
-		if fn.Name != "main" && fn.IsStatic {
+		if fn.IsStatic {
 			c.println("	.local %s", fn.Name)
 		} else {
 			c.println("	.globl %s", fn.Name)
@@ -1205,7 +1295,43 @@ func (c *codeWriter) emitText(prog *Obj) {
 		c.println("	mov %%rsp, %%rbp")
 		c.println("	sub $%d, %%rsp", int(fn.StackSz))
 
-		// Push arguments to the stack
+		// Save arg registers if function is variadic.
+		if fn.VaArea != nil {
+			var gp, fp int
+			for v := fn.Params; v != nil; v = v.Next {
+				if isFlonum(v.Ty) {
+					fp++
+				} else {
+					gp++
+				}
+			}
+
+			off := fn.VaArea.Offset
+
+			// va_elem
+			c.println("  movl $%d, %d(%%rbp)", gp*8, off)
+			c.println("  movl $%d, %d(%%rbp)", fp*8+48, off+4)
+			c.println("  movq %%rbp, %d(%%rbp)", off+16)
+			c.println("  addq $%d, %d(%%rbp)", off+24, off+16)
+
+			// __reg_save_area__
+			c.println("  movq %%rdi, %d(%%rbp)", off+24)
+			c.println("  movq %%rsi, %d(%%rbp)", off+32)
+			c.println("  movq %%rdx, %d(%%rbp)", off+40)
+			c.println("  movq %%rcx, %d(%%rbp)", off+48)
+			c.println("  movq %%r8, %d(%%rbp)", off+56)
+			c.println("  movq %%r9, %d(%%rbp)", off+64)
+			c.println("  movsd %%xmm0, %d(%%rbp)", off+72)
+			c.println("  movsd %%xmm1, %d(%%rbp)", off+80)
+			c.println("  movsd %%xmm2, %d(%%rbp)", off+88)
+			c.println("  movsd %%xmm3, %d(%%rbp)", off+96)
+			c.println("  movsd %%xmm4, %d(%%rbp)", off+104)
+			c.println("  movsd %%xmm5, %d(%%rbp)", off+112)
+			c.println("  movsd %%xmm6, %d(%%rbp)", off+120)
+			c.println("  movsd %%xmm7, %d(%%rbp)", off+128)
+		}
+
+		// Push passed-by-register arguments to the stack
 		gp := 0
 		fp := 0
 		for v := fn.Params; v != nil; v = v.Next {
@@ -1261,6 +1387,7 @@ func (c *codeWriter) emitText(prog *Obj) {
 		// behavior is undifined for the other functions.
 		if fn.Name == "main" {
 			c.println("	mov $0, %%rax")
+			c.println("	jmp .L.return.%s", fn.Name)
 		}
 
 		// Epilogue
