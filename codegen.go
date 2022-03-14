@@ -624,6 +624,70 @@ func (c *codeWriter) copyRetBuf(v *Obj) {
 	}
 }
 
+func (c *codeWriter) copyStructReg() {
+	ty := curFnInGen.Ty.RetTy
+	var gp, fp int
+
+	c.println("	mov %%rax, %%rdi")
+
+	if hasFlonum(ty, 0, 8, 0) {
+		if ty.Sz != 4 && 8 > ty.Sz {
+			c.unreachable("internal error")
+			return
+		}
+		if ty.Sz == 4 {
+			c.println("	movss (%%rdi), %%xmm0")
+		} else {
+			c.println("	movsd (%%rdi), %%xmm0")
+		}
+		fp++
+	} else {
+		c.println("	mov $0, %%rax")
+		for i := min(8, ty.Sz) - 1; i >= 0; i-- {
+			c.println("	shl $8, %%rax")
+			c.println("	mov %d(%%rdi), %%al", i)
+		}
+		gp++
+	}
+
+	if ty.Sz > 8 {
+		if hasFlonum(ty, 8, 16, 0) {
+			if ty.Sz != 12 && ty.Sz != 16 {
+				c.unreachable("internal error")
+				return
+			}
+			if ty.Sz == 12 {
+				c.println("	movss 8(%%rdi), %%xmm%d", fp)
+			} else {
+				c.println("	movsd 8(%%rdi), %%xmm%d", fp)
+			}
+		} else {
+			var reg1, reg2 string = "%al", "%rax"
+			if gp != 0 {
+				reg1 = "%dl"
+				reg2 = "%rdx"
+			}
+			c.println("	mov $0, %s", reg2)
+			for i := min(16, ty.Sz) - 1; i >= 8; i-- {
+				c.println("	shl $8, %s", reg2)
+				c.println("	mov %d(%%rdi), %s", i, reg1)
+			}
+		}
+	}
+}
+
+func (c *codeWriter) copyStructMem() {
+	ty := curFnInGen.Ty.RetTy
+	v := curFnInGen.Params
+
+	c.println("	mov %d(%%rbp), %%rdi", v.Offset)
+
+	for i := 0; i < ty.Sz; i++ {
+		c.println("	mov %d(%%rax), %%dl", i)
+		c.println("	mov %%dl, %d(%%rdi)", i)
+	}
+}
+
 func (c *codeWriter) genExpr(node *Node) {
 	if c.err != nil {
 		return
@@ -1095,7 +1159,17 @@ func (c *codeWriter) genStmt(node *Node) {
 	case ND_RETURN:
 		if node.Lhs != nil {
 			c.genExpr(node.Lhs)
+
+			ty := node.Lhs.Ty
+			if ty.Kind == TY_STRUCT {
+				if ty.Sz <= 16 {
+					c.copyStructReg()
+				} else {
+					c.copyStructMem()
+				}
+			}
 		}
+
 		c.println("	jmp .L.return.%s", curFnInGen.Name)
 		return
 	case ND_EXPR_STMT:

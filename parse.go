@@ -1526,7 +1526,11 @@ func stmt(rest **Token, tok *Token) *Node {
 		*rest = skip(tok, ";")
 
 		addType(exp)
-		node.Lhs = newCast(exp, curFn.Ty.RetTy)
+		ty := curFn.Ty.RetTy
+		if ty.Kind != TY_STRUCT {
+			exp = newCast(exp, curFn.Ty.RetTy)
+		}
+		node.Lhs = exp
 		return node
 	}
 
@@ -2933,6 +2937,14 @@ func function(tok *Token) *Token {
 	locals = nil
 	enterScope()
 	createParamLvars(ty.Params)
+
+	// A buffer for a struct return value is passed
+	// as the hidden first parameter.
+	rty := ty.RetTy
+	if rty.Kind == TY_STRUCT && rty.Sz > 16 {
+		newLvar("", pointerTo(rty))
+	}
+
 	fn.Params = locals
 	if ty.IsVariadic {
 		fn.VaArea = newLvar("__va_area__", arrayOf(ty_char, 136))

@@ -190,6 +190,26 @@ func struct_test26() Ty6
 func struct_test27() Ty20
 func struct_test28() Ty21
 
+func struct_test34() Ty4 {
+	return Ty4{10, 20, 30, 40}
+}
+
+func struct_test35() Ty5 {
+	return Ty5{10, 20, 30}
+}
+
+func struct_test36() Ty6 {
+	return Ty6{10, 20, 30}
+}
+
+func struct_test37() Ty20 {
+	return Ty20{10, 20, 30, 40, 50, 60, 70, 80, 90, 100}
+}
+
+func struct_test38() Ty21 {
+	return Ty21{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+}
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
@@ -325,6 +345,29 @@ func main() {
 	assert(10, struct_test28().a[9], "struct_test28().a[9]")
 	assert(15, struct_test28().a[14], "struct_test28().a[14]")
 	assert(20, struct_test28().a[19], "struct_test28().a[19]")
+
+	assert(10, struct_test34().a, "struct_test34().a")
+	assert(20, struct_test34().b, "struct_test34().b")
+	assert(30, struct_test34().c, "struct_test34().c")
+	assert(40, struct_test34().d, "struct_test34().d")
+
+	assert(10, struct_test35().a, "struct_test35().a")
+	assert(20, struct_test35().b, "struct_test35().b")
+	assert(30, struct_test35().c, "struct_test35().c")
+
+	assert(10, struct_test36().a[0], "struct_test36().a[0]")
+	assert(20, struct_test36().a[1], "struct_test36().a[1]")
+	assert(30, struct_test36().a[2], "struct_test36().a[2]")
+
+	assert(10, struct_test37().a[0], "struct_test37().a[0]")
+	assert(60, struct_test37().a[5], "struct_test36().a[5]")
+	assert(100, struct_test37().a[9], "struct_test36().a[9]")
+
+	assert(1, struct_test38().a[0], "struct_test38().a[0]")
+	assert(5, struct_test38().a[4], "struct_test38().a[4]")
+	assert(10, struct_test38().a[9], "struct_test38().a[9]")
+	assert(15, struct_test38().a[14], "struct_test38().a[14]")
+	assert(20, struct_test38().a[19], "struct_test38().a[19]")
 
 	println("OK")
 }
