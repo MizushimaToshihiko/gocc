@@ -2891,6 +2891,12 @@ func primary(rest **Token, tok *Token) *Node {
 		return newUlong(int64(node.Ty.Align), tok)
 	}
 
+	if equal(tok, "len") && equal(tok.Next, "(") {
+		node := unary(rest, tok.Next)
+		addType(node)
+		return newUlong(int64(node.Ty.Len), tok)
+	}
+
 	if tok.Kind == TK_IDENT {
 		// Variable
 		sc := findVar(tok)

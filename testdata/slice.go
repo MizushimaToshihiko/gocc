@@ -9,13 +9,15 @@ func main() {
 	assert(1, s01[0], "s01[0]")
 	assert(2, s01[1], "s01[1]")
 	assert(8, Sizeof(s01), "Sizeof(x01)")
+	assert(2, len(s01), "len(s01)")
 
 	var a02 = [6]int{1, 2, 3, 4, 5, 6}
-	var s02 = a02[2:4]
+	var s02 = a02[2:5]
 	assert(3, s02[0], "s02[0]")
 	assert(4, s02[1], "s02[1]")
 	assert(5, s02[2], "s02[2]") // out of range
 	assert(8, Sizeof(s02), "Sizeof(x02)")
+	assert(3, len(s02), "len(s02)")
 
 	println("OK")
 }
