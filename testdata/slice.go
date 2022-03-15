@@ -1,7 +1,7 @@
 package test_slice
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
 
 func main() {
 	var a01 = [2]int{1, 2}
@@ -18,6 +18,8 @@ func main() {
 	assert(5, s02[2], "s02[2]") // out of range
 	assert(8, Sizeof(s02), "Sizeof(x02)")
 	assert(3, len(s02), "len(s02)")
+	s02[0] = 100
+	assert(100, a02[2], "a02[2]")
 
 	println("OK")
 }
