@@ -29,8 +29,8 @@ func main() {
 	assert(4, Sizeof(**x8), "var x8 [3][4]int; Sizeof(**x8)")
 	assert(4, Sizeof(**x8+1), "var x8 [3][4]int; Sizeof(**x8+1)")
 	var x9 int=1;
-	assert(4, Sizeof(x9=2), "var x9 int=1; Sizeof(x9=2)")
-	assert(1, x9, "var x9 int=1; Sizeof(x9=2); x9")
+	// assert(4, Sizeof(x9=2), "var x9 int=1; Sizeof(x9=2)") // It isn't supported in Go.
+	assert(1, x9, "var x9 int=1; x9")
 
 	assert(0, g1, "g1")
 	g1=3
