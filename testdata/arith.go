@@ -1,7 +1,7 @@
 package test_arith
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
 
 func main() {
 	assert(0, 0, "0")
@@ -96,6 +96,11 @@ func main() {
 	assert(1, p+20-p > 0, "p+20-p>0")
 	assert(-20, p-20-p, "p-20-p")
 	assert(1, p-20-p < 0, "p-20-p<0")
+
+	var x01, x02 int
+	x01, x02 = 1, 2
+	assert(1, x01, "x01")
+	assert(2, x02, "x02")
 
 	println("OK")
 }

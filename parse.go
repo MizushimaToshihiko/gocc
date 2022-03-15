@@ -1709,11 +1709,40 @@ func stmt(rest **Token, tok *Token) *Node {
 		return node
 	}
 
+	if isMultiAssign(tok) {
+		return assignList(rest, tok)
+	}
+
 	if equal(tok, "{") {
 		return compoundStmt(rest, tok.Next)
 	}
 
 	return exprStmt(rest, tok)
+}
+
+func isMultiAssign(tok *Token) bool {
+	hasComma := false
+	hasEqual := false
+
+	for !equal(tok, ";") {
+		if equal(tok, "{") {
+			return false
+		}
+		if tok.Kind == TK_STR || tok.Kind == TK_NUM {
+			tok = tok.Next
+		}
+		if equal(tok, ",") {
+			hasComma = true
+		}
+		if equal(tok, "=") {
+			hasEqual = true
+			break
+		}
+
+		tok = tok.Next
+	}
+
+	return hasComma && hasEqual
 }
 
 func isShortVarSpec(tok *Token) bool {
@@ -1729,6 +1758,49 @@ func isShortVarSpec(tok *Token) bool {
 		break
 	}
 	return false
+}
+
+// assign-list = Expr-list "=" Expr-list
+func assignList(rest **Token, tok *Token) *Node {
+	printCurTok(tok)
+	printCalledFunc()
+
+	start := tok
+	lhss := make([]*Node, 0)
+	first := true
+
+	for !equal(tok, "=") {
+		if !first {
+			tok = skip(tok, ",")
+		}
+		first = false
+		lhss = append(lhss, logor(&tok, tok))
+
+	}
+
+	tok = skip(tok, "=")
+
+	first = true
+	var node, prev *Node
+
+	for i := 0; i < len(lhss); i++ {
+		if !first {
+			tok = skip(tok, ",")
+		}
+		first = false
+
+		rhs := logor(&tok, tok)
+		node = newBinary(ND_ASSIGN, lhss[i], rhs, tok)
+		if i > 0 {
+			node = newBinary(ND_COMMA, prev, node, tok)
+		}
+		prev = node
+		if consume(&tok, tok, ";") {
+			break
+		}
+	}
+	*rest = tok
+	return newUnary(ND_EXPR_STMT, node, start)
 }
 
 // compound-stmt = (typedef | declaration | stmt)* "}"
