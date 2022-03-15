@@ -630,12 +630,12 @@ func addLineNumbers(head *Token) {
 	for i := 0; i < len(userInput); i++ {
 		for i == tok.Loc && i < len(userInput) {
 			tok.LineNo = n
-			l := tok.Len
 			tok = tok.Next
 			if tok == nil {
 				return
 			}
 			if tok.Str == ";" {
+				l := tok.Len
 				tok.Loc = i + l
 			}
 		}

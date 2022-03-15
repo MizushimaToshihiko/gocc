@@ -1503,7 +1503,7 @@ func isForClause(tok *Token) bool {
 //      | "break" ";"
 //      | "continue" ";"
 //      | "goto" ident ";"
-//      | "ident ":" stmt
+//      | ident ":" stmt
 //      | "type" ident type-prefix basetype ";"
 //      | declaration
 //      | expr ";"
