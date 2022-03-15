@@ -1504,8 +1504,7 @@ func isForClause(tok *Token) bool {
 //      | "continue" ";"
 //      | "goto" ident ";"
 //      | ident ":" stmt
-//      | "type" ident type-prefix basetype ";"
-//      | declaration
+//      | assign-list
 //      | expr ";"
 // for-stmt = "for" [ condition ] block .
 // for-clause = "for" (expr? ";" | declaration) condition ";" expr? block
