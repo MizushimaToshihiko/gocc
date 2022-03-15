@@ -2690,12 +2690,15 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	// fmt.Printf("cur: %#v\n\n", cur)
 	// fmt.Printf("cur.Obj.Ty: %#v\n\n", cur.Obj.Ty)
-	// first := eval(idx)
-	constExpr(rest, tok.Next) // end :=
+	first := eval(idx)
+	end := constExpr(rest, tok.Next) //
 	// cur.Obj.Ty.Cap = cur.Obj.Ty.ArrSz - int(first)
 	// cur.Obj.Ty.Len = int(end - first)
 	// fmt.Println("end:", end)
 	node := newUnary(ND_ADDR, newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
+	addType(node)
+	node.Ty.Cap = cur.Obj.Ty.ArrSz - int(first)
+	node.Ty.Len = int(end - first)
 	return node
 }
 
