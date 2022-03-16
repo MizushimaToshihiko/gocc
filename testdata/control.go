@@ -362,5 +362,54 @@ assert(5, i, "i=0; switch i { case 0,3:i=5; case 1:i=6; case 2:i=7; } i")
 	}
 	assert(100, z6, "z6")
 
+	var z7 int
+	switch x7 := switchFn(0); {
+	case x7 == 5:
+		z7 = 1
+	case x7 == 6:
+		z7 = 2
+	case x7 == 100:
+		z7 = 3
+	case x7 == 10:
+		z7 = 4
+	}
+	assert(1, z7, "z7")
+	z7 = 0
+	switch x7 := switchFn(1); {
+	case x7 == 5:
+		z7 = 1
+	case x7 == 6:
+		z7 = 2
+	case x7 == 100:
+		z7 = 3
+	case x7 == 10:
+		z7 = 4
+	}
+	assert(2, z7, "z7")
+	z7 = 0
+	switch x7 := switchFn(5); {
+	case x7 == 5:
+		z7 = 1
+	case x7 == 6:
+		z7 = 2
+	case x7 == 100:
+		z7 = 3
+	case x7 == 10:
+		z7 = 4
+	}
+	assert(3, z7, "z7")
+	z7 = 0
+	switch x7 := switchFn(7); {
+	case x7 == 5:
+		z7 = 1
+	case x7 == 6:
+		z7 = 2
+	case x7 == 100:
+		z7 = 3
+	case x7 == 10:
+		z7 = 4
+	}
+	assert(4, z7, "z7")
+
 	println("OK")
 }

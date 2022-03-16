@@ -1114,6 +1114,9 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.println("%s:", node.BrkLabel)
 		return
 	case ND_SWITCH:
+		if node.Init != nil {
+			c.genStmt(node.Init)
+		}
 		c.genExpr(node.Cond)
 
 		var reg1, reg2 string

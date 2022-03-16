@@ -1480,7 +1480,7 @@ func isTypename(tok *Token) bool {
 
 // isForClause returns true and exceeds the next token, if ";" will be found
 // between "for" and "{".
-func isForClause(tok *Token) bool {
+func hasSimpleStmt(tok *Token) bool {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -1547,11 +1547,17 @@ func stmt(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "switch") {
 		node := newNode(ND_SWITCH, tok)
-		if !equal(tok.Next, "{") {
-			node.Cond = expr(&tok, tok.Next)
+		enterScope()
+		// Read 'SimpleStmt'
+		if hasSimpleStmt(tok) {
+			node.Init = expr(&tok, tok.Next)
+		} else {
+			tok = tok.Next
+		}
+		if !equal(tok, "{") {
+			node.Cond = expr(&tok, tok)
 		} else {
 			node.Cond = newNum(1, tok)
-			tok = tok.Next
 		}
 		sw := curSwitch
 		curSwitch = node
@@ -1562,6 +1568,7 @@ func stmt(rest **Token, tok *Token) *Node {
 
 		node.Then = stmt(rest, tok)
 
+		leaveScope()
 		curSwitch = sw
 		brkLabel = brk
 		return node
@@ -1621,7 +1628,7 @@ func stmt(rest **Token, tok *Token) *Node {
 	}
 
 	if equal(tok, "for") {
-		if !isForClause(tok) { // for-stmt like 'while' statement
+		if !hasSimpleStmt(tok) { // for-stmt like 'while' statement
 			node := newNode(ND_FOR, tok)
 			if !equal(tok.Next, "{") {
 				node.Cond = expr(&tok, tok.Next)
@@ -2916,12 +2923,20 @@ func primary(rest **Token, tok *Token) *Node {
 		*rest = tok.Next
 
 		if sc != nil && sc.Obj != nil {
+			if isShortVarSpec(tok.Next) {
+				panic(errorTok(tok, "no new variables on left side of :="))
+			}
 			return newVarNode(sc.Obj, tok)
+		}
+
+		if isShortVarSpec(tok.Next) {
+			return declaration(rest, tok, true)
 		}
 
 		if equal(tok.Next, "(") {
 			panic(errorTok(tok, "implicit declaration of a function"))
 		}
+
 		panic(errorTok(tok, "undefined variable"))
 	}
 
