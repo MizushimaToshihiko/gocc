@@ -548,8 +548,6 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 		ty = pointerTo(ty)
 	}
 
-	// fmt.Printf("declSpec: tok: %#v\n\n", tok)
-	// fmt.Printf("declSpec: tok.Next: %#v\n\n", tok.Next)
 	*rest = tok.Next
 	return ty
 }
@@ -949,9 +947,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		if rhsTy.Kind == TY_VOID {
 			init.Expr = assign(rest, tok)
 			addType(init.Expr)
-			// fmt.Printf("initializer2: init.Expr: %#v\n\n", init.Expr)
-			// fmt.Printf("initializer2: init.Expr.Ty: %#v\n\n", init.Expr.Ty)
-			// fmt.Printf("initializer2: init.Expr.Lhs: %#v\n\n", init.Expr.Lhs)
 
 			if init.Expr.Ty.Kind == TY_PTR &&
 				init.Expr.Lhs != nil && init.Expr.Lhs.Ty.Kind == TY_ARRAY {
@@ -1536,11 +1531,20 @@ func stmt(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "if") {
 		node := newNode(ND_IF, tok)
-		node.Cond = expr(&tok, tok.Next)
+		enterScope()
+		// Read 'SimpleStmt'
+		if hasSimpleStmt(tok) {
+			node.Init = expr(&tok, tok.Next)
+		} else {
+			tok = tok.Next
+		}
+
+		node.Cond = expr(&tok, tok)
 		node.Then = stmt(&tok, tok)
 		if equal(tok, "else") {
 			node.Els = stmt(&tok, tok.Next)
 		}
+		leaveScope()
 		*rest = tok
 		return node
 	}
@@ -3119,7 +3123,6 @@ func globalVar(tok *Token) *Token {
 		}
 	}
 
-	// fmt.Printf("globalVar: tok: %#v\n\n", tok)
 	tok = skip(tok, ";")
 	return tok
 }

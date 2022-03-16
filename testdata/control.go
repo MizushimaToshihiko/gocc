@@ -228,16 +228,16 @@ foo:
 	assert(10, switchFn(10), "switchFn(10)")
 	assert(10, switchFn(11), "switchFn(11)")
 
-i = 0
-switch i {
-case 0, 3:
-	i = 5
-case 1:
-	i = 6
-case 2:
-	i = 7
-}
-assert(5, i, "i=0; switch i { case 0,3:i=5; case 1:i=6; case 2:i=7; } i")
+	i = 0
+	switch i {
+	case 0, 3:
+		i = 5
+	case 1:
+		i = 6
+	case 2:
+		i = 7
+	}
+	assert(5, i, "i=0; switch i { case 0,3:i=5; case 1:i=6; case 2:i=7; } i")
 	i = 1
 	switch i {
 	case 0:
@@ -410,6 +410,34 @@ assert(5, i, "i=0; switch i { case 0,3:i=5; case 1:i=6; case 2:i=7; } i")
 		z7 = 4
 	}
 	assert(4, z7, "z7")
+
+	var z8 int
+	if x8, y8 := switchFn(0), 8; x8 < y8 {
+		z8 = 1
+	} else if x8 > z8 {
+		z8 = 2
+	} else {
+		z8 = 3
+	}
+	assert(1, z8, "z8")
+	z8 = 0
+	if x8, y8 := switchFn(200), 8; x8 < y8 {
+		z8 = 1
+	} else if x8 > z8 {
+		z8 = 2
+	} else {
+		z8 = 3
+	}
+	assert(2, z8, "z8")
+	z8 = 10
+	if x8, y8 := switchFn(1)+3, 8; x8 < y8 {
+		z8 = 1
+	} else if x8 > z8 {
+		z8 = 2
+	} else {
+		z8 = 3
+	}
+	assert(3, z8, "z8")
 
 	println("OK")
 }

@@ -1083,6 +1083,9 @@ func (c *codeWriter) genStmt(node *Node) {
 	switch node.Kind {
 	case ND_IF:
 		cnt := count()
+		if node.Init != nil {
+			c.genStmt(node.Init)
+		}
 		c.genExpr(node.Cond)
 		c.cmpZero(node.Cond.Ty)
 		c.println("	je .L.else.%d", cnt)
