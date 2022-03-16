@@ -50,15 +50,15 @@
        - Type構造体のRetTyをそのまま使う
      - codegenの変更
        - 連結リストにしたRetTyをfor文でreturn valueを汎用レジスタに入れる
-   - 変数宣言時のゼロ初期化
+   - 変数宣言時のゼロ初期化 -> 完了?
      - local
        - string -> 完了
        - array -> 完了
        - struct -> 完了
      - global
-       - string
-       - array
-       - struct
+       - string -> 完了
+       - array -> 完了
+       - struct -> 完了
     
 
 #### 【VarSpecの追加について】

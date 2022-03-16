@@ -77,6 +77,7 @@ var g43 [4]int
 var g44 [4]string
 var g45 bool
 var g46 float64
+var g47 gT11
 
 func main() {
 	// comparing strings => unimplement yet.
@@ -483,6 +484,8 @@ func main() {
 	assert(0, g44[3][0], "g44[3][0]")
 	assert(1, g45 == 0, "g45==0")
 	assert(1, g46 == 0, "g46==0")
+	assert(1, g47.a==0, "g47.a==0")
+	assert(1, g47.b==0, "g47.b==0")
 
 	// 以下後回し案件
 	// assert(3, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].a; }));
