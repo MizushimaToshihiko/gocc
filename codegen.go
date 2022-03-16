@@ -1116,14 +1116,22 @@ func (c *codeWriter) genStmt(node *Node) {
 	case ND_SWITCH:
 		c.genExpr(node.Cond)
 
+		var reg1, reg2 string
+		if node.Cond.Ty.Sz == 8 {
+			reg1 = "%rbx"
+			reg2 = "%rax"
+		} else {
+			reg1 = "%ebx"
+			reg2 = "%eax"
+		}
+		// Escape the value in reg2 to reg1.
+		c.println("	mov %s, %s", reg2, reg1)
+
 		for n := node.CaseNext; n != nil; n = n.CaseNext {
-			var reg string
-			if node.Cond.Ty.Sz == 8 {
-				reg = "%rax"
-			} else {
-				reg = "%eax"
-			}
-			c.println("	cmp $%d, %s", n.Val, reg)
+
+			c.genExpr(n.Expr)
+
+			c.println("	cmp %s, %s", reg1, reg2)
 			c.println("	je %s", n.Lbl)
 			n.CaseEndLbl = node.BrkLabel
 		}

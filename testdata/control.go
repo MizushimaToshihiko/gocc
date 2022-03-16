@@ -228,89 +228,98 @@ foo:
 	assert(10, switchFn(10), "switchFn(10)")
 	assert(10, switchFn(11), "switchFn(11)")
 
-	i = 0
+i = 0
+switch i {
+case 0, 3:
+	i = 5
+case 1:
+	i = 6
+case 2:
+	i = 7
+}
+assert(5, i, "i=0; switch i { case 0,3:i=5; case 1:i=6; case 2:i=7; } i")
+	i = 1
 	switch i {
-	case 0, 3:
+	case 0:
 		i = 5
 	case 1:
 		i = 6
 	case 2:
 		i = 7
 	}
-	assert(5, i, "i=0; switch i { case 0,3:i=5; case 1:i=6; case 2:i=7; } i")
-		i = 1
-		switch i {
-		case 0:
-			i = 5
-		case 1:
-			i = 6
-		case 2:
-			i = 7
-		}
-		assert(6, i, "i=1; switch i { case 0:i=5; case 1:i=6; case 2:i=7; } i")
-		i = 2
-		switch i {
-		case 0:
-			i = 5
-		case 1:
-			i = 6
-		case 2:
-			i = 7
-		}
-		assert(7, i, "i=2; switch i { case 0:i=5; case 1:i=6; case 2:i=7; } i")
+	assert(6, i, "i=1; switch i { case 0:i=5; case 1:i=6; case 2:i=7; } i")
+	i = 2
+	switch i {
+	case 0:
+		i = 5
+	case 1:
+		i = 6
+	case 2:
+		i = 7
+	}
+	assert(7, i, "i=2; switch i { case 0:i=5; case 1:i=6; case 2:i=7; } i")
+	i = 3
+	switch i {
+	case 0:
+		i = 5
+	case 1:
+		i = 6
+	case 2:
+		i = 7
+	}
+	assert(3, i, "i=3; switch i { case 0:i=5; case 1:i=6; case 2:i=7; } i")
+	i = 0
+	switch i {
+	case 0:
+		i = 5
+	default:
+		i = 7
+	}
+	assert(5, i, "i=0; switch i { case 0:i=5;i; default:i=7; } i")
+	i = 2
+	switch i {
+	case 0:
+		i = 5
+	default:
+		i = 7
+	}
+	assert(7, i, "i=2; switch i { case 0:i=5;i; default:i=7; } i")
+	i = 0
+	switch -1 {
+	case 0xffffffff:
 		i = 3
-		switch i {
-		case 0:
-			i = 5
-		case 1:
-			i = 6
-		case 2:
-			i = 7
-		}
-		assert(3, i, "i=3; switch i { case 0:i=5; case 1:i=6; case 2:i=7; } i")
-		i = 0
-		switch i {
-		case 0:
-			i = 5
-		default:
-			i = 7
-		}
-		assert(5, i, "i=0; switch i { case 0:i=5;i; default:i=7; } i")
-		i = 2
-		switch i {
-		case 0:
-			i = 5
-		default:
-			i = 7
-		}
-		assert(7, i, "i=2; switch i { case 0:i=5;i; default:i=7; } i")
-		i = 0
-		switch -1 {
-		case 0xffffffff:
-			i = 3
-		}
-		assert(3, i, "i=0; switch(-1) { case 0xffffffff: i=3; }; i")
+	}
+	assert(3, i, "i=0; switch(-1) { case 0xffffffff: i=3; }; i")
 
-	  assert(0, 0.0 && 0.0, "0.0 && 0.0");
-	  assert(0, 0.0 && 0.1, "0.0 && 0.1");
-	  assert(0, 0.3 && 0.0, "0.3 && 0.0");
-	  assert(1, 0.3 && 0.5, "0.3 && 0.5");
-	  assert(0, 0.0 || 0.0, "0.0 || 0.0");
-	  assert(1, 0.0 || 0.1, "0.0 || 0.1");
-	  assert(1, 0.3 || 0.0, "0.3 || 0.0");
-	  assert(1, 0.3 || 0.5, "0.3 || 0.5");
-		var x2 int; if 0.0 {x2=3;}else{x2=5;};
-	  assert(5, x2, "var x int; if 0.0{x=3;}else{x=5;}; x2");
-		var x3 int; if 0.1 {x3=3;}else{x3=5;};
-	  assert(3, x3, "var x3 int; if 0.1{x3=3;}else{x3=5;};x3");
-		var x4=5; if 0.0{x4=3;};
-	  assert(5, x4, "var x4=5; if 0.0{x4=3;}; x4");
-		var x5=5; if 0.1{x5=3;};
-	  assert(3, x5, "var x5=5; if 0.1{x5=3;};x5");
-		i=10.0; j=0; for ;i!=0;i--,j++{};
-	  assert(10, j, "i=10.0; j=0; for ;i!=0;i--,j++{}; j;");
-		i=10.0; j=0; for i!=0{i--;j++;};
-	  assert(10, j, "i=10.0; j=0; for i!=0{i--;j++}; j;");
+	assert(0, 0.0 && 0.0, "0.0 && 0.0");
+	assert(0, 0.0 && 0.1, "0.0 && 0.1");
+	assert(0, 0.3 && 0.0, "0.3 && 0.0");
+	assert(1, 0.3 && 0.5, "0.3 && 0.5");
+	assert(0, 0.0 || 0.0, "0.0 || 0.0");
+	assert(1, 0.0 || 0.1, "0.0 || 0.1");
+	assert(1, 0.3 || 0.0, "0.3 || 0.0");
+	assert(1, 0.3 || 0.5, "0.3 || 0.5");
+	var x2 int; if 0.0 {x2=3;}else{x2=5;};
+	assert(5, x2, "var x int; if 0.0{x=3;}else{x=5;}; x2");
+	var x3 int; if 0.1 {x3=3;}else{x3=5;};
+	assert(3, x3, "var x3 int; if 0.1{x3=3;}else{x3=5;};x3");
+	var x4=5; if 0.0{x4=3;};
+	assert(5, x4, "var x4=5; if 0.0{x4=3;}; x4");
+	var x5=5; if 0.1{x5=3;};
+	assert(3, x5, "var x5=5; if 0.1{x5=3;};x5");
+	i=10.0; j=0; for ;i!=0;i--,j++{};
+	assert(10, j, "i=10.0; j=0; for ;i!=0;i--,j++{}; j;");
+	i=10.0; j=0; for i!=0{i--;j++;};
+	assert(10, j, "i=10.0; j=0; for i!=0{i--;j++}; j;");
+
+	var x6, y6 = 1, 2
+	var z6 int
+	switch {
+	case x6 < y6: z6=switchFn(x6)
+	case x6 > y6: z6=switchFn(y6)
+	case x6 == y6: z6=switchFn(x6+y6)
+	}
+	assert(6, z6, "z6")
 
 	println("OK")
 }

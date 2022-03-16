@@ -310,7 +310,7 @@ func (e *errWriter) visit(node *Node) {
 		ND_LT,
 		ND_LE:
 		usualArithConv(&node.Lhs, &node.Rhs)
-		node.Ty = ty_int
+		node.Ty = ty_bool
 		return
 	case ND_FUNCALL:
 		node.Ty = ty_long
