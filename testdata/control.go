@@ -320,6 +320,47 @@ assert(5, i, "i=0; switch i { case 0,3:i=5; case 1:i=6; case 2:i=7; } i")
 	case x6 == y6: z6=switchFn(x6+y6)
 	}
 	assert(6, z6, "z6")
+	x6, y6 = 2, 0
+	z6 = 0
+	switch {
+	case x6 < y6: z6=switchFn(x6)
+	case x6 > y6: z6=switchFn(y6)
+	case x6 == y6: z6=switchFn(x6+y6)
+	}
+	assert(5, z6, "z6")
+	x6, y6 = 3, 3
+	z6 = 0
+	switch {
+	case x6 < y6: z6=switchFn(x6)
+	case x6 > y6: z6=switchFn(y6)
+	case x6 == y6: z6=switchFn(x6+y6)
+	}
+	assert(100, z6, "z6")
+
+	var x6, y6 float32 = 1.0, 2.0
+	var z6 int
+	switch {
+	case x6 < y6: z6=switchFn(x6)
+	case x6 > y6: z6=switchFn(y6)
+	case x6 == y6: z6=switchFn(x6+y6)
+	}
+	assert(6, z6, "z6")
+	x6, y6 = 2.0, 0.0
+	z6 = 0
+	switch {
+	case x6 < y6: z6=switchFn(x6)
+	case x6 > y6: z6=switchFn(y6)
+	case x6 == y6: z6=switchFn(x6+y6)
+	}
+	assert(5, z6, "z6")
+	x6, y6 = 3.0, 3.0
+	z6 = 0
+	switch {
+	case x6 < y6: z6=switchFn(x6)
+	case x6 > y6: z6=switchFn(y6)
+	case x6 == y6: z6=switchFn(x6+y6)
+	}
+	assert(100, z6, "z6")
 
 	println("OK")
 }
