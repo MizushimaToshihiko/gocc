@@ -155,6 +155,7 @@ type Node struct {
 	DefCase    *Node
 	CaseLbl    int
 	CaseEndLbl string
+	Expr       *Node
 
 	Obj  *Obj  // used if kind == ND_VAR
 	Val  int64 // used if kind == ND_NUM
@@ -1546,8 +1547,12 @@ func stmt(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "switch") {
 		node := newNode(ND_SWITCH, tok)
-		node.Cond = expr(&tok, tok.Next)
-
+		if !equal(tok.Next, "{") {
+			node.Cond = expr(&tok, tok.Next)
+		} else {
+			node.Cond = newNum(1, tok)
+			tok = tok.Next
+		}
 		sw := curSwitch
 		curSwitch = node
 
@@ -1579,7 +1584,8 @@ func stmt(rest **Token, tok *Token) *Node {
 			first = false
 
 			node := newNode(ND_CASE, tok)
-			node.Val = constExpr(&tok, tok)
+			node.Expr = assign(&tok, tok)
+			addType(node.Expr)
 			node.Lbl = newUniqueName()
 			node.CaseNext = curSwitch.CaseNext
 			curSwitch.CaseNext = node
@@ -1589,7 +1595,14 @@ func stmt(rest **Token, tok *Token) *Node {
 		}
 
 		tok = skip(tok, ":")
-		cur.Lhs = stmt(rest, tok)
+		lhs := stmt(rest, tok)
+		cur = head.Next
+
+		for cur != nil {
+			cur.Lhs = lhs
+			cur = cur.Next
+		}
+
 		node := newNode(ND_BLOCK, tok)
 		node.Body = head.Next
 		return node
@@ -2698,7 +2711,6 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 }
 
 // postfix = "(" type-name ")" "{" initializer-list "}"
-//         = ident "(" func-args ")" postfix-tail*
 //         | primary postfix-tail*
 //
 // postfix-tail = "[" expr "]"
