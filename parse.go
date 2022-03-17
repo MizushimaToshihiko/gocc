@@ -1790,38 +1790,47 @@ func assignList(rest **Token, tok *Token) *Node {
 
 	start := tok
 	lhss := make([]*Node, 0)
-	first := true
+	i := 0
 
 	for !equal(tok, "=") {
-		if !first {
+		if i > 0 {
 			tok = skip(tok, ",")
 		}
-		first = false
+		i++
 		lhss = append(lhss, logor(&tok, tok))
-
 	}
 
 	tok = skip(tok, "=")
 
-	first = true
 	var node, prev *Node
 
-	for i := 0; i < len(lhss); i++ {
-		if !first {
-			tok = skip(tok, ",")
-		}
-		first = false
-
-		rhs := logor(&tok, tok)
-		node = newBinary(ND_ASSIGN, lhss[i], rhs, tok)
-		if i > 0 {
-			node = newBinary(ND_COMMA, prev, node, tok)
-		}
-		prev = node
+	valtok := tok
+	j := 0
+	for ; ; j++ {
 		if consume(&tok, tok, ";") {
 			break
 		}
+		if j > 0 {
+			tok = skip(tok, ",")
+		}
+
+		if j < i {
+			rhs := logor(&tok, tok)
+			node = newBinary(ND_ASSIGN, lhss[j], rhs, tok)
+			if j > 0 {
+				node = newBinary(ND_COMMA, prev, node, tok)
+			}
+			prev = node
+		} else {
+			valtok = tok
+			tok = tok.Next
+		}
 	}
+
+	if j > len(lhss) {
+		panic("\n" + errorTok(valtok, " assignment mismatch: %d variables but %d values", len(lhss), j))
+	}
+
 	*rest = tok
 	return newUnary(ND_EXPR_STMT, node, start)
 }

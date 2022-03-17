@@ -1,7 +1,7 @@
 package test_usualconv
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
 
 func ret10() int {
 	return 10

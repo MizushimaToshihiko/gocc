@@ -27,15 +27,15 @@
    - built-in functions
       - new
       - make
-      - len(slice)
-      - cap(slice)
+      - len(slice) -> 完了
+      - cap(slice) -> 完了
       - append(slice)
       - copy(slice)
       - println
       - panic
       - recover
    - parseの順番を変える  
-     現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化)
+     現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化)を先に
    - RangeClause  
      "for x := range X"みたいなもの
    - const宣言
@@ -148,8 +148,10 @@ func MerryXMas() {
     73  }
   ```
   
- - FunctionBody -> BlockStmt -> DeclStmtのSpecメンバ -> x,yのValueSpecがスライスとして登録されている
- - このコンパイラでは、var x,y int = 1,2をparse.goの中でvar x int = 1; var y int = 2;としてfunction()内のstmtの後に繋げる -> declaration()とは別にvarspec()を作り、nodeをつなげたものをfunction()又はstmt()に返す?
+ - ~FunctionBody -> BlockStmt -> DeclStmtのSpecメンバ -> x,yのValueSpecがスライスとして登録されている~
+ - ~このコンパイラでは、var x,y int = 1,2をparse.goの中でvar x int = 1; var y int = 2;としてfunction()内のstmtの後に繋げる -> declaration()とは別にvarspec()を作り、nodeをつなげたものをfunction()又はstmt()に返す?~
+ - declarationで、カンマでつながった変数ごとにNodeを作り、ND_BLOCKで繋げるという方法で完了(2022/03/12)
+ - 代入リスト（例：a,b,c = 1,2,3）は、assignList関数でND_ASSIGNを変数ごとに作ってND_COMMAで繋げてND_EXPR_STMTをrootにしたものを返すことで完了(2022/03/15)
 
 #### 配列変数から配列変数への代入
 - ~~現時点では配列変数から配列変数への代入ができない（not a lvalueエラーを出してしまう)~~  
@@ -159,7 +161,7 @@ func MerryXMas() {
 #### 型が違うので代入できないエラーを返す関数の書きかけ
  - typedefの名前の取得が現時点でできない為
  ```Go
- package main
+package main
 
 import (
 	"errors"
