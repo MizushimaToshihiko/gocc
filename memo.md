@@ -19,6 +19,10 @@
    - package
    - import
    - slice
+     - 初期化
+       - array[2:3]みたいなの
+       - make関数
+       - copy関数
    - rune(int32のエイリアス)
    - rune literal => tokenizerのchar literalを変更する?
    - blank identifiers : "_"

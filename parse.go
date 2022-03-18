@@ -746,6 +746,7 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 	for i := 0; i < length; i++ {
 		init.Children[i].Expr = newNum(int64(tok.Contents[i]), tok)
 	}
+	init.Ty.Len = length
 	*rest = tok.Next
 }
 
