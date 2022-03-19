@@ -11,7 +11,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 )
 
 // set TokenKind with enum
@@ -255,8 +254,43 @@ func isKw(tok *Token) bool {
 	return false
 }
 
+func contains(str string, r rune) bool {
+	s := []rune(str)
+	for i := 0; i < len(s); i++ {
+		if s[i] == r {
+			return true
+		}
+	}
+
+	return false
+}
+
+func strIndex(str string, substr string) int {
+	for i := 0; i < len(str); i++ {
+		if str[i] == substr[0] {
+			flag := true
+			for j := 1; j < len(substr); j++ {
+				if str[i+j] != substr[j] {
+					flag = false
+					break
+				}
+			}
+			if flag {
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+// func parseInt(str string, base int) (int64, error) {
+// 	for i := 0; i < len(str); i++ {
+
+// 	}
+// }
+
 func isSpace(op rune) bool {
-	return strings.Contains("\t\v\f\r ", string(op))
+	return contains("\t\v\f\r ", op)
 }
 
 func isDigit(op rune) bool {
@@ -349,16 +383,16 @@ func readNumber(cur *Token) (*Token, error) {
 		return nil, err
 	}
 
-	if !strings.Contains(".eEfF", string(userInput[curIdx])) {
+	if !contains(".eEfF", userInput[curIdx]) {
 		return tok, nil
 	}
 
 	var sVal string = string(userInput[curIdx])
 	curIdx++
 	for isDigit(userInput[curIdx]) ||
-		strings.Contains("eEfFpP_", string(userInput[curIdx])) ||
-		(strings.Contains("EePp", string(userInput[curIdx-1])) &&
-			strings.Contains("+-", string(userInput[curIdx]))) {
+		contains("eEfFpP_", userInput[curIdx]) ||
+		(contains("EePp", userInput[curIdx-1]) &&
+			contains("+-", userInput[curIdx])) {
 
 		if (userInput[curIdx-1] == '_' && !isDigit(userInput[curIdx])) ||
 			(userInput[curIdx] == '_' && !isDigit(userInput[curIdx-1])) {
@@ -587,7 +621,10 @@ func isTermOfProd(cur *Token) bool {
 			(cur.Kind == TK_RESERVED &&
 				(startsWithTermKw(cur.Str) != "" ||
 					startsWithTypeName(cur.Str) != "" ||
-					strings.Contains(")]}", cur.Str)))
+					startsWith(cur.Str, ")") ||
+					startsWith(cur.Str, "]") ||
+					startsWith(cur.Str, "}")))
+
 	}
 	return false
 }
@@ -688,7 +725,7 @@ func tokenize(filename string) (*Token, error) {
 		// skip block comment
 		if startsWith(string(userInput[curIdx:]), "/*") {
 			// skip to the first of '*/' in userInput[curIdx:].
-			idx := strings.Index(string(userInput[curIdx:]), "*/")
+			idx := strIndex(string(userInput[curIdx:]), "*/")
 			if idx == -1 {
 				return nil, fmt.Errorf(
 					"tokenize(): err:\n%s",
@@ -751,7 +788,7 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// single-letter punctuator
-		if strings.Contains("+-()*/<>=;{},&[].!|^:?%", string(userInput[curIdx])) {
+		if contains("+-()*/<>=;{},&[].!|^:?%", userInput[curIdx]) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue

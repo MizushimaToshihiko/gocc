@@ -83,21 +83,3 @@ func TestIsTypename(t *testing.T) {
 		})
 	}
 }
-
-// func TestTokenize(t *testing.T) {
-// 	cases := map[string]struct {
-// 		in   string
-// 		want string
-// 	}{
-// 		"case 1": {in: "1,2,3", want: "1"},
-// 	}
-
-// 	for name, c := range cases {
-// 		t.Run(name, func(t *testing.T) {
-
-// 			userInput = append([]rune(c.in), 0)
-// 			curIdx = 0
-// 		})
-// 	}
-
-// }

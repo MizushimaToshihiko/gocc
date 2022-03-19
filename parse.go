@@ -697,16 +697,15 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 		panic(errorTok(tok, "type name expected"))
 	}
 
+	// Make a linked list.
 	head := &Type{}
 	cur := head
-
 	for i := 0; i < len(paramList); i++ {
 		cur.Next = paramList[i]
 		cur = cur.Next
 	}
 
 	ty = funcType(ty, head.Next)
-	// ty.Params = head.Next
 	ty.IsVariadic = isVariadic
 	*rest = tok.Next
 	return ty
