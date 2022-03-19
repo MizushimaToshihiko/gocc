@@ -107,6 +107,7 @@ func fnptr(fn func(int, int) int, a int, b int) int {
 
 func add10_int(x1 int, x2 int, x3 int, x4 int, x5 int, x6 int, x7 int, x8 int, x9 int, x10 int) int
 func add10_float(x1 float32, x2 float32, x3 float32, x4 float32, x5 float32, x6 float32, x7 float32, x8 float32, x9 float32, x10 float32) float32
+
 func add10_double(x1 float64, x2 float64, x3 float64, x4 float64, x5 float64, x6 float64, x7 float64, x8 float64, x9 float64, x10 float64) float64
 
 func many_args1(a int, b int, c int, d int, e int, f int, g int, h int) int {
@@ -208,6 +209,24 @@ func struct_test37() Ty20 {
 
 func struct_test38() Ty21 {
 	return Ty21{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+}
+
+func add10_identList_int(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 int) int
+func add10_identList_float(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 float32) float32
+func add10_identList_double(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 float64) float64
+
+func many_args_list1(a, b, c, d, e, f, g, h int) int {
+	return g / h
+}
+
+func many_args_list2(a, b, c, d, e, f, g, h, i, j float64) float64 {
+	return i / j
+}
+
+func many_args_list3(a int, b float64, c, d int, e float64, f int,
+	g float64, h int, i, j, k float64,
+	l, m float64, n, o int, p float64) int {
+	return o / p
 }
 
 func main() {
@@ -368,6 +387,14 @@ func main() {
 	assert(10, struct_test38().a[9], "struct_test38().a[9]")
 	assert(15, struct_test38().a[14], "struct_test38().a[14]")
 	assert(20, struct_test38().a[19], "struct_test38().a[19]")
+
+	assert(55, add10_identList_int(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_identList_int(1,2,3,4,5,6,7,8,9,10)")
+	assert(55, add10_identList_float(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_identList_float(1,2,3,4,5,6,7,8,9,10)")
+	assert(55, add10_identList_double(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_identList_double(1,2,3,4,5,6,7,8,9,10)")
+
+	assert(4, many_args_list1(1, 2, 3, 4, 5, 6, 40, 10), "many_args1(1,2,3,4,5,6,40,10)")
+	assert(4, many_args_list2(1, 2, 3, 4, 5, 6, 7, 8, 40, 10), "many_args2(1,2,3,4,5,6,7,8,40,10)")
+	assert(8, many_args_list3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 80, 10), "many_args3(1,2,3,4,5,6,7,8,9,10,11,12,13,14,80,10)")
 
 	println("OK")
 }

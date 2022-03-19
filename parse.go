@@ -641,14 +641,16 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
-	head := &Type{}
-	cur := head
 	isVariadic := false
+	first := true
+
+	paramList := make([]*Type, 0)
 
 	for !equal(tok, ")") {
-		if cur != head {
+		if !first {
 			tok = skip(tok, ",")
 		}
+		first = false
 
 		ty2 := declarator(&tok, tok)
 		ty2name := ty2.Name
@@ -657,11 +659,9 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 				isVariadic = true
 				ty2 = readTypePreffix(&tok, tok.Next, nil)
 				ty2.Name = ty2name
-				cur.Next = copyType(ty2)
+				paramList = append(paramList, copyType(ty2))
 				break
 			}
-
-			panic(errorTok(tok, "type name expected"))
 		}
 
 		name := ty2.Name
@@ -673,12 +673,36 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 			ty2.Name = name
 		}
 
-		cur.Next = copyType(ty2)
-		cur = cur.Next
+		paramList = append(paramList, copyType(ty2))
 	}
 
-	if cur == head {
+	cnt := 0
+	for i := 0; i < len(paramList); i++ {
+		param := paramList[i]
+		if param.Kind == TY_VOID {
+			cnt++
+		} else {
+			ty3 := param
+			for j := 0; j < cnt; j++ {
+				name := paramList[i-(j+1)].Name
+				paramList[i-(j+1)] = copyType(ty3)
+				paramList[i-(j+1)].Name = name
+			}
+		}
+	}
+
+	if len(paramList) == 0 {
 		isVariadic = true
+	} else if cnt == len(paramList) {
+		panic(errorTok(tok, "type name expected"))
+	}
+
+	head := &Type{}
+	cur := head
+
+	for i := 0; i < len(paramList); i++ {
+		cur.Next = paramList[i]
+		cur = cur.Next
 	}
 
 	ty = funcType(ty, head.Next)

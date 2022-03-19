@@ -285,24 +285,24 @@ func readIntLiteral(cur *Token) (*Token, error) {
 	var err error
 	var startIdx = curIdx
 
-	if startsWith(string(userInput)[curIdx:curIdx+2], "0x") ||
-		startsWith(string(userInput)[curIdx:curIdx+2], "0X") {
+	if startsWith(string(userInput[curIdx:curIdx+2]), "0x") ||
+		startsWith(string(userInput[curIdx:curIdx+2]), "0X") {
 		base = 16
 		curIdx += 2
 		sVal, err = readHexDigit()
 		if err != nil {
 			return nil, err
 		}
-	} else if startsWith(string(userInput)[curIdx:curIdx+2], "0b") ||
-		startsWith(string(userInput)[curIdx:curIdx+2], "0B") {
+	} else if startsWith(string(userInput[curIdx:curIdx+2]), "0b") ||
+		startsWith(string(userInput[curIdx:curIdx+2]), "0B") {
 		base = 2
 		curIdx += 2
-	} else if startsWith(string(userInput)[curIdx:curIdx+2], "0o") ||
-		startsWith(string(userInput)[curIdx:curIdx+2], "0O") ||
-		startsWith(string(userInput)[curIdx:curIdx+2], "0_") {
+	} else if startsWith(string(userInput[curIdx:curIdx+2]), "0o") ||
+		startsWith(string(userInput[curIdx:curIdx+2]), "0O") ||
+		startsWith(string(userInput[curIdx:curIdx+2]), "0_") {
 		base = 8
 		curIdx += 2
-	} else if startsWith(string(userInput)[curIdx:curIdx+1], "0") &&
+	} else if startsWith(string(userInput[curIdx:curIdx+1]), "0") &&
 		isDigit(userInput[curIdx+1]) {
 		base = 8
 		curIdx += 1
@@ -751,7 +751,7 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// single-letter punctuator
-		if strings.Contains("+-()*/<>=;{},&[].,!|^:?%", string(userInput[curIdx])) {
+		if strings.Contains("+-()*/<>=;{},&[].!|^:?%", string(userInput[curIdx])) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue
