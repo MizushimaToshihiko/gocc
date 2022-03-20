@@ -290,12 +290,12 @@ func parseInt(str string, base int) int64 {
 		var num int64
 		if '0' <= str[i] && str[i] <= '9' {
 			num = int64(str[i] - '0')
-		}
-		if 'a' <= str[i] && str[i] <= 'f' {
+		} else if 'a' <= str[i] && str[i] <= 'f' {
 			num = int64(str[i]-'a'+1) + 9
-		}
-		if 'A' <= str[i] && str[i] <= 'F' {
+		} else if 'A' <= str[i] && str[i] <= 'F' {
 			num = int64(str[i]-'A'+1) + 9
+		} else {
+			panic(errorAt(curIdx+i, "couldn't parse"))
 		}
 
 		for j := 0; j < digits; j++ {
@@ -304,7 +304,6 @@ func parseInt(str string, base int) int64 {
 		digits++
 		ret += num
 
-		// panic(errorAt(curIdx, "couldn't parse"))
 	}
 	return ret
 }
