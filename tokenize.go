@@ -283,11 +283,28 @@ func strIndex(str string, substr string) int {
 	return -1
 }
 
-// func parseInt(str string, base int) (int64, error) {
-// 	for i := 0; i < len(str); i++ {
+func parseInt(str string, base int) int64 {
+	var ret int64
+	digits := 0
+	for i := len(str) - 1; i >= 0; i-- {
+		var num int64
+		if '0' <= str[i] && str[i] <= '9' {
+			num = int64(str[i] - '0')
+		}
+		if 'a' <= str[i] && str[i] <= 'f' {
+			num = int64(str[i]-'a'+1) + 10
+		}
 
-// 	}
-// }
+		for j := 0; j < digits; j++ {
+			num *= int64(base)
+		}
+		digits++
+		ret += num
+
+		// panic(errorAt(curIdx, "couldn't parse"))
+	}
+	return ret
+}
 
 func isSpace(op rune) bool {
 	return contains("\t\v\f\r ", op)
@@ -361,10 +378,7 @@ func readIntLiteral(cur *Token) (*Token, error) {
 	cur = newToken(TK_NUM, cur, string(userInput[startIdx:curIdx]), curIdx-startIdx+1)
 	var v int64
 	if sVal != "" {
-		v, err = strconv.ParseInt(sVal, base, 64)
-	}
-	if err != nil {
-		return nil, errors.New(errorAt(startIdx, err.Error()))
+		v = parseInt(sVal, base)
 	}
 
 	cur.Val = v
