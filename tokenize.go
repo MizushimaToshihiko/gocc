@@ -292,7 +292,7 @@ func parseInt(str string, base int) int64 {
 			num = int64(str[i] - '0')
 		}
 		if 'a' <= str[i] && str[i] <= 'f' {
-			num = int64(str[i]-'a'+1) + 10
+			num = int64(str[i]-'a'+1) + 9
 		}
 
 		for j := 0; j < digits; j++ {
