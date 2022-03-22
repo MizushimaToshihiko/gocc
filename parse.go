@@ -44,7 +44,8 @@ type Obj struct {
 	Align   int    // alignment
 
 	// Local variables
-	Offset int // Offset from RBP
+	Offset int   // Offset from RBP
+	Val    int64 // it's integer value
 
 	// Global variable or function
 	IsFunc   bool
@@ -1840,6 +1841,9 @@ func assignList(rest **Token, tok *Token) *Node {
 
 		if j < i {
 			rhs := logor(&tok, tok)
+			// if lhss[j].Obj != nil && isInteger(lhss[j].Obj.Ty) {
+			// 	lhss[j].Obj.Val = eval(rhs)
+			// }
 			node = newBinary(ND_ASSIGN, lhss[j], rhs, tok)
 			if j > 0 {
 				node = newBinary(ND_COMMA, prev, node, tok)
@@ -2089,10 +2093,13 @@ func eval2(node *Node, label **string) int64 {
 		}
 		return evalRval(node.Lhs, label) + int64(node.Mem.Offset)
 	case ND_VAR:
+		// if isInteger(node.Ty) {
+		// 	return node.Obj.Val
+		// }
 		if label == nil {
 			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
 		}
-		if node.Obj.Ty.Kind != TY_ARRAY && node.Obj.Ty.Kind == TY_FUNC {
+		if node.Obj.Ty.Kind != TY_ARRAY && node.Obj.Ty.Kind != TY_FUNC {
 			panic("\n" + errorTok(node.Tok, "invalid initializer"))
 		}
 		*label = &node.Obj.Name
@@ -2205,7 +2212,12 @@ func assign(rest **Token, tok *Token) *Node {
 	node := logor(&tok, tok)
 
 	if equal(tok, "=") {
-		return newBinary(ND_ASSIGN, node, assign(rest, tok.Next), tok)
+		rhs := assign(rest, tok.Next)
+		addType(rhs)
+		// if node.Obj != nil && isInteger(rhs.Ty) {
+		// 	node.Obj.Val = eval(rhs)
+		// }
+		return newBinary(ND_ASSIGN, node, rhs, tok)
 	}
 
 	if equal(tok, "+=") {
