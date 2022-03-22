@@ -10,7 +10,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strconv"
 )
 
 // set TokenKind with enum
@@ -294,6 +293,8 @@ func parseInt(str string, base int) int64 {
 			num = int64(str[i]-'a'+1) + 9
 		} else if 'A' <= str[i] && str[i] <= 'F' {
 			num = int64(str[i]-'A'+1) + 9
+		} else if str[i] == '_' {
+			continue
 		} else {
 			panic(errorAt(curIdx+i, "couldn't parse"))
 		}
@@ -305,6 +306,130 @@ func parseInt(str string, base int) int64 {
 		ret += num
 
 	}
+	return ret
+}
+
+func parseFloat(str string) float64 {
+
+	base := 10
+	if startsWith(str, "0x") ||
+		startsWith(str, "0X") {
+		base = 16
+		str = string(str[2:])
+	}
+
+	// Check literal
+	if base == 10 && (contains(str, 'p') || contains(str, 'P')) {
+		panic(errorAt(curIdx, "invalid number literal"))
+	}
+
+	// Read bofore the floating-point.
+	var integer float64
+	pos := strIndex(str, ".")
+	end := len(str)
+	if pos > 0 {
+		integer = float64(parseInt(str[:pos], base))
+	} else if pos == -1 {
+		pos = 0
+		if base == 10 {
+			if contains(str, 'e') {
+				end = strIndex(str, "e")
+			} else if contains(str, 'E') {
+				end = strIndex(str, "E")
+			}
+			integer = float64(parseInt(str[:end], base))
+		} else if base == 16 {
+			if contains(str, 'p') {
+				end = strIndex(str, "p")
+			} else if contains(str, 'P') {
+				end = strIndex(str, "P")
+			}
+			integer = float64(parseInt(str[:end], base))
+		}
+	}
+
+	// Read after the floating-point to the end or 'E' or 'P'.
+	var float float64
+	fbase := base
+	i := pos + 1
+	for ; i < len(str); i++ {
+		if str[i] == '_' {
+			if i+1 < len(str) && contains(".eEpP", rune(str[i+1])) {
+				panic(errMustSeparateSuccessiveDigits(curIdx + i))
+			}
+			continue
+		}
+
+		if (str[i] == 'e' || str[i] == 'E') && base == 10 {
+			break
+		}
+		if (str[i] == 'p' || str[i] == 'P') && base == 16 {
+			break
+		}
+
+		var num float64
+		if '0' <= str[i] && str[i] <= '9' {
+			num = float64(str[i] - '0')
+		} else if 'a' <= str[i] && str[i] <= 'f' {
+			num = float64(str[i]-'a'+1) + 9
+		} else if 'A' <= str[i] && str[i] <= 'F' {
+			num = float64(str[i]-'A'+1) + 9
+		}
+		num /= float64(fbase)
+		fbase *= fbase
+		float += num
+	}
+
+	ret := integer + float
+	if i >= len(str)-1 {
+		if str[len(str)-1] != '_' {
+			return ret
+		}
+		panic(errMustSeparateSuccessiveDigits(curIdx + i))
+	}
+
+	if str[i] == 'e' || str[i] == 'E' {
+		if str[i+1] == '_' {
+			panic(errMustSeparateSuccessiveDigits(curIdx + i))
+		}
+		pow := parseInt(string(str[i+2:]), base)
+		if isDigit(rune(str[i+1])) {
+			pow = parseInt(string(str[i+1:]), base)
+		}
+		i++
+		if str[i] == '+' || isDigit(rune(str[i])) {
+			var j int64
+			for j = 0; j < pow; j++ {
+				ret *= float64(base)
+			}
+		} else if str[i] == '-' {
+			var j int64
+			for j = 0; j < pow; j++ {
+				ret /= float64(base)
+			}
+		}
+	} else if (str[i] == 'p' || str[i] == 'P') && base == 16 {
+		if str[i+1] == '_' {
+			panic(errMustSeparateSuccessiveDigits(curIdx + i))
+		}
+		pow := parseInt(string(str[i+2:]), base)
+		if isDigit(rune(str[i+1])) {
+			pow = parseInt(string(str[i+1:]), base)
+		}
+		i++
+		if str[i] == '+' || isDigit(rune(str[i])) {
+			var j int64
+			for j = 0; j < pow; j++ {
+				ret *= float64(2)
+			}
+		} else if str[i] == '-' {
+			var j int64
+			for j = 0; j < pow; j++ {
+				ret /= float64(2)
+			}
+		}
+	}
+
 	return ret
 }
 
@@ -419,10 +544,7 @@ func readNumber(cur *Token) (*Token, error) {
 		curIdx++
 	}
 
-	fval, err := strconv.ParseFloat(tok.Str+sVal, 64)
-	if err != nil {
-		return nil, err
-	}
+	fval := parseFloat(tok.Str + sVal)
 
 	ty := ty_double
 

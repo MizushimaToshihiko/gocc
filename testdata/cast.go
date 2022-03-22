@@ -1,7 +1,7 @@
 package test_cast
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
 
 func main() {
 	assert(131585, int(8590066177), "int(8590066177)")
