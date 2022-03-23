@@ -229,6 +229,8 @@ func many_args_list3(a int, b float64, c, d int, e float64, f int,
 	return o / p
 }
 
+func multi_return() (int, int)
+
 func main() {
 	assert(3, ret3(), "ret3()")
 	assert(8, add2(3, 5), "add2(3, 5)")
