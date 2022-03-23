@@ -1124,10 +1124,10 @@ func (c *codeWriter) genStmt(node *Node) {
 
 		var reg1, reg2 string
 		if node.Cond.Ty.Sz == 8 {
-			reg1 = "%rbx"
+			reg1 = "%rdx"
 			reg2 = "%rax"
 		} else {
-			reg1 = "%ebx"
+			reg1 = "%edx"
 			reg2 = "%eax"
 		}
 		// Escape the value in reg2 to reg1.

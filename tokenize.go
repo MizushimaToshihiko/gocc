@@ -650,7 +650,6 @@ func getEscapeChar(newPos *int, idx int) (rune, error) {
 }
 
 // stringLiteralEnd finds a closing double-quote.
-// strings.Indexを使えば簡単なんだけど
 func stringLiteralEnd(idx int) (int, error) {
 	var start int = idx
 	for ; userInput[idx] != '"'; idx++ {

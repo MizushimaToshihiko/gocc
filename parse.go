@@ -3046,7 +3046,7 @@ func createParamLvars(param *Type) {
 	}
 }
 
-// This function matches gotos with labels.
+// resolveGotoLabels function matches gotos with labels.
 //
 // We cannot resolve gotos as we parse a function because gotos
 // can refer a label that apears later in the function.
@@ -3081,7 +3081,20 @@ func function(tok *Token) *Token {
 		panic("\n" + errorTok(ty.NamePos, "function name omitted"))
 	}
 
-	ty.RetTy = readTypePreffix(&tok, tok, nil)
+	if equal(tok, "(") {
+		tok = skip(tok, "(")
+		ty.RetTy = readTypePreffix(&tok, tok, nil)
+		retty := ty.RetTy
+		for !equal(tok, ")") {
+			tok = skip(tok, ",")
+			retty.Next = readTypePreffix(&tok, tok, nil)
+			retty = retty.Next
+		}
+		tok = skip(tok, ")")
+	} else {
+		ty.RetTy = readTypePreffix(&tok, tok, nil)
+	}
+
 	fn := newGvar(getIdent(ty.Name), ty)
 	fn.IsFunc = true
 	fn.IsDef = !consume(&tok, tok, ";")
