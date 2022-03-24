@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"unsafe"
 )
 
@@ -145,6 +144,9 @@ type Node struct {
 	Args        *Node
 	PassByStack bool
 	RetBuf      *Obj
+
+	// Function definition
+	RetVals *Node // return values
 
 	// Goto or labeled statement
 	Lbl       string
@@ -1166,10 +1168,7 @@ func divFloat32(target int32) []int64 {
 	ret := make([]int64, 0, 1024)
 	for i := len(t) - 8; i >= 0; i -= 8 {
 		s := t[i : i+8]
-		num, err := strconv.ParseInt(s, 2, 64)
-		if err != nil {
-			panic(err)
-		}
+		num := parseInt(s, 2)
 		ret = append(ret, num)
 	}
 	return ret
@@ -1180,10 +1179,7 @@ func divFloat64(target int64) []int64 {
 	ret := make([]int64, 0, 1024)
 	for i := len(t) - 8; i >= 0; i -= 8 {
 		s := t[i : i+8]
-		num, err := strconv.ParseInt(s, 2, 64)
-		if err != nil {
-			panic(err)
-		}
+		num := parseInt(s, 2)
 		ret = append(ret, num)
 	}
 	return ret
@@ -1542,15 +1538,38 @@ func stmt(rest **Token, tok *Token) *Node {
 			return node
 		}
 
-		exp := expr(&tok, tok.Next)
-		*rest = skip(tok, ";")
+		// exp := expr(&tok, tok.Next)
+		// *rest = skip(tok, ";")
 
-		addType(exp)
-		ty := curFn.Ty.RetTy
-		if ty.Kind != TY_STRUCT {
-			exp = newCast(exp, curFn.Ty.RetTy)
+		// addType(exp)
+		// ty := curFn.Ty.RetTy
+		// if ty.Kind != TY_STRUCT {
+		// 	exp = newCast(exp, curFn.Ty.RetTy)
+		// }
+		// node.Lhs = exp
+		tok = skip(tok, "return")
+
+		head := &Node{}
+		cur := head
+		first := true
+		ty := copyType(curFn.Ty.RetTy)
+
+		for !equal(tok, ";") {
+			if !first {
+				tok = skip(tok, ",")
+			}
+			first = false
+			exp := assign(&tok, tok)
+			addType(exp)
+			if ty.Kind != TY_STRUCT {
+				exp = newCast(exp, ty)
+			}
+			ty = ty.Next
+			cur.Next = exp
+			cur = cur.Next
 		}
-		node.Lhs = exp
+		node.RetVals = head.Next
+
 		return node
 	}
 
@@ -1828,7 +1847,6 @@ func assignList(rest **Token, tok *Token) *Node {
 	tok = skip(tok, "=")
 
 	var node, prev *Node
-
 	valtok := tok
 	j := 0
 	for ; ; j++ {
@@ -1856,7 +1874,8 @@ func assignList(rest **Token, tok *Token) *Node {
 	}
 
 	if j > len(lhss) {
-		panic("\n" + errorTok(valtok, " assignment mismatch: %d variables but %d values", len(lhss), j))
+		panic("\n" + errorTok(valtok,
+			"assignment mismatch: %d variables but %d values", len(lhss), j))
 	}
 
 	*rest = tok

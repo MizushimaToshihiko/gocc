@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type TypeKind int
@@ -174,6 +173,21 @@ func stringType() *Type {
 	return &Type{Kind: TY_PTR, Base: charType(), Sz: 8, Align: 8, TyName: "string"}
 }
 
+func itoa(i int) string {
+	var tmp = make([]rune, 0)
+	var base int = 10
+	for i > 0 {
+		r := i%base + '0'
+		tmp = append(tmp, rune(r))
+		i /= base
+	}
+	var ret = make([]rune, 0)
+	for j := len(tmp) - 1; j >= 0; j-- {
+		ret = append(ret, tmp[j])
+	}
+	return string(ret)
+}
+
 func arrayOf(base *Type, len int) *Type {
 	return &Type{
 		Kind:   TY_ARRAY,
@@ -181,7 +195,7 @@ func arrayOf(base *Type, len int) *Type {
 		Align:  base.Align,
 		Base:   base,
 		ArrSz:  len,
-		TyName: "[" + strconv.Itoa(len) + "]" + base.TyName}
+		TyName: "[" + itoa(len) + "]" + base.TyName}
 }
 
 func structType() *Type {
