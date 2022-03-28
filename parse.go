@@ -2990,14 +2990,15 @@ func primary(rest **Token, tok *Token) *Node {
 		sc := findVar(tok)
 		*rest = tok.Next
 
+		isSVC := isShortVarSpec(tok.Next)
 		if sc != nil && sc.Obj != nil {
-			if isShortVarSpec(tok.Next) {
+			if isSVC {
 				panic(errorTok(tok, "no new variables on left side of :="))
 			}
 			return newVarNode(sc.Obj, tok)
 		}
 
-		if isShortVarSpec(tok.Next) {
+		if isSVC {
 			return declaration(rest, tok, true)
 		}
 
