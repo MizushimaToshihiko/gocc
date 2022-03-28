@@ -29,9 +29,5 @@ func main() {
 	var x6 MyInt2
 	assert(16, Sizeof(x6), "var x6 MyInt2; Sizeof(x6)")
 
-	type ahochin int
-	var x01 ahochin = 24
-	assert(24, x01, "type ahochin int;var x01 ahochin=24;x01")
-
 	println("OK")
 }
