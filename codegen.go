@@ -24,7 +24,7 @@ func (c *codeWriter) println(frmt string, a ...interface{}) {
 
 func (c *codeWriter) unreachable(frmt string, a ...interface{}) {
 	if c.err == nil {
-		c.err = fmt.Errorf(frmt, a)
+		c.err = fmt.Errorf(frmt, a...)
 	} else {
 		c.err = fmt.Errorf(c.err.Error()+"\n"+frmt, a)
 	}
@@ -1171,10 +1171,19 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.genStmt(node.Lhs)
 		return
 	case ND_RETURN:
-		if node.Lhs != nil {
-			c.genExpr(node.Lhs)
+		// if node.Lhs != nil {
+		// 	fmt.Printf("node.Lhs: %#v\n\n", node.Lhs)
+		// 	fmt.Printf("node.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs)
+		// 	fmt.Printf("node.Lhs.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs.Lhs)
+		// 	fmt.Printf("node.Lhs.Lhs.Rhs: %#v\n\n", node.Lhs.Lhs.Rhs)
+		// 	c.genExpr(node.Lhs)
+		i := 0
+		for ret := node.RetVals; ret != nil; ret = ret.Next {
+			c.genExpr(ret)
+			c.println("	mov %%rax, %s", argreg64[i])
+			i++
 
-			ty := node.Lhs.Ty
+			ty := ret.Ty
 			if ty.Kind == TY_STRUCT {
 				if ty.Sz <= 16 {
 					c.copyStructReg()

@@ -2,7 +2,7 @@ package test_hanoi
 
 func println(format ...string)
 
-func Hanoi(n int, from string, work string, dest string) {
+func Hanoi(n int, from, work, dest string) {
 	if n >= 2 {
 		Hanoi(n-1, from, dest, work)
 	}
@@ -12,7 +12,7 @@ func Hanoi(n int, from string, work string, dest string) {
 	}
 }
 
-func Hanoi2(n int, from string, work string, dest string) {
+func Hanoi2(n int, from, work, dest string) {
 	if n >= 1 {
 		Hanoi2(n-1, from, dest, work)
 		println("%d: from %s to %s", n, from, dest)

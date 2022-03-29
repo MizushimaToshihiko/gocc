@@ -5,7 +5,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -453,7 +452,7 @@ func isIdent2(c rune) bool {
 
 // for integer literal error
 func errMustSeparateSuccessiveDigits(idx int) error {
-	return errors.New(errorAt(idx, "'_' must separate successive digits"))
+	return fmt.Errorf(errorAt(idx, "'_' must separate successive digits"))
 }
 
 func readIntLiteral(cur *Token) (*Token, error) {
