@@ -1408,6 +1408,9 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		if ty.Name == nil {
 			panic(errorTok(ty.NamePos, "variable name omitted"))
 		}
+		if equal(tok, ",") && ty.Kind != TY_VOID {
+			panic(errorTok(ty.NamePos, "expected ';' found ','"))
+		}
 
 		v := newLvar(getIdent(ty.Name), ty)
 		identList = append(identList, v)
@@ -2657,14 +2660,12 @@ func funcDecl(rest **Token, tok *Token, name *Token) *Type {
 	return ty
 }
 
-// struct-member = ident type-prefix type-specifier
+// struct-member = (ident | ident-list) type-prefix type-specifier
 func structMems(rest **Token, tok *Token, ty *Type) *Member {
 	printCurTok(tok)
 	printCalledFunc()
 
-	head := &Member{}
-	cur := head
-	idx := 0
+	memList := make([]*Type, 0)
 
 	for !equal(tok, "}") {
 		first := true
@@ -2673,22 +2674,62 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 				tok = skip(tok, ",")
 			}
 			first = false
-
 			memTy := declarator(&tok, tok)
-			mem := &Member{
-				Name:  memTy.Name,
-				Ty:    memTy,
-				Idx:   idx,
-				Align: memTy.Align,
+			memList = append(memList, copyType(memTy))
+			if memTy.Kind != TY_VOID {
+				idx := len(memList) - 2
+				for 0 <= idx && memList[idx].Kind == TY_VOID {
+					memTy2 := copyType(memTy)
+					name := memList[idx].Name
+					fmt.Printf("name: %#v\n\n", name)
+					memList[idx] = memTy2
+					memList[idx].Name = name
+					idx--
+				}
 			}
-			idx++
-			cur.Next = mem
-			cur = cur.Next
 			if equal(tok, "}") {
 				break
 			}
 		}
 	}
+
+	head := &Member{}
+	cur := head
+
+	for i := 0; i < len(memList); i++ {
+		mem := &Member{
+			Name:  memList[i].Name,
+			Ty:    memList[i],
+			Idx:   i,
+			Align: memList[i].Align,
+		}
+		cur.Next = mem
+		cur = cur.Next
+	}
+
+	// for !equal(tok, "}") {
+	// 	first := true
+	// 	for !consume(&tok, tok, ";") {
+	// 		if !first {
+	// 			tok = skip(tok, ",")
+	// 		}
+	// 		first = false
+
+	// 		memTy := declarator(&tok, tok)
+	// 		mem := &Member{
+	// 			Name:  memTy.Name,
+	// 			Ty:    memTy,
+	// 			Idx:   idx,
+	// 			Align: memTy.Align,
+	// 		}
+	// 		idx++
+	// 		cur.Next = mem
+	// 		cur = cur.Next
+	// 		if equal(tok, "}") {
+	// 			break
+	// 		}
+	// 	}
+	// }
 
 	*rest = tok
 	return head.Next

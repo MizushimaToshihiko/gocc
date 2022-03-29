@@ -1180,7 +1180,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		i := 0
 		for ret := node.RetVals; ret != nil; ret = ret.Next {
 			c.genExpr(ret)
-			c.println("	mov %%rax, %s", argreg64[i])
+			// c.println("	mov %%rax, %s", argreg64[i]) // 現時点で意味がないのでコメントアウト
 			i++
 
 			ty := ret.Ty
