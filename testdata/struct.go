@@ -1,7 +1,7 @@
 package test_struct
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
 
 func main() {
 	type T1 struct {
@@ -181,6 +181,86 @@ func main() {
 	assert(1, a25.next.x, "type T25 struct { next *T25;x int; };var a25 T25;var b25 T25; b25.x=1; a25.next=&b25; a25.next.x")
 	type T26 struct{ x int }
 	assert(4, Sizeof(T26), "type T26 struct{ x int; }; Sizeof(T26)")
+
+	type T27 struct{ x, y int }
+	assert(8, Sizeof(T27), "type T27 struct{x,y int;};Sizeof(T27)")
+	var x27 = T27{1, 2}
+	assert(1, x27.x, "x27.x")
+	assert(2, x27.y, "x27.y")
+
+	type T28 struct{ a, b, c, d, e, f, g, h, i, j int }
+	assert(40, Sizeof(T28), "type T28 struct{ a,b,c,d,e,f,g,h,i,j int;};Sizeof(T28)")
+	var x28 = T28{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	assert(1, x28.a, "x28.a")
+	assert(2, x28.b, "x28.b")
+	assert(3, x28.c, "x28.c")
+	assert(4, x28.d, "x28.d")
+	assert(5, x28.e, "x28.e")
+	assert(6, x28.f, "x28.f")
+	assert(7, x28.g, "x28.g")
+	assert(8, x28.h, "x28.h")
+	assert(9, x28.i, "x28.i")
+	assert(10, x28.j, "x28.j")
+
+	type T29 struct {
+		a, b int
+		k, l [2]string
+		m    [3]byte
+	}
+	assert(48, Sizeof(T29), "type T29 struct {a,b int:k,l [2]string;m [3]byte;};Sizeof(T29)")
+	var x29 = &T29{
+		a: 1, b: 2,
+		k: [2]int{3, 4},
+		l: [2]int{5, 6},
+		m: [3]byte{7, 8, 9},
+	}
+	assert(1, x29.a, "x29.a")
+	assert(2, x29.b, "x29.b")
+	assert(3, x29.k[0], "x29.k[0]")
+	assert(4, x29.k[1], "x29.k[1]")
+	assert(5, x29.l[0], "x29.l[0]")
+	assert(6, x29.l[1], "x29.l[1]")
+	assert(7, x29.m[0], "x29.m[0]")
+	assert(8, x29.m[1], "x29.m[1]")
+	assert(9, x29.m[2], "x29.m[2]")
+
+	x30 := [2]struct {
+		a, b int
+		k, l [2]string
+		m    [3]byte
+	}{
+		{
+			a: 1, b: 2,
+			k: [2]int{3, 4},
+			l: [2]int{5, 6},
+			m: [3]byte{7, 8, 9},
+		},
+		{
+			a: 10, b: 11,
+			k: [2]int{12, 13},
+			l: [2]int{14, 15},
+			m: [3]byte{16, 17, 18},
+		},
+	}
+	assert(96, Sizeof(x30), "Sizeof(x30)")
+	assert(1, x30[0].a, "x30[0].a")
+	assert(2, x30[0].b, "x30[0].b")
+	assert(3, x30[0].k[0], "x30[0].k[0]")
+	assert(4, x30[0].k[1], "x30[0].k[1]")
+	assert(5, x30[0].l[0], "x30[0].l[0]")
+	assert(6, x30[0].l[1], "x30[0].l[1]")
+	assert(7, x30[0].m[0], "x30[0].m[0]")
+	assert(8, x30[0].m[1], "x30[0].m[1]")
+	assert(9, x30[0].m[2], "x30[0].m[2]")
+	assert(10, x30[1].a, "x30[1].a")
+	assert(11, x30[1].b, "x30[1].b")
+	assert(12, x30[1].k[0], "x30[1].k[0]")
+	assert(13, x30[1].k[1], "x30[1].k[1]")
+	assert(14, x30[1].l[0], "x30[1].l[0]")
+	assert(15, x30[1].l[1], "x30[1].l[1]")
+	assert(16, x30[1].m[0], "x30[1].m[0]")
+	assert(17, x30[1].m[1], "x30[1].m[1]")
+	assert(18, x30[1].m[2], "x30[1].m[2]")
 
 	println("OK")
 }
