@@ -2,6 +2,7 @@ package test_struct
 
 func assert(want int, act int, code string)
 func println(format ...string)
+func strcmp(s1 string, s2 string) int
 
 func main() {
 	type T1 struct {
@@ -133,24 +134,23 @@ func main() {
 	y19 = x19
 	assert(5, y19.a, "type T19 struct {a byte; b byte;};var x19 T19;var y19 T19; x19.a=5; y19=x19; y19.a")
 
-	// the belows(comma) is not supported yet.
-	// type T20 struct{ a, b int }
-	// var x20, y20 T20
-	// x20.a = 3
-	// y20 = x20
-	// assert(3, y20.a, "type T20 struct {a,b int;};var x20,y20 T20; x20.a=3; y20=x20; y20.a")
-	// x20.a = 7
-	// var z20 *T20 = &y
-	// *z20 = x20
-	// assert(7, y20.a, "type T20 struct {a,b int;};var x20 T20;var y20 T20;x20.a=7;var z20 *T20=&y; *z20=x20; y20.a")
-	// var p20, q20 *T20 = &x20, &y20
-	// *q20 = *p20
-	// assert(7, y20.a, "type T20 struct {a,b int;};var x20 T20;var y20 T20; x20.a=7;var p20,q20 *T20=&x20,&y20; *q20=*p20; y20.a")
-	// type T21 struct{ a, b byte }
-	// var x21, y21 T21
-	// x21.a = 5
-	// y21 = x21
-	// assert(5, y21.a, "type T21 struct {a,b byte;};var x21,y21 T21; x21.a=5; y21=x21; y21.a")
+	type T20 struct{ a, b int }
+	var x20, y20 T20
+	x20.a = 3
+	y20 = x20
+	assert(3, y20.a, "type T20 struct {a,b int;};var x20,y20 T20; x20.a=3; y20=x20; y20.a")
+	x20.a = 7
+	var z20 *T20 = &y20
+	*z20 = x20
+	assert(7, y20.a, "type T20 struct {a,b int;};var x20 T20;var y20 T20;x20.a=7;var z20 *T20=&y; *z20=x20; y20.a")
+	var p20, q20 *T20 = &x20, &y20
+	*q20 = *p20
+	assert(7, y20.a, "type T20 struct {a,b int;};var x20 T20;var y20 T20; x20.a=7;var p20,q20 *T20=&x20,&y20; *q20=*p20; y20.a")
+	type T21 struct{ a, b byte }
+	var x21, y21 T21
+	x21.a = 5
+	y21 = x21
+	assert(5, y21.a, "type T21 struct {a,b byte;};var x21,y21 T21; x21.a=5; y21=x21; y21.a")
 
 	type T22 struct {
 		a int
@@ -211,18 +211,18 @@ func main() {
 	var x29 = &T29{
 		a: 1, b: 2,
 		k: [2]int{3, 4},
-		l: [2]int{5, 6},
-		m: [3]byte{7, 8, 9},
+		l: [2]string{"abc", "def"},
+		m: [3]byte{'a', 'b', 'c'},
 	}
 	assert(1, x29.a, "x29.a")
 	assert(2, x29.b, "x29.b")
 	assert(3, x29.k[0], "x29.k[0]")
 	assert(4, x29.k[1], "x29.k[1]")
-	assert(5, x29.l[0], "x29.l[0]")
-	assert(6, x29.l[1], "x29.l[1]")
-	assert(7, x29.m[0], "x29.m[0]")
-	assert(8, x29.m[1], "x29.m[1]")
-	assert(9, x29.m[2], "x29.m[2]")
+	assert(0, strcmp(x29.l[0], "abc"), "strcmp(x29.l[0], \"abc\")")
+	assert(0, strcmp(x29.l[1], "def"), "strcmp(x29.l[1], \"def\")")
+	assert(97, x29.m[0], "x29.m[0]")
+	assert(98, x29.m[1], "x29.m[1]")
+	assert(99, x29.m[2], "x29.m[2]")
 
 	x30 := [2]struct {
 		a, b int
@@ -232,14 +232,14 @@ func main() {
 		{
 			a: 1, b: 2,
 			k: [2]int{3, 4},
-			l: [2]int{5, 6},
-			m: [3]byte{7, 8, 9},
+			l: [2]string{"foo", "bar"},
+			m: [3]byte{'7', '8', '9'},
 		},
 		{
 			a: 10, b: 11,
 			k: [2]int{12, 13},
-			l: [2]int{14, 15},
-			m: [3]byte{16, 17, 18},
+			l: [2]string{"abcdef", "ghijkl"},
+			m: [3]byte{'5', '6', '7'},
 		},
 	}
 	assert(96, Sizeof(x30), "Sizeof(x30)")
@@ -247,20 +247,20 @@ func main() {
 	assert(2, x30[0].b, "x30[0].b")
 	assert(3, x30[0].k[0], "x30[0].k[0]")
 	assert(4, x30[0].k[1], "x30[0].k[1]")
-	assert(5, x30[0].l[0], "x30[0].l[0]")
-	assert(6, x30[0].l[1], "x30[0].l[1]")
-	assert(7, x30[0].m[0], "x30[0].m[0]")
-	assert(8, x30[0].m[1], "x30[0].m[1]")
-	assert(9, x30[0].m[2], "x30[0].m[2]")
+	assert(0, strcmp(x30[0].l[0], "foo"), "strcmp(x30[0].l[0], \"foo\")")
+	assert(0, strcmp(x30[0].l[1], "bar"), "strcmp(x30[0].l[1], \"bar\")")
+	assert('7', x30[0].m[0], "x30[0].m[0]")
+	assert('8', x30[0].m[1], "x30[0].m[1]")
+	assert('9', x30[0].m[2], "x30[0].m[2]")
 	assert(10, x30[1].a, "x30[1].a")
 	assert(11, x30[1].b, "x30[1].b")
 	assert(12, x30[1].k[0], "x30[1].k[0]")
 	assert(13, x30[1].k[1], "x30[1].k[1]")
-	assert(14, x30[1].l[0], "x30[1].l[0]")
-	assert(15, x30[1].l[1], "x30[1].l[1]")
-	assert(16, x30[1].m[0], "x30[1].m[0]")
-	assert(17, x30[1].m[1], "x30[1].m[1]")
-	assert(18, x30[1].m[2], "x30[1].m[2]")
+	assert(0, strcmp(x30[1].l[0], "abcdef"), "strcmp(x30[1].l[0], \"abcdef\")")
+	assert(0, strcmp(x30[1].l[1], "ghijkl"), "strcmp(x30[1].l[1], \"ghijkl\")")
+	assert('5', x30[1].m[0], "x30[1].m[0]")
+	assert('6', x30[1].m[1], "x30[1].m[1]")
+	assert('7', x30[1].m[2], "x30[1].m[2]")
 
 	println("OK")
 }
