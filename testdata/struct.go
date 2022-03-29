@@ -210,16 +210,16 @@ func main() {
 	assert(48, Sizeof(T29), "type T29 struct {a,b int:k,l [2]string;m [3]byte;};Sizeof(T29)")
 	var x29 = &T29{
 		a: 1, b: 2,
-		k: [2]int{3, 4},
+		k: [2]string{"3", "4"},
 		l: [2]string{"abc", "def"},
 		m: [3]byte{'a', 'b', 'c'},
 	}
 	assert(1, x29.a, "x29.a")
 	assert(2, x29.b, "x29.b")
-	assert(3, x29.k[0], "x29.k[0]")
-	assert(4, x29.k[1], "x29.k[1]")
-	assert(0, strcmp(x29.l[0], "abc"), "strcmp(x29.l[0], \"abc\")")
-	assert(0, strcmp(x29.l[1], "def"), "strcmp(x29.l[1], \"def\")")
+	assert(0, strcmp(x29.k[0], "3"), "strcmp(x29.k[0],\"3\")")
+	assert(0, strcmp(x29.k[1], "4"), "strcmp(x29.k[1],\"4\")")
+	assert(0, strcmp(x29.l[0], "abc"), "strcmp(x29.l[0],\"abc\")")
+	assert(0, strcmp(x29.l[1], "def"), "strcmp(x29.l[1],\"def\")")
 	assert(97, x29.m[0], "x29.m[0]")
 	assert(98, x29.m[1], "x29.m[1]")
 	assert(99, x29.m[2], "x29.m[2]")
@@ -231,13 +231,13 @@ func main() {
 	}{
 		{
 			a: 1, b: 2,
-			k: [2]int{3, 4},
+			k: [2]string{"3", "4"},
 			l: [2]string{"foo", "bar"},
 			m: [3]byte{'7', '8', '9'},
 		},
 		{
 			a: 10, b: 11,
-			k: [2]int{12, 13},
+			k: [2]string{"12", "13"},
 			l: [2]string{"abcdef", "ghijkl"},
 			m: [3]byte{'5', '6', '7'},
 		},
@@ -245,19 +245,19 @@ func main() {
 	assert(96, Sizeof(x30), "Sizeof(x30)")
 	assert(1, x30[0].a, "x30[0].a")
 	assert(2, x30[0].b, "x30[0].b")
-	assert(3, x30[0].k[0], "x30[0].k[0]")
-	assert(4, x30[0].k[1], "x30[0].k[1]")
-	assert(0, strcmp(x30[0].l[0], "foo"), "strcmp(x30[0].l[0], \"foo\")")
-	assert(0, strcmp(x30[0].l[1], "bar"), "strcmp(x30[0].l[1], \"bar\")")
+	assert(0, strcmp(x30[0].k[0], "3"), "strcmp(x30[0].k[0],\"3\")")
+	assert(0, strcmp(x30[0].k[1], "4"), "strcmp(x30[0].k[1],\"4\")")
+	assert(0, strcmp(x30[0].l[0], "foo"), "strcmp(x30[0].l[0],\"foo\")")
+	assert(0, strcmp(x30[0].l[1], "bar"), "strcmp(x30[0].l[1],\"bar\")")
 	assert('7', x30[0].m[0], "x30[0].m[0]")
 	assert('8', x30[0].m[1], "x30[0].m[1]")
 	assert('9', x30[0].m[2], "x30[0].m[2]")
 	assert(10, x30[1].a, "x30[1].a")
 	assert(11, x30[1].b, "x30[1].b")
-	assert(12, x30[1].k[0], "x30[1].k[0]")
-	assert(13, x30[1].k[1], "x30[1].k[1]")
-	assert(0, strcmp(x30[1].l[0], "abcdef"), "strcmp(x30[1].l[0], \"abcdef\")")
-	assert(0, strcmp(x30[1].l[1], "ghijkl"), "strcmp(x30[1].l[1], \"ghijkl\")")
+	assert(0, strcmp(x30[1].k[0], "12"), "strcmp(x30[1].k[0],\"12\")")
+	assert(0, strcmp(x30[1].k[1], "13"), "strcmp(x30[1].k[1],\"13\")")
+	assert(0, strcmp(x30[1].l[0], "abcdef"), "strcmp(x30[1].l[0],\"abcdef\")")
+	assert(0, strcmp(x30[1].l[1], "ghijkl"), "strcmp(x30[1].l[1],\"ghijkl\")")
 	assert('5', x30[1].m[0], "x30[1].m[0]")
 	assert('6', x30[1].m[1], "x30[1].m[1]")
 	assert('7', x30[1].m[2], "x30[1].m[2]")
