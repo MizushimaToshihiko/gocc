@@ -2681,7 +2681,6 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 				for 0 <= idx && memList[idx].Kind == TY_VOID {
 					memTy2 := copyType(memTy)
 					name := memList[idx].Name
-					fmt.Printf("name: %#v\n\n", name)
 					memList[idx] = memTy2
 					memList[idx].Name = name
 					idx--
@@ -2706,30 +2705,6 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 		cur.Next = mem
 		cur = cur.Next
 	}
-
-	// for !equal(tok, "}") {
-	// 	first := true
-	// 	for !consume(&tok, tok, ";") {
-	// 		if !first {
-	// 			tok = skip(tok, ",")
-	// 		}
-	// 		first = false
-
-	// 		memTy := declarator(&tok, tok)
-	// 		mem := &Member{
-	// 			Name:  memTy.Name,
-	// 			Ty:    memTy,
-	// 			Idx:   idx,
-	// 			Align: memTy.Align,
-	// 		}
-	// 		idx++
-	// 		cur.Next = mem
-	// 		cur = cur.Next
-	// 		if equal(tok, "}") {
-	// 			break
-	// 		}
-	// 	}
-	// }
 
 	*rest = tok
 	return head.Next
