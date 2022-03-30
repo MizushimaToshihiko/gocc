@@ -614,7 +614,7 @@ func declarator(rest **Token, tok *Token) *Type {
 	var name *Token
 	var namePos *Token = tok
 
-	if tok.Kind == TK_IDENT {
+	if tok.Kind == TK_IDENT || tok.Kind == TK_BLANKIDENT {
 		name = tok
 		tok = tok.Next
 	}
@@ -1091,6 +1091,10 @@ func createLvarInit(init *Initializer, ty *Type, desg *InitDesg, tok *Token) *No
 		return newNode(ND_NULL_EXPR, tok)
 	}
 
+	if desg.Var != nil && desg.Var.Name == "_" {
+		return init.Expr
+	}
+
 	lhs := initDesgExpr(desg, tok)
 	return newBinary(ND_ASSIGN, lhs, init.Expr, tok)
 }
@@ -1421,7 +1425,7 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		identList[j].Ty = ty
 	}
 
-	if !isShort && equal(tok, "=") || isShort && equal(tok, ":=") {
+	if (!isShort && equal(tok, "=")) || (isShort && equal(tok, ":=")) {
 		j := 0
 		for !equal(tok, ";") {
 			v := identList[j]
@@ -1821,7 +1825,8 @@ func isShortVarSpec(tok *Token) bool {
 			return true
 		}
 
-		if equal(tok, ",") && tok.Next.Kind == TK_IDENT {
+		if equal(tok, ",") && (tok.Next.Kind == TK_IDENT ||
+			tok.Next.Kind == TK_BLANKIDENT) {
 			tok = tok.Next.Next
 			continue
 		}
@@ -1922,7 +1927,7 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 					continue
 				}
 
-				if tok.Kind != TK_IDENT {
+				if tok.Kind != TK_IDENT && tok.Kind != TK_BLANKIDENT {
 					panic("\n" + errorTok(tok, "unexpected expression"))
 				}
 
@@ -1936,7 +1941,7 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 		if consume(&tok, tok, "var") {
 			cur.Next = declaration(&tok, tok, false)
 
-		} else if tok.Kind == TK_IDENT && isShortVarSpec(tok.Next) {
+		} else if (tok.Kind == TK_IDENT || tok.Kind == TK_BLANKIDENT) && isShortVarSpec(tok.Next) {
 			cur.Next = declaration(&tok, tok, true)
 
 		} else {

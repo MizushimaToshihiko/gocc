@@ -2,9 +2,14 @@ package test_variable
 
 func assert(want int, act int, code string)
 func println(format ...string)
+func printf(format ...string) int
 
 var g1 int
 var g2 [4]int
+
+func ret3() int {
+	return 3
+}
 
 func main() {
 	var a1 int
@@ -88,6 +93,10 @@ func main() {
 	var x33 int
 	x33, _ = 1, 3
 	assert(1, x33, "x33")
+	_, x34 := 4, 5
+	assert(5, x34, "x34")
+	var x35, _ = ret3()+3, printf("blank ident test\n")
+	assert(6, x35, "x35")
 
 	println("OK")
 }

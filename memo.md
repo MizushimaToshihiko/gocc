@@ -252,6 +252,35 @@ An alternate method of passing a larger number of parameters (or a data structur
  - 6.4.3.3引数リストでのパラメータの受け渡し  
 呼び出されたプロシージャに多数のパラメータ（またはデータ構造）を渡す別の方法は、メモリ内のデータセグメントの1つにある引数リストにパラメータを配置することです。次に、引数リストへのポインタを、汎用レジスタまたはスタックを介して呼び出されたプロシージャに渡すことができます。これと同じ方法で、パラメータを呼び出し元のプロシージャに戻すこともできます。
 
+2022/03/30 [System V ABI AMD64 Architecture Processor Supplement (With LP64 and ILP32 Programming Models) Version 1.0 – January 28, 2018 – 8:23](https://github.com/hjl-tools/x86-psABI/wiki/x86-64-psABI-1.0.pdf)から抜粋  
+  
+**Returning of Values**  
+The returning of values is done according to the following algorithm:
+1. Classify the return type with the classification algorithm.
+2. If the type has class MEMORY, then the caller provides space for the return value and passes the address of this storage in %rdi as if it were the first argument to the function. In effect, this address becomes a “hidden” first argument.
+This storage must not overlap any data visible to the callee through other names than this argument.
+On return %rax will contain the address that has been passed in by the caller in %rdi.
+3. If the class is INTEGER, the next available register of the sequence %rax, %rdx is used.
+4. If the class is SSE, the next available vector register of the sequence %xmm0, %xmm1 is used.
+5. If the class is SSEUP, the eightbyte is returned in the next available eightbyte chunk of the last used vector register.
+6. If the class is X87, the value is returned on the X87 stack in %st0 as 80-bit x87 number.
+7. If the class is X87UP, the value is returned together with the previous X87 value in %st0.
+8. If the class is COMPLEX_X87, the real part of the value is returned in %st0 and the imaginary part in %st1.  
+  
+**値の戻り**  
+値の戻りは、次のアルゴリズムに従って行われます。
+1. 分類アルゴリズムを使用してリターンタイプを分類します。
+2. 型のクラスがMEMORYの場合、呼び出し元は戻り値用のスペースを提供し、関数の最初の引数であるかのように、このストレージのアドレスを%rdiで渡します。事実上、このアドレスは「隠された」最初の引数になります。
+このストレージは、この引数以外の名前で呼び出し先に表示されるデータと重複してはなりません。
+戻り時に、%raxには、%rdiで呼び出し元から渡されたアドレスが含まれます。
+3. クラスがINTEGERの場合、シーケンス%rax、%rdxの次に使用可能なレジスタが使用されます。
+4. クラスがSSEの場合、シーケンス%xmm0、%xmm1の次に使用可能なベクトルレジスタが使用されます。
+5. クラスがSSEUPの場合、8バイトは、最後に使用されたベクトルレジスタの次に使用可能な8バイトチャンクで返されます。
+6. クラスがX87の場合、値はX87スタックの%st0に80ビットのx87番号として返されます。
+7. クラスがX87UPの場合、値は%st0の前のX87値と一緒に返されます。
+8. クラスがCOMPLEX_X87の場合、値の実数部は%st0に返され、虚数部は%st1に返されます。
+  
+  
 #### 2022/02/17 floating-pointを扱う
  - chibiccのcodegen.cのgen_expr関数では、  
  　1. union { float f32; double f64; uint32_t u32; uint64_t u64; } u;を定義  
