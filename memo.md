@@ -25,7 +25,7 @@
        - copy関数
    - rune(int32のエイリアス)
    - rune literal => tokenizerのchar literalを変更する?
-   - blank identifiers : "_"
+   - blank identifiers : "_" -> 完了
    - bool型でtrueやfalseを使用できるように
    - 構造体埋め込みでメソッド集合も埋め込む
    - built-in functions
@@ -54,15 +54,11 @@
        - Type構造体のRetTyをそのまま使う
      - codegenの変更
        - 連結リストにしたRetTyをfor文でreturn valueを汎用レジスタに入れる
-   - 変数宣言時のゼロ初期化 -> 完了?
-     - local
-       - string -> 完了
-       - array -> 完了
-       - struct -> 完了
-     - global
-       - string -> 完了
-       - array -> 完了
-       - struct -> 完了
+   - グローバル変数の初期化子に関数を使用できるようにする
+       - Addendへの登録でconstExpr()を使うのを止めれば良い?  
+          -> RelocationのメンバにAddendExprを作ってそこに構文木を保存  
+          -> emitData内でgenExprを呼び出してコード出力  
+          でできるかも
     
 
 #### 【VarSpecの追加について】
