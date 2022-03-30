@@ -1127,7 +1127,7 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	printCalledFunc()
 
 	// Initialize a char array with a string literal.
-	// => unnecessary
+	// => unnecessary for this compiler, I think.
 
 	init := initializer(rest, tok, v.Ty, &v.Ty)
 	desg := &InitDesg{nil, 0, nil, v}
@@ -1836,7 +1836,7 @@ func assignList(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	start := tok
-	lhss := make([]*Node, 0)
+	lhses := make([]*Node, 0)
 	i := 0
 
 	for !equal(tok, "=") {
@@ -1844,7 +1844,7 @@ func assignList(rest **Token, tok *Token) *Node {
 			tok = skip(tok, ",")
 		}
 		i++
-		lhss = append(lhss, logor(&tok, tok))
+		lhses = append(lhses, logor(&tok, tok))
 	}
 
 	tok = skip(tok, "=")
@@ -1865,7 +1865,11 @@ func assignList(rest **Token, tok *Token) *Node {
 			// if lhss[j].Obj != nil && isInteger(lhss[j].Obj.Ty) {
 			// 	lhss[j].Obj.Val = eval(rhs)
 			// }
-			node = newBinary(ND_ASSIGN, lhss[j], rhs, tok)
+			if lhses[j].Kind == ND_NULL_EXPR {
+				node = rhs
+			} else {
+				node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
+			}
 			if j > 0 {
 				node = newBinary(ND_COMMA, prev, node, tok)
 			}
@@ -1876,9 +1880,9 @@ func assignList(rest **Token, tok *Token) *Node {
 		}
 	}
 
-	if j > len(lhss) {
+	if j > len(lhses) {
 		panic("\n" + errorTok(valtok,
-			"assignment mismatch: %d variables but %d values", len(lhss), j))
+			"assignment mismatch: %d variables but %d values", len(lhses), j))
 	}
 
 	*rest = tok
@@ -2236,6 +2240,9 @@ func assign(rest **Token, tok *Token) *Node {
 	if equal(tok, "=") {
 		rhs := assign(rest, tok.Next)
 		addType(rhs)
+		if node.Kind == ND_NULL_EXPR {
+			return rhs
+		}
 		// if node.Obj != nil && isInteger(rhs.Ty) {
 		// 	node.Obj.Val = eval(rhs)
 		// }
@@ -2999,6 +3006,11 @@ func primary(rest **Token, tok *Token) *Node {
 		node := unary(rest, tok.Next)
 		addType(node)
 		return newUlong(int64(node.Ty.Cap), tok)
+	}
+
+	if tok.Kind == TK_BLANKIDENT {
+		*rest = tok.Next
+		return newNode(ND_NULL_EXPR, tok)
 	}
 
 	if tok.Kind == TK_IDENT {

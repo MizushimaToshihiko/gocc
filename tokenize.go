@@ -25,7 +25,9 @@ const (
 	TK_COMM // 4: comment
 	TK_NL   // 5: new line
 
-	TK_EOF // 6: the end of tokens
+	TK_BLANKIDENT // 6: '_' identifier
+
+	TK_EOF // 7: the end of tokens
 )
 
 type Token struct {
@@ -873,6 +875,13 @@ func tokenize(filename string) (*Token, error) {
 			continue
 		}
 
+		// blank identifier
+		if contains("_", userInput[curIdx]) {
+			cur = newToken(TK_BLANKIDENT, cur, string(userInput[curIdx]), 1)
+			curIdx++
+			continue
+		}
+
 		// identifier
 		// if 'userInput[cutIdx]' is alphabets, it makes a token of TK_IDENT type.
 		if isIdent1(userInput[curIdx]) {
@@ -922,7 +931,6 @@ func tokenize(filename string) (*Token, error) {
 			curIdx += len(kw)
 			continue
 		}
-
 		// single-letter punctuator
 		if contains("+-()*/<>=;{},&[].!|^:?%", userInput[curIdx]) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)

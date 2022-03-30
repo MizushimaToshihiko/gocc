@@ -1,7 +1,7 @@
 package test_variable
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
 
 var g1 int
 var g2 [4]int
@@ -82,5 +82,12 @@ func main() {
 	// assert(3, ({ char *x[3]; char y; x[0]=&y; y=3; x[0][0]; }));
 	// assert(4, ({ char x[3]; char (*y)[3]=x; y[0][0]=4; y[0][0]; }));
 
-	println("OK");
+	_ = 1
+	_, g1 = 1, 2
+	assert(2, g1, "g1")
+	var x33 int
+	x33, _ = 1, 3
+	assert(1, x33, "x33")
+
+	println("OK")
 }

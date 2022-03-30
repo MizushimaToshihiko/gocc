@@ -243,6 +243,10 @@ func main() {
 		},
 	}
 	assert(96, Sizeof(x30), "Sizeof(x30)")
+	assert(4, Sizeof(x30[0].a), "Sizeof(x30[0].a)")
+	assert(8, Sizeof(x30[0].k[0]), "Sizeof(x30[0].k[0])")
+	assert(8, Sizeof(x30[0].k[1]), "Sizeof(x30[0].k[1])")
+	assert(1, Sizeof(x30[0].m[2]), "Sizeof(x30[0].m[2])")
 	assert(1, x30[0].a, "x30[0].a")
 	assert(2, x30[0].b, "x30[0].b")
 	assert(0, strcmp(x30[0].k[0], "3"), "strcmp(x30[0].k[0],\"3\")")
