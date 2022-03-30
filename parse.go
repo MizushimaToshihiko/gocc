@@ -389,7 +389,9 @@ func newVar(name string, ty *Type) *Obj {
 	printCalledFunc()
 
 	v := &Obj{Name: name, Ty: ty, Align: ty.Align}
-	pushScope(name).Obj = v
+	if name != "_" {
+		pushScope(name).Obj = v
+	}
 	return v
 }
 
@@ -3272,7 +3274,7 @@ func parse(tok *Token) *Obj {
 					continue
 				}
 
-				if tok.Kind != TK_IDENT {
+				if tok.Kind != TK_IDENT && tok.Kind == TK_BLANKIDENT {
 					panic("\n" + errorTok(tok, "unexpected expression"))
 				}
 				tok = globalVar(tok)

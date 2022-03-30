@@ -452,6 +452,11 @@ func isIdent2(c rune) bool {
 	return isIdent1(c) || isDigit(c)
 }
 
+func isIdent3(c rune) bool {
+	return ('a' <= c && c <= 'z') ||
+		('A' <= c && c <= 'Z')
+}
+
 // for integer literal error
 func errMustSeparateSuccessiveDigits(idx int) error {
 	return fmt.Errorf(errorAt(idx, "'_' must separate successive digits"))
@@ -876,7 +881,7 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// blank identifier
-		if contains("_", userInput[curIdx]) {
+		if contains("_", userInput[curIdx]) && !isIdent3(userInput[curIdx+1]) {
 			cur = newToken(TK_BLANKIDENT, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue

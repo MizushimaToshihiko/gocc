@@ -11,6 +11,8 @@ func ret3() int {
 	return 3
 }
 
+var _, g3  = 1, 2
+
 func main() {
 	var a1 int
 	a1 = 3
@@ -90,13 +92,15 @@ func main() {
 	_ = 1
 	_, g1 = 1, 2
 	assert(2, g1, "g1")
-	var x33 int
-	x33, _ = 1, 3
-	assert(1, x33, "x33")
+	var _x33 int
+	_x33, _ = 1, 3
+	assert(1, _x33, "_x33")
 	_, x34 := 4, 5
 	assert(5, x34, "x34")
 	var x35, _ = ret3()+3, printf("blank ident test\n")
 	assert(6, x35, "x35")
+	assert(2, g3, "g3")
+	// assert(2, _, "_")
 
 	println("OK")
 }
