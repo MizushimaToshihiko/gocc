@@ -43,8 +43,9 @@ type Obj struct {
 	Align   int    // alignment
 
 	// Local variables
-	Offset int   // Offset from RBP
-	Val    int64 // it's integer value
+	Offset int     // Offset from RBP
+	Val    int64   // it's integer value
+	FVal   float64 // it's floating-point value
 
 	// Global variable or function
 	IsFunc   bool
@@ -1098,6 +1099,13 @@ func createLvarInit(init *Initializer, ty *Type, desg *InitDesg, tok *Token) *No
 	}
 
 	lhs := initDesgExpr(desg, tok)
+	if desg.Var != nil {
+		if isInteger(desg.Var.Ty) {
+			desg.Var.Val = eval(init.Expr)
+		} else if isFlonum(desg.Var.Ty) {
+			desg.Var.FVal = evalDouble(init.Expr)
+		}
+	}
 	return newBinary(ND_ASSIGN, lhs, init.Expr, tok)
 }
 
@@ -1432,7 +1440,6 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		for !equal(tok, ";") {
 			v := identList[j]
 			expr := lvarInitializer(&tok, tok.Next, v)
-			addType(expr)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 			j++
@@ -1876,6 +1883,8 @@ func assignList(rest **Token, tok *Token) *Node {
 				addType(node)
 				if isInteger(node.Ty) {
 					lhses[j].Obj.Val = eval(rhs)
+				} else if isFlonum(node.Ty) {
+					lhses[j].Obj.FVal = evalDouble(rhs)
 				}
 			}
 			if j > 0 {
@@ -2210,6 +2219,8 @@ func evalDouble(node *Node) float64 {
 		return float64(eval(node.Lhs))
 	case ND_NUM:
 		return node.FVal
+	case ND_VAR:
+		return node.Obj.FVal
 	default:
 		panic("\n" + errorTok(node.Tok, "not a complie-time constant"))
 	}
@@ -2254,8 +2265,12 @@ func assign(rest **Token, tok *Token) *Node {
 		if node.Kind == ND_NULL_EXPR {
 			return rhs
 		}
-		if node.Obj != nil && isInteger(rhs.Ty) {
-			node.Obj.Val = eval(rhs)
+		if node.Obj != nil {
+			if isInteger(rhs.Ty) {
+				node.Obj.Val = eval(rhs)
+			} else if isFlonum(rhs.Ty) {
+				node.Obj.FVal = evalDouble(rhs)
+			}
 		}
 		return newBinary(ND_ASSIGN, node, rhs, tok)
 	}

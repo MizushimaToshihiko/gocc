@@ -22,15 +22,25 @@ func main() {
 	assert(4, cap(s02), "cap(s02)")
 	s02[0] = 100
 	assert(100, a02[2], "a02[2]")
-	var x021, x022 int
-	x021, x022 = 2, 5
-	s021 := a02[x021:x022]
+
+	var x021, x0211 int
+	x021, x0211 = 2.0, 5.0
+	s021 := a02[x021:x0211]
 	assert(100, s021[0], "s021[0]")
 	assert(4, s021[1], "s021[1]")
 	assert(5, s021[2], "s021[2]")
 	assert(8, Sizeof(s021), "Sizeof(x021)")
 	assert(3, len(s021), "len(s021)")
 	assert(4, cap(s021), "cap(s021)")
+
+	var x022, x0221 = 2.0, 5.0
+	s022 := a02[x022:x0221]
+	assert(100, s022[0], "s022[0]")
+	assert(4, s022[1], "s022[1]")
+	assert(5, s022[2], "s022[2]")
+	assert(8, Sizeof(s022), "Sizeof(x022)")
+	assert(3, len(s022), "len(s022)")
+	assert(4, cap(s022), "cap(s022)")
 
 	println("OK")
 }
