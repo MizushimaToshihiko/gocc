@@ -2016,6 +2016,10 @@ func eval(node *Node) int64 {
 func eval2(node *Node, label **string) int64 {
 	printCalledFunc()
 
+	if node == nil {
+		return 0
+	}
+
 	addType(node)
 
 	if isFlonum(node.Ty) {
@@ -2151,6 +2155,9 @@ func eval2(node *Node, label **string) int64 {
 		return 0
 	case ND_NUM:
 		return node.Val
+	case ND_FUNCALL:
+		fmt.Println("ここ")
+		return evalFuncall(node)
 	default:
 		return 0
 		// panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
@@ -2830,6 +2837,7 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
 	end := constExpr(rest, tok.Next)
+	fmt.Println("end:", end)
 	node := newUnary(ND_ADDR, newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
 	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
@@ -2959,6 +2967,12 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 			// arguments are promoted to double.
 			arg = newCast(arg, ty_double)
 		}
+
+		// fmt.Printf("arg: %#v\n\n", arg)
+		// if paramTy != nil {
+		// 	fmt.Printf("paramTy: %#v\n\n", paramTy)
+		// 	fmt.Printf("paramTy.Name: %#v\n\n", paramTy.Name)
+		// }
 
 		cur.Next = arg
 		cur = cur.Next
