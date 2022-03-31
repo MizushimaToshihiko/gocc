@@ -205,11 +205,13 @@ func structType() *Type {
 func sliceType(base *Type, len int, cap int) *Type {
 	return &Type{
 		Kind:   TY_PTR,
-		Sz:     base.Sz * len,
-		Align:  base.Align,
+		Sz:     8,
+		Align:  8,
 		Base:   base,
 		ArrSz:  len,
-		TyName: "[]" + base.Base.TyName,
+		Len:    len,
+		Cap:    cap,
+		TyName: "[]" + base.TyName,
 	}
 }
 
