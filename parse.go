@@ -2810,7 +2810,6 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 	end := constExpr(rest, tok.Next)
 	node := newUnary(ND_ADDR, newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
-	fmt.Printf("node.Ty: %#v\n\n", node.Ty)
 	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
 	return node
 }
