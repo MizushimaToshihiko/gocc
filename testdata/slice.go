@@ -4,6 +4,7 @@ func assert(want int, act int, code string)
 func println(format ...string)
 
 var g01 = 1
+var g02 = 3
 
 func main() {
 	var a01 = [2]int{1, 2}
@@ -44,7 +45,7 @@ func main() {
 	assert(3, len(s022), "len(s022)")
 	assert(4, cap(s022), "cap(s022)")
 
-	s023 := a02[g01:3]
+	s023 := a02[g01:g02]
 	assert(2, s023[0], "s023[0]")
 	assert(100, s023[1], "s023[1]")
 	assert(2, len(s023), "len(s023)")
