@@ -1038,7 +1038,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	}
 }
 
-func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer {
+func initializer(rest **Token, tok *Token, ty *Type, newTy **Type, v *Obj) *Initializer {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -1046,6 +1046,13 @@ func initializer(rest **Token, tok *Token, ty *Type, newTy **Type) *Initializer 
 	initializer2(rest, tok, init)
 
 	*newTy = init.Ty
+
+	if isInteger(init.Ty) {
+		v.Val = eval(init.Expr)
+	} else if isFlonum(init.Ty) {
+		v.FVal = evalDouble(init.Expr)
+	}
+
 	return init
 }
 
@@ -1099,13 +1106,6 @@ func createLvarInit(init *Initializer, ty *Type, desg *InitDesg, tok *Token) *No
 	}
 
 	lhs := initDesgExpr(desg, tok)
-	if desg.Var != nil {
-		if isInteger(desg.Var.Ty) {
-			desg.Var.Val = eval(init.Expr)
-		} else if isFlonum(desg.Var.Ty) {
-			desg.Var.FVal = evalDouble(init.Expr)
-		}
-	}
 	return newBinary(ND_ASSIGN, lhs, init.Expr, tok)
 }
 
@@ -1143,7 +1143,7 @@ func lvarInitializer(rest **Token, tok *Token, v *Obj) *Node {
 	// Initialize a char array with a string literal.
 	// => unnecessary for this compiler, I think.
 
-	init := initializer(rest, tok, v.Ty, &v.Ty)
+	init := initializer(rest, tok, v.Ty, &v.Ty, v)
 	desg := &InitDesg{nil, 0, nil, v}
 
 	// If a partial initializer list is given, the standard requires
@@ -1267,7 +1267,7 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	printCurTok(tok)
 	printCalledFunc()
 
-	init := initializer(rest, tok, v.Ty, &v.Ty)
+	init := initializer(rest, tok, v.Ty, &v.Ty, v)
 	head := &Relocation{}
 	var buf []int64 = make([]int64, v.Ty.Sz)
 	writeGvarData(head, init, v.Ty, &buf, 0)
@@ -1440,6 +1440,7 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		for !equal(tok, ";") {
 			v := identList[j]
 			expr := lvarInitializer(&tok, tok.Next, v)
+			addType(expr)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 			j++
@@ -2140,7 +2141,8 @@ func eval2(node *Node, label **string) int64 {
 			return node.Obj.Val
 		}
 		if label == nil {
-			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+			return 0
+			// panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
 		}
 		if node.Obj.Ty.Kind != TY_ARRAY && node.Obj.Ty.Kind != TY_FUNC {
 			panic("\n" + errorTok(node.Tok, "invalid initializer"))
@@ -2150,7 +2152,8 @@ func eval2(node *Node, label **string) int64 {
 	case ND_NUM:
 		return node.Val
 	default:
-		panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+		return 0
+		// panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
 	}
 }
 
@@ -2826,11 +2829,7 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 // slice-expr = primary "[" expr ":" expr "]"
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
-	fmt.Printf("idx: %#v\n\n", idx)
-	fmt.Printf("idx.Obj: %#v\n\n", idx.Obj)
-	fmt.Printf("first: %d\n\n", first)
 	end := constExpr(rest, tok.Next)
-	fmt.Printf("end: %d\n\n", end)
 	node := newUnary(ND_ADDR, newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
 	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
