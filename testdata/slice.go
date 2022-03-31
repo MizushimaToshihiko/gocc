@@ -22,6 +22,15 @@ func main() {
 	assert(4, cap(s02), "cap(s02)")
 	s02[0] = 100
 	assert(100, a02[2], "a02[2]")
+	var x021, x022 int
+	x021, x022 = 2, 5
+	s021 := a02[x021:x022]
+	assert(100, s021[0], "s021[0]")
+	assert(4, s021[1], "s021[1]")
+	assert(5, s021[2], "s021[2]")
+	assert(8, Sizeof(s021), "Sizeof(x021)")
+	assert(3, len(s021), "len(s021)")
+	assert(4, cap(s021), "cap(s021)")
 
 	println("OK")
 }

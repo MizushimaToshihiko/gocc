@@ -1869,13 +1869,14 @@ func assignList(rest **Token, tok *Token) *Node {
 
 		if j < i {
 			rhs := logor(&tok, tok)
-			// if lhss[j].Obj != nil && isInteger(lhss[j].Obj.Ty) {
-			// 	lhss[j].Obj.Val = eval(rhs)
-			// }
 			if lhses[j].Kind == ND_NULL_EXPR {
 				node = rhs
 			} else {
 				node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
+				addType(node)
+				if isInteger(node.Ty) {
+					lhses[j].Obj.Val = eval(rhs)
+				}
 			}
 			if j > 0 {
 				node = newBinary(ND_COMMA, prev, node, tok)
@@ -2126,9 +2127,9 @@ func eval2(node *Node, label **string) int64 {
 		}
 		return evalRval(node.Lhs, label) + int64(node.Mem.Offset)
 	case ND_VAR:
-		// if isInteger(node.Ty) {
-		// 	return node.Obj.Val
-		// }
+		if isInteger(node.Ty) {
+			return node.Obj.Val
+		}
 		if label == nil {
 			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
 		}
@@ -2150,6 +2151,9 @@ func evalRval(node *Node, label **string) int64 {
 	switch node.Kind {
 	case ND_VAR:
 		if node.Obj.IsLocal {
+			if isInteger(node.Ty) {
+				return node.Obj.Val
+			}
 			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
 		}
 		*label = &node.Obj.Name
@@ -2250,9 +2254,9 @@ func assign(rest **Token, tok *Token) *Node {
 		if node.Kind == ND_NULL_EXPR {
 			return rhs
 		}
-		// if node.Obj != nil && isInteger(rhs.Ty) {
-		// 	node.Obj.Val = eval(rhs)
-		// }
+		if node.Obj != nil && isInteger(rhs.Ty) {
+			node.Obj.Val = eval(rhs)
+		}
 		return newBinary(ND_ASSIGN, node, rhs, tok)
 	}
 
@@ -2807,7 +2811,11 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 // slice-expr = primary "[" expr ":" expr "]"
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
+	fmt.Printf("idx: %#v\n\n", idx)
+	fmt.Printf("idx.Obj: %#v\n\n", idx.Obj)
+	fmt.Printf("first: %d\n\n", first)
 	end := constExpr(rest, tok.Next)
+	fmt.Printf("end: %d\n\n", end)
 	node := newUnary(ND_ADDR, newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
 	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
