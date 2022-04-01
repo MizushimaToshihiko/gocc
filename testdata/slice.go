@@ -65,5 +65,10 @@ func main() {
 	assert(5, len(s024), "len(s024)")
 	assert(5, cap(s024), "cap(s024)")
 
+	var s025 []int
+	assert(0, len(s025), "len(s025)")
+	assert(0, cap(s025), "cap(s025)")
+	assert(8, Sizeof(s025), "Sizeof(s025)")
+
 	println("OK")
 }

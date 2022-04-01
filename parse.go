@@ -504,46 +504,47 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 	}
 
 	var ty *Type
-	if equal(tok, "byte") {
+	if consume(&tok, tok, "byte") {
 		ty = ty_uchar
-	} else if equal(tok, "bool") {
+	} else if consume(&tok, tok, "bool") {
 		ty = ty_bool
-	} else if equal(tok, "int8") {
+	} else if consume(&tok, tok, "int8") {
 		ty = ty_char
-	} else if equal(tok, "int16") {
+	} else if consume(&tok, tok, "int16") {
 		ty = ty_short
-	} else if equal(tok, "int") {
+	} else if consume(&tok, tok, "int") {
 		ty = ty_int
-	} else if equal(tok, "int32") {
+	} else if consume(&tok, tok, "int32") {
 		ty = ty_int
-	} else if equal(tok, "int64") {
+	} else if consume(&tok, tok, "int64") {
 		ty = ty_long
-	} else if equal(tok, "uint8") {
+	} else if consume(&tok, tok, "uint8") {
 		ty = ty_uchar
-	} else if equal(tok, "uint16") {
+	} else if consume(&tok, tok, "uint16") {
 		ty = ty_ushort
-	} else if equal(tok, "uint32") {
+	} else if consume(&tok, tok, "uint32") {
 		ty = ty_uint
-	} else if equal(tok, "uint") {
+	} else if consume(&tok, tok, "uint") {
 		ty = ty_uint
-	} else if equal(tok, "uint64") {
+	} else if consume(&tok, tok, "uint64") {
 		ty = ty_ulong
-	} else if equal(tok, "float32") {
+	} else if consume(&tok, tok, "float32") {
 		ty = ty_float
-	} else if equal(tok, "float64") {
+	} else if consume(&tok, tok, "float64") {
 		ty = ty_double
-	} else if equal(tok, "string") {
+	} else if consume(&tok, tok, "string") {
 		ty = stringType()
-	} else if equal(tok, "struct") { // struct type
-		ty = structDecl(&tok, tok.Next, name)
-	} else if equal(tok, "func") { // func type ,like: "func(int,string) int8"
-		ty = funcDecl(&tok, tok.Next, name)
+	} else if consume(&tok, tok, "struct") { // struct type
+		ty = structDecl(&tok, tok, name)
+	} else if consume(&tok, tok, "func") { // func type ,like: "func(int,string) int8"
+		ty = funcDecl(&tok, tok, name)
 	}
 
 	// Handle user-defined types.
 	ty2 := findTyDef(tok)
 	if ty2 != nil {
 		ty = ty2
+		tok = tok.Next
 	}
 
 	if ty == nil {
@@ -554,7 +555,7 @@ func declSpec(rest **Token, tok *Token, name *Token) *Type {
 		ty = pointerTo(ty)
 	}
 
-	*rest = tok.Next
+	*rest = tok
 	return ty
 }
 
@@ -603,7 +604,12 @@ func readTypePreffix(rest **Token, tok *Token, name *Token) *Type {
 	start := tok
 
 	base := findBase(&tok, tok, name)
-	arrTy := readArr(start, base)
+	var arrTy *Type
+	if equal(start.Next, "]") {
+		arrTy = sliceType(base, 0, 0)
+	} else {
+		arrTy = readArr(start, base)
+	}
 	*rest = tok
 	return arrTy
 }
@@ -1363,6 +1369,18 @@ func zeroInit2(init *Initializer, tok *Token) {
 		}
 		init.Ty.Init = init
 		return
+	}
+
+	// If init.Ty is slice.
+	if init.Ty.TyName[0:3] == "[]" {
+		// Make the underlying array.
+		uArrTy := arrayOf(init.Ty.Base, init.Ty.Len)
+		uArr := newGvar("", uArrTy)
+		uArrNode := lvarZeroInit(uArr, tok)
+		init.Expr = newUnary(ND_ADDR,
+			newUnary(ND_DEREF, newAdd(uArrNode, newNum(0, tok), tok), tok),
+			tok)
+		init.Ty.Init = init
 	}
 
 	if init.Expr == nil {
@@ -2739,7 +2757,21 @@ func funcDecl(rest **Token, tok *Token, name *Token) *Type {
 	}
 
 	tok = skip(tok, ")")
-	retty := readTypePreffix(rest, tok, name)
+
+	var retty *Type
+	if equal(tok, "(") {
+		tok = skip(tok, "(")
+		retty = readTypePreffix(&tok, tok, nil)
+		for !equal(tok, ")") {
+			tok = skip(tok, ",")
+			retty.Next = readTypePreffix(&tok, tok, nil)
+			retty = retty.Next
+		}
+		tok = skip(tok, ")")
+	} else {
+		retty = readTypePreffix(&tok, tok, nil)
+	}
+
 	*rest = tok
 
 	ty := pointerTo(funcType(retty, head.Next))
@@ -2799,7 +2831,7 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 		cur = cur.Next
 	}
 
-	*rest = tok
+	*rest = tok.Next
 	return head.Next
 }
 
@@ -3016,12 +3048,6 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 			// arguments are promoted to double.
 			arg = newCast(arg, ty_double)
 		}
-
-		// fmt.Printf("arg: %#v\n\n", arg)
-		// if paramTy != nil {
-		// 	fmt.Printf("paramTy: %#v\n\n", paramTy)
-		// 	fmt.Printf("paramTy.Name: %#v\n\n", paramTy.Name)
-		// }
 
 		cur.Next = arg
 		cur = cur.Next
