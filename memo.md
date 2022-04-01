@@ -20,7 +20,7 @@
    - import
    - slice
      - 初期化
-       - array[2:3]みたいなの
+       - array[2:3]みたいなの -> 完了
        - make関数
        - copy関数
    - rune(int32のエイリアス)
@@ -31,8 +31,8 @@
    - built-in functions
       - new
       - make
-      - len(slice) -> 完了
-      - cap(slice) -> 完了
+      - len(slice) -> sliceのみ完了
+      - cap(slice) -> sliceのみ完了
       - append(slice)
       - copy(slice)
       - println
