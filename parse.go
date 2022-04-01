@@ -2220,6 +2220,7 @@ func evalFuncall(node *Node) interface{} {
 				} else if isFlonum(n.RetVals.Ty) {
 					return evalDouble(n.RetVals)
 				}
+				panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
 			}
 		}
 	}
