@@ -2156,7 +2156,6 @@ func eval2(node *Node, label **string) int64 {
 	case ND_NUM:
 		return node.Val
 	case ND_FUNCALL:
-		fmt.Println("ここ")
 		return evalFuncall(node)
 	default:
 		return 0
@@ -2184,6 +2183,36 @@ func evalRval(node *Node, label **string) int64 {
 	default:
 		panic("\n" + errorTok(node.Tok, "invalid initializer"))
 	}
+}
+
+func evalFuncall(node *Node) int64 {
+	addType(node)
+
+	enterScope()
+	defer leaveScope()
+
+	fn := node.Lhs.Obj
+	createParamLvars(fn.Ty.Params)
+	lvars := fn.Locals
+	for lv := lvars; lv != nil; lv = lv.Next {
+		pushScope(lv.Name).Obj = lv
+	}
+
+	// evaluate arguments
+	for arg := node.Args; lvars != nil && node.Args != nil; arg = arg.Next {
+		findVar(lvars.Ty.Name).Obj.Val = eval(arg)
+		lvars = lvars.Next
+	}
+
+	if fn.IsDef {
+		node2 := fn.Body
+		for n := node2.Body; n != nil; n = n.Next {
+			if n.Kind == ND_RETURN {
+				return eval(n.RetVals)
+			}
+		}
+	}
+	return 0
 }
 
 // const-expr
@@ -2837,7 +2866,6 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
 	end := constExpr(rest, tok.Next)
-	fmt.Println("end:", end)
 	node := newUnary(ND_ADDR, newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
 	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
