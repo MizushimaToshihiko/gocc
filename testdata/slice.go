@@ -10,6 +10,10 @@ func ret3() int {
 	return 3
 }
 
+func retf3() float64 {
+	return 3.5
+}
+
 func main() {
 	var a01 = [2]int{1, 2}
 	var s01 = a01[0:2]
@@ -54,6 +58,12 @@ func main() {
 	assert(100, s023[1], "s023[1]")
 	assert(5, len(s023), "len(s023)")
 	assert(5, cap(s023), "cap(s023)")
+
+	s024 := a02[g01 : retf3()+3]
+	assert(2, s024[0], "s024[0]")
+	assert(100, s024[1], "s024[1]")
+	assert(5, len(s024), "len(s024)")
+	assert(5, cap(s024), "cap(s024)")
 
 	println("OK")
 }

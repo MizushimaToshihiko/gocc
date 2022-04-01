@@ -2156,7 +2156,14 @@ func eval2(node *Node, label **string) int64 {
 	case ND_NUM:
 		return node.Val
 	case ND_FUNCALL:
-		return evalFuncall(node)
+		switch res := evalFuncall(node).(type) {
+		case int64:
+			return res
+		case int:
+			return int64(res)
+		default:
+			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+		}
 	default:
 		return 0
 		// panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
@@ -2185,30 +2192,34 @@ func evalRval(node *Node, label **string) int64 {
 	}
 }
 
-func evalFuncall(node *Node) int64 {
+func evalFuncall(node *Node) interface{} {
 	addType(node)
 
-	enterScope()
-	defer leaveScope()
-
 	fn := node.Lhs.Obj
-	createParamLvars(fn.Ty.Params)
-	lvars := fn.Locals
-	for lv := lvars; lv != nil; lv = lv.Next {
-		pushScope(lv.Name).Obj = lv
-	}
-
-	// evaluate arguments
-	for arg := node.Args; lvars != nil && node.Args != nil; arg = arg.Next {
-		findVar(lvars.Ty.Name).Obj.Val = eval(arg)
-		lvars = lvars.Next
-	}
-
 	if fn.IsDef {
+		enterScope()
+		defer leaveScope()
+
+		createParamLvars(fn.Ty.Params)
+		lvars := fn.Locals
+		for lv := lvars; lv != nil; lv = lv.Next {
+			pushScope(lv.Name).Obj = lv
+		}
+
+		// evaluate arguments
+		for arg := node.Args; lvars != nil && node.Args != nil; arg = arg.Next {
+			findVar(lvars.Ty.Name).Obj.Val = eval(arg)
+			lvars = lvars.Next
+		}
+
 		node2 := fn.Body
 		for n := node2.Body; n != nil; n = n.Next {
 			if n.Kind == ND_RETURN {
-				return eval(n.RetVals)
+				if isInteger(n.RetVals.Ty) {
+					return eval(n.RetVals)
+				} else if isFlonum(n.RetVals.Ty) {
+					return evalDouble(n.RetVals)
+				}
 			}
 		}
 	}
@@ -2260,6 +2271,15 @@ func evalDouble(node *Node) float64 {
 		return node.FVal
 	case ND_VAR:
 		return node.Obj.FVal
+	case ND_FUNCALL:
+		switch res := evalFuncall(node).(type) {
+		case float64:
+			return res
+		case float32:
+			return float64(res)
+		default:
+			panic("\n" + errorTok(node.Tok, "not a compile-time constant"))
+		}
 	default:
 		panic("\n" + errorTok(node.Tok, "not a complie-time constant"))
 	}
