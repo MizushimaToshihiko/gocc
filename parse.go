@@ -1375,7 +1375,7 @@ func zeroInit2(init *Initializer, tok *Token) {
 	if init.Ty.TyName[0:3] == "[]" {
 		// Make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, init.Ty.Len)
-		uArr := newGvar("", uArrTy)
+		uArr := newLvar("", uArrTy)
 		uArrNode := lvarZeroInit(uArr, tok)
 		init.Expr = newUnary(ND_ADDR,
 			newUnary(ND_DEREF, newAdd(uArrNode, newNum(0, tok), tok), tok),
