@@ -1983,10 +1983,12 @@ func assignList(rest **Token, tok *Token) *Node {
 			} else {
 				node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
 				addType(node)
-				if isInteger(node.Ty) {
-					lhses[j].Obj.Val = eval(rhs)
-				} else if isFlonum(node.Ty) {
-					lhses[j].Obj.FVal = evalDouble(rhs)
+				if lhses[j].Obj != nil {
+					if isInteger(node.Ty) {
+						lhses[j].Obj.Val = eval(rhs)
+					} else if isFlonum(node.Ty) {
+						lhses[j].Obj.FVal = evalDouble(rhs)
+					}
 				}
 			}
 			if j > 0 {
