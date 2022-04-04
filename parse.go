@@ -327,9 +327,10 @@ type Relocation struct {
 // can be nested (e.g. `var x [2][2]int = [2][2]int{[2]int{1,2},[2]int{3,4}}`),
 // this struct is a tree data structure.
 type Initializer struct {
-	Next *Initializer
-	Ty   *Type
-	Tok  *Token
+	Next   *Initializer
+	Ty     *Type
+	Tok    *Token
+	IsFlex bool
 
 	// Constant expression
 	Sz  int
@@ -355,15 +356,19 @@ type InitDesg struct {
 	Var  *Obj
 }
 
-func newInitializer(ty *Type) *Initializer {
+func newInitializer(ty *Type, isflex bool) *Initializer {
 	printCalledFunc()
 
 	init := &Initializer{Ty: ty}
 
 	if ty.Kind == TY_ARRAY {
+		if isflex && ty.Sz < 0 {
+			init.IsFlex = true
+			return init
+		}
 		init.Children = make([]*Initializer, ty.ArrSz)
 		for i := 0; i < ty.ArrSz; i++ {
-			init.Children[i] = newInitializer(ty.Base)
+			init.Children[i] = newInitializer(ty.Base, false)
 		}
 		return init
 	}
@@ -378,7 +383,12 @@ func newInitializer(ty *Type) *Initializer {
 		init.Children = make([]*Initializer, l)
 
 		for mem := ty.Mems; mem != nil; mem = mem.Next {
-			init.Children[mem.Idx] = newInitializer(mem.Ty)
+			if isflex && ty.IsFlex && mem.Next == nil {
+				child := &Initializer{Ty: mem.Ty, IsFlex: true}
+				init.Children[mem.Idx] = child
+			} else {
+				init.Children[mem.Idx] = newInitializer(mem.Ty, false)
+			}
 		}
 		return init
 	}
@@ -777,6 +787,10 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
 
+	if init.IsFlex {
+		*init = *newInitializer(arrayOf(init.Ty.Base, tok.Ty.ArrSz), false)
+	}
+
 	length := min(init.Ty.ArrSz, tok.Ty.ArrSz)
 	for i := 0; i < length; i++ {
 		init.Children[i].Expr = newNum(int64(tok.Contents[i]), tok)
@@ -830,6 +844,11 @@ func arrayInitializer(rest **Token, tok *Token, init *Initializer) {
 
 	tok = skip(tok, "{")
 
+	if init.IsFlex {
+		len := countArrInitElem(tok, init.Ty)
+		*init = *newInitializer(arrayOf(init.Ty.Base, len), false)
+	}
+
 	for i := 0; !consumeEnd(rest, tok); i++ {
 		if i > 0 {
 			tok = skip(tok, ",")
@@ -847,6 +866,11 @@ func arrayInitializer(rest **Token, tok *Token, init *Initializer) {
 func arrayInitializer2(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
+
+	if init.IsFlex {
+		len := countArrInitElem(tok, init.Ty)
+		*init = *newInitializer(arrayOf(init.Ty.Base, len), false)
+	}
 
 	for i := 0; i < init.Ty.ArrSz && !isEnd(tok); i++ {
 		if i > 0 {
@@ -914,6 +938,22 @@ func structInitializer2(rest **Token, tok *Token, init *Initializer, mem *Member
 	*rest = tok
 }
 
+func countArrInitElem(tok *Token, ty *Type) int {
+	printCurTok(tok)
+	printCalledFunc()
+
+	dummy := newInitializer(ty.Base, false)
+	i := 0
+
+	for ; !consumeEnd(&tok, tok); i++ {
+		if i > 0 {
+			tok = skip(tok, ",")
+		}
+		initializer2(&tok, tok, dummy)
+	}
+	return i
+}
+
 // initializer = string-initializer | array-initializer
 //             | struct-initializer
 //             | assign
@@ -937,6 +977,23 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			arrayInitializer2(rest, tok, init)
 		}
 		init.Ty.Init = init
+		return
+	}
+
+	// If the rhs is slice.
+	if init.Ty.Kind == TY_SLICE {
+		// start := tok
+		readTypePreffix(&tok, tok, nil) // I'll add type checking later
+		// Make the underlying array.
+		uArrTy := arrayOf(init.Ty.Base, 0)
+		len := countArrInitElem(tok.Next, uArrTy)
+		uArrTy = arrayOf(init.Ty.Base, len)
+		uArr := newGvar(newUniqueName(), uArrTy)
+
+		gvarInitializer(rest, tok, uArr)
+
+		init.Expr = newUnary(ND_ADDR,
+			newUnary(ND_DEREF, newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
 		return
 	}
 
@@ -1005,7 +1062,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			if equal(start, "{") || equal(startNext, "{") {
 				init.Children = make([]*Initializer, init.Ty.ArrSz)
 				for i := 0; i < init.Ty.ArrSz; i++ {
-					init.Children[i] = newInitializer(init.Ty.Base)
+					init.Children[i] = newInitializer(init.Ty.Base, false)
 				}
 				initializer2(rest, tok, init)
 				init.Ty.Init = init
@@ -1030,7 +1087,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			init.Children = make([]*Initializer, l)
 
 			for mem := init.Ty.Mems; mem != nil; mem = mem.Next {
-				init.Children[mem.Idx] = newInitializer(mem.Ty)
+				init.Children[mem.Idx] = newInitializer(mem.Ty, false)
 			}
 			initializer2(rest, tok, init)
 			return
@@ -1039,17 +1096,42 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		return
 	}
 
-	if init.Expr == nil {
-		init.Expr = assign(rest, tok)
+	init.Expr = assign(rest, tok)
+
+}
+
+func copyStructType(ty *Type) *Type {
+	ty = copyType(ty)
+
+	head := &Member{}
+	cur := head
+	for mem := ty.Mems; mem != nil; mem = mem.Next {
+		m := mem
+		cur.Next = m
+		cur = cur.Next
 	}
+
+	ty.Mems = head.Next
+	return ty
 }
 
 func initializer(rest **Token, tok *Token, ty *Type, newTy **Type, v *Obj) *Initializer {
 	printCurTok(tok)
 	printCalledFunc()
 
-	init := newInitializer(ty)
+	init := newInitializer(ty, true)
 	initializer2(rest, tok, init)
+
+	if ty.Kind == TY_STRUCT && ty.IsFlex {
+		ty = copyStructType(ty)
+
+		mem := ty.Mems
+		for mem.Next != nil {
+			mem = mem.Next
+		}
+		mem.Ty = init.Children[mem.Idx].Ty
+		ty.Sz += mem.Ty.Sz
+	}
 
 	*newTy = init.Ty
 
@@ -1372,13 +1454,14 @@ func zeroInit2(init *Initializer, tok *Token) {
 	}
 
 	// If init.Ty is slice.
-	if init.Ty.TyName[0:3] == "[]" {
+	if init.Ty.TyName[0:2] == "[]" {
 		// Make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, init.Ty.Len)
 		uArr := newLvar("", uArrTy)
-		uArrNode := lvarZeroInit(uArr, tok)
+		uArrInit := zeroInit(uArr.Ty, &uArrTy, tok)
+		uArr.Ty.Init = uArrInit
 		init.Expr = newUnary(ND_ADDR,
-			newUnary(ND_DEREF, newAdd(uArrNode, newNum(0, tok), tok), tok),
+			newVarNode(uArr, tok),
 			tok)
 		init.Ty.Init = init
 	}
@@ -1393,7 +1476,7 @@ func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
 	printCurTok(tok)
 	printCalledFunc()
 
-	init := newInitializer(ty)
+	init := newInitializer(ty, true)
 	zeroInit2(init, tok)
 
 	*newTy = init.Ty
@@ -2831,6 +2914,14 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 		cur = cur.Next
 	}
 
+	// If the last element is an array of imcomlete type, it's
+	// called a "flexible array member". It should bahave as if
+	// if were a zero-sized array.
+	for cur != head && cur.Ty.Kind == TY_ARRAY && cur.Ty.ArrSz < 0 {
+		cur.Ty = arrayOf(cur.Ty.Base, 0)
+		ty.IsFlex = true
+	}
+
 	*rest = tok.Next
 	return head.Next
 }
@@ -2919,7 +3010,8 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
 	end := constExpr(rest, tok.Next)
-	node := newUnary(ND_ADDR, newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
+	node := newUnary(ND_ADDR,
+		newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
 	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
 	return node
