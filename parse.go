@@ -988,7 +988,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		uArrTy := arrayOf(init.Ty.Base, 0)
 		len := countArrInitElem(tok.Next, uArrTy)
 		uArrTy = arrayOf(init.Ty.Base, len)
-		uArr := newGvar(newUniqueName(), uArrTy)
+		uArr := newAnonGvar(uArrTy)
 
 		gvarInitializer(rest, tok, uArr)
 
@@ -3229,11 +3229,12 @@ func primary(rest **Token, tok *Token) *Node {
 		sc := findVar(tok)
 		*rest = tok.Next
 
-		isSVC := isShortVarSpec(tok.Next)
+		isSVC := isShortVarSpec(tok)
 		if sc != nil && sc.Obj != nil {
 			if isSVC {
 				panic(errorTok(tok, "no new variables on left side of :="))
 			}
+			fmt.Printf("sc.Obj.Name: %s\n\n", sc.Obj.Name)
 			return newVarNode(sc.Obj, tok)
 		}
 
@@ -3268,6 +3269,7 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
+	fmt.Printf("primary: tok: %#v\n\n", tok)
 	panic("\n" + errorTok(tok, "expected expression: %s", tok.Str))
 }
 
