@@ -949,6 +949,7 @@ func countArrInitElem(tok *Token, ty *Type) int {
 		if i > 0 {
 			tok = skip(tok, ",")
 		}
+		fmt.Println("i:", i)
 		initializer2(&tok, tok, dummy)
 	}
 	return i
@@ -1096,6 +1097,9 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		return
 	}
 
+	fmt.Printf("initializer2: tok: %#v\n\n", tok)
+	fmt.Printf("initializer2: init: %#v\n\n", init)
+	fmt.Printf("initializer2: init.Ty: %#v\n\n", init.Ty)
 	init.Expr = assign(rest, tok)
 
 }
@@ -2421,6 +2425,7 @@ func assign(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	node := logor(&tok, tok)
+	fmt.Printf("assign: tok: %#v\n\n", tok)
 
 	if equal(tok, "=") {
 		rhs := assign(rest, tok.Next)
@@ -3012,6 +3017,7 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
 	end := constExpr(rest, tok.Next)
+	fmt.Printf("sliceExpr: tok: %#v\n\n", tok)
 	node := newUnary(ND_ADDR,
 		newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
@@ -3061,9 +3067,11 @@ func postfix(rest **Token, tok *Token) *Node {
 			// x[y] is short for *(x+y)
 			start := tok
 			idx := expr(&tok, tok.Next)
+			fmt.Printf("postfix: tok: %#v\n\n", tok)
 			if equal(tok, ":") {
 				node = sliceExpr(&tok, tok, node, idx, start)
 				tok = skip(tok, "]")
+				fmt.Printf("postfix: tok2: %#v\n\n", tok)
 				*rest = tok
 				return node
 			}
