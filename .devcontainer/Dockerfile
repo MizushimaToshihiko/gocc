@@ -18,7 +18,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
         strace \
         gdb
 
-FROM mcr.microsoft.com/vscode/devcontainers/go:1.17
+FROM mcr.microsoft.com/vscode/devcontainers/go:1.18
 
 WORKDIR /go/src/github.com/MizushimaToshihiko/gocc
 
