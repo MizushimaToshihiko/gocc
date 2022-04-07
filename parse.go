@@ -983,8 +983,10 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	// If the rhs is slice.
 	if init.Ty.Kind == TY_SLICE {
 		// start := tok
+		fmt.Printf("tok: %#v\n\n", tok)
 		sliceTy := readTypePreffix(&tok, tok, nil) // I'll add type checking later
-		if sliceTy.Kind == TY_VOID {
+		fmt.Printf("sliceTy: %#v\n\n", sliceTy)
+		if sliceTy.Kind == TY_VOID && !equal(tok, "{") {
 			// In the case that no typename is written, like: `var x = a[0:1]`
 			init.Expr = assign(rest, tok)
 			init.Ty.Init = init
@@ -1040,6 +1042,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		// Get the type from rhs. If type-name is written.
 		// like: [2]int{1,2,3}
 		rhsTy = readTypePreffix(&tok, tok, nil)
+		fmt.Printf("rhsTy: %#v\n\n", rhsTy)
 
 		// If type-name isn't written in the rhs.
 		var start *Token = tok
@@ -1062,6 +1065,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			// panic(errorTok(tok, "the lhs and rhs both declared void"))
 		}
 
+		fmt.Printf("rhsTy2: %#v\n\n", rhsTy)
 		init.Ty = rhsTy
 
 		// Initialize the lhs.
@@ -1099,6 +1103,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 			initializer2(rest, tok, init)
 			return
 		}
+		fmt.Printf("init.Ty: %#v\n\n", init.Ty)
 		initializer2(rest, tok, init)
 		return
 	}
