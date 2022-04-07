@@ -949,7 +949,6 @@ func countArrInitElem(tok *Token, ty *Type) int {
 		if i > 0 {
 			tok = skip(tok, ",")
 		}
-		fmt.Println("i:", i)
 		initializer2(&tok, tok, dummy)
 	}
 	return i
@@ -984,8 +983,15 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	// If the rhs is slice.
 	if init.Ty.Kind == TY_SLICE {
 		// start := tok
-		readTypePreffix(&tok, tok, nil) // I'll add type checking later
-		// Make the underlying array.
+		sliceTy := readTypePreffix(&tok, tok, nil) // I'll add type checking later
+		if sliceTy.Kind == TY_VOID {
+			// In the case that no typename is written, like: `var x = a[0:1]`
+			init.Expr = assign(rest, tok)
+			init.Ty.Init = init
+			return
+		}
+		// In the case that any typename is written, like: `var x = []int{1,3}`,
+		// make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, 0)
 		len := countArrInitElem(tok.Next, uArrTy)
 		uArrTy = arrayOf(init.Ty.Base, len)
@@ -1035,7 +1041,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		// like: [2]int{1,2,3}
 		rhsTy = readTypePreffix(&tok, tok, nil)
 
-		// If type-name isn't written.
+		// If type-name isn't written in the rhs.
 		var start *Token = tok
 		var startNext *Token = tok.Next
 		if rhsTy.Kind == TY_VOID {
@@ -1097,9 +1103,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		return
 	}
 
-	fmt.Printf("initializer2: tok: %#v\n\n", tok)
-	fmt.Printf("initializer2: init: %#v\n\n", init)
-	fmt.Printf("initializer2: init.Ty: %#v\n\n", init.Ty)
 	init.Expr = assign(rest, tok)
 
 }
@@ -2425,7 +2428,6 @@ func assign(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	node := logor(&tok, tok)
-	fmt.Printf("assign: tok: %#v\n\n", tok)
 
 	if equal(tok, "=") {
 		rhs := assign(rest, tok.Next)
@@ -3017,7 +3019,6 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
 	end := constExpr(rest, tok.Next)
-	fmt.Printf("sliceExpr: tok: %#v\n\n", tok)
 	node := newUnary(ND_ADDR,
 		newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
@@ -3067,11 +3068,9 @@ func postfix(rest **Token, tok *Token) *Node {
 			// x[y] is short for *(x+y)
 			start := tok
 			idx := expr(&tok, tok.Next)
-			fmt.Printf("postfix: tok: %#v\n\n", tok)
 			if equal(tok, ":") {
 				node = sliceExpr(&tok, tok, node, idx, start)
 				tok = skip(tok, "]")
-				fmt.Printf("postfix: tok2: %#v\n\n", tok)
 				*rest = tok
 				return node
 			}
@@ -3237,12 +3236,11 @@ func primary(rest **Token, tok *Token) *Node {
 		sc := findVar(tok)
 		*rest = tok.Next
 
-		isSVC := isShortVarSpec(tok)
+		isSVC := isShortVarSpec(tok.Next)
 		if sc != nil && sc.Obj != nil {
 			if isSVC {
 				panic(errorTok(tok, "no new variables on left side of :="))
 			}
-			fmt.Printf("sc.Obj.Name: %s\n\n", sc.Obj.Name)
 			return newVarNode(sc.Obj, tok)
 		}
 
@@ -3277,7 +3275,6 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
-	fmt.Printf("primary: tok: %#v\n\n", tok)
 	panic("\n" + errorTok(tok, "expected expression: %s", tok.Str))
 }
 
