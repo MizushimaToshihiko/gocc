@@ -939,8 +939,6 @@ func countArrInitElem(tok *Token, ty *Type) int {
 	printCalledFunc()
 
 	dummy := newInitializer(ty.Base, false)
-	fmt.Printf("countArrInitElem: dummy: %#v\n\n", dummy)
-	fmt.Printf("countArrInitElem: dummy.Ty: %#v\n\n", dummy.Ty)
 	i := 0
 
 	for ; !consumeEnd(&tok, tok); i++ {
@@ -968,7 +966,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 	// If the rhs is array literal.
 	if init.Ty.Kind == TY_ARRAY {
-		fmt.Printf("initializer2: init.Ty: %#v\n\n", init.Ty)
 		readTypePreffix(&tok, tok, nil) // I'll add type checking later
 		if equal(tok, "{") {
 			arrayInitializer(rest, tok, init)
@@ -995,7 +992,6 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		uArr := newAnonGvar(uArrTy)
 
 		gvarInitializer(rest, tok, uArr)
-		fmt.Printf("initializer2: uArr.Ty: %#v\n\n", uArr.Ty)
 
 		init.Expr = newUnary(ND_ADDR,
 			newUnary(ND_DEREF, newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
