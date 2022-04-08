@@ -16,6 +16,8 @@ func retf3() float64 {
 	return 3.5
 }
 
+var g03 = []string{"abc", "def", "ghi"}
+
 func main() {
 	var a01 = [2]int{1, 2}
 	var s01 = a01[0:2]
@@ -124,6 +126,13 @@ func main() {
 	assert(0, strcmp(s029[1][0], "jkl"), "strcmp(s029[1][0], \"jkl\")")
 	assert(0, strcmp(s029[1][1], "mno"), "strcmp(s029[1][1], \"mno\")")
 	assert(0, strcmp(s029[1][2], "pqr"), "strcmp(s029[1][2], \"pqr\")")
+
+	assert(8, Sizeof(g03), "Sizeof(g03)")
+	assert(3, len(g03), "len(g03)")
+	assert(3, cap(g03), "cap(g03)")
+	assert(0, strcmp(g03[0], "abc"), "strcmp(g03[0], \"abc\")")
+	assert(0, strcmp(g03[1], "def"), "strcmp(g03[1], \"def\")")
+	assert(0, strcmp(g03[2], "ghi"), "strcmp(g03[2], \"ghi\")")
 
 	println("OK")
 }
