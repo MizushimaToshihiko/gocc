@@ -992,6 +992,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		uArr := newAnonGvar(uArrTy)
 
 		gvarInitializer(rest, tok, uArr)
+		init.Ty.Len = uArr.Ty.ArrSz
+		init.Ty.Cap = uArr.Ty.ArrSz
 
 		init.Expr = newUnary(ND_ADDR,
 			newUnary(ND_DEREF, newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)

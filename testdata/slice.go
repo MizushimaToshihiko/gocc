@@ -73,8 +73,8 @@ func main() {
 	assert(8, Sizeof(s025), "Sizeof(s025)")
 
 	var s026 []int = []int{1, 2, 3, 4, 5, 6}
-	assert(0, len(s026), "len(s026)")
-	assert(0, cap(s026), "cap(s026)")
+	assert(6, len(s026), "len(s026)")
+	assert(6, cap(s026), "cap(s026)")
 	assert(8, Sizeof(s026), "Sizeof(s026)")
 	assert(1, s026[0], "s026[0]")
 	assert(2, s026[1], "s026[1]")
@@ -91,8 +91,8 @@ func main() {
 	assert(105, s026[5], "s026[5]")
 
 	var s027 = []int{1, 2, 3, 4, 5, 6}
-	assert(0, len(s027), "len(s027)")
-	assert(0, cap(s027), "cap(s027)")
+	assert(6, len(s027), "len(s027)")
+	assert(6, cap(s027), "cap(s027)")
 	assert(8, Sizeof(s027), "Sizeof(s027)")
 	assert(1, s027[0], "s027[0]")
 	assert(2, s027[1], "s027[1]")
@@ -103,11 +103,20 @@ func main() {
 
 	s028 := []string{"abc", "def", "ghi"}
 	assert(8, Sizeof(s028), "Sizeof(s028)")
+	assert(3, len(s028), "len(s028)")
+	assert(3, cap(s028), "cap(s028)")
 	assert(0, strcmp(s028[0], "abc"), "strcmp(s028[0], \"abc\")")
 	assert(0, strcmp(s028[1], "def"), "strcmp(s028[1], \"def\")")
 	assert(0, strcmp(s028[2], "ghi"), "strcmp(s028[2], \"ghi\")")
 
 	s029 := [][]string{{"abc", "def", "ghi"}, {"jkl", "mno", "pqr"}}
+	assert(8, Sizeof(s029), "Sizeof(s029)")
+	assert(2, len(s029), "len(s029)")
+	assert(3, len(s029[0]), "len(s029[0])")
+	assert(3, len(s029[1]), "len(s029[1])")
+	assert(2, cap(s029), "cap(s029)")
+	assert(3, cap(s029[0]), "cap(s029[0])")
+	assert(3, cap(s029[1]), "cap(s029[1])")
 	assert(0, strcmp(s029[0][0], "abc"), "strcmp(s029[0][0], \"abc\")")
 	assert(0, strcmp(s029[0][1], "def"), "strcmp(s029[0][1], \"def\")")
 	assert(0, strcmp(s029[0][2], "ghi"), "strcmp(s029[0][2], \"ghi\")")
