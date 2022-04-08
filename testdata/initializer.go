@@ -1,7 +1,7 @@
 package test_initializer
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
 
 var g3 byte = 3
 var g4 int16 = 4

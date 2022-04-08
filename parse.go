@@ -968,7 +968,12 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	if init.Ty.Kind == TY_ARRAY {
 		readTypePreffix(&tok, tok, nil) // I'll add type checking later
 		if equal(tok, "{") {
-			arrayInitializer(rest, tok, init)
+			if !equal(tok.Next, "}") {
+				arrayInitializer(rest, tok, init)
+			} else {
+				zeroInit2(init, tok)
+				*rest = skip(tok.Next, "}")
+			}
 		} else {
 			arrayInitializer2(rest, tok, init)
 		}
@@ -1005,12 +1010,24 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	if init.Ty.Kind == TY_STRUCT {
 		if equal(tok.Next, "{") {
 			readTypePreffix(&tok, tok, nil) // I'll add type checking later
-			structInitializer(rest, tok, init)
-			return
+			if !equal(tok.Next, "}") {
+				structInitializer(rest, tok, init)
+				return
+			} else {
+				zeroInit2(init, tok)
+				*rest = skip(tok.Next, "}")
+				return
+			}
 		}
 		if equal(tok, "{") {
-			structInitializer(rest, tok, init)
-			return
+			if !equal(tok.Next, "}") {
+				structInitializer(rest, tok, init)
+				return
+			} else {
+				zeroInit2(init, tok)
+				*rest = skip(tok.Next, "}")
+				return
+			}
 		}
 		// A struct can be initialized with another struct. E.g.
 		// `type x y` where y is a another struct.
@@ -1124,7 +1141,7 @@ func initializer(rest **Token, tok *Token, ty *Type, newTy **Type, v *Obj) *Init
 	printCurTok(tok)
 	printCalledFunc()
 
-	init := newInitializer(ty, true)
+	init := newInitializer(ty, ty.IsFlex)
 	initializer2(rest, tok, init)
 
 	if ty.Kind == TY_STRUCT && ty.IsFlex {
@@ -1481,7 +1498,7 @@ func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
 	printCurTok(tok)
 	printCalledFunc()
 
-	init := newInitializer(ty, true)
+	init := newInitializer(ty, ty.IsFlex)
 	zeroInit2(init, tok)
 
 	*newTy = init.Ty
@@ -1551,7 +1568,7 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 			cur = cur.Next
 			j++
 
-			if v.Ty.Sz <= 0 {
+			if v.Ty.Sz < 0 {
 				panic("\n" + errorTok(v.Ty.Name, "variable has incomplete type"))
 			}
 			if v.Ty.Kind == TY_VOID ||
