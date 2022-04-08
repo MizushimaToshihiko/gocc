@@ -26,6 +26,7 @@ const (
 	TY_ARRAY
 	TY_STRUCT
 	TY_FUNC
+	TY_SLICE
 )
 
 type Type struct {
@@ -42,8 +43,9 @@ type Type struct {
 
 	TyName string
 
-	ArrSz int     // Array size
-	Mems  *Member // struct
+	ArrSz  int     // Array size
+	Mems   *Member // struct
+	IsFlex bool    // struct
 
 	// function
 	RetTy      *Type
@@ -204,7 +206,7 @@ func structType() *Type {
 
 func sliceType(base *Type, len int, cap int) *Type {
 	return &Type{
-		Kind:   TY_PTR,
+		Kind:   TY_SLICE,
 		Sz:     8,
 		Align:  8,
 		Base:   base,

@@ -20,7 +20,7 @@
    - import
    - slice
      - 初期化
-       - array[2:3]みたいなの
+       - array[2:3]みたいなの -> 完了
        - make関数
        - copy関数
    - rune(int32のエイリアス)
@@ -31,8 +31,8 @@
    - built-in functions
       - new
       - make
-      - len(slice) -> 完了
-      - cap(slice) -> 完了
+      - len(slice) -> sliceのみ完了
+      - cap(slice) -> sliceのみ完了
       - append(slice)
       - copy(slice)
       - println
@@ -363,7 +363,7 @@ func main() {
 }
 ```
 
-2022/02/18 左辺ポインタのキャスト変換&書き込みの例[URL](https://go.dev/play/p/FlES6L9lUOU)
+#### 2022/02/18 左辺ポインタのキャスト変換&書き込みの例[URL](https://go.dev/play/p/FlES6L9lUOU)
 ```Go
 package main
 
@@ -385,7 +385,7 @@ func main() {
 }
 ```
 
-2022/03/07 関数名を引数に取る関数の定義の例[URL](https://go.dev/play/p/xctRHJDCJJn)
+#### 2022/03/07 関数名を引数に取る関数の定義の例[URL](https://go.dev/play/p/xctRHJDCJJn)
 ```Go
 package main
 
@@ -438,3 +438,6 @@ int main(void){
 }
 ```
 https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
+
+#### 2022/04/04 testdata/commonに#defineマクロを入れても意味がない
+ - 定義したCファイル内のトークンを置き換えるものだから。もし入れるのであれば、ヘッダーファイルに入れる必要がある。

@@ -1,7 +1,8 @@
 package test_alignof
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
+func ASSERT(want int, act int)
 
 var g3 byte
 var g4 int16

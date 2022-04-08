@@ -6,6 +6,8 @@ func println(format ...string)
 var g01 = 1
 var g02 = 3
 
+func strcmp(s1, s2 string) int
+
 func ret3() int {
 	return 3
 }
@@ -13,6 +15,8 @@ func ret3() int {
 func retf3() float64 {
 	return 3.5
 }
+
+var g03 = []string{"abc", "def", "ghi"}
 
 func main() {
 	var a01 = [2]int{1, 2}
@@ -64,6 +68,71 @@ func main() {
 	assert(100, s024[1], "s024[1]")
 	assert(5, len(s024), "len(s024)")
 	assert(5, cap(s024), "cap(s024)")
+
+	var s025 []int
+	assert(0, len(s025), "len(s025)")
+	assert(0, cap(s025), "cap(s025)")
+	assert(8, Sizeof(s025), "Sizeof(s025)")
+
+	var s026 []int = []int{1, 2, 3, 4, 5, 6}
+	assert(6, len(s026), "len(s026)")
+	assert(6, cap(s026), "cap(s026)")
+	assert(8, Sizeof(s026), "Sizeof(s026)")
+	assert(1, s026[0], "s026[0]")
+	assert(2, s026[1], "s026[1]")
+	assert(3, s026[2], "s026[2]")
+	assert(4, s026[3], "s026[3]")
+	assert(5, s026[4], "s026[4]")
+	assert(6, s026[5], "s026[5]")
+	s026[0], s026[1], s026[2], s026[3], s026[4], s026[5] = 100, 101, 102, 103, 104, 105
+	assert(100, s026[0], "s026[0]")
+	assert(101, s026[1], "s026[1]")
+	assert(102, s026[2], "s026[2]")
+	assert(103, s026[3], "s026[3]")
+	assert(104, s026[4], "s026[4]")
+	assert(105, s026[5], "s026[5]")
+
+	var s027 = []int{1, 2, 3, 4, 5, 6}
+	assert(6, len(s027), "len(s027)")
+	assert(6, cap(s027), "cap(s027)")
+	assert(8, Sizeof(s027), "Sizeof(s027)")
+	assert(1, s027[0], "s027[0]")
+	assert(2, s027[1], "s027[1]")
+	assert(3, s027[2], "s027[2]")
+	assert(4, s027[3], "s027[3]")
+	assert(5, s027[4], "s027[4]")
+	assert(6, s027[5], "s027[5]")
+
+	s028 := []string{"abc", "def", "ghi"}
+	assert(8, Sizeof(s028), "Sizeof(s028)")
+	assert(3, len(s028), "len(s028)")
+	assert(3, cap(s028), "cap(s028)")
+	assert(0, strcmp(s028[0], "abc"), "strcmp(s028[0], \"abc\")")
+	assert(0, strcmp(s028[1], "def"), "strcmp(s028[1], \"def\")")
+	assert(0, strcmp(s028[2], "ghi"), "strcmp(s028[2], \"ghi\")")
+
+	s029 := [][]string{{"abc", "def", "ghi"}, {"jkl", "mno", "pqr"}}
+	assert(8, Sizeof(s029), "Sizeof(s029)")
+	assert(2, len(s029), "len(s029)")
+	assert(3, len(s029[0]), "len(s029[0])")
+	assert(3, len(s029[1]), "len(s029[1])")
+	assert(2, cap(s029), "cap(s029)")
+	assert(3, cap(s029[0]), "cap(s029[0])")
+	assert(3, cap(s029[1]), "cap(s029[1])")
+	assert(0, strcmp(s029[0][0], "abc"), "strcmp(s029[0][0], \"abc\")")
+	assert(0, strcmp(s029[0][1], "def"), "strcmp(s029[0][1], \"def\")")
+	assert(0, strcmp(s029[0][2], "ghi"), "strcmp(s029[0][2], \"ghi\")")
+	println(s029[0][2])
+	assert(0, strcmp(s029[1][0], "jkl"), "strcmp(s029[1][0], \"jkl\")")
+	assert(0, strcmp(s029[1][1], "mno"), "strcmp(s029[1][1], \"mno\")")
+	assert(0, strcmp(s029[1][2], "pqr"), "strcmp(s029[1][2], \"pqr\")")
+
+	assert(8, Sizeof(g03), "Sizeof(g03)")
+	assert(3, len(g03), "len(g03)")
+	assert(3, cap(g03), "cap(g03)")
+	assert(0, strcmp(g03[0], "abc"), "strcmp(g03[0], \"abc\")")
+	assert(0, strcmp(g03[1], "def"), "strcmp(g03[1], \"def\")")
+	assert(0, strcmp(g03[2], "ghi"), "strcmp(g03[2], \"ghi\")")
 
 	println("OK")
 }
