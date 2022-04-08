@@ -362,7 +362,7 @@ func newInitializer(ty *Type, isflex bool) *Initializer {
 	init := &Initializer{Ty: ty}
 
 	if ty.Kind == TY_ARRAY {
-		if isflex && ty.Sz < 0 {
+		if isflex { //&& ty.Sz < 0
 			init.IsFlex = true
 			return init
 		}
@@ -589,13 +589,14 @@ func readArr(tok *Token, base *Type) *Type {
 	if !consume(&tok, tok, "[") {
 		return base
 	}
-	var sz int64
 	if !consume(&tok, tok, "]") {
-		sz = constExpr(&tok, tok)
+		sz := constExpr(&tok, tok)
 		tok = skip(tok, "]")
+		base = readArr(tok, base)
+		return arrayOf(base, int(sz))
 	}
 	base = readArr(tok, base)
-	return arrayOf(base, int(sz))
+	return sliceType(base, 0, 0)
 }
 
 // type-preffix = ("[" const-expr "]")*
@@ -614,12 +615,7 @@ func readTypePreffix(rest **Token, tok *Token, name *Token) *Type {
 	start := tok
 
 	base := findBase(&tok, tok, name)
-	var arrTy *Type
-	if equal(start.Next, "]") {
-		arrTy = sliceType(base, 0, 0)
-	} else {
-		arrTy = readArr(start, base)
-	}
+	arrTy := readArr(start, base)
 	*rest = tok
 	return arrTy
 }
@@ -943,6 +939,8 @@ func countArrInitElem(tok *Token, ty *Type) int {
 	printCalledFunc()
 
 	dummy := newInitializer(ty.Base, false)
+	fmt.Printf("countArrInitElem: dummy: %#v\n\n", dummy)
+	fmt.Printf("countArrInitElem: dummy.Ty: %#v\n\n", dummy.Ty)
 	i := 0
 
 	for ; !consumeEnd(&tok, tok); i++ {
@@ -970,6 +968,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 	// If the rhs is array literal.
 	if init.Ty.Kind == TY_ARRAY {
+		fmt.Printf("initializer2: init.Ty: %#v\n\n", init.Ty)
 		readTypePreffix(&tok, tok, nil) // I'll add type checking later
 		if equal(tok, "{") {
 			arrayInitializer(rest, tok, init)
@@ -992,11 +991,11 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		// In the case that any typename is written, like: `var x = []int{1,3}`,
 		// make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, 0)
-		len := countArrInitElem(tok.Next, uArrTy)
-		uArrTy = arrayOf(init.Ty.Base, len)
+		uArrTy.IsFlex = true
 		uArr := newAnonGvar(uArrTy)
 
 		gvarInitializer(rest, tok, uArr)
+		fmt.Printf("initializer2: uArr.Ty: %#v\n\n", uArr.Ty)
 
 		init.Expr = newUnary(ND_ADDR,
 			newUnary(ND_DEREF, newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
@@ -1552,7 +1551,7 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 			cur = cur.Next
 			j++
 
-			if v.Ty.Sz < 0 {
+			if v.Ty.Sz <= 0 {
 				panic("\n" + errorTok(v.Ty.Name, "variable has incomplete type"))
 			}
 			if v.Ty.Kind == TY_VOID ||
@@ -2925,7 +2924,7 @@ func structMems(rest **Token, tok *Token, ty *Type) *Member {
 	// If the last element is an array of imcomlete type, it's
 	// called a "flexible array member". It should bahave as if
 	// if were a zero-sized array.
-	for cur != head && cur.Ty.Kind == TY_ARRAY && cur.Ty.ArrSz < 0 {
+	for cur != head && cur.Ty.Kind == TY_ARRAY && cur.Ty.ArrSz <= 0 {
 		cur.Ty = arrayOf(cur.Ty.Base, 0)
 		ty.IsFlex = true
 	}
