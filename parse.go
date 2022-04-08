@@ -997,6 +997,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 		init.Expr = newUnary(ND_ADDR,
 			newUnary(ND_DEREF, newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
+
+		init.Ty.Init = init
 		return
 	}
 
