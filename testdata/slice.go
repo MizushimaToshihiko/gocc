@@ -6,6 +6,8 @@ func println(format ...string)
 var g01 = 1
 var g02 = 3
 
+func strcmp(s1, s2 string) int
+
 func ret3() int {
 	return 3
 }
@@ -98,6 +100,12 @@ func main() {
 	assert(4, s027[3], "s027[3]")
 	assert(5, s027[4], "s027[4]")
 	assert(6, s027[5], "s027[5]")
+
+	s028 := []string{"abc", "def", "ghi"}
+	assert(8, Sizeof(s028), "Sizeof(s028)")
+	assert(0, strcmp(s028[0], "abc"), "strcmp(s028[0], \"abc\")")
+	assert(0, strcmp(s028[1], "def"), "strcmp(s028[1], \"def\")")
+	assert(0, strcmp(s028[2], "ghi"), "strcmp(s028[2], \"ghi\")")
 
 	println("OK")
 }
