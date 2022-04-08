@@ -573,8 +573,9 @@ func findBase(rest **Token, tok *Token, name *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
 
-	for !(equal(tok, "*") && isTypename2(tok.Next)) &&
-		!(isTypename2(tok) && !equal(tok.Next, "(")) {
+	for !(isTypename2(tok) && !equal(tok.Next, "(")) && // builtin type-name except for type cast
+		!(equal(tok, "*") && isTypename2(tok.Next)) && // pointer to type name
+		!(equal(tok, "func") && equal(tok.Next, "(")) { // function type
 		tok = tok.Next
 	}
 	ty := declSpec(&tok, tok, name)

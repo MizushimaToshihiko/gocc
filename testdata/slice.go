@@ -17,6 +17,7 @@ func retf3() float64 {
 }
 
 var g03 = []string{"abc", "def", "ghi"}
+var g04 = [][]string{{"abc", "def", "ghi"}, {"jkl", "mno", "pqr"}}
 
 func main() {
 	var a01 = [2]int{1, 2}
@@ -133,6 +134,33 @@ func main() {
 	assert(0, strcmp(g03[0], "abc"), "strcmp(g03[0], \"abc\")")
 	assert(0, strcmp(g03[1], "def"), "strcmp(g03[1], \"def\")")
 	assert(0, strcmp(g03[2], "ghi"), "strcmp(g03[2], \"ghi\")")
+
+	assert(8, Sizeof(g04), "Sizeof(g04)")
+	assert(2, len(g04), "len(g04)")
+	assert(3, len(g04[0]), "len(g04[0])")
+	assert(3, len(g04[1]), "len(g04[1])")
+	assert(2, cap(g04), "cap(g04)")
+	assert(3, cap(g04[0]), "cap(g04[0])")
+	assert(3, cap(g04[1]), "cap(g04[1])")
+	assert(0, strcmp(g04[0][0], "abc"), "strcmp(g04[0][0], \"abc\")")
+	assert(0, strcmp(g04[0][1], "def"), "strcmp(g04[0][1], \"def\")")
+	assert(0, strcmp(g04[0][2], "ghi"), "strcmp(g04[0][2], \"ghi\")")
+	println(g04[0][2])
+	assert(0, strcmp(g04[1][0], "jkl"), "strcmp(g04[1][0], \"jkl\")")
+	assert(0, strcmp(g04[1][1], "mno"), "strcmp(g04[1][1], \"mno\")")
+	assert(0, strcmp(g04[1][2], "pqr"), "strcmp(g04[1][2], \"pqr\")")
+
+	var s030 = struct{ a []int }{a: []int{1, 2, 3, 4, 5, 6}}
+	assert(1, s030.a[0], "s030.a[0]")
+	assert(2, s030.a[1], "s030.a[1]")
+	assert(3, s030.a[2], "s030.a[2]")
+	assert(4, s030.a[3], "s030.a[3]")
+	assert(5, s030.a[4], "s030.a[4]")
+	assert(6, s030.a[5], "s030.a[5]")
+
+	var s031 = []func() int{ret3, ret3}
+	assert(3, s031[0](), "s031[0]()")
+	assert(3, s031[1](), "s031[1]()")
 
 	println("OK")
 }
