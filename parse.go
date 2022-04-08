@@ -1010,15 +1010,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 	if init.Ty.Kind == TY_STRUCT {
 		if equal(tok.Next, "{") {
 			readTypePreffix(&tok, tok, nil) // I'll add type checking later
-			if !equal(tok.Next, "}") {
-				structInitializer(rest, tok, init)
-				return
-			} else {
-				zeroInit2(init, tok)
-				*rest = skip(tok.Next, "}")
-				return
-			}
 		}
+
 		if equal(tok, "{") {
 			if !equal(tok.Next, "}") {
 				structInitializer(rest, tok, init)
