@@ -998,6 +998,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		uArr := newAnonGvar(uArrTy)
 
 		gvarInitializer(rest, tok, uArr)
+
 		init.Ty.Len = uArr.Ty.ArrSz
 		init.Ty.Cap = uArr.Ty.ArrSz
 
@@ -1333,10 +1334,11 @@ func writeGvarData(
 	if ty.Kind == TY_FLOAT {
 		fval := float32(evalDouble(init.Expr))
 		// float32(evalDouble(init.Expr))の内部表現(2進数で取得)をintとして読んだものを取得し
-		// 分割してスライスにしてdiviedに保存
+		// 分割してスライスにしてdivedに保存
 		dived := divFloat32(*(*int32)(unsafe.Pointer(&fval)))
-		for i := offset; i < offset+ty.Sz; i++ {
-			(*buf)[i] = dived[i]
+		for i, j := offset, 0; i < offset+ty.Sz && j < 4; i++ {
+			(*buf)[i] = dived[j]
+			j++
 		}
 		return cur
 	}
@@ -1344,8 +1346,9 @@ func writeGvarData(
 	if ty.Kind == TY_DOUBLE {
 		fval := evalDouble(init.Expr)
 		dived := divFloat64(*(*int64)(unsafe.Pointer(&fval)))
-		for i := offset; i < offset+ty.Sz; i++ {
-			(*buf)[i] = dived[i]
+		for i, j := offset, 0; i < offset+ty.Sz && j < 8; i++ {
+			(*buf)[i] = dived[j]
+			j++
 		}
 		return cur
 	}
