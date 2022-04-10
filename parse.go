@@ -3240,6 +3240,7 @@ func primary(rest **Token, tok *Token) *Node {
 		return newUlong(int64(node.Ty.Cap), tok)
 	}
 
+	// 'make' function for slice only.
 	if equal(tok, "make") && equal(tok.Next, "(") {
 		ty := readTypePreffix(&tok, tok.Next.Next, nil)
 		tok = skip(tok, ",")
@@ -3247,9 +3248,11 @@ func primary(rest **Token, tok *Token) *Node {
 		// if equal(tok, ")") {
 		ty.Len = int(len)
 		ty.Cap = int(len)
+
 		// Make the underlying array.
 		uArr := newAnonGvar(arrayOf(ty.Base, int(len)))
 		gvarZeroInit(uArr, tok)
+
 		*rest = tok.Next
 		node := newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
