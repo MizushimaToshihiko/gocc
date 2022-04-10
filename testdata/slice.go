@@ -176,5 +176,11 @@ func main() {
 	assert(1, s033[0] == 1.0, "s033[0]==1.0")
 	assert(1, s033[1] == 2.0, "s033[1]==2.0")
 
+	s034 := make([]float64, 10)
+	assert(10, len(s034), "len(s034)")
+	assert(10, cap(s034), "cap(s034)")
+	assert(0, s034[0], "s034[0]")
+	assert(0, s034[9], "s034[9]")
+
 	println("OK")
 }

@@ -1003,7 +1003,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		init.Ty.Cap = uArr.Ty.ArrSz
 
 		init.Expr = newUnary(ND_ADDR,
-			newUnary(ND_DEREF, newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
+			newUnary(ND_DEREF,
+				newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
 
 		init.Ty.Init = init
 		return
@@ -1473,7 +1474,7 @@ func zeroInit2(init *Initializer, tok *Token) {
 	}
 
 	// If init.Ty is slice.
-	if init.Ty.TyName[0:2] == "[]" {
+	if init.Ty.Kind == TY_SLICE {
 		// Make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, init.Ty.Len)
 		uArr := newLvar("", uArrTy)
@@ -1566,7 +1567,8 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 			j++
 
 			if v.Ty.Sz < 0 {
-				panic("\n" + errorTok(v.Ty.Name, "variable has incomplete type"))
+				panic("\n" +
+					errorTok(v.Ty.Name, "variable has incomplete type"))
 			}
 			if v.Ty.Kind == TY_VOID ||
 				(v.Ty.Base != nil && v.Ty.Base.Kind == TY_VOID) {
@@ -3236,6 +3238,25 @@ func primary(rest **Token, tok *Token) *Node {
 		node := unary(rest, tok.Next)
 		addType(node)
 		return newUlong(int64(node.Ty.Cap), tok)
+	}
+
+	if equal(tok, "make") && equal(tok.Next, "(") {
+		ty := readTypePreffix(&tok, tok.Next.Next, nil)
+		tok = skip(tok, ",")
+		len := constExpr(&tok, tok)
+		// if equal(tok, ")") {
+		ty.Len = int(len)
+		ty.Cap = int(len)
+		// Make the underlying array.
+		uArr := newAnonGvar(arrayOf(ty.Base, int(len)))
+		gvarZeroInit(uArr, tok)
+		*rest = tok.Next
+		node := newUnary(ND_ADDR,
+			newUnary(ND_DEREF,
+				newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
+		node.Ty = ty
+		return node
+		// }
 	}
 
 	if tok.Kind == TK_BLANKIDENT {
