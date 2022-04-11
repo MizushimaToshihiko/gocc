@@ -3277,10 +3277,28 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
-	// if equal(tok, "append") {
-	// 	tok = skip(tok.Next, "(")
+	if equal(tok, "append") {
+		tok = skip(tok.Next, "(")
+		node := primary(&tok, tok)
+		if node.Obj == nil {
+			panic(errorTok(tok, "unexpected %s", tok.Str))
+		}
+		if node.Obj.Ty.Kind != TY_SLICE {
+			panic(errorTok(tok,
+				"first argument to append must be a slice; have a (variable of type %s)",
+				node.Obj.Ty.TyName))
+		}
+		tok = skip(tok, ",")
+		elem := expr(&tok, tok)
 
-	// }
+		node = newBinary(ND_ASSIGN,
+			newUnary(ND_DEREF,
+				newAdd(node, newNum(int64(node.Obj.Ty.Len+1), tok), tok), tok),
+			elem, tok)
+
+		*rest = skip(tok, ")")
+		return node
+	}
 
 	if tok.Kind == TK_BLANKIDENT {
 		*rest = tok.Next
