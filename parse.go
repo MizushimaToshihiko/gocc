@@ -1089,7 +1089,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 			// Copy Initializer from rhs, if array can be initialized by other array.
 			if rhsTy.Init != nil {
-				*init = *rhsTy.Init // copyType()使った方が良いかもしれないが、検証する時間なし
+				*init = *rhsTy.Init //
 			}
 			return
 		}
@@ -3079,7 +3079,6 @@ func postfix(rest **Token, tok *Token) *Node {
 
 		if equal(tok, "[") {
 			// x[y:z] is slice
-			// x[y] is short for *(x+y)
 			start := tok
 			idx := expr(&tok, tok.Next)
 			if equal(tok, ":") {
@@ -3088,6 +3087,7 @@ func postfix(rest **Token, tok *Token) *Node {
 				*rest = tok
 				return node
 			}
+			// x[y] is short for *(x+y)
 			tok = skip(tok, "]")
 			node = newUnary(ND_DEREF, newAdd(node, idx, start), start)
 			continue
@@ -3276,6 +3276,11 @@ func primary(rest **Token, tok *Token) *Node {
 		*rest = skip(tok, ")")
 		return node
 	}
+
+	// if equal(tok, "append") {
+	// 	tok = skip(tok.Next, "(")
+
+	// }
 
 	if tok.Kind == TK_BLANKIDENT {
 		*rest = tok.Next
