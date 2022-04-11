@@ -3245,21 +3245,36 @@ func primary(rest **Token, tok *Token) *Node {
 		ty := readTypePreffix(&tok, tok.Next.Next, nil)
 		tok = skip(tok, ",")
 		len := constExpr(&tok, tok)
-		// if equal(tok, ")") {
+		if equal(tok, ")") {
+			ty.Len = int(len)
+			ty.Cap = int(len)
+
+			// Make the underlying array.
+			uArr := newAnonGvar(arrayOf(ty.Base, int(len)))
+			gvarZeroInit(uArr, tok)
+
+			node := newUnary(ND_ADDR,
+				newUnary(ND_DEREF,
+					newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
+			node.Ty = ty
+			*rest = skip(tok, ")")
+			return node
+		}
+		tok = skip(tok, ",")
+		cap := constExpr(&tok, tok)
 		ty.Len = int(len)
-		ty.Cap = int(len)
+		ty.Cap = int(cap)
 
 		// Make the underlying array.
-		uArr := newAnonGvar(arrayOf(ty.Base, int(len)))
+		uArr := newAnonGvar(arrayOf(ty.Base, int(cap)))
 		gvarZeroInit(uArr, tok)
 
-		*rest = tok.Next
 		node := newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
 				newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
 		node.Ty = ty
+		*rest = skip(tok, ")")
 		return node
-		// }
 	}
 
 	if tok.Kind == TK_BLANKIDENT {

@@ -176,12 +176,28 @@ func main() {
 	assert(1, s033[0] == 1.0, "s033[0]==1.0")
 	assert(1, s033[1] == 2.0, "s033[1]==2.0")
 
-	s034 := make([]float64, 10)
+	s034 := make([]int, 10)
 	assert(10, len(s034), "len(s034)")
 	assert(10, cap(s034), "cap(s034)")
 	assert(0, s034[0], "s034[0]")
 	assert(0, s034[9], "s034[9]")
-	s034[1], s034[2], s034[3], s034[4], s034[5], s034[6], s034[7], s034[8], s034[9] = 101, 102, 103, 104, 105, 106, 107, 108, 109
+	s034[1],
+		s034[2],
+		s034[3],
+		s034[4],
+		s034[5],
+		s034[6],
+		s034[7],
+		s034[8],
+		s034[9] = 101,
+		102,
+		103,
+		104,
+		105,
+		106,
+		107,
+		108,
+		109
 	assert(101, s034[1], "s034[1]")
 	assert(102, s034[2], "s034[2]")
 	assert(103, s034[3], "s034[3]")
@@ -191,6 +207,38 @@ func main() {
 	assert(107, s034[7], "s034[7]")
 	assert(108, s034[8], "s034[8]")
 	assert(109, s034[9], "s034[9]")
+
+	s035 := make([]string, 10, 15)
+	assert(10, len(s035), "len(s035)")
+	assert(15, cap(s035), "cap(s035)")
+	assert(0, strcmp(s035[0], ""), "strcmp(s035[0], \"\")")
+	assert(0, strcmp(s035[9], ""), "strcmp(s034[9], \"\")")
+	s035[1],
+		s035[2],
+		s035[3],
+		s035[4],
+		s035[5],
+		s035[6],
+		s035[7],
+		s035[8],
+		s035[9] = "abc",
+		"def",
+		"ghi",
+		"jkl",
+		"mno",
+		"pqr",
+		"stu",
+		"vwx",
+		"yz"
+	assert(0, strcmp(s035[1], "abc"), "strcmp(s035[1], \"abc\")")
+	assert(0, strcmp(s035[2], "def"), "strcmp(s035[2], \"def\")")
+	assert(0, strcmp(s035[3], "ghi"), "strcmp(s035[3], \"ghi\")")
+	assert(0, strcmp(s035[4], "jkl"), "strcmp(s035[4], \"jkl\")")
+	assert(0, strcmp(s035[5], "mno"), "strcmp(s035[5], \"mno\")")
+	assert(0, strcmp(s035[6], "pqr"), "strcmp(s035[6], \"pqr\")")
+	assert(0, strcmp(s035[7], "stu"), "strcmp(s035[7], \"stu\")")
+	assert(0, strcmp(s035[8], "vwx"), "strcmp(s035[8], \"vwx\")")
+	assert(0, strcmp(s035[9], "yz"), "strcmp(s035[9], \"yz\")")
 
 	println("OK")
 }
