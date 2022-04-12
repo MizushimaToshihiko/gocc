@@ -54,8 +54,9 @@ type Type struct {
 	Next       *Type
 
 	// slice
-	Len int
-	Cap int
+	Len  int
+	Cap  int
+	UArr *Obj // It's underlying array
 
 	Init *Initializer
 }
@@ -214,6 +215,7 @@ func sliceType(base *Type, len int, cap int) *Type {
 		Len:    len,
 		Cap:    cap,
 		TyName: "[]" + base.TyName,
+		IsFlex: true,
 	}
 }
 

@@ -240,5 +240,12 @@ func main() {
 	assert(0, strcmp(s035[8], "vwx"), "strcmp(s035[8], \"vwx\")")
 	assert(0, strcmp(s035[9], "yz"), "strcmp(s035[9], \"yz\")")
 
+	s036 := make([]int, 10, 15)
+	assert(10, len(s036), "len(s036)")
+	assert(15, cap(s036), "cap(s036)")
+	assert(0, s036[9], "s036[9]")
+	s036 = append(s036, 1)
+	assert(0, s036[10], "s036[10]")
+
 	println("OK")
 }

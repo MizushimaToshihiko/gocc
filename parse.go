@@ -1001,6 +1001,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 		init.Ty.Len = uArr.Ty.ArrSz
 		init.Ty.Cap = uArr.Ty.ArrSz
+		init.Ty.UArr = uArr
 
 		init.Expr = newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
@@ -1477,13 +1478,16 @@ func zeroInit2(init *Initializer, tok *Token) {
 	if init.Ty.Kind == TY_SLICE {
 		// Make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, init.Ty.Len)
-		uArr := newLvar("", uArrTy)
-		uArrInit := zeroInit(uArr.Ty, &uArrTy, tok)
+		uArr := newAnonGvar(uArrTy)
+		uArrInit := zeroInit(uArr.Ty, &uArr.Ty, tok)
 		uArr.Ty.Init = uArrInit
 		init.Expr = newUnary(ND_ADDR,
 			newVarNode(uArr, tok),
 			tok)
+		init.Ty = sliceType(uArr.Ty.Base, init.Ty.Len, init.Ty.Cap)
 		init.Ty.Init = init
+		init.Ty.UArr = uArr
+		return
 	}
 
 	if init.Expr == nil {
@@ -1500,6 +1504,7 @@ func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
 	zeroInit2(init, tok)
 
 	*newTy = init.Ty
+	fmt.Printf("zeroInit: init.Ty: %#v\n\n", init.Ty)
 	return init
 }
 
@@ -3279,23 +3284,33 @@ func primary(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "append") {
 		tok = skip(tok.Next, "(")
-		node := primary(&tok, tok)
-		if node.Obj == nil {
+		asg := primary(&tok, tok)
+		if asg.Obj == nil {
 			panic(errorTok(tok, "unexpected %s", tok.Str))
 		}
-		if node.Obj.Ty.Kind != TY_SLICE {
-			panic(errorTok(tok,
+		if asg.Obj.Ty.Kind != TY_SLICE {
+			panic(errorTok(
+				tok,
 				"first argument to append must be a slice; have a (variable of type %s)",
-				node.Obj.Ty.TyName))
+				asg.Obj.Ty.TyName))
 		}
+		v := asg.Obj
+		fmt.Printf("primary: v: %#v\n\n", v)
+		fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
 		tok = skip(tok, ",")
 		elem := expr(&tok, tok)
 
-		node = newBinary(ND_ASSIGN,
+		// 間違っているけど、とりあえずそのまま
+		asg = newBinary(ND_ASSIGN,
 			newUnary(ND_DEREF,
-				newAdd(node, newNum(int64(node.Obj.Ty.Len+1), tok), tok), tok),
+				newAdd(asg, newNum(int64(asg.Obj.Ty.Len+1), tok), tok), tok),
 			elem, tok)
 
+		node := newUnary(ND_ADDR,
+			newUnary(ND_DEREF,
+				newAdd(newVarNode(v, tok), newNum(0, tok), tok), tok), tok)
+		node.Ty = sliceType(v.Ty.Base, v.Ty.Len+1, v.Ty.Cap)
+		node.Next = asg
 		*rest = skip(tok, ")")
 		return node
 	}
