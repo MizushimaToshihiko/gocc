@@ -16,6 +16,10 @@ func retf3() float64 {
 	return 3.5
 }
 
+func reti(i int) int {
+	return i
+}
+
 var g03 = []string{"abc", "def", "ghi"}
 var g04 = [][]string{{"abc", "def", "ghi"}, {"jkl", "mno", "pqr"}}
 
@@ -150,19 +154,37 @@ func main() {
 	assert(0, strcmp(g04[1][1], "mno"), "strcmp(g04[1][1], \"mno\")")
 	assert(0, strcmp(g04[1][2], "pqr"), "strcmp(g04[1][2], \"pqr\")")
 
-	var s030 = struct{ a []int }{a: []int{1, 2, 3, 4, 5, 6}}
+	var s030 = &struct {
+		a []int
+		b int
+		c []string
+	}{
+		a: []int{1, 2, 3, 4, 5, 6},
+		b: 7,
+		c: []string{"abc", "def", "ghi"},
+	}
 	assert(1, s030.a[0], "s030.a[0]")
 	assert(2, s030.a[1], "s030.a[1]")
 	assert(3, s030.a[2], "s030.a[2]")
 	assert(4, s030.a[3], "s030.a[3]")
 	assert(5, s030.a[4], "s030.a[4]")
 	assert(6, s030.a[5], "s030.a[5]")
+	assert(7, s030.b, "s030.b")
+	assert(0, strcmp(s030.c[0], "abc"), "strcmp(s030.c[0], \"abc\")")
+	assert(0, strcmp(s030.c[1], "def"), "strcmp(s030.c[1], \"def\")")
+	assert(0, strcmp(s030.c[2], "ghi"), "strcmp(s030.c[2], \"ghi\")")
 
 	var s031 = []func() int{ret3, ret3}
 	assert(2, len(s031), "len(s031)")
 	assert(2, cap(s031), "cap(s031)")
 	assert(3, s031[0](), "s031[0]()")
 	assert(3, s031[1](), "s031[1]()")
+
+	var s0311 = []func(int) int{reti, reti}
+	assert(2, len(s0311), "len(s0311)")
+	assert(2, cap(s0311), "cap(s0311)")
+	assert(3, s0311[0](3), "s0311[0](3)")
+	assert(4, s0311[1](4), "s0311[1](4)")
 
 	var s032 = []float32{1., 2., 3.}
 	assert(3, len(s032), "len(s032)")
@@ -240,35 +262,30 @@ func main() {
 	assert(0, strcmp(s035[8], "vwx"), "strcmp(s035[8], \"vwx\")")
 	assert(0, strcmp(s035[9], "yz"), "strcmp(s035[9], \"yz\")")
 
-	s036 := make([]int, 10, 15)
-	assert(10, len(s036), "len(s036)")
-	assert(15, cap(s036), "cap(s036)")
+	s036 := make([]int, 1, 5)
+	assert(1, len(s036), "len(s036)")
+	assert(5, cap(s036), "cap(s036)")
 	assert(0, s036[0], "s036[0]")
-	assert(0, s036[1], "s036[1]")
-	assert(0, s036[2], "s036[2]")
-	assert(0, s036[3], "s036[3]")
-	assert(0, s036[4], "s036[4]")
-	assert(0, s036[5], "s036[5]")
-	assert(0, s036[6], "s036[6]")
-	assert(0, s036[7], "s036[7]")
-	assert(0, s036[8], "s036[8]")
-	assert(0, s036[9], "s036[9]")
 	s036 = append(s036, 1, 2, 3)
-	assert(13, len(s036), "len(s036)")
-	assert(15, cap(s036), "cap(s036)")
+	assert(4, len(s036), "len(s036)")
+	assert(5, cap(s036), "cap(s036)")
 	assert(0, s036[0], "s036[0]")
-	assert(0, s036[1], "s036[1]")
-	assert(0, s036[2], "s036[2]")
-	assert(0, s036[3], "s036[3]")
-	assert(0, s036[4], "s036[4]")
-	assert(0, s036[5], "s036[5]")
-	assert(0, s036[6], "s036[6]")
-	assert(0, s036[7], "s036[7]")
-	assert(0, s036[8], "s036[8]")
-	assert(0, s036[9], "s036[9]")
-	assert(1, s036[10], "s036[10]")
-	assert(2, s036[11], "s036[11]")
-	assert(3, s036[12], "s036[12]")
+	assert(1, s036[1], "s036[1]")
+	assert(2, s036[2], "s036[2]")
+	assert(3, s036[3], "s036[3]")
+	assert(1, s036[reti(1)], "s036[reti(1)]")
+
+	s037 := make([]string, 1, 5)
+	assert(1, len(s037), "len(s037)")
+	assert(5, cap(s037), "cap(s037)")
+	assert(0, strcmp(s037[0], ""), "strcmp(s037[0], \"\")")
+	s037 = append(s037, "abc", "def", "ghi")
+	assert(4, len(s037), "len(s037)")
+	assert(5, cap(s037), "cap(s037)")
+	assert(0, strcmp(s037[0], ""), "strcmp(s037[0], \"\")")
+	assert(0, strcmp(s037[1], "abc"), "strcmp(s037[1], \"abc\")")
+	assert(0, strcmp(s037[2], "def"), "strcmp(s037[2], \"def\")")
+	assert(0, strcmp(s037[3], "ghi"), "strcmp(s037[3], \"ghi\")")
 
 	println("OK")
 }

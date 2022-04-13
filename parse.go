@@ -3101,6 +3101,20 @@ func postfix(rest **Token, tok *Token) *Node {
 				return node
 			}
 			// x[y] is short for *(x+y)
+			i := eval(idx)
+			if i < 0 {
+				panic(errorTok(idx.Tok,
+					"invalid argument: index %d (constant of type int) must not be negative", i))
+			}
+			addType(node)
+			if node.Ty != nil {
+				if node.Ty.Kind == TY_ARRAY && i > int64(node.Ty.ArrSz) {
+					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.ArrSz))
+				}
+				if node.Ty.Kind == TY_SLICE && i > int64(node.Ty.Len) {
+					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.Len))
+				}
+			}
 			tok = skip(tok, "]")
 			node = newUnary(ND_DEREF, newAdd(node, idx, start), start)
 			continue
@@ -3209,7 +3223,7 @@ var appendAsg *Node
 //         | "len" unary
 //         | "cap" unary
 //         | "make" "(" slice-type-name "," length "," capacity ")"
-//         | "append" "(" slice-expr "," element ")"
+//         | "append" "(" slice-expr "," element ( "," element)* ")"
 //         | ident
 //         | str
 //         | num
@@ -3327,7 +3341,7 @@ func primary(rest **Token, tok *Token) *Node {
 		node := newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
 				newAdd(slice, newNum(0, tok), tok), tok), tok)
-		node.Ty = v.Ty
+		addType(node)
 		*rest = skip(tok, ")")
 		return node
 	}
