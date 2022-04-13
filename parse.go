@@ -3314,13 +3314,13 @@ func primary(rest **Token, tok *Token) *Node {
 		isAppend = true
 		appendAsg = newBinary(ND_ASSIGN,
 			newUnary(ND_DEREF,
-				newAdd(newVarNode(v.Ty.UArr, tok), newNum(int64(asg.Obj.Ty.Len), tok), tok), tok),
+				newAdd(asg, newNum(int64(asg.Obj.Ty.Len), tok), tok), tok),
 			elem, tok)
 		appendAsg = newUnary(ND_EXPR_STMT, appendAsg, tok)
 
 		node := newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
-				newAdd(newVarNode(v.Ty.UArr, tok), newNum(0, tok), tok), tok), tok)
+				newAdd(asg, newNum(0, tok), tok), tok), tok)
 		v.Ty.Len++
 		node.Ty = v.Ty
 		node.Next = asg
