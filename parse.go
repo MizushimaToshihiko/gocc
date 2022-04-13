@@ -3206,7 +3206,10 @@ var appendAsg *Node
 // primary = "(" expr ")"
 //         | "Sizeof" "(" type-name ")"
 //         | "Sizeof" unary
+//         | "len" unary
+//         | "cap" unary
 //         | "make" "(" slice-type-name "," length "," capacity ")"
+//         | "append" "(" slice-expr "," element ")"
 //         | ident
 //         | str
 //         | num
@@ -3288,42 +3291,43 @@ func primary(rest **Token, tok *Token) *Node {
 
 	if equal(tok, "append") {
 		tok = skip(tok.Next, "(")
-		asg := primary(&tok, tok)
-		if asg.Obj == nil {
+		slice := postfix(&tok, tok)
+		if slice.Obj == nil {
 			panic(errorTok(tok, "unexpected %s", tok.Str))
 		}
-		if asg.Obj.Ty.Kind != TY_SLICE {
+		if slice.Obj.Ty.Kind != TY_SLICE {
 			panic(errorTok(
 				tok,
 				"first argument to append must be a slice; have a (variable of type %s)",
-				asg.Obj.Ty.TyName))
+				slice.Obj.Ty.TyName))
 		}
-		v := asg.Obj
+		isAppend = true
+		v := slice.Obj
 		fmt.Printf("primary: v: %#v\n\n", v)
 		fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
 		fmt.Printf("primary: v.Ty.UArr: %#v\n\n", v.Ty.UArr)
-		tok = skip(tok, ",")
-		elem := assign(&tok, tok)
+		head := &Node{}
+		cur := head
+		for !equal(tok, ")") {
+			tok = skip(tok, ",")
+			elem := assign(&tok, tok)
 
-		fmt.Printf("primary: asg: %#v\n\n", asg)
-		fmt.Println("primary: asg.Tok.Str:", asg.Tok.Str)
-		fmt.Printf("primary: elem: %#v\n\n", elem)
-		fmt.Println("primary: elem.Tok.Str:", elem.Tok.Str)
-
-		//
-		isAppend = true
-		appendAsg = newBinary(ND_ASSIGN,
-			newUnary(ND_DEREF,
-				newAdd(asg, newNum(int64(asg.Obj.Ty.Len), tok), tok), tok),
-			elem, tok)
-		appendAsg = newUnary(ND_EXPR_STMT, appendAsg, tok)
+			// Assign elem to slice[slice.Obj.Ty.Len]
+			expr := newBinary(ND_ASSIGN,
+				newUnary(ND_DEREF,
+					newAdd(slice, newNum(int64(slice.Obj.Ty.Len), tok), tok), tok),
+				elem, tok)
+			v.Ty.Len++
+			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+			cur = cur.Next
+		}
+		appendAsg = newNode(ND_BLOCK, tok)
+		appendAsg.Body = head.Next
 
 		node := newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
-				newAdd(asg, newNum(0, tok), tok), tok), tok)
-		v.Ty.Len++
+				newAdd(slice, newNum(0, tok), tok), tok), tok)
 		node.Ty = v.Ty
-		node.Next = asg
 		*rest = skip(tok, ")")
 		return node
 	}
