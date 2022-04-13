@@ -1504,7 +1504,6 @@ func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
 	zeroInit2(init, tok)
 
 	*newTy = init.Ty
-	fmt.Printf("zeroInit: init.Ty: %#v\n\n", init.Ty)
 	return init
 }
 
@@ -3317,9 +3316,9 @@ func primary(rest **Token, tok *Token) *Node {
 		}
 		isAppend = true
 		v := slice.Obj
-		fmt.Printf("primary: v: %#v\n\n", v)
-		fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
-		fmt.Printf("primary: v.Ty.UArr: %#v\n\n", v.Ty.UArr)
+		// fmt.Printf("primary: v: %#v\n\n", v)
+		// fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
+		// fmt.Printf("primary: v.Ty.UArr: %#v\n\n", v.Ty.UArr)
 		head := &Node{}
 		cur := head
 		for !equal(tok, ")") {
