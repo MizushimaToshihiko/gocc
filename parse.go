@@ -2090,6 +2090,14 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 			cur.Next = stmt(&tok, tok)
 
 		}
+
+		if isAppend {
+			cur = cur.Next
+			addType(cur)
+			cur.Next = appendAsg
+			isAppend = false
+		}
+
 		cur = cur.Next
 		addType(cur) //
 	}
@@ -3192,9 +3200,13 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	return node
 }
 
+var isAppend bool
+var appendAsg *Node
+
 // primary = "(" expr ")"
-//         | "sizeof" "(" type-name ")"
-//         | "sizeof" unary
+//         | "Sizeof" "(" type-name ")"
+//         | "Sizeof" unary
+//         | "make" "(" slice-type-name "," length "," capacity ")"
 //         | ident
 //         | str
 //         | num
@@ -3250,29 +3262,21 @@ func primary(rest **Token, tok *Token) *Node {
 		ty := readTypePreffix(&tok, tok.Next.Next, nil)
 		tok = skip(tok, ",")
 		len := constExpr(&tok, tok)
+		var cap int64
 		if equal(tok, ")") {
 			ty.Len = int(len)
 			ty.Cap = int(len)
-
-			// Make the underlying array.
-			uArr := newAnonGvar(arrayOf(ty.Base, int(len)))
-			gvarZeroInit(uArr, tok)
-
-			node := newUnary(ND_ADDR,
-				newUnary(ND_DEREF,
-					newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
-			node.Ty = ty
-			*rest = skip(tok, ")")
-			return node
+			cap = len
+		} else {
+			tok = skip(tok, ",")
+			cap = constExpr(&tok, tok)
+			ty.Len = int(len)
+			ty.Cap = int(cap)
 		}
-		tok = skip(tok, ",")
-		cap := constExpr(&tok, tok)
-		ty.Len = int(len)
-		ty.Cap = int(cap)
-
 		// Make the underlying array.
 		uArr := newAnonGvar(arrayOf(ty.Base, int(cap)))
 		gvarZeroInit(uArr, tok)
+		ty.UArr = uArr
 
 		node := newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
@@ -3297,19 +3301,28 @@ func primary(rest **Token, tok *Token) *Node {
 		v := asg.Obj
 		fmt.Printf("primary: v: %#v\n\n", v)
 		fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
+		fmt.Printf("primary: v.Ty.UArr: %#v\n\n", v.Ty.UArr)
 		tok = skip(tok, ",")
-		elem := expr(&tok, tok)
+		elem := assign(&tok, tok)
 
-		// 間違っているけど、とりあえずそのまま
-		asg = newBinary(ND_ASSIGN,
+		fmt.Printf("primary: asg: %#v\n\n", asg)
+		fmt.Println("primary: asg.Tok.Str:", asg.Tok.Str)
+		fmt.Printf("primary: elem: %#v\n\n", elem)
+		fmt.Println("primary: elem.Tok.Str:", elem.Tok.Str)
+
+		//
+		isAppend = true
+		appendAsg = newBinary(ND_ASSIGN,
 			newUnary(ND_DEREF,
-				newAdd(asg, newNum(int64(asg.Obj.Ty.Len+1), tok), tok), tok),
+				newAdd(newVarNode(v.Ty.UArr, tok), newNum(int64(asg.Obj.Ty.Len), tok), tok), tok),
 			elem, tok)
+		appendAsg = newUnary(ND_EXPR_STMT, appendAsg, tok)
 
 		node := newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
-				newAdd(newVarNode(v, tok), newNum(0, tok), tok), tok), tok)
-		node.Ty = sliceType(v.Ty.Base, v.Ty.Len+1, v.Ty.Cap)
+				newAdd(newVarNode(v.Ty.UArr, tok), newNum(0, tok), tok), tok), tok)
+		v.Ty.Len++
+		node.Ty = v.Ty
 		node.Next = asg
 		*rest = skip(tok, ")")
 		return node
