@@ -2091,8 +2091,8 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 		}
 
 		if isAppend {
-			addType(cur)
 			cur = cur.Next
+			addType(cur)
 			cur.Next = appendAsg
 			isAppend = false
 		}
@@ -3297,7 +3297,9 @@ func primary(rest **Token, tok *Token) *Node {
 
 	// 'make' function for slice only.
 	if equal(tok, "make") && equal(tok.Next, "(") {
+		start := tok
 		ty := readTypePreffix(&tok, tok.Next.Next, nil)
+		fmt.Printf("primary: ty: %#v\n\n", ty)
 		tok = skip(tok, ",")
 		len := constExpr(&tok, tok)
 		var cap int64
@@ -3318,7 +3320,7 @@ func primary(rest **Token, tok *Token) *Node {
 
 		node := newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
-				newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
+				newAdd(newVarNode(uArr, start), newNum(0, start), start), start), start)
 		node.Ty = ty
 		*rest = skip(tok, ")")
 		return node
@@ -3369,6 +3371,7 @@ func primary(rest **Token, tok *Token) *Node {
 				newUnary(ND_DEREF,
 					newAdd(slice, newNum(0, tok), tok), tok), tok)
 			addType(node)
+			node.Ty = v.Ty
 			*rest = skip(tok, ")")
 			return node
 		}
