@@ -2091,8 +2091,8 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 		}
 
 		if isAppend {
-			cur = cur.Next
 			addType(cur)
+			cur = cur.Next
 			cur.Next = appendAsg
 			isAppend = false
 		}
@@ -2468,7 +2468,18 @@ func assign(rest **Token, tok *Token) *Node {
 				node.Obj.FVal = evalDouble(rhs)
 			}
 		}
-		return newBinary(ND_ASSIGN, node, rhs, tok)
+
+		if node.Obj != nil && node.Obj.Ty.Kind == TY_SLICE {
+			node.Obj.Ty = rhs.Ty
+			addType(node)
+			fmt.Printf("assign: rhs.Ty: %#v\n\n", rhs.Ty)
+			fmt.Printf("assign: node.Ty: %#v\n\n", node.Ty)
+			fmt.Printf("assign: node.Obj: %#v\n\n", node.Obj)
+			fmt.Printf("assign: node.Obj.ty: %#v\n\n", node.Obj.Ty)
+		}
+		node = newBinary(ND_ASSIGN, node, rhs, tok)
+		addType(node)
+		return node
 	}
 
 	if equal(tok, "+=") {
@@ -3041,7 +3052,7 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 		node.Ty)
 }
 
-// slice-expr = primary "[" expr ":" expr "]"
+// slice-expr = primary "[" expr ":" const-expr "]"
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
 	end := constExpr(rest, tok.Next)
@@ -3049,6 +3060,7 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 		newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
 	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
+	node.Ty.UArr = cur.Obj
 	return node
 }
 
@@ -3216,6 +3228,16 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 var isAppend bool
 var appendAsg *Node
 
+func countAppElem(tok *Token) int {
+	ret := 0
+	for !equal(tok, ")") {
+		tok = skip(tok, ",")
+		assign(&tok, tok)
+		ret++
+	}
+	return ret
+}
+
 // primary = "(" expr ")"
 //         | "Sizeof" "(" type-name ")"
 //         | "Sizeof" unary
@@ -3305,6 +3327,7 @@ func primary(rest **Token, tok *Token) *Node {
 	if equal(tok, "append") {
 		tok = skip(tok.Next, "(")
 		slice := postfix(&tok, tok)
+		addType(slice)
 		if slice.Obj == nil {
 			panic(errorTok(tok, "unexpected %s", tok.Str))
 		}
@@ -3316,11 +3339,59 @@ func primary(rest **Token, tok *Token) *Node {
 		}
 		isAppend = true
 		v := slice.Obj
-		// fmt.Printf("primary: v: %#v\n\n", v)
-		// fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
-		// fmt.Printf("primary: v.Ty.UArr: %#v\n\n", v.Ty.UArr)
+		fmt.Printf("primary: slice.Ty: %#v\n\n", slice.Ty)
+		fmt.Printf("primary: v: %#v\n\n", v)
+		fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
+		fmt.Printf("primary: v.Ty.UArr: %#v\n\n", v.Ty.UArr)
+		cntElem := countAppElem(tok)
+
+		// In the case that the new length is no more than the slice's capacity.
+		if v.Ty.Len+cntElem <= v.Ty.Cap {
+			head := &Node{}
+			cur := head
+			for !equal(tok, ")") {
+				tok = skip(tok, ",")
+				elem := assign(&tok, tok)
+
+				// Assign elem to slice[slice.Obj.Ty.Len]
+				expr := newBinary(ND_ASSIGN,
+					newUnary(ND_DEREF,
+						newAdd(slice, newNum(int64(v.Ty.Len), tok), tok), tok),
+					elem, tok)
+				v.Ty.Len++
+				cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+				cur = cur.Next
+			}
+			appendAsg = newNode(ND_BLOCK, tok)
+			appendAsg.Body = head.Next
+
+			node := newUnary(ND_ADDR,
+				newUnary(ND_DEREF,
+					newAdd(slice, newNum(0, tok), tok), tok), tok)
+			addType(node)
+			*rest = skip(tok, ")")
+			return node
+		}
+
+		// In the case that the new length is more than original slice's capacity,
+		// Make a new underlying array.
+		uArrTy := arrayOf(v.Ty.Base, v.Ty.Cap*2)
+		uArr := newAnonGvar(uArrTy)
+		uaNode := newVarNode(uArr, tok)
+
 		head := &Node{}
 		cur := head
+		length := v.Ty.Len
+		// Copy to new array from the original underlying array.
+		var i int64
+		for i = 0; i < int64(length); i++ {
+			lhs := newUnary(ND_DEREF, newAdd(uaNode, newNum(i, tok), tok), tok)
+			rhs := newUnary(ND_DEREF, newAdd(slice, newNum(i, tok), tok), tok)
+			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
+			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+			cur = cur.Next
+		}
+
 		for !equal(tok, ")") {
 			tok = skip(tok, ",")
 			elem := assign(&tok, tok)
@@ -3328,19 +3399,18 @@ func primary(rest **Token, tok *Token) *Node {
 			// Assign elem to slice[slice.Obj.Ty.Len]
 			expr := newBinary(ND_ASSIGN,
 				newUnary(ND_DEREF,
-					newAdd(slice, newNum(int64(slice.Obj.Ty.Len), tok), tok), tok),
+					newAdd(uaNode, newNum(int64(length), tok), tok), tok),
 				elem, tok)
-			v.Ty.Len++
+			length++
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 		}
 		appendAsg = newNode(ND_BLOCK, tok)
 		appendAsg.Body = head.Next
 
-		node := newUnary(ND_ADDR,
-			newUnary(ND_DEREF,
-				newAdd(slice, newNum(0, tok), tok), tok), tok)
-		addType(node)
+		node := newUnary(ND_ADDR, uaNode, tok)
+		node.Ty = sliceType(uArrTy.Base, length, uArrTy.ArrSz)
+		node.Ty.UArr = uArr
 		*rest = skip(tok, ")")
 		return node
 	}
