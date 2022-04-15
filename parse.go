@@ -434,7 +434,7 @@ func newGvar(name string, ty *Type) *Obj {
 	return v
 }
 
-// for newLabel function
+// for newUniqueName function
 var cnt int
 
 func newUniqueName() string {
@@ -3118,10 +3118,10 @@ func postfix(rest **Token, tok *Token) *Node {
 			}
 			addType(node)
 			if node.Ty != nil {
-				if node.Ty.Kind == TY_ARRAY && i > int64(node.Ty.ArrSz) {
+				if node.Ty.Kind == TY_ARRAY && i >= int64(node.Ty.ArrSz) {
 					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.ArrSz))
 				}
-				if node.Ty.Kind == TY_SLICE && i > int64(node.Ty.Len) {
+				if node.Ty.Kind == TY_SLICE && i >= int64(node.Ty.Len) {
 					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.Len))
 				}
 			}
@@ -3340,10 +3340,6 @@ func primary(rest **Token, tok *Token) *Node {
 		}
 		isAppend = true
 		v := slice.Obj
-		// fmt.Printf("primary: slice: %#v\n\n", slice)
-		// fmt.Printf("primary: slice.Ty: %#v\n\n", slice.Ty)
-		// fmt.Printf("primary: v: %#v\n\n", v)
-		// fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
 		cntElem := countAppElem(tok)
 
 		// In the case that the new length is no more than the slice's capacity.
@@ -3390,8 +3386,13 @@ func primary(rest **Token, tok *Token) *Node {
 			lhs := newUnary(ND_DEREF, newAdd(uaNode, newNum(i, tok), tok), tok)
 			addType(lhs)
 			// 右辺がnewUnary(ND_DEREF, newAdd(slice, newNum(i, tok), tok), tok)だと上手く代入できない
-			// slice(Node)がポインタアドレスを示すNode(ND_ADDR)ではないからかな?
-			rhs := newUnary(ND_DEREF, newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
+			// 原因は分かりません?
+			var rhs *Node
+			if slice.Ty.Base.TyName == "string" {
+				rhs = newUnary(ND_DEREF, newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
+			} else {
+				rhs = newUnary(ND_DEREF, newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
+			}
 			addType(rhs)
 			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
