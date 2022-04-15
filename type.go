@@ -54,9 +54,11 @@ type Type struct {
 	Next       *Type
 
 	// slice
-	Len  int
-	Cap  int
-	UArr *Obj // It's underlying array
+	Len      int
+	Cap      int
+	UArr     *Obj  // It's underlying array
+	UArrIdx  int64 // Underlying array's index
+	UArrNode *Node // Underlying array node
 
 	Init *Initializer
 }

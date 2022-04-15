@@ -3061,6 +3061,8 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 	addType(node)
 	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
 	node.Ty.UArr = cur.Obj
+	node.Ty.UArrIdx = first
+	node.Ty.UArrNode = cur
 	return node
 }
 
@@ -3341,10 +3343,11 @@ func primary(rest **Token, tok *Token) *Node {
 		}
 		isAppend = true
 		v := slice.Obj
-		fmt.Printf("primary: slice.Ty: %#v\n\n", slice.Ty)
-		fmt.Printf("primary: v: %#v\n\n", v)
-		fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
-		fmt.Printf("primary: v.Ty.UArr: %#v\n\n", v.Ty.UArr)
+		// fmt.Printf("primary: slice: %#v\n\n", slice)
+		// fmt.Printf("primary: slice.Ty: %#v\n\n", slice.Ty)
+		// fmt.Printf("primary: v: %#v\n\n", v)
+		// fmt.Printf("primary: v.Ty: %#v\n\n", v.Ty)
+		// fmt.Printf("primary: v.Ty.UArr: %#v\n\n", v.Ty.UArr)
 		cntElem := countAppElem(tok)
 
 		// In the case that the new length is no more than the slice's capacity.
@@ -3389,7 +3392,11 @@ func primary(rest **Token, tok *Token) *Node {
 		var i int64
 		for i = 0; i < int64(length); i++ {
 			lhs := newUnary(ND_DEREF, newAdd(uaNode, newNum(i, tok), tok), tok)
-			rhs := newUnary(ND_DEREF, newAdd(slice, newNum(i, tok), tok), tok)
+			addType(lhs)
+			// fmt.Printf("primary: lhs.Ty: %#v\n\n", lhs.Ty)
+			rhs := newUnary(ND_DEREF, newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
+			addType(rhs)
+			// fmt.Printf("primary: rhs.Ty: %#v\n\n", rhs.Ty)
 			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
@@ -3410,6 +3417,7 @@ func primary(rest **Token, tok *Token) *Node {
 		}
 		appendAsg = newNode(ND_BLOCK, tok)
 		appendAsg.Body = head.Next
+		addType(appendAsg)
 
 		node := newUnary(ND_ADDR, uaNode, tok)
 		node.Ty = sliceType(uArrTy.Base, length, uArrTy.ArrSz)
