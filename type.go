@@ -56,7 +56,6 @@ type Type struct {
 	// slice
 	Len      int
 	Cap      int
-	UArr     *Obj  // It's underlying array
 	UArrIdx  int64 // Underlying array's index
 	UArrNode *Node // Underlying array node
 
