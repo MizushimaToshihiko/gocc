@@ -2424,7 +2424,7 @@ func evalDouble(node *Node) float64 {
 	}
 }
 
-// Convert `A op= B` to `*tmp = *tmp op B`
+// Convert `A op= B` to `tmp = &A, *tmp = *tmp op B`
 // where tmp is a fresh pointer variable.
 func toAssign(binary *Node) *Node {
 	printCalledFunc()
@@ -2680,12 +2680,12 @@ func shift(rest **Token, tok *Token) *Node {
 	}
 }
 
+// newAdd :
 // In C, `+` operator is overloaded to perform the pointer arithmetic.
 // If p is a pointer, p+n add not n but sizeof(*p)*n to the value of p,
 // sothat p+n pointes to the location n elements (not bytes) ahead of p.
 // In other words, we need to scale an integer value before adding to a
 // pointer value. This function takes care of the scaling.
-// => that isn't supported in Go.
 func newAdd(lhs, rhs *Node, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -2715,7 +2715,6 @@ func newAdd(lhs, rhs *Node, tok *Token) *Node {
 }
 
 // Like `+`, `-` is overloaded for the pointer type.
-// => that isn't supported in Go.
 func newSub(lhs, rhs *Node, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -3126,7 +3125,14 @@ func postfix(rest **Token, tok *Token) *Node {
 				}
 			}
 			tok = skip(tok, "]")
+			fmt.Printf("postfix: node: %#v\n\n", node)
+			fmt.Printf("postfix: node.Ty: %#v\n\n", node.Ty)
+			fmt.Printf("postfix: node.Tok.Str: %#v\n\n", node.Tok.Str)
 			node = newUnary(ND_DEREF, newAdd(node, idx, start), start)
+			addType(node)
+			fmt.Printf("postfix: node 2: %#v\n\n", node)
+			fmt.Printf("postfix: node.Ty 2: %#v\n\n", node.Ty)
+			fmt.Printf("postfix: node.Tok.Str 2: %#v\n\n", node.Tok.Str)
 			continue
 		}
 
@@ -3376,6 +3382,15 @@ func primary(rest **Token, tok *Token) *Node {
 		uArrTy := arrayOf(v.Ty.Base, v.Ty.Cap*2)
 		uArr := newAnonGvar(uArrTy)
 		uaNode := newVarNode(uArr, tok)
+		addType(uaNode)
+
+		fmt.Printf("primary: uArr.Ty: %#v\n\n", uArr.Ty)
+		fmt.Printf("primary: slice.Ty: %#v\n\n", slice.Ty)
+		fmt.Printf("primary: slice.Ty.UArrNode.Ty: %#v\n\n", slice.Ty.UArrNode.Ty)
+		fmt.Printf("primary: slice.Ty.UArrIdx: %d\n\n", slice.Ty.UArrIdx)
+		fmt.Printf("primary: uaNode.Ty: %#v\n\n", uaNode.Ty)
+		fmt.Printf("primary: slice.Ty.UArrNode.Obj.Name: %s\n\n", slice.Ty.UArrNode.Obj.Name) //.L..0
+		fmt.Printf("primary: uaNode.Obj.Name: %s\n\n", uaNode.Obj.Name)                       // .L..19
 
 		head := &Node{}
 		cur := head
@@ -3383,40 +3398,42 @@ func primary(rest **Token, tok *Token) *Node {
 		// Copy to new array from the original underlying array.
 		var i int64
 		for i = 0; i < int64(length); i++ {
-			lhs := newUnary(ND_DEREF, newAdd(uaNode, newNum(i, tok), tok), tok)
+			fmt.Println("i:", i)
+			lhs := newUnary(ND_DEREF,
+				newAdd(uaNode, newNum(i, tok), tok), tok)
 			addType(lhs)
 			// 右辺がnewUnary(ND_DEREF, newAdd(slice, newNum(i, tok), tok), tok)だと上手く代入できない
-			// 原因は分かりません?
-			var rhs *Node
-			if slice.Ty.Base.TyName == "string" {
-				rhs = newUnary(ND_DEREF, newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
-			} else {
-				rhs = newUnary(ND_DEREF, newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
-			}
+			// sliceがダメらしい
+			rhs := newUnary(ND_DEREF,
+				newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
 			addType(rhs)
+			fmt.Printf("primary: rhs.Ty: %#v\n\n", rhs.Ty)
 			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 		}
 
 		for !equal(tok, ")") {
+			fmt.Println("length:", length)
 			tok = skip(tok, ",")
 			elem := assign(&tok, tok)
 
+			lhs := newUnary(ND_DEREF,
+				newAdd(uaNode, newNum(int64(length), tok), tok), tok)
+
 			// Assign elem to slice[slice.Obj.Ty.Len]
-			expr := newBinary(ND_ASSIGN,
-				newUnary(ND_DEREF,
-					newAdd(uaNode, newNum(int64(length), tok), tok), tok),
-				elem, tok)
+			expr := newBinary(ND_ASSIGN, lhs, elem, tok)
 			length++
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 		}
+
 		appendAsg = newNode(ND_BLOCK, tok)
 		appendAsg.Body = head.Next
 		addType(appendAsg)
 
-		node := newUnary(ND_ADDR, uaNode, tok)
+		node := newUnary(ND_ADDR,
+			newUnary(ND_DEREF, newAdd(uaNode, newNum(0, tok), tok), tok), tok)
 		node.Ty = sliceType(uArrTy.Base, length, uArrTy.ArrSz)
 		node.Ty.UArrNode = uaNode
 		*rest = skip(tok, ")")

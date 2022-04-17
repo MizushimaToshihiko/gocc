@@ -296,35 +296,44 @@ func main() {
 	// assert(2, len(s038), "len(s038)")
 	// assert(5, cap(s038), "cap(s038)")
 	// s038[0] = s0381[0]
+	// s038[1] = a0381[4]
 	// assert(10, s038[0], "s038[0]")
-	// assert(0, s038[1], "s038[1]")
+	// assert(50, s038[1], "s038[1]")
 	// s038 = append(s038, 2, 3, 4, 5)
 	// assert(6, len(s038), "len(s038)")
 	// assert(10, cap(s038), "cap(s038)")
 	// assert(10, s038[0], "s038[0]")
-	// assert(0, s038[1], "s038[1]")
+	// assert(50, s038[1], "s038[1]")
 	// assert(2, s038[2], "s038[2]")
 	// assert(3, s038[3], "s038[3]")
 	// assert(4, s038[4], "s038[4]")
 	// assert(5, s038[5], "s038[5]")
 	// assert(10, a038[0], "a038[0]")
-	// assert(0, a038[1], "a038[1]")
+	// assert(50, a038[1], "a038[1]")
 	// assert(0, a038[2], "a038[2]")
 	// assert(0, a038[3], "a038[3]")
 	// assert(0, a038[4], "a038[4]")
 
-	s039 := make([]string, 1, 2)
-	assert(1, len(s039), "len(s039)")
-	assert(2, cap(s039), "cap(s039)")
+	s039 := make([]string, 2, 3)
+	assert(2, len(s039), "len(s039)")
+	assert(3, cap(s039), "cap(s039)")
 	s039[0] = "abc"
-	// s039[1] = "def" => error
+	s039[1] = "def"
+	println("s039[0]: %s", s039[0])
+	println("s039[1]: %s", s039[1])
 	assert(0, strcmp(s039[0], "abc"), "strcmp(s039[0], \"abc\")")
-	s039 = append(s039, "def", "ghi", "jkl")
-	println("%s", s039[0])
-	assert(0, strcmp(s039[0], ""), "strcmp(s039[0], \"\")")
-	assert(0, strcmp(s039[1], "def"), "strcmp(s039[1], \"def\")")
+	s039 = append(s039, "ghi", "jkl", "mno")
+	// println("%s", s039[0])
+	assert(0, strcmp(s039[0], ""), "strcmp(s039[0], \"\")") // The original 's039' wasn't copied to new 's039'.
+	assert(0, strcmp(s039[1], ""), "strcmp(s039[1], \"\")") // The original 's039' wasn't copied to new 's039'.
 	assert(0, strcmp(s039[2], "ghi"), "strcmp(s039[2], \"ghi\")")
 	assert(0, strcmp(s039[3], "jkl"), "strcmp(s039[3], \"jkl\")")
+	assert(0, strcmp(s039[4], "mno"), "strcmp(s039[4], \"mno\")")
+
+	a040 := [3]string{"abc", "def", "ghi"}
+	a0401 := [3]string{}
+	a0401[1] = a040[1]
+	println("a0401[1]: %s", a0401[1])
 
 	println("OK")
 }

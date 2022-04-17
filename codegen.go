@@ -699,6 +699,7 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_NULL_EXPR:
 		return
 	case ND_NUM:
+		// c.println("# ND_NUM")
 		switch node.Ty.Kind {
 		case TY_FLOAT:
 			f32 := node.FVal
@@ -715,6 +716,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println("	mov $%d, %%rax", node.Val)
 		return
 	case ND_NEG:
+		// c.println("# ND_NEG")
 		c.genExpr(node.Lhs)
 
 		switch node.Ty.Kind {
@@ -735,36 +737,44 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println("	neg %%rax")
 		return
 	case ND_VAR, ND_MEMBER:
+		// c.println("# ND_VAR or ND_MEMBER")
 		c.genAddr(node)
 		c.load(node.Ty)
 		return
 	case ND_DEREF:
+		// c.println("# ND_DEREF")
 		c.genExpr(node.Lhs)
 		c.load(node.Ty)
 		return
 	case ND_ADDR:
+		// c.println("# ND_ADDR")
 		c.genAddr(node.Lhs)
 		return
 	case ND_ASSIGN:
+		c.println("# ND_ASSIGN")
 		c.genAddr(node.Lhs)
 		c.push()
 		c.genExpr(node.Rhs)
 		c.store(node.Ty)
 		return
 	case ND_STMT_EXPR:
+		// c.println("# ND_STMT_EXPR")
 		for n := node.Body; n != nil; n = n.Next {
 			c.genStmt(n)
 		}
 		return
 	case ND_COMMA:
+		// c.println("# ND_COMMA")
 		c.genExpr(node.Lhs)
 		c.genExpr(node.Rhs)
 		return
 	case ND_CAST:
+		// c.println("# ND_CAST")
 		c.genExpr(node.Lhs)
 		c.cast(node.Lhs.Ty, node.Ty)
 		return
 	case ND_MEMZERO:
+		// c.println("# ND_MEMZERO")
 		// `rep stosb` is equivalent to `memset(%rdi, %al, %rcx)`.
 		c.println("	mov $%d, %%rcx", node.Obj.Ty.Sz)
 		c.println("	lea %d(%%rbp), %%rdi", node.Obj.Offset)
@@ -772,6 +782,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println("	rep stosb")
 		return
 	case ND_COND:
+		// c.println("# ND_COND")
 		cnt := count()
 		c.genExpr(node.Cond)
 		c.cmpZero(node.Cond.Ty)
@@ -783,16 +794,19 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println(".L.end.%d", cnt)
 		return
 	case ND_NOT:
+		// c.println("# ND_NOT")
 		c.genExpr(node.Lhs)
 		c.cmpZero(node.Lhs.Ty)
 		c.println("	sete %%al")
 		c.println("	movzx %%al, %%rax")
 		return
 	case ND_BITNOT:
+		// c.println("# ND_BITNOT")
 		c.genExpr(node.Lhs)
 		c.println("	not %%rax")
 		return
 	case ND_LOGAND:
+		// c.println("# ND_BITAND")
 		cnt := count()
 		c.genExpr(node.Lhs)
 		c.cmpZero(node.Lhs.Ty)
@@ -807,6 +821,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println(".L.end.%d:", cnt)
 		return
 	case ND_LOGOR:
+		// c.println("# ND_LOGOR")
 		cnt := count()
 		c.genExpr(node.Lhs)
 		c.cmpZero(node.Lhs.Ty)
@@ -821,6 +836,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println(".L.end.%d:", cnt)
 		return
 	case ND_FUNCALL:
+		// c.println("# ND_FUNCALL")
 		stackArgs := c.pushArgs(node)
 		c.genExpr(node.Lhs)
 
@@ -941,32 +957,41 @@ func (c *codeWriter) genExpr(node *Node) {
 
 		switch node.Kind {
 		case ND_ADD:
+			// c.println("# ND_ADD is_flonum")
 			c.println("	add%s %%xmm1, %%xmm0", sz)
 			return
 		case ND_SUB:
+			// c.println("# ND_SUB is_flonum")
 			c.println("	sub%s %%xmm1, %%xmm0", sz)
 			return
 		case ND_MUL:
+			// c.println("# ND_MUL is_flonum")
 			c.println("	mul%s %%xmm1, %%xmm0", sz)
 			return
 		case ND_DIV:
+			// c.println("# ND_DIV is_flonum")
 			c.println("	div%s %%xmm1, %%xmm0", sz)
 			return
 		case ND_EQ, ND_NE, ND_LT, ND_LE:
+			// c.println("# ND_EQ or ND_NE or ND_LT or ND_LE")
 			c.println("	ucomi%s %%xmm0, %%xmm1", sz)
 
 			switch node.Kind {
 			case ND_EQ:
+				// c.println("# ND_EQ")
 				c.println("	sete %%al")
 				c.println("	setnp %%dl")
 				c.println("	and %%dl, %%al")
 			case ND_NE:
+				// c.println("# ND_NE")
 				c.println("	setne %%al")
 				c.println("	setp %%dl")
 				c.println("	or %%dl, %%al")
 			case ND_LT:
+				// c.println("# ND_LT")
 				c.println("	seta %%al")
 			default:
+				// c.println("# exept for ND_EQ, ND_NE, ND_LT")
 				c.println("	setae %%al")
 			}
 
@@ -998,15 +1023,19 @@ func (c *codeWriter) genExpr(node *Node) {
 
 	switch node.Kind {
 	case ND_ADD:
+		// c.println("# ND_ADD")
 		c.println("	add %s, %s", di, ax)
 		return
 	case ND_SUB:
+		// c.println("# ND_SUB")
 		c.println("	sub %s, %s", di, ax)
 		return
 	case ND_MUL:
+		// c.println("# ND_MUL")
 		c.println("	imul %s, %s", di, ax)
 		return
 	case ND_DIV, ND_MOD:
+		// c.println("# ND_DIV or ND_MOD")
 		if node.Ty.IsUnsigned {
 			c.println("	mov $0, %s", dx)
 			c.println("	div %s", di)
@@ -1020,33 +1049,42 @@ func (c *codeWriter) genExpr(node *Node) {
 		}
 
 		if node.Kind == ND_MOD {
+			// c.println("# ND_MOD")
 			c.println("	mov %%rdx, %%rax")
 		}
 		return
 	case ND_BITAND:
+		// c.println("# ND_BITAND")
 		c.println("	and %s, %s", di, ax)
 		return
 	case ND_BITOR:
+		// c.println("# ND_BITOR")
 		c.println("	or %s, %s", di, ax)
 		return
 	case ND_BITXOR:
+		// c.println("# ND_BITXOR")
 		c.println("	xor %s, %s", di, ax)
 		return
 	case ND_EQ, ND_NE, ND_LT, ND_LE:
+		// c.println("# ND_EQ or ND_NE or ND_LT or ND_LE")
 		c.println("	cmp %s, %s", di, ax)
 
 		switch node.Kind {
 		case ND_EQ:
+			// c.println("# ND_EQ")
 			c.println("	sete %%al")
 		case ND_NE:
+			// c.println("# ND_NE")
 			c.println("	setne %%al")
 		case ND_LT:
+			// c.println("# ND_LT")
 			if node.Lhs.Ty.IsUnsigned {
 				c.println("	setb %%al")
 			} else {
 				c.println("	setl %%al")
 			}
 		case ND_LE:
+			// c.println("# ND_LE")
 			if node.Lhs.Ty.IsUnsigned {
 				c.println("	setbe %%al")
 			} else {
@@ -1057,10 +1095,12 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.println("	movzb %%al, %%rax")
 		return
 	case ND_SHL:
+		// c.println("# ND_SHL")
 		c.println("	mov %%rdi, %%rcx")
 		c.println("	shl %%cl, %s", ax)
 		return
 	case ND_SHR:
+		// c.println("# ND_SHR")
 		c.println("	mov %%rdi, %%rcx")
 		if node.Lhs.Ty.IsUnsigned {
 			c.println("	shr %%cl, %s", ax)
@@ -1082,6 +1122,7 @@ func (c *codeWriter) genStmt(node *Node) {
 
 	switch node.Kind {
 	case ND_IF:
+		// c.println("# ND_IF")
 		cnt := count()
 		if node.Init != nil {
 			c.genStmt(node.Init)
@@ -1098,6 +1139,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.println(".L.end.%d:", cnt)
 		return
 	case ND_FOR:
+		// c.println("# ND_FOR")
 		cnt := count()
 		if node.Init != nil {
 			c.genStmt(node.Init)
@@ -1117,6 +1159,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.println("%s:", node.BrkLabel)
 		return
 	case ND_SWITCH:
+		// c.println("# ND_SWITCH")
 		if node.Init != nil {
 			c.genStmt(node.Init)
 		}
@@ -1152,6 +1195,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.println("%s:", node.BrkLabel)
 		return
 	case ND_CASE:
+		// c.println("# ND_CASE")
 		c.println("%s:", node.Lbl)
 		if node.Lhs != nil {
 			c.genStmt(node.Lhs)
@@ -1159,18 +1203,22 @@ func (c *codeWriter) genStmt(node *Node) {
 		}
 		return
 	case ND_BLOCK:
+		// c.println("# ND_BLOCK")
 		for n := node.Body; n != nil; n = n.Next {
 			c.genStmt(n)
 		}
 		return
 	case ND_GOTO:
+		// c.println("# ND_GOTO")
 		c.println("	jmp %s", node.UniqueLbl)
 		return
 	case ND_LABEL:
+		// c.println("# ND_LABEL")
 		c.println("%s:", node.UniqueLbl)
 		c.genStmt(node.Lhs)
 		return
 	case ND_RETURN:
+		// c.println("# ND_RETURN")
 		// if node.Lhs != nil {
 		// 	fmt.Printf("node.Lhs: %#v\n\n", node.Lhs)
 		// 	fmt.Printf("node.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs)
@@ -1196,6 +1244,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.println("	jmp .L.return.%s", curFnInGen.Name)
 		return
 	case ND_EXPR_STMT:
+		// c.println("# ND_EXPR_STMT")
 		c.genExpr(node.Lhs)
 		return
 	}
