@@ -212,7 +212,6 @@ func sliceType(base *Type, len int, cap int) *Type {
 		Sz:     8,
 		Align:  8,
 		Base:   base,
-		ArrSz:  len,
 		Len:    len,
 		Cap:    cap,
 		TyName: "[]" + base.TyName,
