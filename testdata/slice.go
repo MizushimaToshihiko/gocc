@@ -1,12 +1,12 @@
 package test_slice
 
-func assert(want int, act int, code string)
-func println(format ...string)
+// func assert(want int, act int, code string)
+// func println(format ...string)
 
 // var g01 = 1
 // var g02 = 3
 
-func strcmp(s1, s2 string) int
+// func strcmp(s1, s2 string) int
 
 // func ret3() int {
 // 	return 3
@@ -20,7 +20,7 @@ func strcmp(s1, s2 string) int
 // 	return i
 // }
 
-func printf(format ...string)
+// func printf(format ...string)
 
 // var g03 = []string{"abc", "def", "ghi"}
 // var g04 = [][]string{{"abc", "def", "ghi"}, {"jkl", "mno", "pqr"}}
@@ -315,25 +315,25 @@ func main() {
 	// assert(0, a038[4], "a038[4]")
 
 	s039 := make([]string, 2, 3)
-	assert(2, len(s039), "len(s039)")
-	assert(3, cap(s039), "cap(s039)")
+	// assert(2, len(s039), "len(s039)")
+	// assert(3, cap(s039), "cap(s039)")
 	s039[0] = "abc"
 	s039[1] = "def"
-	println("s039[0]: %s", s039[0])
-	println("s039[1]: %s", s039[1])
-	assert(0, strcmp(s039[0], "abc"), "strcmp(s039[0], \"abc\")")
+	// println("s039[0]: %s", s039[0])
+	// println("s039[1]: %s", s039[1])
+	// assert(0, strcmp(s039[0], "abc"), "strcmp(s039[0], \"abc\")")
 	s039 = append(s039, "ghi", "jkl", "mno")
-	// println("%s", s039[0])
-	assert(0, strcmp(s039[0], ""), "strcmp(s039[0], \"\")") // The original 's039' wasn't copied to new 's039'.
-	assert(0, strcmp(s039[1], ""), "strcmp(s039[1], \"\")") // The original 's039' wasn't copied to new 's039'.
-	assert(0, strcmp(s039[2], "ghi"), "strcmp(s039[2], \"ghi\")")
-	assert(0, strcmp(s039[3], "jkl"), "strcmp(s039[3], \"jkl\")")
-	assert(0, strcmp(s039[4], "mno"), "strcmp(s039[4], \"mno\")")
+	// // println("%s", s039[0])
+	// assert(0, strcmp(s039[0], ""), "strcmp(s039[0], \"\")") // The original 's039' wasn't copied to new 's039'.
+	// assert(0, strcmp(s039[1], ""), "strcmp(s039[1], \"\")") // The original 's039' wasn't copied to new 's039'.
+	// assert(0, strcmp(s039[2], "ghi"), "strcmp(s039[2], \"ghi\")")
+	// assert(0, strcmp(s039[3], "jkl"), "strcmp(s039[3], \"jkl\")")
+	// assert(0, strcmp(s039[4], "mno"), "strcmp(s039[4], \"mno\")")
 
-	a040 := [3]string{"abc", "def", "ghi"}
-	a0401 := [3]string{}
-	a0401[1] = a040[1]
-	println("a0401[1]: %s", a0401[1])
+	// a040 := [3]string{"abc", "def", "ghi"}
+	// a0401 := [3]string{}
+	// a0401[1] = a040[1]
+	// println("a0401[1]: %s", a0401[1])
 
-	println("OK")
+	// println("OK")
 }

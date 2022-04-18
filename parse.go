@@ -1992,7 +1992,9 @@ func assignList(rest **Token, tok *Token) *Node {
 
 	tok = skip(tok, "=")
 
-	var node, prev *Node
+	var node *Node
+	head := &Node{}
+	cur := head
 	valtok := tok
 	j := 0
 	for ; ; j++ {
@@ -2003,29 +2005,22 @@ func assignList(rest **Token, tok *Token) *Node {
 			tok = skip(tok, ",")
 		}
 
-		if j < i {
-			rhs := logor(&tok, tok)
-			if lhses[j].Kind == ND_NULL_EXPR {
-				node = rhs
-			} else {
-				node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
-				addType(node)
-				if lhses[j].Obj != nil {
-					if isInteger(node.Ty) {
-						lhses[j].Obj.Val = eval(rhs)
-					} else if isFlonum(node.Ty) {
-						lhses[j].Obj.FVal = evalDouble(rhs)
-					}
+		rhs := logor(&tok, tok)
+		if lhses[j].Kind == ND_EXPR_STMT {
+			node = rhs
+		} else {
+			node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
+			addType(node)
+			if lhses[j].Obj != nil {
+				if isInteger(node.Ty) {
+					lhses[j].Obj.Val = eval(rhs)
+				} else if isFlonum(node.Ty) {
+					lhses[j].Obj.FVal = evalDouble(rhs)
 				}
 			}
-			if j > 0 {
-				node = newBinary(ND_COMMA, prev, node, tok)
-			}
-			prev = node
-		} else {
-			valtok = tok
-			tok = tok.Next
 		}
+		cur.Next = newUnary(ND_EXPR_STMT, node, tok)
+		cur = cur.Next
 	}
 
 	if j > len(lhses) {
@@ -2034,7 +2029,9 @@ func assignList(rest **Token, tok *Token) *Node {
 	}
 
 	*rest = tok
-	return newUnary(ND_EXPR_STMT, node, start)
+	asgNode := newNode(ND_BLOCK, start)
+	asgNode.Body = head.Next
+	return asgNode
 }
 
 // compound-stmt = (typedef | declaration | stmt)* "}"
@@ -3109,7 +3106,6 @@ func postfix(rest **Token, tok *Token) *Node {
 				*rest = tok
 				return node
 			}
-			// x[y] is short for *(x+y)
 			i := eval(idx)
 			if i < 0 {
 				panic(errorTok(idx.Tok,
@@ -3125,6 +3121,7 @@ func postfix(rest **Token, tok *Token) *Node {
 				}
 			}
 			tok = skip(tok, "]")
+			// x[y] is short for *(x+y)
 			fmt.Printf("postfix: node: %#v\n\n", node)
 			fmt.Printf("postfix: node.Ty: %#v\n\n", node.Ty)
 			fmt.Printf("postfix: node.Tok.Str: %#v\n\n", node.Tok.Str)
@@ -3389,8 +3386,8 @@ func primary(rest **Token, tok *Token) *Node {
 		fmt.Printf("primary: slice.Ty.UArrNode.Ty: %#v\n\n", slice.Ty.UArrNode.Ty)
 		fmt.Printf("primary: slice.Ty.UArrIdx: %d\n\n", slice.Ty.UArrIdx)
 		fmt.Printf("primary: uaNode.Ty: %#v\n\n", uaNode.Ty)
-		fmt.Printf("primary: slice.Ty.UArrNode.Obj.Name: %s\n\n", slice.Ty.UArrNode.Obj.Name) //.L..0
-		fmt.Printf("primary: uaNode.Obj.Name: %s\n\n", uaNode.Obj.Name)                       // .L..19
+		fmt.Printf("primary: slice.Ty.UArrNode.Obj.Name: %s\n\n", slice.Ty.UArrNode.Obj.Name) // .L..0
+		fmt.Printf("primary: uaNode.Obj.Name: %s\n\n", uaNode.Obj.Name)                       // .L..13
 
 		head := &Node{}
 		cur := head
