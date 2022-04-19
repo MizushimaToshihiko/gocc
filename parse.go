@@ -3415,13 +3415,15 @@ func primary(rest **Token, tok *Token) *Node {
 			fmt.Println("length:", length)
 			tok = skip(tok, ",")
 			elem := assign(&tok, tok)
+			addType(elem)
 
 			lhs := newUnary(ND_DEREF,
 				newAdd(uaNode, newNum(int64(length), tok), tok), tok)
-
+			addType(lhs)
 			// Assign elem to slice[slice.Obj.Ty.Len]
 			expr := newBinary(ND_ASSIGN, lhs, elem, tok)
 			length++
+			addType(expr)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
 		}
