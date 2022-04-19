@@ -336,11 +336,11 @@ func main() {
 	assert(0, strcmp(s040[0], "abc"), "strcmp(s040[0], \"abc\")")
 	assert(0, strcmp(s040[1], "def"), "strcmp(s040[1], \"def\")")
 	s040 = append(s040, "ghi", "jkl", "mno")
-	assert(0, strcmp(s040[0], "abc"), "strcmp(s039[0], \"abc\")") // The original 's040' wasn't copied to new 's040'.
-	assert(0, strcmp(s040[1], "def"), "strcmp(s039[1], \"def\")") // The original 's040' wasn't copied to new 's040'.
-	assert(0, strcmp(s040[2], "ghi"), "strcmp(s039[2], \"ghi\")")
-	assert(0, strcmp(s040[3], "jkl"), "strcmp(s039[3], \"jkl\")")
-	assert(0, strcmp(s040[4], "mno"), "strcmp(s039[4], \"mno\")")
+	assert(0, strcmp(s040[0], ""), "strcmp(s040[0], \"\")") // The original 's040' wasn't copied to new 's040'.
+	assert(0, strcmp(s040[1], ""), "strcmp(s040[1], \"\")") // The original 's040' wasn't copied to new 's040'.
+	assert(0, strcmp(s040[2], "ghi"), "strcmp(s040[2], \"ghi\")")
+	assert(0, strcmp(s040[3], "jkl"), "strcmp(s040[3], \"jkl\")")
+	assert(0, strcmp(s040[4], "mno"), "strcmp(s040[4], \"mno\")")
 
 	println("OK")
 }
