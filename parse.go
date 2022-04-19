@@ -3112,24 +3112,24 @@ func postfix(rest **Token, tok *Token) *Node {
 					"invalid argument: index %d (constant of type int) must not be negative", i))
 			}
 			addType(node)
-			if node.Ty != nil {
-				if node.Ty.Kind == TY_ARRAY && i >= int64(node.Ty.ArrSz) {
-					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.ArrSz))
-				}
-				if node.Ty.Kind == TY_SLICE && i >= int64(node.Ty.Len) {
-					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.Len))
-				}
-			}
+			// if node.Ty != nil {
+			// 	if node.Ty.Kind == TY_ARRAY && i >= int64(node.Ty.ArrSz) {
+			// 		panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.ArrSz))
+			// 	}
+			// 	if node.Ty.Kind == TY_SLICE && i >= int64(node.Ty.Len) {
+			// 		panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.Len))
+			// 	}
+			// }
 			tok = skip(tok, "]")
 			// x[y] is short for *(x+y)
-			fmt.Printf("postfix: node: %#v\n\n", node)
-			fmt.Printf("postfix: node.Ty: %#v\n\n", node.Ty)
-			fmt.Printf("postfix: node.Tok.Str: %#v\n\n", node.Tok.Str)
+			// fmt.Printf("postfix: node: %#v\n\n", node)
+			// fmt.Printf("postfix: node.Ty: %#v\n\n", node.Ty)
+			// fmt.Printf("postfix: node.Tok.Str: %#v\n\n", node.Tok.Str)
 			node = newUnary(ND_DEREF, newAdd(node, idx, start), start)
 			addType(node)
-			fmt.Printf("postfix: node 2: %#v\n\n", node)
-			fmt.Printf("postfix: node.Ty 2: %#v\n\n", node.Ty)
-			fmt.Printf("postfix: node.Tok.Str 2: %#v\n\n", node.Tok.Str)
+			// fmt.Printf("postfix: node 2: %#v\n\n", node)
+			// fmt.Printf("postfix: node.Ty 2: %#v\n\n", node.Ty)
+			// fmt.Printf("postfix: node.Tok.Str 2: %#v\n\n", node.Tok.Str)
 			continue
 		}
 
@@ -3379,6 +3379,7 @@ func primary(rest **Token, tok *Token) *Node {
 		// Make a new underlying array.
 		uArrTy := arrayOf(v.Ty.Base, v.Ty.Cap*2)
 		uArr := newAnonGvar(uArrTy)
+		gvarZeroInit(uArr, tok)
 		uaNode := newVarNode(uArr, tok)
 		addType(uaNode)
 
@@ -3403,7 +3404,7 @@ func primary(rest **Token, tok *Token) *Node {
 			// 右辺がnewUnary(ND_DEREF, newAdd(slice, newNum(i, tok), tok), tok)だと上手く代入できない
 			// sliceがダメらしい
 			rhs := newUnary(ND_DEREF,
-				newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
+				newAdd(v.Ty.UArrNode, newNum(v.Ty.UArrIdx+i, tok), tok), tok)
 			addType(rhs)
 			fmt.Printf("primary: rhs.Ty: %#v\n\n", rhs.Ty)
 			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)

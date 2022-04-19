@@ -752,11 +752,11 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_ASSIGN:
 		c.println("# ND_ASSIGN")
-		fmt.Printf("genExpr: ND_ASSIGN: node: %#v\n\n", node)
-		fmt.Printf("genExpr: ND_ASSIGN: node.Tok: %#v\n\n", node.Tok)
-		fmt.Printf("genExpr: ND_ASSIGN: node.Lhs: %#v\n\n", node.Lhs)
-		fmt.Printf("genExpr: ND_ASSIGN: node.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs)
-		fmt.Printf("genExpr: ND_ASSIGN: node.Rhs: %#v\n\n", node.Rhs)
+		// fmt.Printf("genExpr: ND_ASSIGN: node: %#v\n\n", node)
+		// fmt.Printf("genExpr: ND_ASSIGN: node.Tok: %#v\n\n", node.Tok)
+		// fmt.Printf("genExpr: ND_ASSIGN: node.Lhs: %#v\n\n", node.Lhs)
+		// fmt.Printf("genExpr: ND_ASSIGN: node.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs)
+		// fmt.Printf("genExpr: ND_ASSIGN: node.Rhs: %#v\n\n", node.Rhs)
 		c.genAddr(node.Lhs)
 		c.push()
 		c.genExpr(node.Rhs)

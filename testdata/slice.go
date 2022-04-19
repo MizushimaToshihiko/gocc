@@ -25,8 +25,6 @@ func printf(format ...string)
 // var g03 = []string{"abc", "def", "ghi"}
 // var g04 = [][]string{{"abc", "def", "ghi"}, {"jkl", "mno", "pqr"}}
 
-var str01 string
-
 func main() {
 	// var a01 = [2]int{1, 2}
 	// var s01 = a01[0:2]
@@ -338,13 +336,12 @@ func main() {
 	// assert(0, strcmp(s040[0], "abc"), "strcmp(s040[0], \"abc\")")
 	// assert(0, strcmp(s040[1], "def"), "strcmp(s040[1], \"def\")")
 	s040 = append(s040, "ghi", "jkl", "mno")
-	assert(0, strcmp(s040[0], ""), "strcmp(s040[0], \"\")") // The original 's040' wasn't copied to new 's040'.
-	assert(0, strcmp(s040[1], ""), "strcmp(s040[1], \"\")") // The original 's040' wasn't copied to new 's040'.
+	// println("s040[0]: %s", s040[0])
+	// assert(0, strcmp(s040[0], ""), "strcmp(s040[0], \"\")") // The original 's040' wasn't copied to new 's040'.
+	// assert(0, strcmp(s040[1], ""), "strcmp(s040[1], \"\")") // The original 's040' wasn't copied to new 's040'.
 	// assert(0, strcmp(s040[2], "ghi"), "strcmp(s040[2], \"ghi\")")
 	// assert(0, strcmp(s040[3], "jkl"), "strcmp(s040[3], \"jkl\")")
 	// assert(0, strcmp(s040[4], "mno"), "strcmp(s040[4], \"mno\")")
-
-	println(str01)
 
 	println("OK")
 }

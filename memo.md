@@ -441,3 +441,36 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
 
 #### 2022/04/04 testdata/commonに#defineマクロを入れても意味がない
  - 定義したCファイル内のトークンを置き換えるものだから。もし入れるのであれば、ヘッダーファイルに入れる必要がある。
+
+#### 2022/04/19 appendで元の容量が足りない場合の旧基底配列から新基底配列への値のコピーができない
+ - initializerを使った場合はできる
+ - makeでsliceを作成した後に代入した値はコピーされない
+ - コピーする時には a[0]=b[0]の様になるから、下記でいいはずなんだけど
+ ```Go
+      lhs := newUnary(ND_DEREF,
+        newAdd(uaNode, newNum(i, tok), tok), tok)
+      addType(lhs)
+      // 右辺がnewUnary(ND_DEREF, newAdd(slice, newNum(i, tok), tok), tok)だと上手く代入できない
+      // sliceがダメらしい
+      rhs := newUnary(ND_DEREF,
+        newAdd(v.Ty.UArrNode, newNum(v.Ty.UArrIdx+i, tok), tok), tok)
+      addType(rhs)
+      fmt.Printf("primary: rhs.Ty: %#v\n\n", rhs.Ty)
+      expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
+  ```
+ - ヒントになりそうなCコード
+ ```c
+  #include <stdio.h>
+
+  char *a[] = {"acb","def","ghi","jkl"};
+  char *b[] = {"mno","pqr","stu","vwx"};
+
+  int main(void){
+      // Your code here!
+      int *x=&*(b+1);
+      *x="yz";
+      *(a+1) = *(x+1);
+      printf("sizeof: %d\n", sizeof(b[1]));
+      printf("%s\n", *(x-2));
+  }
+ ```
