@@ -3301,6 +3301,7 @@ func primary(rest **Token, tok *Token) *Node {
 	if equal(tok, "make") && equal(tok.Next, "(") {
 		start := tok
 		ty := readTypePreffix(&tok, tok.Next.Next, nil)
+		fmt.Printf("primary: make: ty: %#v\n\n", ty)
 		tok = skip(tok, ",")
 		len := constExpr(&tok, tok)
 		var cap int64
