@@ -443,9 +443,9 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
  - 定義したCファイル内のトークンを置き換えるものだから。もし入れるのであれば、ヘッダーファイルに入れる必要がある。
 
 #### 2022/04/19 appendで元の容量が足りない場合の旧基底配列から新基底配列への値のコピーができない
- - initializerを使った場合はできる
- - makeでsliceを作成した後に代入した値はコピーされない
- - コピーする時には a[0]=b[0]の様になるから、下記でいいはずなんだけど
+ - makeでsliceを作成した後に、代入した値はコピーされない.
+ - initializer, sliceExprでsliceを作成し、後から値を代入した場合はコピーされるみたい => makeの処理に問題がありそう
+ - コピーする時には a[0]=b[0] の様になるから、下記でいいはずなんだけど
  ```Go
       lhs := newUnary(ND_DEREF,
         newAdd(uaNode, newNum(i, tok), tok), tok)
@@ -458,6 +458,7 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
       fmt.Printf("primary: rhs.Ty: %#v\n\n", rhs.Ty)
       expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
   ```
+ - newAdd内でSizeごとのAlignが必要? => postfix関数で既にやっているし、問題ないように見える
  - ヒントになりそうなCコード
  ```c
   #include <stdio.h>
@@ -472,5 +473,26 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
       *(a+1) = *(x+1);
       printf("sizeof: %d\n", sizeof(b[1]));
       printf("%s\n", *(x-2));
+  }
+ ```
+ - ヒントになりそうなCコードその2
+ ```c
+  #include <stdio.h>
+
+  int a[]={1,2,3,4,5};
+  char *b[]={"abcc","def","ghi"};
+
+  int main(void){
+      // Your code here!
+      a[1]=100;
+      int *x=&*(a+1);
+      *(x+1)=1000;
+      printf("%d\n", *(a+1)); // 100
+      printf("%d\n", x[3]); // 5
+      printf("%d\n", *(x+1)); // 1000
+      
+      printf("int: %d\n", sizeof(int));
+      int *y=&*(b+0);
+      printf("%s\n", *(y+2)); // +0の場合:abc, +2の場合:def, +4の場合:ghi
   }
  ```

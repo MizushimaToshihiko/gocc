@@ -1001,6 +1001,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 		init.Ty.Len = uArr.Ty.ArrSz
 		init.Ty.Cap = uArr.Ty.ArrSz
+		fmt.Printf("initializer2: uArr.Ty.ArrSz: %d\n\n", uArr.Ty.ArrSz)
 		uaNode := newVarNode(uArr, tok)
 		init.Ty.UArrNode = uaNode
 
@@ -1053,6 +1054,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		// Get the type from rhs. If type-name is written.
 		// like: [2]int{1,2,3}
 		rhsTy = readTypePreffix(&tok, tok, nil)
+		fmt.Printf("initializer2: rhsTy: %#v\n\n", rhsTy)
 
 		// If type-name isn't written in the rhs.
 		var start *Token = tok
@@ -1076,6 +1078,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		}
 
 		init.Ty = rhsTy
+		fmt.Printf("initializer2: rhsTy 2: %#v\n\n", rhsTy)
 
 		// Initialize the lhs.
 		if init.Ty.Kind == TY_ARRAY {
@@ -1154,6 +1157,7 @@ func initializer(rest **Token, tok *Token, ty *Type, newTy **Type, v *Obj) *Init
 	}
 
 	*newTy = init.Ty
+	fmt.Printf("initializer: init.Ty: %#v\n\n", init.Ty)
 
 	if isInteger(init.Ty) {
 		v.Val = eval(init.Expr)
@@ -1480,15 +1484,16 @@ func zeroInit2(init *Initializer, tok *Token) {
 		// Make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, init.Ty.Len)
 		uArr := newAnonGvar(uArrTy)
-		uArrInit := zeroInit(uArr.Ty, &uArr.Ty, tok)
-		uArr.Ty.Init = uArrInit
+		gvarZeroInit(uArr, tok)
+		// uArr.Ty.Init = uArrInit
 		uaNode := newVarNode(uArr, tok)
 		init.Expr = newUnary(ND_ADDR,
-			uaNode,
+			newUnary(ND_DEREF, newAdd(uaNode, newNum(0, tok), tok), tok),
 			tok)
 		init.Ty = sliceType(uArr.Ty.Base, init.Ty.Len, init.Ty.Cap)
-		init.Ty.Init = init
+		// fmt.Printf("zeroInit2: init.Ty: %#v\n\n", init.Ty)
 		init.Ty.UArrNode = uaNode
+		init.Ty.Init = init
 		return
 	}
 
@@ -3053,7 +3058,19 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 	node := newUnary(ND_ADDR,
 		newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
-	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
+
+	len := int(end - first)
+	var cap int
+	switch cur.Obj.Ty.Kind {
+	case TY_ARRAY:
+		cap = cur.Obj.Ty.ArrSz - int(first)
+	case TY_SLICE:
+		cap = cur.Obj.Ty.Cap - int(first)
+	default:
+		panic(errorTok(start, "is not neither array nor slice"))
+	}
+
+	node.Ty = sliceType(node.Ty.Base, len, cap)
 	node.Ty.UArrIdx = first
 	node.Ty.UArrNode = cur
 	return node
@@ -3318,6 +3335,7 @@ func primary(rest **Token, tok *Token) *Node {
 		// Make the underlying array.
 		uArr := newAnonGvar(arrayOf(ty.Base, int(cap)))
 		gvarZeroInit(uArr, tok)
+		fmt.Printf("primary: make: ty 2: %#v\n\n", ty)
 		uaNode := newVarNode(uArr, start)
 		ty.UArrNode = uaNode
 
@@ -3377,13 +3395,13 @@ func primary(rest **Token, tok *Token) *Node {
 
 		// In the case that the new length is more than original slice's capacity,
 		// Make a new underlying array.
-		uArrTy := arrayOf(v.Ty.Base, v.Ty.Cap*2)
+		uArrTy := arrayOf(v.Ty.Base, v.Ty.Cap*2+cntElem)
 		uArr := newAnonGvar(uArrTy)
 		gvarZeroInit(uArr, tok)
 		uaNode := newVarNode(uArr, tok)
 		addType(uaNode)
 
-		fmt.Printf("primary: uArr.Ty: %#v\n\n", uArr.Ty)
+		fmt.Printf("primary: slice: %#v\n\n", slice)
 		fmt.Printf("primary: slice.Ty: %#v\n\n", slice.Ty)
 		fmt.Printf("primary: slice.Ty.UArrNode.Ty: %#v\n\n", slice.Ty.UArrNode.Ty)
 		fmt.Printf("primary: slice.Ty.UArrIdx: %d\n\n", slice.Ty.UArrIdx)
@@ -3406,6 +3424,7 @@ func primary(rest **Token, tok *Token) *Node {
 			rhs := newUnary(ND_DEREF,
 				newAdd(v.Ty.UArrNode, newNum(v.Ty.UArrIdx+i, tok), tok), tok)
 			addType(rhs)
+			fmt.Printf("primary: rhs: %#v\n\n", rhs)
 			fmt.Printf("primary: rhs.Ty: %#v\n\n", rhs.Ty)
 			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
