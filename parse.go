@@ -2473,20 +2473,26 @@ func assign(rest **Token, tok *Token) *Node {
 			}
 		}
 
-		if node.Obj != nil && node.Obj.Ty.Kind == TY_SLICE {
-			node.Obj.Ty = rhs.Ty
+		if isAppend {
 			addType(node)
+			node.Ty.Len = rhs.Ty.Len
+			node.Ty.Cap = rhs.Ty.Cap
 		}
-		if node.Ty.Kind == TY_SLICE && rhs.Ty.Kind == TY_SLICE {
-			node.Ty = rhs.Ty
-			fmt.Printf("assign: rhs.Ty: %#v\n\n", rhs.Ty)
-			fmt.Printf("assign: node: %#v\n\n", node)
-			fmt.Printf("assign: node.Lhs: %#v\n\n", node.Lhs)
-			fmt.Printf("assign: node.Ty: %#v\n\n", node.Ty)
-			fmt.Printf("assign: node.Ty.Base: %#v\n\n", node.Ty)
-			addType(node)
-			fmt.Printf("assign: node.Ty: %#v\n\n", node.Ty)
-		}
+
+		// if node.Obj != nil && node.Obj.Ty.Kind == TY_SLICE {
+		// 	node.Obj.Ty = rhs.Ty
+		// 	addType(node)
+		// }
+		// if node.Ty.Kind == TY_SLICE && rhs.Ty.Kind == TY_SLICE {
+		// 	node.Ty = rhs.Ty
+		// 	fmt.Printf("assign: rhs.Ty: %#v\n\n", rhs.Ty)
+		// 	fmt.Printf("assign: node: %#v\n\n", node)
+		// 	fmt.Printf("assign: node.Lhs: %#v\n\n", node.Lhs)
+		// 	fmt.Printf("assign: node.Ty: %#v\n\n", node.Ty)
+		// 	fmt.Printf("assign: node.Ty.Base: %#v\n\n", node.Ty)
+		// 	addType(node)
+		// 	fmt.Printf("assign: node.Ty: %#v\n\n", node.Ty)
+		// }
 
 		node = newBinary(ND_ASSIGN, node, rhs, tok)
 		addType(node)
