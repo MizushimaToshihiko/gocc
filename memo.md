@@ -490,6 +490,7 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
       printf("%d\n", *(a+1)); // 100
       printf("%d\n", x[3]); // 5
       printf("%d\n", *(x+1)); // 1000
+      printf("%d\n", a[2]); // 1000
       
       printf("int: %d\n", sizeof(int));
       int *y=&*(b+0);
