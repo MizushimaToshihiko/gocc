@@ -291,67 +291,67 @@ func main() {
 	// assert(0, strcmp(s037[2], "def"), "strcmp(s037[2], \"def\")")
 	// assert(0, strcmp(s037[3], "ghi"), "strcmp(s037[3], \"ghi\")")
 
-	// // case: made a slice from global array, int
-	// a0381 := [5]int{10, 20, 30, 40, 50}
-	// s038 := a038[0:2]
-	// s0381 := a0381[0:2]
-	// assert(2, len(s038), "len(s038)")
-	// assert(5, cap(s038), "cap(s038)")
-	// s038[0] = s0381[0]
-	// s038[1] = a0381[4]
-	// assert(10, s038[0], "s038[0]")
-	// assert(50, s038[1], "s038[1]")
-	// s038 = append(s038, 2, 3, 4, 5)
-	// assert(6, len(s038), "len(s038)")
-	// assert(14, cap(s038), "cap(s038)")
-	// assert(10, s038[0], "s038[0]")
-	// assert(50, s038[1], "s038[1]")
-	// assert(2, s038[2], "s038[2]")
-	// assert(3, s038[3], "s038[3]")
-	// assert(4, s038[4], "s038[4]")
-	// assert(5, s038[5], "s038[5]")
-	// assert(10, a038[0], "a038[0]")
-	// assert(50, a038[1], "a038[1]")
-	// assert(0, a038[2], "a038[2]")
-	// assert(0, a038[3], "a038[3]")
-	// assert(0, a038[4], "a038[4]")
+	// case: made a slice from global array, int
+	a0381 := [5]int{10, 20, 30, 40, 50}
+	s038 := a038[0:2]
+	s0381 := a0381[0:2]
+	assert(2, len(s038), "len(s038)")
+	assert(5, cap(s038), "cap(s038)")
+	s038[0] = s0381[0]
+	s038[1] = a0381[4]
+	assert(10, s038[0], "s038[0]")
+	assert(50, s038[1], "s038[1]")
+	s038 = append(s038, 2, 3, 4, 5)
+	assert(6, len(s038), "len(s038)")
+	assert(14, cap(s038), "cap(s038)")
+	assert(10, s038[0], "s038[0]")
+	assert(50, s038[1], "s038[1]")
+	assert(2, s038[2], "s038[2]")
+	assert(3, s038[3], "s038[3]")
+	assert(4, s038[4], "s038[4]")
+	assert(5, s038[5], "s038[5]")
+	assert(10, a038[0], "a038[0]")
+	assert(50, a038[1], "a038[1]")
+	assert(0, a038[2], "a038[2]")
+	assert(0, a038[3], "a038[3]")
+	assert(0, a038[4], "a038[4]")
 
-	// // case: made a slice from global array, string
-	// s0382 := g03[0:2]
-	// assert(2, len(s0382), "len(s0382)")
-	// assert(3, cap(s0382), "cap(s0382)")
-	// s0382[0] = "aaa"
-	// s0382[1] = "bbb"
-	// assert(0, strcmp(s0382[0], "aaa"), "strcmp(s0382[0], \"aaa\")")
-	// assert(0, strcmp(s0382[1], "bbb"), "strcmp(s0382[1], \"bbb\")")
-	// s0382 = append(s0382, "jkl", "mno", "pqr", "stu")
-	// assert(6, len(s0382), "len(s0382)")
-	// assert(10, cap(s0382), "cap(s0382)")
-	// assert(0, strcmp(s0382[0], "aaa"), "strcmp(s0382[0], \"aaa\")")
-	// assert(0, strcmp(s0382[1], "bbb"), "strcmp(s0382[1], \"bbb\")")
-	// assert(0, strcmp(s0382[2], "jkl"), "strcmp(s0382[2], \"jkl\")")
-	// assert(0, strcmp(s0382[3], "mno"), "strcmp(s0382[3], \"mno\")")
-	// assert(0, strcmp(s0382[4], "pqr"), "strcmp(s0382[4], \"pqr\")")
-	// assert(0, strcmp(s0382[5], "stu"), "strcmp(s0382[5], \"stu\")")
+	// case: made a slice from global array, string
+	s0382 := g03[0:2]
+	assert(2, len(s0382), "len(s0382)")
+	assert(3, cap(s0382), "cap(s0382)")
+	s0382[0] = "aaa"
+	s0382[1] = "bbb"
+	assert(0, strcmp(s0382[0], "aaa"), "strcmp(s0382[0], \"aaa\")")
+	assert(0, strcmp(s0382[1], "bbb"), "strcmp(s0382[1], \"bbb\")")
+	s0382 = append(s0382, "jkl", "mno", "pqr", "stu")
+	assert(6, len(s0382), "len(s0382)")
+	assert(10, cap(s0382), "cap(s0382)")
+	assert(0, strcmp(s0382[0], "aaa"), "strcmp(s0382[0], \"aaa\")")
+	assert(0, strcmp(s0382[1], "bbb"), "strcmp(s0382[1], \"bbb\")")
+	assert(0, strcmp(s0382[2], "jkl"), "strcmp(s0382[2], \"jkl\")")
+	assert(0, strcmp(s0382[3], "mno"), "strcmp(s0382[3], \"mno\")")
+	assert(0, strcmp(s0382[4], "pqr"), "strcmp(s0382[4], \"pqr\")")
+	assert(0, strcmp(s0382[5], "stu"), "strcmp(s0382[5], \"stu\")")
 
-	// // case: made a slice by initializer, string
-	// s03821 := []string{"abc", "def", "ghi"}
-	// assert(3, len(s03821), "len(s03821)")
-	// assert(3, cap(s03821), "cap(s03821)")
-	// s03821[0] = "aaa"
-	// s03821[1] = "bbb"
-	// assert(0, strcmp(s03821[0], "aaa"), "strcmp(s03821[0], \"aaa\")")
-	// assert(0, strcmp(s03821[1], "bbb"), "strcmp(s03821[1], \"bbb\")")
-	// s03821 = append(s03821, "jkl", "mno", "pqr", "stu")
-	// assert(7, len(s03821), "len(s03821)")
-	// assert(10, cap(s03821), "cap(s03821)")
-	// assert(0, strcmp(s03821[0], "aaa"), "strcmp(s03821[0], \"aaa\")")
-	// assert(0, strcmp(s03821[1], "bbb"), "strcmp(s03821[1], \"bbb\")")
-	// assert(0, strcmp(s03821[2], "ghi"), "strcmp(s03821[2], \"ghi\")")
-	// assert(0, strcmp(s03821[3], "jkl"), "strcmp(s03821[3], \"jkl\")")
-	// assert(0, strcmp(s03821[4], "mno"), "strcmp(s03821[4], \"mno\")")
-	// assert(0, strcmp(s03821[5], "pqr"), "strcmp(s03821[5], \"pqr\")")
-	// assert(0, strcmp(s03821[6], "stu"), "strcmp(s03821[6], \"stu\")")
+	// case: made a slice by initializer, string
+	s03821 := []string{"abc", "def", "ghi"}
+	assert(3, len(s03821), "len(s03821)")
+	assert(3, cap(s03821), "cap(s03821)")
+	s03821[0] = "aaa"
+	s03821[1] = "bbb"
+	assert(0, strcmp(s03821[0], "aaa"), "strcmp(s03821[0], \"aaa\")")
+	assert(0, strcmp(s03821[1], "bbb"), "strcmp(s03821[1], \"bbb\")")
+	s03821 = append(s03821, "jkl", "mno", "pqr", "stu")
+	assert(7, len(s03821), "len(s03821)")
+	assert(10, cap(s03821), "cap(s03821)")
+	assert(0, strcmp(s03821[0], "aaa"), "strcmp(s03821[0], \"aaa\")")
+	assert(0, strcmp(s03821[1], "bbb"), "strcmp(s03821[1], \"bbb\")")
+	assert(0, strcmp(s03821[2], "ghi"), "strcmp(s03821[2], \"ghi\")")
+	assert(0, strcmp(s03821[3], "jkl"), "strcmp(s03821[3], \"jkl\")")
+	assert(0, strcmp(s03821[4], "mno"), "strcmp(s03821[4], \"mno\")")
+	assert(0, strcmp(s03821[5], "pqr"), "strcmp(s03821[5], \"pqr\")")
+	assert(0, strcmp(s03821[6], "stu"), "strcmp(s03821[6], \"stu\")")
 
 	// case: made a global slice , string, two dimensions
 	assert(2, len(g04), "len(g04)")
