@@ -380,71 +380,73 @@ func main() {
 	assert(0, strcmp(g04[2][0], "aaa"), "strcmp(g04[2][0], \"aaa\")")
 	assert(0, strcmp(g04[2][1], "bbb"), "strcmp(g04[2][1], \"bbb\")")
 
-	// // case: made a slice by initializer, int
-	// s03822 := []int{1, 2, 3}
-	// assert(3, len(s03822), "len(s03822)")
-	// assert(3, cap(s03822), "cap(s03822)")
-	// s03822[0] = 11
-	// s03822[1] = 22
-	// assert(11, s03822[0], "s03822[0])")
-	// assert(22, s03822[1], "s03822[1])")
-	// s03822 = append(s03822, 4, 5, 6, 7)
-	// assert(7, len(s03822), "len(s03832)")
-	// assert(10, cap(s03822), "cap(s03832)")
-	// assert(11, s03822[0], "s03822[0]")
-	// assert(22, s03822[1], "s03822[1]")
-	// assert(3, s03822[2], "s03822[2]")
-	// assert(4, s03822[3], "s03822[3]")
-	// assert(5, s03822[4], "s03822[4]")
-	// assert(6, s03822[5], "s03822[5]")
-	// assert(7, s03822[6], "s03822[6]")
+	// case: made a slice by initializer, int
+	s03822 := []int{1, 2, 3}
+	assert(3, len(s03822), "len(s03822)")
+	assert(3, cap(s03822), "cap(s03822)")
+	s03822[0] = 11
+	s03822[1] = 22
+	assert(11, s03822[0], "s03822[0])")
+	assert(22, s03822[1], "s03822[1])")
+	s03822 = append(s03822, 4, 5, 6, 7)
+	assert(7, len(s03822), "len(s03832)")
+	assert(10, cap(s03822), "cap(s03832)")
+	assert(11, s03822[0], "s03822[0]")
+	assert(22, s03822[1], "s03822[1]")
+	assert(3, s03822[2], "s03822[2]")
+	assert(4, s03822[3], "s03822[3]")
+	assert(5, s03822[4], "s03822[4]")
+	assert(6, s03822[5], "s03822[5]")
+	assert(7, s03822[6], "s03822[6]")
 
-	// // case: made a slice by 'var', int
-	// var s03823 []int
-	// assert(0, len(s03823), "len(s03823)")
-	// assert(0, cap(s03823), "cap(s03823)")
-	// s03823 = append(s03823, 1, 2, 3, 4, 5, 6)
-	// assert(6, len(s03823), "len(s03823)")
-	// assert(6, cap(s03823), "cap(s03823)")
-	// assert(1, s03823[0], "s03823[0]")
-	// assert(2, s03823[1], "s03823[1]")
-	// assert(3, s03823[2], "s03823[2]")
-	// assert(4, s03823[3], "s03823[3]")
-	// assert(5, s03823[4], "s03823[4]")
-	// assert(6, s03823[5], "s03823[5]")
-	// s03823[2] = 1000
-	// assert(1000, s03823[2], "s03823[2]")
-	// s03823 = append(s03823, 7, 8, 9, 10, 11, 12)
-	// assert(1, s03823[0], "s03823[0]")
-	// assert(2, s03823[1], "s03823[1]")
-	// assert(1000, s03823[2], "s03823[2]")
-	// assert(4, s03823[3], "s03823[3]")
-	// assert(5, s03823[4], "s03823[4]")
-	// assert(6, s03823[5], "s03823[5]")
-	// assert(7, s03823[6], "s03823[6]")
-	// assert(8, s03823[7], "s03823[7]")
-	// assert(9, s03823[8], "s03823[8]")
-	// assert(10, s03823[9], "s03823[9]")
-	// assert(11, s03823[10], "s03823[10]")
-	// assert(12, s03823[11], "s03823[11]")
+	// case: made a slice by 'var', int
+	var s03823 []int
+	assert(0, len(s03823), "len(s03823)")
+	assert(0, cap(s03823), "cap(s03823)")
+	s03823 = append(s03823, 1, 2, 3, 4, 5, 6)
+	assert(6, len(s03823), "len(s03823)")
+	assert(6, cap(s03823), "cap(s03823)")
+	assert(1, s03823[0], "s03823[0]")
+	assert(2, s03823[1], "s03823[1]")
+	assert(3, s03823[2], "s03823[2]")
+	assert(4, s03823[3], "s03823[3]")
+	assert(5, s03823[4], "s03823[4]")
+	assert(6, s03823[5], "s03823[5]")
+	s03823[2] = 1000
+	assert(1000, s03823[2], "s03823[2]")
+	s03823 = append(s03823, 7, 8, 9, 10, 11, 12)
+	assert(12, len(s03823), "len(s03823)")
+	assert(18, cap(s03823), "cap(s03823)")
+	assert(1, s03823[0], "s03823[0]")
+	assert(2, s03823[1], "s03823[1]")
+	assert(1000, s03823[2], "s03823[2]")
+	assert(4, s03823[3], "s03823[3]")
+	assert(5, s03823[4], "s03823[4]")
+	assert(6, s03823[5], "s03823[5]")
+	assert(7, s03823[6], "s03823[6]")
+	assert(8, s03823[7], "s03823[7]")
+	assert(9, s03823[8], "s03823[8]")
+	assert(10, s03823[9], "s03823[9]")
+	assert(11, s03823[10], "s03823[10]")
+	assert(12, s03823[11], "s03823[11]")
 
-	// case: made a slice by make function, int => failed
-	s0383 := make([]int, 5)
-	assert(5, len(s0383), "len(s0383)")
-	assert(5, cap(s0383), "cap(s0383)")
-	s0383[0] = 10
-	s0383[1] = 50
-	assert(10, s0383[0], "s0383[0]")
-	assert(50, s0383[1], "s0383[1]")
-	s0383 = append(s0383, 2, 3, 4, 5)
-	assert(9, len(s0383), "len(s0383)")
-	assert(14, cap(s0383), "cap(s0383)")
-	assert(10, s0383[0], "s0383[0]")
-	assert(50, s0383[1], "s0383[1]")
-	assert(2, s0383[2], "s0383[2]")
-	assert(3, s0383[3], "s0383[3]")
-	assert(4, s0383[4], "s0383[4]")
-	assert(5, s0383[5], "s0383[5]")
+	// // case: made a slice by make function, int => failed
+	// s0383 := make([]int, 5)
+	// assert(5, len(s0383), "len(s0383)")
+	// assert(5, cap(s0383), "cap(s0383)")
+	// s0383[0] = 10
+	// s0383[1] = 50
+	// assert(10, s0383[0], "s0383[0]")
+	// assert(50, s0383[1], "s0383[1]")
+	// s0383 = append(s0383, 2, 3, 4, 5)
+	// assert(9, len(s0383), "len(s0383)")
+	// assert(14, cap(s0383), "cap(s0383)")
+	// assert(10, s0383[0], "s0383[0]")
+	// assert(50, s0383[1], "s0383[1]")
+	// assert(2, s0383[2], "s0383[2]")
+	// assert(3, s0383[3], "s0383[3]")
+	// assert(4, s0383[4], "s0383[4]")
+	// assert(5, s0383[5], "s0383[5]")
 
 	// // case: made a slice by make function, string => failed
 	// s039 := []string{"abc", "def"}

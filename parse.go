@@ -1456,7 +1456,7 @@ func zeroInit2(init *Initializer, tok *Token) {
 		tokTy := arrayOf(ty_char, 1)
 		tokConts := []int64{0}
 		v := newStringLiteral(tokConts, tokTy)
-		init.Expr = newVarNode(v, tok)
+		init.Children[0].Expr = newVarNode(v, tok)
 		init.Ty.Init = init
 		return
 	}
@@ -1481,26 +1481,27 @@ func zeroInit2(init *Initializer, tok *Token) {
 
 	// If init.Ty is slice.
 	if init.Ty.Kind == TY_SLICE {
+		fmt.Printf("zeroInit2: init.Ty: %#v\n\n", init.Ty)
 		// Make the underlying array.
-		uArrTy := arrayOf(init.Ty.Base, init.Ty.Len)
+		uArrTy := arrayOf(init.Ty.Base, init.Ty.Cap)
 		uArr := newAnonGvar(uArrTy)
 		gvarZeroInit(uArr, tok)
+		fmt.Printf("zeroInit2: uArr.Ty: %#v\n\n", uArr.Ty)
 		// uArr.Ty.Init = uArrInit
 		uaNode := newVarNode(uArr, tok)
 		init.Expr = newUnary(ND_ADDR,
 			newUnary(ND_DEREF, newAdd(uaNode, newNum(0, tok), tok), tok),
 			tok)
 		init.Ty = sliceType(uArr.Ty.Base, init.Ty.Len, init.Ty.Cap)
-		// fmt.Printf("zeroInit2: init.Ty: %#v\n\n", init.Ty)
 		init.Ty.UArrNode = uaNode
 		init.Ty.Init = init
 		return
 	}
 
-	if init.Expr == nil {
-		init.Expr = newNum(0, tok)
-		init.Expr.Ty = init.Ty
-	}
+	// if init.Expr == nil {
+	init.Expr = newNum(0, tok)
+	init.Expr.Ty = init.Ty
+	// }
 }
 
 func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
@@ -2016,6 +2017,12 @@ func assignList(rest **Token, tok *Token) *Node {
 		} else {
 			node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
 			addType(node)
+			if isAppend {
+				node.Ty.Len = rhs.Ty.Len
+				node.Ty.Cap = rhs.Ty.Cap
+				node.Ty.UArrNode = rhs.Ty.UArrNode
+				node.Ty.UArrIdx = rhs.Ty.UArrIdx
+			}
 			if lhses[j].Obj != nil {
 				if isInteger(node.Ty) {
 					lhses[j].Obj.Val = eval(rhs)
@@ -2477,22 +2484,9 @@ func assign(rest **Token, tok *Token) *Node {
 			addType(node)
 			node.Ty.Len = rhs.Ty.Len
 			node.Ty.Cap = rhs.Ty.Cap
+			node.Ty.UArrNode = rhs.Ty.UArrNode
+			node.Ty.UArrIdx = rhs.Ty.UArrIdx
 		}
-
-		// if node.Obj != nil && node.Obj.Ty.Kind == TY_SLICE {
-		// 	node.Obj.Ty = rhs.Ty
-		// 	addType(node)
-		// }
-		// if node.Ty.Kind == TY_SLICE && rhs.Ty.Kind == TY_SLICE {
-		// 	node.Ty = rhs.Ty
-		// 	fmt.Printf("assign: rhs.Ty: %#v\n\n", rhs.Ty)
-		// 	fmt.Printf("assign: node: %#v\n\n", node)
-		// 	fmt.Printf("assign: node.Lhs: %#v\n\n", node.Lhs)
-		// 	fmt.Printf("assign: node.Ty: %#v\n\n", node.Ty)
-		// 	fmt.Printf("assign: node.Ty.Base: %#v\n\n", node.Ty)
-		// 	addType(node)
-		// 	fmt.Printf("assign: node.Ty: %#v\n\n", node.Ty)
-		// }
 
 		node = newBinary(ND_ASSIGN, node, rhs, tok)
 		addType(node)
@@ -3365,6 +3359,7 @@ func primary(rest **Token, tok *Token) *Node {
 	}
 
 	if equal(tok, "append") {
+		fmt.Print("primary: append\n\n")
 		tok = skip(tok.Next, "(")
 		slice := postfix(&tok, tok)
 		addType(slice)
@@ -3414,16 +3409,20 @@ func primary(rest **Token, tok *Token) *Node {
 		uArrTy := arrayOf(slice.Ty.Base, slice.Ty.Cap*2+cntElem)
 		uArr := newAnonGvar(uArrTy)
 		gvarZeroInit(uArr, tok)
+		fmt.Printf("primary: uArr: %#v\n\n", uArr)
+		fmt.Printf("primary: uArr.Ty: %#v\n\n", uArr.Ty)
 		uaNode := newVarNode(uArr, tok)
 		addType(uaNode)
 
-		// fmt.Printf("primary: slice: %#v\n\n", slice)
-		// fmt.Printf("primary: slice.Ty: %#v\n\n", slice.Ty)
-		// fmt.Printf("primary: slice.Ty.UArrNode.Ty: %#v\n\n", slice.Ty.UArrNode.Ty)
-		// fmt.Printf("primary: slice.Ty.UArrIdx: %d\n\n", slice.Ty.UArrIdx)
-		// fmt.Printf("primary: uaNode.Ty: %#v\n\n", uaNode.Ty)
-		// fmt.Printf("primary: slice.Ty.UArrNode.Obj.Name: %s\n\n", slice.Ty.UArrNode.Obj.Name) // .L..0
-		// fmt.Printf("primary: uaNode.Obj.Name: %s\n\n", uaNode.Obj.Name)                       // .L..13
+		fmt.Printf("primary: slice: %#v\n\n", slice)
+		fmt.Printf("primary: slice.Ty: %#v\n\n", slice.Ty)
+		fmt.Printf("primary: slice.Ty.UArrNode.Ty: %#v\n\n", slice.Ty.UArrNode.Ty)
+		fmt.Printf("primary: slice.Ty.UArrNode.Obj: %#v\n\n", slice.Ty.UArrNode.Obj)
+		fmt.Printf("primary: slice.Ty.UArrNode.Obj.Ty: %#v\n\n", slice.Ty.UArrNode.Obj.Ty)
+		fmt.Printf("primary: slice.Ty.UArrIdx: %d\n\n", slice.Ty.UArrIdx)
+		fmt.Printf("primary: uaNode.Ty: %#v\n\n", uaNode.Ty)
+		fmt.Printf("primary: slice.Ty.UArrNode.Obj.Name: %s\n\n", slice.Ty.UArrNode.Obj.Name) // .L..0
+		fmt.Printf("primary: uaNode.Obj.Name: %s\n\n", uaNode.Obj.Name)                       // .L..13
 
 		head := &Node{}
 		cur := head
@@ -3436,12 +3435,11 @@ func primary(rest **Token, tok *Token) *Node {
 				newAdd(uaNode, newNum(i, tok), tok), tok)
 			addType(lhs)
 			// 右辺がnewUnary(ND_DEREF, newAdd(slice, newNum(i, tok), tok), tok)だと上手く代入できない
-			// sliceがダメらしい
 			rhs := newUnary(ND_DEREF,
 				newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
 			addType(rhs)
-			// fmt.Printf("primary: rhs: %#v\n\n", rhs)
-			// fmt.Printf("primary: rhs.Ty: %#v\n\n", rhs.Ty)
+			fmt.Printf("primary: rhs: %#v\n\n", rhs)
+			fmt.Printf("primary: rhs.Ty: %#v\n\n", rhs.Ty)
 			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
 			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
 			cur = cur.Next
@@ -3474,6 +3472,9 @@ func primary(rest **Token, tok *Token) *Node {
 		fmt.Println("primary: length:", length)
 		fmt.Println("primary: uArrTy.ArrSz:", uArrTy.ArrSz)
 		node.Ty.UArrNode = uaNode
+		fmt.Printf("primary: node.Ty.UArrNode: %#v\n\n", node.Ty.UArrNode)
+		fmt.Printf("primary: node.Ty.UArrNode.Obj: %#v\n\n", node.Ty.UArrNode.Obj)
+		fmt.Printf("primary: node.Ty.UArrNode.Ty: %#v\n\n", node.Ty.UArrNode.Ty)
 		*rest = skip(tok, ")")
 		return node
 	}

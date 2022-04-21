@@ -475,7 +475,7 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
       printf("%s\n", *(x-2));
   }
  ```
- - ヒントになりそうなCコードその2
+ - ヒントになりそうな[Cコードその2](https://paiza.io/projects/7xIFRBhAo7kYPKeWrTaBSg)
  ```c
   #include <stdio.h>
 
