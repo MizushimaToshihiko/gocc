@@ -347,10 +347,10 @@ func (e *errWriter) visit(node *Node) {
 		return
 	case ND_VAR:
 		node.Ty = node.Obj.Ty
-		if node.Obj.Ty.Kind == TY_ARRAY && node.Obj.Ty.Sz == 0 {
-			fmt.Printf("e.visit: node.Obj.Ty: %#v\n\n", node.Obj.Ty)
-			fmt.Printf("e.visit: node.Tok: %#v\n\n", node.Tok)
-		}
+		// if node.Obj.Ty.Kind == TY_ARRAY && node.Obj.Ty.Sz == 0 {
+		// fmt.Printf("e.visit: node.Obj.Ty: %#v\n\n", node.Obj.Ty)
+		// fmt.Printf("e.visit: node.Tok: %#v\n\n", node.Tok)
+		// }
 		return
 	case ND_COND:
 		if node.Then.Ty.Kind == TY_VOID || node.Els.Ty.Kind == TY_VOID {
