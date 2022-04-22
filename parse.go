@@ -3143,14 +3143,14 @@ func postfix(rest **Token, tok *Token) *Node {
 					"invalid argument: index %d (constant of type int) must not be negative", i))
 			}
 			addType(node)
-			// if node.Ty != nil {
-			// 	if node.Ty.Kind == TY_ARRAY && i >= int64(node.Ty.ArrSz) {
-			// 		panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.ArrSz))
-			// 	}
-			// 	if node.Ty.Kind == TY_SLICE && i >= int64(node.Ty.Len) {
-			// 		panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.Len))
-			// 	}
-			// }
+			if node.Ty != nil {
+				if node.Ty.Kind == TY_ARRAY && i >= int64(node.Ty.ArrSz) {
+					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.ArrSz))
+				}
+				if node.Ty.Kind == TY_SLICE && i >= int64(node.Ty.Len) {
+					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.Len))
+				}
+			}
 			tok = skip(tok, "]")
 			// x[y] is short for *(x+y)
 			// fmt.Printf("postfix: node: %#v\n\n", node)
@@ -3358,6 +3358,7 @@ func primary(rest **Token, tok *Token) *Node {
 		node := newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
 				newAdd(uaNode, newNum(0, start), start), start), start)
+		addType(node)
 		node.Ty = ty
 		*rest = skip(tok, ")")
 		return node
@@ -3417,8 +3418,8 @@ func primary(rest **Token, tok *Token) *Node {
 		addType(uaNode)
 
 		// fmt.Printf("primary: slice: %#v\n\n", slice)
-		fmt.Printf("primary: slice.Obj: %#v\n\n", slice.Obj)
-		fmt.Printf("primary: slice.Obj.Ty: %#v\n\n", slice.Obj.Ty)
+		// fmt.Printf("primary: slice.Obj: %#v\n\n", slice.Obj)
+		// fmt.Printf("primary: slice.Obj.Ty: %#v\n\n", slice.Obj.Ty)
 		// fmt.Printf("primary: slice.Ty: %#v\n\n", slice.Ty)
 		// fmt.Printf("primary: slice.Ty.UArrNode.Ty: %#v\n\n", slice.Ty.UArrNode.Ty)
 		// fmt.Printf("primary: slice.Ty.UArrNode.Obj: %#v\n\n", slice.Ty.UArrNode.Obj)

@@ -449,24 +449,24 @@ func main() {
 
 	// case: made a slice by make function, int => failed
 	s0383 := make([]int, 5)
-	assert(5, len(s0383), "len(s0383)")
-	assert(5, cap(s0383), "cap(s0383)")
+	// assert(5, len(s0383), "len(s0383)")
+	// assert(5, cap(s0383), "cap(s0383)")
 	s0383[0] = 10
 	s0383[1] = 50
-	assert(10, s0383[0], "s0383[0]")
-	assert(50, s0383[1], "s0383[1]")
+	// assert(10, s0383[0], "s0383[0]")
+	// assert(50, s0383[1], "s0383[1]")
 	s0383 = append(s0383, 2, 3, 4, 5)
-	assert(9, len(s0383), "len(s0383)")
-	assert(14, cap(s0383), "cap(s0383)")
+	// assert(9, len(s0383), "len(s0383)")
+	// assert(14, cap(s0383), "cap(s0383)")
 	assert(10, s0383[0], "s0383[0]") // => failed
 	assert(50, s0383[1], "s0383[1]") // => failed
-	assert(0, s0383[2], "s0383[2]")
-	assert(0, s0383[3], "s0383[3]")
-	assert(0, s0383[4], "s0383[4]")
-	assert(2, s0383[5], "s0383[5]")
-	assert(3, s0383[6], "s0383[6]")
-	assert(4, s0383[7], "s0383[7]")
-	assert(5, s0383[8], "s0383[8]")
+	// assert(0, s0383[2], "s0383[2]")
+	// assert(0, s0383[3], "s0383[3]")
+	// assert(0, s0383[4], "s0383[4]")
+	// assert(2, s0383[5], "s0383[5]")
+	// assert(3, s0383[6], "s0383[6]")
+	// assert(4, s0383[7], "s0383[7]")
+	// assert(5, s0383[8], "s0383[8]")
 
 	// // case: made a slice by make function, string
 	// s039 := []string{"abc", "def"}
