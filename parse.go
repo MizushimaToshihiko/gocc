@@ -987,10 +987,13 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		sliceTy := readTypePreffix(&tok, tok, nil) // I'll add type checking later
 		if sliceTy.Kind == TY_VOID && !equal(tok, "{") {
 			// In the case that no typename is written, like: `var x = a[0:1]`
-			init.Expr = assign(rest, tok)
+			if init.Expr == nil {
+				init.Expr = assign(rest, tok)
+			}
 			init.Ty.Init = init
 			return
 		}
+
 		// In the case that any typename is written, like: `var x = []int{1,3}`,
 		// make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, 0)
@@ -1007,7 +1010,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 		init.Expr = newUnary(ND_ADDR,
 			newUnary(ND_DEREF,
-				newAdd(uaNode, newNum(0, tok), tok), tok), tok)
+				newAdd(init.Ty.UArrNode, newNum(0, tok), tok), tok), tok)
 
 		init.Ty.Init = init
 		return
@@ -3350,6 +3353,7 @@ func primary(rest **Token, tok *Token) *Node {
 		}
 		// Make the underlying array.
 		uArr := newAnonGvar(arrayOf(ty.Base, int(cap)))
+		fmt.Printf("primary: make: uArr.Ty: %#v\n\n", uArr.Ty)
 		gvarZeroInit(uArr, tok)
 		uaNode := newVarNode(uArr, start)
 		ty.UArrNode = uaNode
@@ -3412,8 +3416,8 @@ func primary(rest **Token, tok *Token) *Node {
 		uArrTy := arrayOf(slice.Ty.Base, slice.Ty.Cap*2+cntElem)
 		uArr := newAnonGvar(uArrTy)
 		gvarZeroInit(uArr, tok)
-		fmt.Printf("primary: uArr: %#v\n\n", uArr)
-		fmt.Printf("primary: uArr.Ty: %#v\n\n", uArr.Ty)
+		// fmt.Printf("primary: uArr: %#v\n\n", uArr)
+		// fmt.Printf("primary: uArr.Ty: %#v\n\n", uArr.Ty)
 		uaNode := newVarNode(uArr, tok)
 		addType(uaNode)
 
@@ -3426,8 +3430,8 @@ func primary(rest **Token, tok *Token) *Node {
 		// fmt.Printf("primary: slice.Ty.UArrNode.Obj.Ty: %#v\n\n", slice.Ty.UArrNode.Obj.Ty)
 		// fmt.Printf("primary: slice.Ty.UArrIdx: %d\n\n", slice.Ty.UArrIdx)
 		// fmt.Printf("primary: uaNode.Ty: %#v\n\n", uaNode.Ty)
-		// fmt.Printf("primary: slice.Ty.UArrNode.Obj.Name: %s\n\n", slice.Ty.UArrNode.Obj.Name) // .L..0
-		// fmt.Printf("primary: uaNode.Obj.Name: %s\n\n", uaNode.Obj.Name)                       // .L..13
+		fmt.Printf("primary: slice.Ty.UArrNode.Obj.Name: %s\n\n", slice.Ty.UArrNode.Obj.Name) // .L..0
+		fmt.Printf("primary: uaNode.Obj.Name: %s\n\n", uaNode.Obj.Name)                       // .L..13
 
 		head := &Node{}
 		cur := head

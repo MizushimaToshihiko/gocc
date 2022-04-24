@@ -267,12 +267,12 @@ func getCommonType(ty1, ty2 *Type) *Type {
 //
 // This operation is called the "usual arithmetic conversion".
 func usualArithConv(lhs **Node, rhs **Node) {
-	fmt.Printf("usualArithConv: *lhs: %#v\n\n", *lhs)
-	fmt.Printf("usualArithConv: (*lhs).Ty: %#v\n\n", (*lhs).Ty)
-	fmt.Printf("usualArithConv: *rhs: %#v\n\n", *rhs)
-	fmt.Printf("usualArithConv: (*rhs).Ty: %#v\n\n", (*rhs).Ty)
+	// fmt.Printf("usualArithConv: *lhs: %#v\n\n", *lhs)
+	// fmt.Printf("usualArithConv: (*lhs).Ty: %#v\n\n", (*lhs).Ty)
+	// fmt.Printf("usualArithConv: *rhs: %#v\n\n", *rhs)
+	// fmt.Printf("usualArithConv: (*rhs).Ty: %#v\n\n", (*rhs).Ty)
 	ty := getCommonType((*lhs).Ty, (*rhs).Ty)
-	fmt.Printf("usualArithConv: ty: %#v\n\n", ty)
+	// fmt.Printf("usualArithConv: ty: %#v\n\n", ty)
 	*lhs = newCast(*lhs, ty)
 	*rhs = newCast(*rhs, ty)
 }
