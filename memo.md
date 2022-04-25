@@ -30,11 +30,11 @@
    - 構造体埋め込みでメソッド集合も埋め込む
    - built-in functions
       - new
-      - make
+      - make -> sliceのみ完了
       - len(slice) -> sliceのみ完了
       - cap(slice) -> sliceのみ完了
-      - append(slice)
-      - copy(slice)
+      - append(slice) -> 概ね完了（declaration-list内のappend, 「...」等は未実装）
+      - copy(slice) -> コンパイラの中で定義するのは無理があるかも、runtime的なものを作ってその中で定義した方が良い
       - println
       - panic
       - recover
@@ -151,11 +151,12 @@ func MerryXMas() {
  - ~FunctionBody -> BlockStmt -> DeclStmtのSpecメンバ -> x,yのValueSpecがスライスとして登録されている~
  - ~このコンパイラでは、var x,y int = 1,2をparse.goの中でvar x int = 1; var y int = 2;としてfunction()内のstmtの後に繋げる -> declaration()とは別にvarspec()を作り、nodeをつなげたものをfunction()又はstmt()に返す?~
  - declarationで、カンマでつながった変数ごとにNodeを作り、ND_BLOCKで繋げるという方法で完了(2022/03/12)
- - 代入リスト（例：a,b,c = 1,2,3）は、assignList関数でND_ASSIGNを変数ごとに作ってND_COMMAで繋げてND_EXPR_STMTをrootにしたものを返すことで完了(2022/03/15)
+ - 代入リスト（例：a,b,c = 1,2,3）は、assignList関数でND_ASSIGNを変数ごとに作ってND_BLOCKで繋げてND_EXPR_STMTをrootにしたものを返すことで完了(2022/03/15)
 
 #### 配列変数から配列変数への代入
 - ~~現時点では配列変数から配列変数への代入ができない（not a lvalueエラーを出してしまう)~~  
-  Type構造体の要素にInitを追加し、Obj構造体の.Ty.InitにInitializerを保存し、代入時に右辺のObjから左辺のObjに.Tyを丸ごとコピーすることで実装済み、copyType()を使った方が良いかも
+  Type構造体の要素にInitを追加し、Obj構造体の.Ty.InitにInitializerを保存し、代入時に右辺のObjから左辺のObjに.Tyを丸ごとコピーすることで実装済み、~copyType()を使った方が良いかも~  
+   => この方法はダメかもしれない。initializerを使用すると代入されたタイミングではなく最初から代入元の文字列が入ってしまうかも
 - string変数からstring変数への代入も同様にできない。stringをbase typeがbyteの配列にしているため。⇒string型をarrayType()からpointerTo()にしたら通った。
 
 #### 型が違うので代入できないエラーを返す関数の書きかけ
