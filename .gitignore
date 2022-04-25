@@ -4,4 +4,4 @@ testdata/*
 !testdata/common
 !testdata/esc
 profile
-debug.txt
+debug*.txt

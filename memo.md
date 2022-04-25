@@ -441,3 +441,62 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
 
 #### 2022/04/04 testdata/commonに#defineマクロを入れても意味がない
  - 定義したCファイル内のトークンを置き換えるものだから。もし入れるのであれば、ヘッダーファイルに入れる必要がある。
+
+#### 2022/04/19 appendで元の容量が足りない場合の旧基底配列から新基底配列への値のコピーができない
+ - makeでsliceを作成した後に、代入した値はコピーされない.
+ - initializer, sliceExprでsliceを作成し、後から値を代入した場合はコピーされるみたい => makeの処理に問題がありそう
+ - コピーする時には a[0]=b[0] の様になるから、下記でいいはずなんだけど
+ ```Go
+      lhs := newUnary(ND_DEREF,
+        newAdd(uaNode, newNum(i, tok), tok), tok)
+      addType(lhs)
+      // 右辺がnewUnary(ND_DEREF, newAdd(slice, newNum(i, tok), tok), tok)だと上手く代入できない
+      // sliceがダメらしい
+      rhs := newUnary(ND_DEREF,
+        newAdd(v.Ty.UArrNode, newNum(v.Ty.UArrIdx+i, tok), tok), tok)
+      addType(rhs)
+      fmt.Printf("primary: rhs.Ty: %#v\n\n", rhs.Ty)
+      expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
+  ```
+ - newAdd内でSizeごとのAlignが必要? => postfix関数で既にやっているし、問題ないように見える
+ - ヒントになりそうなCコード
+ ```c
+  #include <stdio.h>
+
+  char *a[] = {"acb","def","ghi","jkl"};
+  char *b[] = {"mno","pqr","stu","vwx"};
+
+  int main(void){
+      // Your code here!
+      int *x=&*(b+1);
+      *x="yz";
+      *(a+1) = *(x+1);
+      printf("sizeof: %d\n", sizeof(b[1]));
+      printf("%s\n", *(x-2));
+  }
+ ```
+ - ヒントになりそうな[Cコードその2](https://paiza.io/projects/7xIFRBhAo7kYPKeWrTaBSg)
+ ```c
+  #include <stdio.h>
+
+  int a[]={1,2,3,4,5};
+  char *b[]={"abcc","def","ghi"};
+
+  int main(void){
+      // Your code here!
+      a[1]=100;
+      int *x=&*(a+1);
+      *(x+1)=1000;
+      printf("%d\n", *(a+1)); // 100
+      printf("%d\n", x[3]); // 5
+      printf("%d\n", *(x+1)); // 1000
+      printf("%d\n", a[2]); // 1000
+      
+      printf("int: %d\n", sizeof(int));
+      int *y=&*(b+0);
+      printf("%s\n", *(y+2)); // +0の場合:abc, +2の場合:def, +4の場合:ghi
+  }
+ ```
+ - 2022/04/24 原因判明:
+  - initializer2の処理が間違っており基底配列を二つ作っていた
+  - 型推論（左辺がTY_VOID）の時に、make関数で作られる基底配列（一回目）をNode.Ty.UArrNodeに入れた後に、sliceを示す変数には二回目に作られた基底配列へのポインタアドレスを代入していた為

@@ -1,7 +1,7 @@
 package test_literal
 
 func assert(want int, act int, code string)
-func println(format string)
+func println(format ...string)
 
 func main() {
 	assert(97, 'a', "'a'")

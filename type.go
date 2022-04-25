@@ -54,8 +54,10 @@ type Type struct {
 	Next       *Type
 
 	// slice
-	Len int
-	Cap int
+	Len      int
+	Cap      int
+	UArrIdx  int64 // Underlying array's index
+	UArrNode *Node // Underlying array node
 
 	Init *Initializer
 }
@@ -119,6 +121,7 @@ func copyType(ty *Type) *Type {
 		Params:     ty.Params,
 		IsVariadic: ty.IsVariadic,
 		Next:       ty.Next,
+		IsFlex:     ty.IsFlex,
 	}
 	return ret
 }
@@ -210,10 +213,10 @@ func sliceType(base *Type, len int, cap int) *Type {
 		Sz:     8,
 		Align:  8,
 		Base:   base,
-		ArrSz:  len,
 		Len:    len,
 		Cap:    cap,
 		TyName: "[]" + base.TyName,
+		IsFlex: true,
 	}
 }
 

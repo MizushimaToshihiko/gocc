@@ -34,7 +34,7 @@ func main() {
 	x2[2] = 2
 	var y2 *byte = x2 + 1
 	assert(1, y2[0], "var x2 [3]byte; x2[0]=0; x2[1]=1; x2[2]=2;var y2 *byte=x2+1; y2[0]")
-	assert(0, y2[-1], "var x2 [3]byte; x2[0]=0; x2[1]=1; x2[2]=2;var y2 *byte=x2+1; y2[-1]")
+	// assert(0, y2[-1], "var x2 [3]byte; x2[0]=0; x2[1]=1; x2[2]=2;var y2 *byte=x2+1; y2[-1]")
 	type t3 struct{ a byte }
 	var x3 t3
 	var y3 t3

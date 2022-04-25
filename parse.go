@@ -434,7 +434,7 @@ func newGvar(name string, ty *Type) *Obj {
 	return v
 }
 
-// for newLabel function
+// for newUniqueName function
 var cnt int
 
 func newUniqueName() string {
@@ -987,10 +987,13 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		sliceTy := readTypePreffix(&tok, tok, nil) // I'll add type checking later
 		if sliceTy.Kind == TY_VOID && !equal(tok, "{") {
 			// In the case that no typename is written, like: `var x = a[0:1]`
-			init.Expr = assign(rest, tok)
+			if init.Expr == nil {
+				init.Expr = assign(rest, tok)
+			}
 			init.Ty.Init = init
 			return
 		}
+
 		// In the case that any typename is written, like: `var x = []int{1,3}`,
 		// make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, 0)
@@ -1001,9 +1004,12 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 		init.Ty.Len = uArr.Ty.ArrSz
 		init.Ty.Cap = uArr.Ty.ArrSz
+		uaNode := newVarNode(uArr, tok)
+		init.Ty.UArrNode = uaNode
 
 		init.Expr = newUnary(ND_ADDR,
-			newUnary(ND_DEREF, newAdd(newVarNode(uArr, tok), newNum(0, tok), tok), tok), tok)
+			newUnary(ND_DEREF,
+				newAdd(init.Ty.UArrNode, newNum(0, tok), tok), tok), tok)
 
 		init.Ty.Init = init
 		return
@@ -1088,7 +1094,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 
 			// Copy Initializer from rhs, if array can be initialized by other array.
 			if rhsTy.Init != nil {
-				*init = *rhsTy.Init // copyType()使った方が良いかもしれないが、検証する時間なし
+				*init = *rhsTy.Init //
 			}
 			return
 		}
@@ -1151,6 +1157,8 @@ func initializer(rest **Token, tok *Token, ty *Type, newTy **Type, v *Obj) *Init
 	}
 
 	*newTy = init.Ty
+	// Change variable's align
+	v.Align = init.Ty.Align
 
 	if isInteger(init.Ty) {
 		v.Val = eval(init.Expr)
@@ -1473,22 +1481,22 @@ func zeroInit2(init *Initializer, tok *Token) {
 	}
 
 	// If init.Ty is slice.
-	if init.Ty.TyName[0:2] == "[]" {
+	if init.Ty.Kind == TY_SLICE {
 		// Make the underlying array.
-		uArrTy := arrayOf(init.Ty.Base, init.Ty.Len)
-		uArr := newLvar("", uArrTy)
-		uArrInit := zeroInit(uArr.Ty, &uArrTy, tok)
-		uArr.Ty.Init = uArrInit
+		uArrTy := arrayOf(init.Ty.Base, init.Ty.Cap)
+		uArr := newAnonGvar(uArrTy)
+		gvarZeroInit(uArr, tok)
+		uaNode := newVarNode(uArr, tok)
 		init.Expr = newUnary(ND_ADDR,
-			newVarNode(uArr, tok),
+			newUnary(ND_DEREF, newAdd(uaNode, newNum(0, tok), tok), tok),
 			tok)
+		init.Ty = sliceType(uArr.Ty.Base, init.Ty.Len, init.Ty.Cap)
+		init.Ty.UArrNode = uaNode
 		init.Ty.Init = init
+		return
 	}
 
-	if init.Expr == nil {
-		init.Expr = newNum(0, tok)
-		init.Expr.Ty = init.Ty
-	}
+	init.Expr = newNum(0, tok)
 }
 
 func zeroInit(ty *Type, newTy **Type, tok *Token) *Initializer {
@@ -1566,7 +1574,8 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 			j++
 
 			if v.Ty.Sz < 0 {
-				panic("\n" + errorTok(v.Ty.Name, "variable has incomplete type"))
+				panic("\n" +
+					errorTok(v.Ty.Name, "variable has incomplete type"))
 			}
 			if v.Ty.Kind == TY_VOID ||
 				(v.Ty.Base != nil && v.Ty.Base.Kind == TY_VOID) {
@@ -1984,7 +1993,9 @@ func assignList(rest **Token, tok *Token) *Node {
 
 	tok = skip(tok, "=")
 
-	var node, prev *Node
+	var node *Node
+	head := &Node{}
+	cur := head
 	valtok := tok
 	j := 0
 	for ; ; j++ {
@@ -1995,29 +2006,28 @@ func assignList(rest **Token, tok *Token) *Node {
 			tok = skip(tok, ",")
 		}
 
-		if j < i {
-			rhs := logor(&tok, tok)
-			if lhses[j].Kind == ND_NULL_EXPR {
-				node = rhs
-			} else {
-				node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
-				addType(node)
-				if lhses[j].Obj != nil {
-					if isInteger(node.Ty) {
-						lhses[j].Obj.Val = eval(rhs)
-					} else if isFlonum(node.Ty) {
-						lhses[j].Obj.FVal = evalDouble(rhs)
-					}
+		rhs := logor(&tok, tok)
+		if lhses[j].Kind == ND_NULL_EXPR {
+			node = rhs
+		} else {
+			node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
+			addType(node)
+			if isAppend || isMake {
+				node.Ty.Len = rhs.Ty.Len
+				node.Ty.Cap = rhs.Ty.Cap
+				node.Ty.UArrNode = rhs.Ty.UArrNode
+				node.Ty.UArrIdx = rhs.Ty.UArrIdx
+			}
+			if lhses[j].Obj != nil {
+				if isInteger(node.Ty) {
+					lhses[j].Obj.Val = eval(rhs)
+				} else if isFlonum(node.Ty) {
+					lhses[j].Obj.FVal = evalDouble(rhs)
 				}
 			}
-			if j > 0 {
-				node = newBinary(ND_COMMA, prev, node, tok)
-			}
-			prev = node
-		} else {
-			valtok = tok
-			tok = tok.Next
 		}
+		cur.Next = newUnary(ND_EXPR_STMT, node, tok)
+		cur = cur.Next
 	}
 
 	if j > len(lhses) {
@@ -2026,7 +2036,9 @@ func assignList(rest **Token, tok *Token) *Node {
 	}
 
 	*rest = tok
-	return newUnary(ND_EXPR_STMT, node, start)
+	asgNode := newNode(ND_BLOCK, start)
+	asgNode.Body = head.Next
+	return asgNode
 }
 
 // compound-stmt = (typedef | declaration | stmt)* "}"
@@ -2082,7 +2094,17 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 		} else {
 			cur.Next = stmt(&tok, tok)
 
+			if isAppend {
+				cur = cur.Next
+				addType(cur)
+				cur.Next = appendAsg
+				isAppend = false
+			}
+
+			isMake = false
+
 		}
+
 		cur = cur.Next
 		addType(cur) //
 	}
@@ -2408,7 +2430,7 @@ func evalDouble(node *Node) float64 {
 	}
 }
 
-// Convert `A op= B` to `*tmp = *tmp op B`
+// Convert `A op= B` to `tmp = &A, *tmp = *tmp op B`
 // where tmp is a fresh pointer variable.
 func toAssign(binary *Node) *Node {
 	printCalledFunc()
@@ -2454,7 +2476,18 @@ func assign(rest **Token, tok *Token) *Node {
 				node.Obj.FVal = evalDouble(rhs)
 			}
 		}
-		return newBinary(ND_ASSIGN, node, rhs, tok)
+
+		if isAppend || isMake {
+			addType(node)
+			node.Ty.Len = rhs.Ty.Len
+			node.Ty.Cap = rhs.Ty.Cap
+			node.Ty.UArrNode = rhs.Ty.UArrNode
+			node.Ty.UArrIdx = rhs.Ty.UArrIdx
+		}
+
+		node = newBinary(ND_ASSIGN, node, rhs, tok)
+		addType(node)
+		return node
 	}
 
 	if equal(tok, "+=") {
@@ -2657,12 +2690,12 @@ func shift(rest **Token, tok *Token) *Node {
 	}
 }
 
+// newAdd :
 // In C, `+` operator is overloaded to perform the pointer arithmetic.
 // If p is a pointer, p+n add not n but sizeof(*p)*n to the value of p,
 // sothat p+n pointes to the location n elements (not bytes) ahead of p.
 // In other words, we need to scale an integer value before adding to a
 // pointer value. This function takes care of the scaling.
-// => that isn't supported in Go.
 func newAdd(lhs, rhs *Node, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -2692,7 +2725,6 @@ func newAdd(lhs, rhs *Node, tok *Token) *Node {
 }
 
 // Like `+`, `-` is overloaded for the pointer type.
-// => that isn't supported in Go.
 func newSub(lhs, rhs *Node, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -3027,14 +3059,29 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 		node.Ty)
 }
 
-// slice-expr = primary "[" expr ":" expr "]"
+// slice-expr = primary "[" expr ":" const-expr "]"
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
 	end := constExpr(rest, tok.Next)
 	node := newUnary(ND_ADDR,
 		newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
-	node.Ty = sliceType(node.Ty.Base, int(end-first), cur.Obj.Ty.ArrSz-int(first))
+
+	len := int(end - first)
+	var cap int
+	switch cur.Obj.Ty.Kind {
+	case TY_ARRAY:
+		cap = cur.Obj.Ty.ArrSz - int(first)
+	case TY_SLICE:
+		cap = cur.Obj.Ty.Cap - int(first)
+	default:
+		panic(errorTok(start, "is not neither array nor slice"))
+	}
+
+	node.Ty = sliceType(node.Ty.Base, len, cap)
+	node.Ty.UArrIdx = first
+	node.Ty.UArrNode = cur
+
 	return node
 }
 
@@ -3077,7 +3124,6 @@ func postfix(rest **Token, tok *Token) *Node {
 
 		if equal(tok, "[") {
 			// x[y:z] is slice
-			// x[y] is short for *(x+y)
 			start := tok
 			idx := expr(&tok, tok.Next)
 			if equal(tok, ":") {
@@ -3086,8 +3132,24 @@ func postfix(rest **Token, tok *Token) *Node {
 				*rest = tok
 				return node
 			}
+			i := eval(idx)
+			if i < 0 {
+				panic(errorTok(idx.Tok,
+					"invalid argument: index %d (constant of type int) must not be negative", i))
+			}
+			addType(node)
+			if node.Ty != nil {
+				if node.Ty.Kind == TY_ARRAY && i >= int64(node.Ty.ArrSz) {
+					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.ArrSz))
+				}
+				if node.Ty.Kind == TY_SLICE && i >= int64(node.Ty.Len) && !node.Ty.IsFlex {
+					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.Len))
+				}
+			}
 			tok = skip(tok, "]")
+			// x[y] is short for *(x+y)
 			node = newUnary(ND_DEREF, newAdd(node, idx, start), start)
+			addType(node)
 			continue
 		}
 
@@ -3185,9 +3247,27 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	return node
 }
 
+var isMake bool
+var isAppend bool
+var appendAsg *Node
+
+func countAppElem(tok *Token) int {
+	ret := 0
+	for !equal(tok, ")") {
+		tok = skip(tok, ",")
+		assign(&tok, tok)
+		ret++
+	}
+	return ret
+}
+
 // primary = "(" expr ")"
-//         | "sizeof" "(" type-name ")"
-//         | "sizeof" unary
+//         | "Sizeof" "(" type-name ")"
+//         | "Sizeof" unary
+//         | "len" unary
+//         | "cap" unary
+//         | "make" "(" slice-type-name "," length "," capacity ")"
+//         | "append" "(" slice-expr "," element ( "," element)* ")"
 //         | ident
 //         | str
 //         | num
@@ -3236,6 +3316,135 @@ func primary(rest **Token, tok *Token) *Node {
 		node := unary(rest, tok.Next)
 		addType(node)
 		return newUlong(int64(node.Ty.Cap), tok)
+	}
+
+	// 'make' function for slice only.
+	if equal(tok, "make") && equal(tok.Next, "(") {
+		isMake = true
+		start := tok
+		ty := readTypePreffix(&tok, tok.Next.Next, nil)
+		tok = skip(tok, ",")
+		len := constExpr(&tok, tok)
+		var cap int64
+		if equal(tok, ")") {
+			ty.Len = int(len)
+			ty.Cap = int(len)
+			cap = len
+		} else {
+			tok = skip(tok, ",")
+			cap = constExpr(&tok, tok)
+			ty.Len = int(len)
+			ty.Cap = int(cap)
+		}
+		// Make the underlying array.
+		uArr := newAnonGvar(arrayOf(ty.Base, int(cap)))
+		gvarZeroInit(uArr, tok)
+		uaNode := newVarNode(uArr, start)
+		ty.UArrNode = uaNode
+
+		node := newUnary(ND_ADDR,
+			newUnary(ND_DEREF,
+				newAdd(uaNode, newNum(0, start), start), start), start)
+		addType(node)
+		node.Ty = ty
+		*rest = skip(tok, ")")
+		return node
+	}
+
+	if equal(tok, "append") {
+		tok = skip(tok.Next, "(")
+		slice := postfix(&tok, tok)
+		addType(slice)
+		if slice.Ty.Kind != TY_SLICE {
+			panic(errorTok(
+				tok,
+				"first argument to append must be a slice; have a (variable of type %s)",
+				slice.Ty.TyName))
+		}
+		isAppend = true
+		cntElem := countAppElem(tok)
+
+		// In the case that the new length is no more than the slice's capacity.
+		if slice.Ty.Len+cntElem <= slice.Ty.Cap {
+			head := &Node{}
+			cur := head
+			for !equal(tok, ")") {
+				tok = skip(tok, ",")
+				elem := assign(&tok, tok)
+
+				// Assign elem to slice[slice.Obj.Ty.Len]
+				expr := newBinary(ND_ASSIGN,
+					newUnary(ND_DEREF,
+						newAdd(slice, newNum(int64(slice.Ty.Len), tok), tok), tok),
+					elem, tok)
+				slice.Ty.Len++
+				cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+				cur = cur.Next
+			}
+			appendAsg = newNode(ND_BLOCK, tok)
+			appendAsg.Body = head.Next
+
+			node := newUnary(ND_ADDR,
+				newUnary(ND_DEREF,
+					newAdd(slice, newNum(0, tok), tok), tok), tok)
+			addType(node)
+			node.Ty = slice.Ty
+			*rest = skip(tok, ")")
+			return node
+		}
+
+		// In the case that the new length is more than original slice's capacity,
+		// Make a new underlying array.
+		uArrTy := arrayOf(slice.Ty.Base, slice.Ty.Cap*2+cntElem)
+		uArr := newAnonGvar(uArrTy)
+		gvarZeroInit(uArr, tok)
+		uaNode := newVarNode(uArr, tok)
+		addType(uaNode)
+
+		head := &Node{}
+		cur := head
+		length := slice.Ty.Len
+		// Copy to new array from the original underlying array.
+		var i int64
+		for i = 0; i < int64(length); i++ {
+			lhs := newUnary(ND_DEREF,
+				newAdd(uaNode, newNum(i, tok), tok), tok)
+			addType(lhs)
+			// 右辺がnewUnary(ND_DEREF, newAdd(slice, newNum(i, tok), tok), tok)だと上手く代入できない
+			rhs := newUnary(ND_DEREF,
+				newAdd(slice.Ty.UArrNode, newNum(slice.Ty.UArrIdx+i, tok), tok), tok)
+			addType(rhs)
+			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
+			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+			cur = cur.Next
+		}
+
+		for !equal(tok, ")") {
+			tok = skip(tok, ",")
+			elem := assign(&tok, tok)
+			addType(elem)
+
+			lhs := newUnary(ND_DEREF,
+				newAdd(uaNode, newNum(int64(length), tok), tok), tok)
+			addType(lhs)
+			// Assign elem to slice[slice.Obj.Ty.Len]
+			expr := newBinary(ND_ASSIGN, lhs, elem, tok)
+			length++
+			addType(expr)
+			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+			cur = cur.Next
+		}
+
+		appendAsg = newNode(ND_BLOCK, tok)
+		appendAsg.Body = head.Next
+		addType(appendAsg)
+
+		node := newUnary(ND_ADDR,
+			newUnary(ND_DEREF, newAdd(uaNode, newNum(0, tok), tok), tok), tok)
+		node.Ty = sliceType(uArrTy.Base, length, uArrTy.ArrSz)
+		node.Ty.UArrNode = uaNode
+		*rest = skip(tok, ")")
+		return node
 	}
 
 	if tok.Kind == TK_BLANKIDENT {
