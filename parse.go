@@ -2007,7 +2007,7 @@ func assignList(rest **Token, tok *Token) *Node {
 		}
 
 		rhs := logor(&tok, tok)
-		if lhses[j].Kind == ND_EXPR_STMT {
+		if lhses[j].Kind == ND_NULL_EXPR {
 			node = rhs
 		} else {
 			node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
@@ -3142,7 +3142,7 @@ func postfix(rest **Token, tok *Token) *Node {
 				if node.Ty.Kind == TY_ARRAY && i >= int64(node.Ty.ArrSz) {
 					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.ArrSz))
 				}
-				if node.Ty.Kind == TY_SLICE && i >= int64(node.Ty.Len) {
+				if node.Ty.Kind == TY_SLICE && i >= int64(node.Ty.Len) && !node.Ty.IsFlex {
 					panic(errorTok(idx.Tok, "index out of range [%d] with length %d", i, node.Ty.Len))
 				}
 			}

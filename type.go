@@ -121,6 +121,7 @@ func copyType(ty *Type) *Type {
 		Params:     ty.Params,
 		IsVariadic: ty.IsVariadic,
 		Next:       ty.Next,
+		IsFlex:     ty.IsFlex,
 	}
 	return ret
 }

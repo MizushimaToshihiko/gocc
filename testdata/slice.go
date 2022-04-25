@@ -387,6 +387,7 @@ func main() {
 	assert(7, cap(g04[0]), "cap(g04[0])")
 	assert(4, len(g04[1]), "len(g04[1])")
 	assert(7, cap(g04[1]), "cap(g04[1])")
+	assert(4, len(g04[2]), "len(g04[1])")
 	assert(0, strcmp(g04[0][0], "abc"), "strcmp(g04[0][0], \"abc\")")
 	assert(0, strcmp(g04[0][1], "def"), "strcmp(g04[0][1], \"def\")")
 	assert(0, strcmp(g04[0][2], "ggg"), "strcmp(g04[0][2], \"ggg\")")
@@ -486,12 +487,9 @@ func main() {
 	assert(3, cap(s040), "cap(s040)")
 	s040[0] = "abc"
 	s040[1] = "def"
-	println("s040[0]: %s", s040[0])
-	println("s040[1]: %s", s040[1])
 	assert(0, strcmp(s040[0], "abc"), "strcmp(s040[0], \"abc\")")
 	assert(0, strcmp(s040[1], "def"), "strcmp(s040[1], \"def\")")
 	s040 = append(s040, "ghi", "jkl", "mno")
-	println("s040[0]: %s", s040[0])
 	assert(0, strcmp(s040[0], "abc"), "strcmp(s040[0], \"abc\")")
 	assert(0, strcmp(s040[1], "def"), "strcmp(s040[1], \"def\")")
 	assert(0, strcmp(s040[2], "ghi"), "strcmp(s040[2], \"ghi\")")
