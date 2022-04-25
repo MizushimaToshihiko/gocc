@@ -267,12 +267,7 @@ func getCommonType(ty1, ty2 *Type) *Type {
 //
 // This operation is called the "usual arithmetic conversion".
 func usualArithConv(lhs **Node, rhs **Node) {
-	// fmt.Printf("usualArithConv: *lhs: %#v\n\n", *lhs)
-	// fmt.Printf("usualArithConv: (*lhs).Ty: %#v\n\n", (*lhs).Ty)
-	// fmt.Printf("usualArithConv: *rhs: %#v\n\n", *rhs)
-	// fmt.Printf("usualArithConv: (*rhs).Ty: %#v\n\n", (*rhs).Ty)
 	ty := getCommonType((*lhs).Ty, (*rhs).Ty)
-	// fmt.Printf("usualArithConv: ty: %#v\n\n", ty)
 	*lhs = newCast(*lhs, ty)
 	*rhs = newCast(*rhs, ty)
 }
@@ -352,10 +347,6 @@ func (e *errWriter) visit(node *Node) {
 		return
 	case ND_VAR:
 		node.Ty = node.Obj.Ty
-		// if node.Obj.Ty.Kind == TY_ARRAY && node.Obj.Ty.Sz == 0 {
-		// fmt.Printf("e.visit: node.Obj.Ty: %#v\n\n", node.Obj.Ty)
-		// fmt.Printf("e.visit: node.Tok: %#v\n\n", node.Tok)
-		// }
 		return
 	case ND_COND:
 		if node.Then.Ty.Kind == TY_VOID || node.Els.Ty.Kind == TY_VOID {
