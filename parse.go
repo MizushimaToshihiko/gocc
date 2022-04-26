@@ -1566,7 +1566,6 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 	if (!isShort && equal(tok, "=")) || (isShort && equal(tok, ":=")) {
 		j := 0
 		for !equal(tok, ";") {
-			fmt.Printf("declaration: tok: %#v\n\n", tok)
 			v := identList[j]
 			expr := lvarInitializer(&tok, tok.Next, v)
 			addType(expr)
@@ -3063,7 +3062,23 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 // slice-expr = primary "[" expr ":" const-expr "]"
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
-	end := constExpr(rest, tok.Next)
+
+	var end int64
+	if equal(tok.Next, "]") {
+		switch cur.Obj.Ty.Kind {
+		case TY_ARRAY:
+			end = int64(cur.Obj.Ty.ArrSz)
+		case TY_SLICE:
+			fmt.Printf("sliceExpr: cur.Obj: %#v\n\n", cur.Obj)
+			fmt.Printf("sliceExpr: cur.Obj.Ty: %#v\n\n", cur.Obj.Ty)
+			end = int64(cur.Obj.Ty.Len)
+		}
+		fmt.Println("sliceExpr: end:", end)
+		*rest = tok.Next
+	} else {
+		end = constExpr(rest, tok.Next)
+	}
+
 	node := newUnary(ND_ADDR,
 		newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
@@ -3079,6 +3094,7 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 		panic(errorTok(start, "is not neither array nor slice"))
 	}
 
+	fmt.Println("sliceExpr: len:", len)
 	node.Ty = sliceType(node.Ty.Base, len, cap)
 	node.Ty.UArrIdx = first
 	node.Ty.UArrNode = cur
@@ -3480,8 +3496,6 @@ func primary(rest **Token, tok *Token) *Node {
 		appendAsg = newNode(ND_BLOCK, tok)
 		appendAsg.Body = head.Next
 		addType(appendAsg)
-
-		dst.Ty.Len = int(newLen)
 
 		*rest = tok.Next
 		return newNum(newLen, start)
