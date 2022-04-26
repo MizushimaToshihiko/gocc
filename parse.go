@@ -3069,11 +3069,8 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 		case TY_ARRAY:
 			end = int64(cur.Obj.Ty.ArrSz)
 		case TY_SLICE:
-			fmt.Printf("sliceExpr: cur.Obj: %#v\n\n", cur.Obj)
-			fmt.Printf("sliceExpr: cur.Obj.Ty: %#v\n\n", cur.Obj.Ty)
 			end = int64(cur.Obj.Ty.Len)
 		}
-		fmt.Println("sliceExpr: end:", end)
 		*rest = tok.Next
 	} else {
 		end = constExpr(rest, tok.Next)
@@ -3094,7 +3091,6 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 		panic(errorTok(start, "is not neither array nor slice"))
 	}
 
-	fmt.Println("sliceExpr: len:", len)
 	node.Ty = sliceType(node.Ty.Base, len, cap)
 	node.Ty.UArrIdx = first
 	node.Ty.UArrNode = cur
