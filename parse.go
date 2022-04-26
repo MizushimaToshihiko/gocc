@@ -1566,6 +1566,7 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 	if (!isShort && equal(tok, "=")) || (isShort && equal(tok, ":=")) {
 		j := 0
 		for !equal(tok, ";") {
+			fmt.Printf("declaration: tok: %#v\n\n", tok)
 			v := identList[j]
 			expr := lvarInitializer(&tok, tok.Next, v)
 			addType(expr)
@@ -3447,42 +3448,44 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
-	// if equal(tok, "copy") && equal(tok, "(") {
-	// 	start := tok
-	// 	tok = skip(tok.Next, "(")
+	if equal(tok, "copy") && equal(tok.Next, "(") {
+		start := tok
+		tok = skip(tok.Next, "(")
 
-	// 	dst := assign(rest, tok)
-	// 	addType(dst)
+		dst := assign(&tok, tok)
+		addType(dst)
 
-	// 	tok = skip(tok, ",")
+		tok = skip(tok, ",")
 
-	// 	src := assign(rest, tok)
-	// 	addType(src)
+		src := assign(&tok, tok)
+		addType(src)
 
-	// 	// Get the new length of 'dst'.
-	// 	newLen := int64(min(dst.Ty.Len, src.Ty.Len))
+		// Get the new length of 'dst'.
+		newLen := int64(min(dst.Ty.Len, src.Ty.Len))
 
-	// 	// Copy values in 'src'.
-	// 	isAppend = true
-	// 	head := &Node{}
-	// 	cur := head
-	// 	var i int64
-	// 	for i = 0; i < newLen; i++ {
-	// 		lhs := newUnary(ND_DEREF,
-	// 			newAdd(dst, newNum(i, tok), tok), tok)
-	// 		rhs := newUnary(ND_DEREF,
-	// 			newAdd(src, newNum(i, tok), tok), tok)
-	// 		cur.Next = newBinary(ND_ASSIGN, lhs, rhs, tok)
-	// 		cur = cur.Next
-	// 	}
-	// 	appendAsg = newNode(ND_BLOCK, tok)
-	// 	appendAsg.Body = head.Next
-	// 	addType(appendAsg)
+		// Copy values in 'src'.
+		isAppend = true
+		head := &Node{}
+		cur := head
+		var i int64
+		for i = 0; i < newLen; i++ {
+			lhs := newUnary(ND_DEREF,
+				newAdd(dst, newNum(i, tok), tok), tok)
+			rhs := newUnary(ND_DEREF,
+				newAdd(src, newNum(i, tok), tok), tok)
+			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
+			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+			cur = cur.Next
+		}
+		appendAsg = newNode(ND_BLOCK, tok)
+		appendAsg.Body = head.Next
+		addType(appendAsg)
 
-	// 	dst.Ty.Len = int(newLen)
+		dst.Ty.Len = int(newLen)
 
-	// 	return newNum(newLen, start)
-	// }
+		*rest = tok.Next
+		return newNum(newLen, start)
+	}
 
 	if tok.Kind == TK_BLANKIDENT {
 		*rest = tok.Next
