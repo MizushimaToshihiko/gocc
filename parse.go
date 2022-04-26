@@ -3279,8 +3279,9 @@ func countAppElem(tok *Token) int {
 //         | "Sizeof" unary
 //         | "len" unary
 //         | "cap" unary
-//         | "make" "(" slice-type-name "," length "," capacity ")"
-//         | "append" "(" slice-expr "," element ( "," element)* ")"
+//         | "make" "(" type-name "," const-expr "," const-expr ")"
+//         | "append" "(" postfix "," assign ( "," assign)* ")"
+//         | "copy" "(" assign "," assign ")"
 //         | ident
 //         | str
 //         | num
@@ -3364,6 +3365,7 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
+	// 'append' function
 	if equal(tok, "append") && equal(tok.Next, "(") {
 		tok = skip(tok.Next, "(")
 		slice := postfix(&tok, tok)
@@ -3460,6 +3462,7 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
+	// 'copy' function for slice only.
 	if equal(tok, "copy") && equal(tok.Next, "(") {
 		start := tok
 		tok = skip(tok.Next, "(")

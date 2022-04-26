@@ -534,5 +534,13 @@ func main() {
 	assert(0, strcmp(s042[2], "ghi"), "strcmp(s042[2], \"ghi\")")
 	assert(0, strcmp(s042[3], "jkl"), "strcmp(s042[3], \"jkl\")")
 
+	s043 := make([][]int, 6)
+	assert(6, len(s043), "len(s043)")
+	assert(0, len(s043[0]), "len(s043[0])")
+	s043[0] = append(s043[0], 1)
+	assert(1, len(s043[0]), "len(s043[0])")
+	assert(1, s043[0][0], "s043[0][0]")
+	assert(1, len(s043[1]), "len(s043[1])") // 他も変わっちゃう
+
 	println("OK")
 }
