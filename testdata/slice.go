@@ -497,5 +497,11 @@ func main() {
 	assert(0, strcmp(s040[3], "jkl"), "strcmp(s040[3], \"jkl\")")
 	assert(0, strcmp(s040[4], "mno"), "strcmp(s040[4], \"mno\")")
 
+	// var a041 = [8]int{0, 1, 2, 3, 4, 5, 6, 7}
+	// var s041 = make([]int, 6)
+	// n0411 := copy(s041, a041[0:]) // n0411 == 6, s041 == []int{0, 1, 2, 3, 4, 5}
+	// n0412 := copy(s041, s041[2:]) // n0412 == 4, s041 == []int{2, 3, 4, 5, 4, 5}
+	// assert(6, n0411, "n0411")
+
 	println("OK")
 }

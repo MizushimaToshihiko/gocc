@@ -21,8 +21,10 @@
    - slice
      - 初期化
        - array[2:3]みたいなの -> 完了
-       - make関数
-       - copy関数
+       - make関数 -> 概ね完了
+       - copy関数 -> 概ね完了
+       - 二次元以上のsliceの場合、一部appendすると同じdimensionの他のlengthも一緒に変わってしまう  
+        => データ構造を見直した方が良い?
    - rune(int32のエイリアス)
    - rune literal => tokenizerのchar literalを変更する?
    - blank identifiers : "_" -> 完了
