@@ -3062,7 +3062,23 @@ func newIncDec(node *Node, tok *Token, addend int) *Node {
 // slice-expr = primary "[" expr ":" const-expr "]"
 func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *Node {
 	first := eval(idx)
-	end := constExpr(rest, tok.Next)
+
+	var end int64
+	if equal(tok.Next, "]") {
+		switch cur.Obj.Ty.Kind {
+		case TY_ARRAY:
+			end = int64(cur.Obj.Ty.ArrSz)
+		case TY_SLICE:
+			fmt.Printf("sliceExpr: cur.Obj: %#v\n\n", cur.Obj)
+			fmt.Printf("sliceExpr: cur.Obj.Ty: %#v\n\n", cur.Obj.Ty)
+			end = int64(cur.Obj.Ty.Len)
+		}
+		fmt.Println("sliceExpr: end:", end)
+		*rest = tok.Next
+	} else {
+		end = constExpr(rest, tok.Next)
+	}
+
 	node := newUnary(ND_ADDR,
 		newUnary(ND_DEREF, newAdd(cur, idx, start), start), start)
 	addType(node)
@@ -3078,6 +3094,7 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 		panic(errorTok(start, "is not neither array nor slice"))
 	}
 
+	fmt.Println("sliceExpr: len:", len)
 	node.Ty = sliceType(node.Ty.Base, len, cap)
 	node.Ty.UArrIdx = first
 	node.Ty.UArrNode = cur
@@ -3447,42 +3464,42 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
-	// if equal(tok, "copy") && equal(tok, "(") {
-	// 	start := tok
-	// 	tok = skip(tok.Next, "(")
+	if equal(tok, "copy") && equal(tok.Next, "(") {
+		start := tok
+		tok = skip(tok.Next, "(")
 
-	// 	dst := assign(rest, tok)
-	// 	addType(dst)
+		dst := assign(&tok, tok)
+		addType(dst)
 
-	// 	tok = skip(tok, ",")
+		tok = skip(tok, ",")
 
-	// 	src := assign(rest, tok)
-	// 	addType(src)
+		src := assign(&tok, tok)
+		addType(src)
 
-	// 	// Get the new length of 'dst'.
-	// 	newLen := int64(min(dst.Ty.Len, src.Ty.Len))
+		// Get the new length of 'dst'.
+		newLen := int64(min(dst.Ty.Len, src.Ty.Len))
 
-	// 	// Copy values in 'src'.
-	// 	isAppend = true
-	// 	head := &Node{}
-	// 	cur := head
-	// 	var i int64
-	// 	for i = 0; i < newLen; i++ {
-	// 		lhs := newUnary(ND_DEREF,
-	// 			newAdd(dst, newNum(i, tok), tok), tok)
-	// 		rhs := newUnary(ND_DEREF,
-	// 			newAdd(src, newNum(i, tok), tok), tok)
-	// 		cur.Next = newBinary(ND_ASSIGN, lhs, rhs, tok)
-	// 		cur = cur.Next
-	// 	}
-	// 	appendAsg = newNode(ND_BLOCK, tok)
-	// 	appendAsg.Body = head.Next
-	// 	addType(appendAsg)
+		// Copy values in 'src'.
+		isAppend = true
+		head := &Node{}
+		cur := head
+		var i int64
+		for i = 0; i < newLen; i++ {
+			lhs := newUnary(ND_DEREF,
+				newAdd(dst, newNum(i, tok), tok), tok)
+			rhs := newUnary(ND_DEREF,
+				newAdd(src, newNum(i, tok), tok), tok)
+			expr := newBinary(ND_ASSIGN, lhs, rhs, tok)
+			cur.Next = newUnary(ND_EXPR_STMT, expr, tok)
+			cur = cur.Next
+		}
+		appendAsg = newNode(ND_BLOCK, tok)
+		appendAsg.Body = head.Next
+		addType(appendAsg)
 
-	// 	dst.Ty.Len = int(newLen)
-
-	// 	return newNum(newLen, start)
-	// }
+		*rest = tok.Next
+		return newNum(newLen, start)
+	}
 
 	if tok.Kind == TK_BLANKIDENT {
 		*rest = tok.Next
