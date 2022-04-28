@@ -1225,19 +1225,17 @@ func (c *codeWriter) genStmt(node *Node) {
 		for ; n != nil; n = n.Next {
 			c.genAddr(n)
 			c.push()
-			c.println("	mov %s, %%rax", argreg64[i])
+			if isFlonum(n.Ty) {
+				c.println("	movq %s, %%xmm0", argreg64[i])
+			} else {
+				c.println("	mov %s, %%rax", argreg64[i])
+			}
 			c.store(n.Ty)
 			i++
 		}
 		return
 	case ND_RETURN:
 		// c.println("# ND_RETURN")
-		// if node.Lhs != nil {
-		// 	fmt.Printf("node.Lhs: %#v\n\n", node.Lhs)
-		// 	fmt.Printf("node.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs)
-		// 	fmt.Printf("node.Lhs.Lhs.Lhs: %#v\n\n", node.Lhs.Lhs.Lhs)
-		// 	fmt.Printf("node.Lhs.Lhs.Rhs: %#v\n\n", node.Lhs.Lhs.Rhs)
-		// 	c.genExpr(node.Lhs)
 
 		// Save passed-by-register return values to the stack.
 		i := 0
