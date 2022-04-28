@@ -154,22 +154,31 @@ func pointerTo(base *Type) *Type {
 }
 
 func funcType(retTy *Type, params *Type) *Type {
-	head := params
-	cur := head
+
 	var typarams string
-	for ; cur != nil; cur = cur.Next {
-		typarams += cur.TyName + ","
+	if params != nil {
+		head := params
+		cur := head
+		for ; cur != nil; cur = cur.Next {
+			typarams += cur.TyName + ","
+		}
+		params = head
 	}
 
 	var retty string
 	if retTy != nil {
-		retty = retTy.TyName
+		head := retTy
+		cur := head
+		for ; cur != nil; cur = cur.Next {
+			retty += cur.TyName + ","
+		}
+		retTy = head
 	}
 
 	return &Type{
 		Kind:   TY_FUNC,
 		RetTy:  retTy,
-		Params: head,
+		Params: params,
 		TyName: "func(" + typarams + ")" + retty,
 	}
 }

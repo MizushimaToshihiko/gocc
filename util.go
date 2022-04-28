@@ -23,7 +23,7 @@ func printTokens(tok *Token) {
 	fmt.Print("# Tokens:\n")
 	for tok.Next != nil {
 		fmt.Printf(" '%s' ", tok.Str)
-		if tok.Str == ";" || tok.Kind == TK_COMM {
+		if tok.Str == ";" || tok.Str == "{" || tok.Kind == TK_COMM {
 			fmt.Println()
 		}
 		tok = tok.Next

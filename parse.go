@@ -67,48 +67,49 @@ type Obj struct {
 type NodeKind int
 
 const (
-	ND_NULL_EXPR NodeKind = iota // Do nothing
-	ND_ADD                       // +
-	ND_SUB                       // -
-	ND_MUL                       // *
-	ND_DIV                       // /
-	ND_NEG                       // unary -
-	ND_MOD                       // %
-	ND_BITAND                    // &
-	ND_BITOR                     // |
-	ND_BITXOR                    // ^
-	ND_SHL                       // <<
-	ND_SHR                       // >>
-	ND_EQ                        // ==
-	ND_NE                        // !=
-	ND_LT                        // <
-	ND_LE                        // <=
-	ND_ASSIGN                    // =
-	ND_COND                      // ?:
-	ND_COMMA                     //
-	ND_MEMBER                    // . (struct member access)
-	ND_ADDR                      // unary &
-	ND_DEREF                     // unary *
-	ND_NOT                       // !
-	ND_BITNOT                    // ~
-	ND_LOGAND                    // &&
-	ND_LOGOR                     // ||
-	ND_RETURN                    // "return"
-	ND_IF                        // "if"
-	ND_FOR                       // "for" or "while"
-	ND_SWITCH                    // "switch"
-	ND_CASE                      // "case"
-	ND_BLOCK                     // { ... }
-	ND_GOTO                      // "goto"
-	ND_LABEL                     // Labeled statement
-	ND_FUNCALL                   // Function call
-	ND_EXPR_STMT                 // Expression statement
-	ND_STMT_EXPR                 // Statement expression
-	ND_VAR                       // Variable
-	ND_NUM                       // Integer
-	ND_CAST                      // Type cast
-	ND_MEMZERO                   // Zero-clear a stack variable
-	ND_SIZEOF                    // 'Sizeof'
+	ND_NULL_EXPR   NodeKind = iota // Do nothing
+	ND_ADD                         // +
+	ND_SUB                         // -
+	ND_MUL                         // *
+	ND_DIV                         // /
+	ND_NEG                         // unary -
+	ND_MOD                         // %
+	ND_BITAND                      // &
+	ND_BITOR                       // |
+	ND_BITXOR                      // ^
+	ND_SHL                         // <<
+	ND_SHR                         // >>
+	ND_EQ                          // ==
+	ND_NE                          // !=
+	ND_LT                          // <
+	ND_LE                          // <=
+	ND_ASSIGN                      // =
+	ND_COND                        // ?:
+	ND_COMMA                       //
+	ND_MEMBER                      // . (struct member access)
+	ND_ADDR                        // unary &
+	ND_DEREF                       // unary *
+	ND_NOT                         // !
+	ND_BITNOT                      // ~
+	ND_LOGAND                      // &&
+	ND_LOGOR                       // ||
+	ND_RETURN                      // "return"
+	ND_IF                          // "if"
+	ND_FOR                         // "for" or "while"
+	ND_SWITCH                      // "switch"
+	ND_CASE                        // "case"
+	ND_BLOCK                       // { ... }
+	ND_GOTO                        // "goto"
+	ND_LABEL                       // Labeled statement
+	ND_FUNCALL                     // Function call
+	ND_EXPR_STMT                   // Expression statement
+	ND_STMT_EXPR                   // Statement expression
+	ND_VAR                         // Variable
+	ND_NUM                         // Integer
+	ND_CAST                        // Type cast
+	ND_MEMZERO                     // Zero-clear a stack variable
+	ND_SIZEOF                      // 'Sizeof'
+	ND_MULTIASSIGN                 // Assign to multiple variables from functions returning multiple return values
 )
 
 // define AST node
@@ -148,6 +149,9 @@ type Node struct {
 
 	// Function definition
 	RetVals *Node // return values
+
+	// Assigning from functions returning multiple return values
+	Masg *Node
 
 	// Goto or labeled statement
 	Lbl       string
@@ -695,6 +699,7 @@ func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 		paramList = append(paramList, copyType(ty2))
 	}
 
+	// Handle the cases that typename omittied, like "var a,b int"
 	cnt := 0
 	for i := 0; i < len(paramList); i++ {
 		param := paramList[i]
@@ -1974,6 +1979,14 @@ func isShortVarSpec(tok *Token) bool {
 	return false
 }
 
+func countRetTys(v *Obj) int {
+	i := 0
+	for t := v.Ty.RetTy; t != nil; t = t.Next {
+		i++
+	}
+	return i
+}
+
 // assign-list = Expr-list "=" Expr-list
 func assignList(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
@@ -2007,6 +2020,30 @@ func assignList(rest **Token, tok *Token) *Node {
 		}
 
 		rhs := logor(&tok, tok)
+
+		if rhs.Kind == ND_FUNCALL {
+			numVals := countRetTys(rhs.Lhs.Obj)
+			if numVals > 1 {
+				// とりあえずlhsesの長さだけで判定、エラーも適当
+				if len(lhses) != numVals {
+					panic(errorTok(tok, "too many assigns: left:%d, right:%d", len(lhses), numVals))
+				}
+				node = newUnary(ND_MULTIASSIGN, rhs, tok)
+				head := &Node{}
+				cur := head
+				for k := 0; k < len(lhses); k++ {
+					cur.Next = lhses[k]
+					cur = cur.Next
+					addType(cur)
+				}
+				node.Masg = head.Next
+				*rest = tok.Next
+				node = newUnary(ND_EXPR_STMT, node, tok)
+				addType(node)
+				return node
+			}
+		}
+
 		if lhses[j].Kind == ND_NULL_EXPR {
 			node = rhs
 		} else {
@@ -2867,7 +2904,7 @@ func unary(rest **Token, tok *Token) *Node {
 	return postfix(rest, tok)
 }
 
-// func-decl = "func(" param-type* ")" return-type
+// func-decl = "func(" param-type* ")" ( return-type | "(" return-type ("," return-type)* ")" )
 func funcDecl(rest **Token, tok *Token, name *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
@@ -2878,6 +2915,7 @@ func funcDecl(rest **Token, tok *Token, name *Token) *Type {
 	cur := head
 	first := true
 
+	// Get parameters
 	for !equal(tok, ")") {
 		if !first {
 			tok = skip(tok, ",")
@@ -2891,18 +2929,25 @@ func funcDecl(rest **Token, tok *Token, name *Token) *Type {
 		cur.Next = copyType(paramty)
 		cur = cur.Next
 	}
-
 	tok = skip(tok, ")")
 
 	var retty *Type
 	if equal(tok, "(") {
 		tok = skip(tok, "(")
-		retty = readTypePreffix(&tok, tok, nil)
+		head := &Type{}
+		cur := head
+		first := true
 		for !equal(tok, ")") {
-			tok = skip(tok, ",")
-			retty.Next = readTypePreffix(&tok, tok, nil)
-			retty = retty.Next
+			if !first {
+				tok = skip(tok, ",")
+			}
+			first = false
+			ret := readTypePreffix(&tok, tok, nil)
+			cur.Next = copyType(ret)
+			cur = cur.Next
 		}
+		cur.Next = nil
+		retty = head.Next
 		tok = skip(tok, ")")
 	} else {
 		retty = readTypePreffix(&tok, tok, nil)
@@ -3621,21 +3666,28 @@ func function(tok *Token) *Token {
 		panic("\n" + errorTok(ty.NamePos, "function name omitted"))
 	}
 
-	if equal(tok, "(") {
-		tok = skip(tok, "(")
-		ty.RetTy = readTypePreffix(&tok, tok, nil)
-		retty := ty.RetTy
-		for !equal(tok, ")") {
-			tok = skip(tok, ",")
-			retty.Next = readTypePreffix(&tok, tok, nil)
-			retty = retty.Next
+	var retTy *Type
+	if consume(&tok, tok, "(") {
+		head := &Type{}
+		cur := head
+		first := true
+		for !consume(&tok, tok, ")") {
+			if !first {
+				tok = skip(tok, ",")
+			}
+			first = false
+			ret := readTypePreffix(&tok, tok, nil)
+			cur.Next = copyType(ret)
+			cur = cur.Next
 		}
-		tok = skip(tok, ")")
+		retTy = head.Next
 	} else {
-		ty.RetTy = readTypePreffix(&tok, tok, nil)
+		retTy = readTypePreffix(&tok, tok, nil)
 	}
 
-	fn := newGvar(getIdent(ty.Name), ty)
+	name := ty.Name
+	ty = funcType(retTy, ty.Params)
+	fn := newGvar(getIdent(name), ty)
 	fn.IsFunc = true
 	fn.IsDef = !consume(&tok, tok, ";")
 
