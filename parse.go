@@ -3685,8 +3685,11 @@ func function(tok *Token) *Token {
 		retTy = readTypePreffix(&tok, tok, nil)
 	}
 
+	isvariadic := ty.IsVariadic
 	name := ty.Name
 	ty = funcType(retTy, ty.Params)
+	ty.IsVariadic = isvariadic
+
 	fn := newGvar(getIdent(name), ty)
 	fn.IsFunc = true
 	fn.IsDef = !consume(&tok, tok, ";")

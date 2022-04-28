@@ -751,12 +751,11 @@ func (c *codeWriter) genExpr(node *Node) {
 		c.genAddr(node.Lhs)
 		return
 	case ND_MULTIASSIGN:
-		i := 0
-		var n *Node
 		c.genExpr(node.Lhs)
-		n = node.Masg
+
+		i := 0
+		n := node.Masg
 		for ; n != nil; n = n.Next {
-			fmt.Printf("c.genExpr: ND_MUlTIASSIGN: n.Obj: %#v\n\n", n.Obj)
 			c.println("	mov %s, %d(%%rbp)", argreg64[i], n.Obj.Offset)
 			i++
 		}
@@ -1240,10 +1239,8 @@ func (c *codeWriter) genStmt(node *Node) {
 		// Save passed-by-register return values to the stack.
 		i := 0
 		for ret := node.RetVals; ret != nil; ret = ret.Next {
-			fmt.Printf("c.genStmt: ND_RETURN: ret: %#v\n\n", ret)
 			c.genExpr(ret)
 			c.println("	mov %%rax, %s", argreg64[i])
-			fmt.Println("argreg64[i]:", argreg64[i])
 			i++
 
 			ty := ret.Ty
