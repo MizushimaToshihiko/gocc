@@ -160,7 +160,11 @@ func funcType(retTy *Type, params *Type) *Type {
 		head := params
 		cur := head
 		for ; cur != nil; cur = cur.Next {
-			typarams += cur.TyName + ","
+			if cur == head {
+				typarams = cur.TyName
+			} else {
+				typarams += "," + cur.TyName
+			}
 		}
 		params = head
 	}
@@ -170,7 +174,11 @@ func funcType(retTy *Type, params *Type) *Type {
 		head := retTy
 		cur := head
 		for ; cur != nil; cur = cur.Next {
-			retty += cur.TyName + ","
+			if cur == head {
+				retty = cur.TyName
+			} else {
+				retty += "," + cur.TyName
+			}
 		}
 		retTy = head
 	}

@@ -2038,7 +2038,6 @@ func assignList(rest **Token, tok *Token) *Node {
 				}
 				node.Masg = head.Next
 				*rest = tok.Next
-				node = newUnary(ND_EXPR_STMT, node, tok)
 				addType(node)
 				return node
 			}

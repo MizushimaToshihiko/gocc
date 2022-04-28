@@ -750,16 +750,6 @@ func (c *codeWriter) genExpr(node *Node) {
 		// c.println("# ND_ADDR")
 		c.genAddr(node.Lhs)
 		return
-	case ND_MULTIASSIGN:
-		c.genExpr(node.Lhs)
-
-		i := 0
-		n := node.Masg
-		for ; n != nil; n = n.Next {
-			c.println("	mov %s, %d(%%rbp)", argreg64[i], n.Obj.Offset)
-			i++
-		}
-		return
 	case ND_ASSIGN:
 		// c.println("# ND_ASSIGN")
 		c.genAddr(node.Lhs)
@@ -1226,6 +1216,16 @@ func (c *codeWriter) genStmt(node *Node) {
 		// c.println("# ND_LABEL")
 		c.println("%s:", node.UniqueLbl)
 		c.genStmt(node.Lhs)
+		return
+	case ND_MULTIASSIGN:
+		c.genExpr(node.Lhs)
+
+		i := 0
+		n := node.Masg
+		for ; n != nil; n = n.Next {
+			c.println("	mov %s, %d(%%rbp)", argreg64[i], n.Obj.Offset)
+			i++
+		}
 		return
 	case ND_RETURN:
 		// c.println("# ND_RETURN")
