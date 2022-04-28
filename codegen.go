@@ -1223,7 +1223,10 @@ func (c *codeWriter) genStmt(node *Node) {
 		i := 0
 		n := node.Masg
 		for ; n != nil; n = n.Next {
-			c.println("	mov %s, %d(%%rbp)", argreg64[i], n.Obj.Offset)
+			c.genAddr(n)
+			c.push()
+			c.println("	mov %s, %%rax", argreg64[i])
+			c.store(n.Ty)
 			i++
 		}
 		return
