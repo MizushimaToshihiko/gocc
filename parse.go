@@ -1003,7 +1003,8 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		// make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, 0)
 		uArrTy.IsFlex = true
-		uArr := newAnonGvar(uArrTy)
+		uArr := newGvar(fmt.Sprintf("underlying_array%d", cnt), uArrTy)
+		cnt++
 
 		gvarInitializer(rest, tok, uArr)
 
@@ -1489,7 +1490,8 @@ func zeroInit2(init *Initializer, tok *Token) {
 	if init.Ty.Kind == TY_SLICE {
 		// Make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, init.Ty.Cap)
-		uArr := newAnonGvar(uArrTy)
+		uArr := newGvar(fmt.Sprintf("underlying_array%d", cnt), uArrTy)
+		cnt++
 		gvarZeroInit(uArr, tok)
 		uaNode := newVarNode(uArr, tok)
 		init.Expr = newUnary(ND_ADDR,
@@ -3395,7 +3397,8 @@ func primary(rest **Token, tok *Token) *Node {
 			ty.Cap = int(cap)
 		}
 		// Make the underlying array.
-		uArr := newAnonGvar(arrayOf(ty.Base, int(cap)))
+		uArr := newGvar(fmt.Sprintf("underlying_array%d", cnt), arrayOf(ty.Base, int(cap)))
+		cnt++
 		gvarZeroInit(uArr, tok)
 		uaNode := newVarNode(uArr, start)
 		ty.UArrNode = uaNode
@@ -3455,7 +3458,8 @@ func primary(rest **Token, tok *Token) *Node {
 		// In the case that the new length is more than original slice's capacity,
 		// Make a new underlying array.
 		uArrTy := arrayOf(slice.Ty.Base, slice.Ty.Cap*2+cntElem)
-		uArr := newAnonGvar(uArrTy)
+		uArr := newGvar(fmt.Sprintf("underlying_array%d", cnt), uArrTy)
+		cnt++
 		gvarZeroInit(uArr, tok)
 		uaNode := newVarNode(uArr, tok)
 		addType(uaNode)

@@ -1241,8 +1241,6 @@ func (c *codeWriter) genStmt(node *Node) {
 		i := 0
 		for ret := node.RetVals; ret != nil; ret = ret.Next {
 			c.genExpr(ret)
-			c.println("	mov %%rax, %s", argreg64[i])
-			i++
 
 			ty := ret.Ty
 			if ty.Kind == TY_STRUCT {
@@ -1251,6 +1249,9 @@ func (c *codeWriter) genStmt(node *Node) {
 				} else {
 					c.copyStructMem()
 				}
+			} else {
+				c.println("	mov %%rax, %s", argreg64[i])
+				i++
 			}
 		}
 
