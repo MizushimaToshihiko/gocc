@@ -47,6 +47,7 @@
    - const宣言
    - 文字列の足し算
    - *(*type-name)(unary)
+   - a, b = b, a のような多値代入による値の入れ替え
    - グローバル変数の初期化子に関数を使用できるようにする
        - Addendへの登録でconstExpr()を使うのを止めれば良い?  
           -> RelocationのメンバにAddendExprを作ってそこに構文木を保存  

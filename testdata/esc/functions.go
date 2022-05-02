@@ -211,6 +211,15 @@ func struct_test38() Ty21 {
 	return Ty21{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
 }
 
+type Ty021 struct {
+	a string
+	b string
+}
+
+func struct_test39() Ty021 {
+	return Ty021{"aaa", "bbb"}
+}
+
 func add10_identList_int(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 int) int
 func add10_identList_float(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 float32) float32
 func add10_identList_double(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 float64) float64
@@ -229,9 +238,9 @@ func many_args_list3(a int, b float64, c, d int, e float64, f int,
 	return o / p
 }
 
-func multi_return() (int, int, int) {
-	return 3, 5, 6
-}
+// func multi_return() (int, int, int) {
+// 	return 3, 5, 6
+// }
 
 func main() {
 	assert(3, ret3(), "ret3()")
@@ -400,10 +409,13 @@ func main() {
 	assert(4, many_args_list2(1, 2, 3, 4, 5, 6, 7, 8, 40, 10), "many_args2(1,2,3,4,5,6,7,8,40,10)")
 	assert(8, many_args_list3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 80, 10), "many_args3(1,2,3,4,5,6,7,8,9,10,11,12,13,14,80,10)")
 
-	var x10, x11, x12 = multi_return()
-	assert(6, x10, "x10") // 最後の返り値以外は捨てられる。raxレジスタが最後の返り値で上書きされるため
-	assert(0, x11, "x11")
-	assert(0, x12, "x12")
+	// var x10, x11, x12 = multi_return()
+	// assert(6, x10, "x10") // 最後の返り値以外は捨てられる。raxレジスタが最後の返り値で上書きされるため
+	// assert(0, x11, "x11")
+	// assert(0, x12, "x12")
+
+	assert(0, strcmp(struct_test39().a, "aaa"), "strcmp(struct_test39().a, \"aaa\")")
+	assert(0, strcmp(struct_test39().b, "bbb"), "strcmp(struct_test39().b, \"bbb\")")
 
 	println("OK")
 }

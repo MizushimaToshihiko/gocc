@@ -1217,7 +1217,25 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.println("%s:", node.UniqueLbl)
 		c.genStmt(node.Lhs)
 		return
-	case ND_MULTIASSIGN:
+	case ND_MULTIVALASSIGN:
+
+		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
+			if lhs.Kind != ND_NULL_EXPR {
+				c.println("# lhs: %s", lhs.Obj.Name)
+				c.genAddr(lhs)
+				c.push()
+			}
+		}
+
+		for rhs := node.Rhses; rhs != nil; rhs = rhs.Next {
+			if rhs.Obj != nil {
+				c.println("# rhs: %s", rhs.Obj.Name)
+			}
+			c.genExpr(rhs)
+			c.store(rhs.Ty)
+		}
+		return
+	case ND_MULTIRETASSIGN:
 		c.genExpr(node.Lhs)
 
 		i := 0

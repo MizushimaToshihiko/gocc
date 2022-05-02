@@ -67,49 +67,50 @@ type Obj struct {
 type NodeKind int
 
 const (
-	ND_NULL_EXPR   NodeKind = iota // Do nothing
-	ND_ADD                         // +
-	ND_SUB                         // -
-	ND_MUL                         // *
-	ND_DIV                         // /
-	ND_NEG                         // unary -
-	ND_MOD                         // %
-	ND_BITAND                      // &
-	ND_BITOR                       // |
-	ND_BITXOR                      // ^
-	ND_SHL                         // <<
-	ND_SHR                         // >>
-	ND_EQ                          // ==
-	ND_NE                          // !=
-	ND_LT                          // <
-	ND_LE                          // <=
-	ND_ASSIGN                      // =
-	ND_COND                        // ?:
-	ND_COMMA                       //
-	ND_MEMBER                      // . (struct member access)
-	ND_ADDR                        // unary &
-	ND_DEREF                       // unary *
-	ND_NOT                         // !
-	ND_BITNOT                      // ~
-	ND_LOGAND                      // &&
-	ND_LOGOR                       // ||
-	ND_RETURN                      // "return"
-	ND_IF                          // "if"
-	ND_FOR                         // "for" or "while"
-	ND_SWITCH                      // "switch"
-	ND_CASE                        // "case"
-	ND_BLOCK                       // { ... }
-	ND_GOTO                        // "goto"
-	ND_LABEL                       // Labeled statement
-	ND_FUNCALL                     // Function call
-	ND_EXPR_STMT                   // Expression statement
-	ND_STMT_EXPR                   // Statement expression
-	ND_VAR                         // Variable
-	ND_NUM                         // Integer
-	ND_CAST                        // Type cast
-	ND_MEMZERO                     // Zero-clear a stack variable
-	ND_SIZEOF                      // 'Sizeof'
-	ND_MULTIASSIGN                 // Assign to multiple variables from functions returning multiple return values
+	ND_NULL_EXPR      NodeKind = iota // Do nothing
+	ND_ADD                            // +
+	ND_SUB                            // -
+	ND_MUL                            // *
+	ND_DIV                            // /
+	ND_NEG                            // unary -
+	ND_MOD                            // %
+	ND_BITAND                         // &
+	ND_BITOR                          // |
+	ND_BITXOR                         // ^
+	ND_SHL                            // <<
+	ND_SHR                            // >>
+	ND_EQ                             // ==
+	ND_NE                             // !=
+	ND_LT                             // <
+	ND_LE                             // <=
+	ND_ASSIGN                         // =
+	ND_COND                           // ?:
+	ND_COMMA                          //
+	ND_MEMBER                         // . (struct member access)
+	ND_ADDR                           // unary &
+	ND_DEREF                          // unary *
+	ND_NOT                            // !
+	ND_BITNOT                         // ~
+	ND_LOGAND                         // &&
+	ND_LOGOR                          // ||
+	ND_RETURN                         // "return"
+	ND_IF                             // "if"
+	ND_FOR                            // "for" or "while"
+	ND_SWITCH                         // "switch"
+	ND_CASE                           // "case"
+	ND_BLOCK                          // { ... }
+	ND_GOTO                           // "goto"
+	ND_LABEL                          // Labeled statement
+	ND_FUNCALL                        // Function call
+	ND_EXPR_STMT                      // Expression statement
+	ND_STMT_EXPR                      // Statement expression
+	ND_VAR                            // Variable
+	ND_NUM                            // Integer
+	ND_CAST                           // Type cast
+	ND_MEMZERO                        // Zero-clear a stack variable
+	ND_SIZEOF                         // 'Sizeof'
+	ND_MULTIVALASSIGN                 // Assign multiple values in rhs to maultiple variables, like a,b = b, a.
+	ND_MULTIRETASSIGN                 // Assign to multiple variables from functions returning multiple return values
 )
 
 // define AST node
@@ -149,6 +150,10 @@ type Node struct {
 
 	// Function definition
 	RetVals *Node // return values
+
+	// Multi valued assignment
+	Lhses *Node
+	Rhses *Node
 
 	// Assigning from functions returning multiple return values
 	Masg *Node
@@ -1995,22 +2000,27 @@ func assignList(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	start := tok
-	lhses := make([]*Node, 0)
+	// lhses := make([]*Node, 0)
 	i := 0
 
+	lhses := &Node{}
+	cur := lhses
 	for !equal(tok, "=") {
 		if i > 0 {
 			tok = skip(tok, ",")
 		}
 		i++
-		lhses = append(lhses, logor(&tok, tok))
+		cur.Next = logor(&tok, tok)
+		cur = cur.Next
+		addType(cur)
 	}
 
 	tok = skip(tok, "=")
 
 	var node *Node
-	head := &Node{}
-	cur := head
+	rhses := &Node{}
+	cur = rhses
+	lhs := lhses.Next
 	valtok := tok
 	j := 0
 	for ; ; j++ {
@@ -2027,56 +2037,75 @@ func assignList(rest **Token, tok *Token) *Node {
 			numVals := countRetTys(rhs.Lhs.Obj)
 			if numVals > 1 {
 				// とりあえずlhsesの長さだけで判定、エラーも適当
-				if len(lhses) != numVals {
-					panic(errorTok(tok, "too many assigns: left:%d, right:%d", len(lhses), numVals))
+				if i != numVals {
+					panic(errorTok(tok, "too many assigns: left:%d, right:%d", i, numVals))
 				}
-				node = newUnary(ND_MULTIASSIGN, rhs, tok)
-				head := &Node{}
-				cur := head
-				for k := 0; k < len(lhses); k++ {
-					cur.Next = lhses[k]
-					cur = cur.Next
-					addType(cur)
-				}
-				node.Masg = head.Next
+				node = newUnary(ND_MULTIRETASSIGN, rhs, tok)
+				node.Masg = lhses.Next
 				*rest = tok.Next
 				addType(node)
 				return node
 			}
 		}
 
-		if lhses[j].Kind == ND_NULL_EXPR {
-			node = rhs
-		} else {
-			node = newBinary(ND_ASSIGN, lhses[j], rhs, tok)
-			addType(node)
-			if isAppend || isMake {
-				node.Ty.Len = rhs.Ty.Len
-				node.Ty.Cap = rhs.Ty.Cap
-				node.Ty.UArrNode = rhs.Ty.UArrNode
-				node.Ty.UArrIdx = rhs.Ty.UArrIdx
-			}
-			if lhses[j].Obj != nil {
-				if isInteger(node.Ty) {
-					lhses[j].Obj.Val = eval(rhs)
-				} else if isFlonum(node.Ty) {
-					lhses[j].Obj.FVal = evalDouble(rhs)
-				}
+		if lhs.Kind == ND_NULL_EXPR {
+			lhs = lhs.Next
+			continue
+		}
+
+		cur.Next = rhs
+		addType(rhs)
+		if isAppend || isMake {
+			lhs.Ty.Len = rhs.Ty.Len
+			lhs.Ty.Cap = rhs.Ty.Cap
+			lhs.Ty.UArrNode = rhs.Ty.UArrNode
+			lhs.Ty.UArrIdx = rhs.Ty.UArrIdx
+		}
+		if lhs.Obj != nil {
+			if isInteger(lhs.Ty) {
+				lhs.Obj.Val = eval(rhs)
+			} else if isFlonum(lhs.Ty) {
+				lhs.Obj.FVal = evalDouble(rhs)
 			}
 		}
-		cur.Next = newUnary(ND_EXPR_STMT, node, tok)
+
 		cur = cur.Next
+		lhs = lhs.Next
 	}
 
-	if j > len(lhses) {
+	if j > i {
 		panic("\n" + errorTok(valtok,
-			"assignment mismatch: %d variables but %d values", len(lhses), j))
+			"assignment mismatch: %d variables but %d values", i, j))
 	}
+
+	// for l := lhses; l != nil; l = l.Next {
+	// 	fmt.Printf("assignList: lhses: %#v\n\n", l)
+	// }
+
+	// for r := rhses; r != nil; r = r.Next {
+	// 	fmt.Printf("assignList: rhses: %#v\n\n", r)
+	// }
+
+	// Rhsesを逆順にする。Lhsesの値がスタック（LIFO）に入っている為
+	// var work *Node
+	// for r := rhses.Next; r != nil; {
+	// 	tmp := r.Next
+	// 	r.Next = work
+	// 	work = r
+	// 	r = tmp
+	// }
+	// rhses.Next = work
+
+	// for r := rhses; r != nil; r = r.Next {
+	// 	fmt.Printf("assignList: rhses 2: %#v\n\n", r)
+	// }
+
+	node = newNode(ND_MULTIVALASSIGN, start)
+	node.Lhses = lhses.Next
+	node.Rhses = rhses.Next
 
 	*rest = tok
-	asgNode := newNode(ND_BLOCK, start)
-	asgNode.Body = head.Next
-	return asgNode
+	return node
 }
 
 // compound-stmt = (typedef | declaration | stmt)* "}"
