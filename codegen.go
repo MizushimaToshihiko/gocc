@@ -1224,23 +1224,30 @@ func (c *codeWriter) genStmt(node *Node) {
 				continue
 			}
 			c.println("# lhs: %s", lhs.Obj.Name)
-			c.genAddr(lhs) // address->value
+			c.genAddr(lhs) // push lvalue's address
 			c.push()
 			if rhs.Obj != nil {
 				c.println("# rhs: %s", rhs.Obj.Name)
 			}
-			c.genExpr(rhs)
-			c.push()
+			c.genExpr(rhs) // push rvalue
+			if isFlonum(rhs.Ty) {
+				c.pushf()
+			} else {
+				c.push()
+			}
 			rhs = rhs.Next
-
 		}
 
 		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
 			if lhs.Kind == ND_NULL_EXPR {
 				continue
 			}
-			c.pop("%rax") // value->address
-			c.store(lhs.Ty)
+			if isFlonum(lhs.Ty) { // pop rvalue
+				c.popf(0)
+			} else {
+				c.pop("%rax")
+			}
+			c.store(lhs.Ty) // pop the address and store rvalue to the address
 		}
 		return
 	case ND_MULTIRETASSIGN:
