@@ -1220,15 +1220,13 @@ func (c *codeWriter) genStmt(node *Node) {
 	case ND_MULTIVALASSIGN:
 		rhs := node.Rhses
 		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
-			if lhs.Kind == ND_NULL_EXPR {
+			if lhs.Kind == ND_BLANKIDENT {
 				continue
 			}
-			c.println("# lhs: %s", lhs.Obj.Name)
+
 			c.genAddr(lhs) // push lvalue's address
 			c.push()
-			if rhs.Obj != nil {
-				c.println("# rhs: %s", rhs.Obj.Name)
-			}
+
 			c.genExpr(rhs) // push rvalue
 			if isFlonum(rhs.Ty) {
 				c.pushf()
@@ -1239,7 +1237,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		}
 
 		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
-			if lhs.Kind == ND_NULL_EXPR {
+			if lhs.Kind == ND_BLANKIDENT {
 				continue
 			}
 			if isFlonum(lhs.Ty) { // pop rvalue

@@ -111,6 +111,7 @@ const (
 	ND_SIZEOF                         // 'Sizeof'
 	ND_MULTIVALASSIGN                 // Assign multiple values in rhs to maultiple variables, like a,b = b, a.
 	ND_MULTIRETASSIGN                 // Assign to multiple variables from functions returning multiple return values
+	ND_BLANKIDENT                     // '_'
 )
 
 // define AST node
@@ -2047,7 +2048,7 @@ func assignList(rest **Token, tok *Token) *Node {
 			}
 		}
 
-		if lhs.Kind == ND_NULL_EXPR {
+		if lhs.Kind == ND_BLANKIDENT {
 			lhs = lhs.Next
 			continue
 		}
@@ -2076,28 +2077,6 @@ func assignList(rest **Token, tok *Token) *Node {
 		panic("\n" + errorTok(valtok,
 			"assignment mismatch: %d variables but %d values", i, j))
 	}
-
-	// for l := lhses; l != nil; l = l.Next {
-	// 	fmt.Printf("assignList: lhses: %#v\n\n", l)
-	// }
-
-	// for r := rhses; r != nil; r = r.Next {
-	// 	fmt.Printf("assignList: rhses: %#v\n\n", r)
-	// }
-
-	// // Rhsesを逆順にする。Lhsesの値がスタック（LIFO）に入っている為
-	// var work *Node
-	// for r := rhses.Next; r != nil; {
-	// 	tmp := r.Next
-	// 	r.Next = work
-	// 	work = r
-	// 	r = tmp
-	// }
-	// rhses.Next = work
-
-	// for r := rhses; r != nil; r = r.Next {
-	// 	fmt.Printf("assignList: rhses 2: %#v\n\n", r)
-	// }
 
 	node = newNode(ND_MULTIVALASSIGN, start)
 	node.Lhses = lhses.Next
@@ -2532,7 +2511,7 @@ func assign(rest **Token, tok *Token) *Node {
 	if equal(tok, "=") {
 		rhs := assign(rest, tok.Next)
 		addType(rhs)
-		if node.Kind == ND_NULL_EXPR {
+		if node.Kind == ND_BLANKIDENT {
 			return rhs
 		}
 		if node.Obj != nil {
@@ -3578,7 +3557,7 @@ func primary(rest **Token, tok *Token) *Node {
 
 	if tok.Kind == TK_BLANKIDENT {
 		*rest = tok.Next
-		return newNode(ND_NULL_EXPR, tok)
+		return newNode(ND_BLANKIDENT, tok)
 	}
 
 	if tok.Kind == TK_IDENT {

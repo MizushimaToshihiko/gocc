@@ -13,9 +13,9 @@ func strcmp(s1 string, s2 string) int
 // 	return "abc", "def", "ghi", "jkl", "mno", "pqr"
 // }
 
-// func multiRetFloat() (float64, float64) {
-// 	return 0.1, 0.2
-// }
+func multiRetFloat() (float64, float64) {
+	return 0.1, 0.2
+}
 
 // type gT01 struct {
 // 	a int
@@ -46,12 +46,12 @@ func main() {
 	// assert(0, strcmp(e02, "mno"), "strcmp(e02, \"mno\")")
 	// assert(0, strcmp(f02, "pqr"), "strcmp(f02, \"pqr\")")
 
-	// var a03, b03 float64
-	// a03, b03 = multiRetFloat()
-	// println("%f", a03)
-	// println("%f", b03)
-	// assert(1, a03 == 0.1, "a03==0.1")
-	// assert(1, b03 == 0.2, "b03==0.2")
+	var a03, b03 float64
+	a03, b03 = multiRetFloat()
+	println("%lf", a03)
+	println("%lf", b03)
+	assert(1, a03 == 0.1, "a03==0.1")
+	assert(1, b03 == 0.2, "b03==0.2")
 
 	// var a04 int
 	// var b04 string
