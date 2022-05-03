@@ -1218,21 +1218,29 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.genStmt(node.Lhs)
 		return
 	case ND_MULTIVALASSIGN:
-
+		rhs := node.Rhses
 		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
-			if lhs.Kind != ND_NULL_EXPR {
-				c.println("# lhs: %s", lhs.Obj.Name)
-				c.genAddr(lhs)
-				c.push()
+			if lhs.Kind == ND_NULL_EXPR {
+				continue
 			}
-		}
-
-		for rhs := node.Rhses; rhs != nil; rhs = rhs.Next {
+			c.println("# lhs: %s", lhs.Obj.Name)
+			c.genAddr(lhs) // address->value
+			c.push()
 			if rhs.Obj != nil {
 				c.println("# rhs: %s", rhs.Obj.Name)
 			}
 			c.genExpr(rhs)
-			c.store(rhs.Ty)
+			c.push()
+			rhs = rhs.Next
+
+		}
+
+		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
+			if lhs.Kind == ND_NULL_EXPR {
+				continue
+			}
+			c.pop("%rax") // value->address
+			c.store(lhs.Ty)
 		}
 		return
 	case ND_MULTIRETASSIGN:

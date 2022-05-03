@@ -2000,7 +2000,6 @@ func assignList(rest **Token, tok *Token) *Node {
 	printCalledFunc()
 
 	start := tok
-	// lhses := make([]*Node, 0)
 	i := 0
 
 	lhses := &Node{}
@@ -2086,7 +2085,7 @@ func assignList(rest **Token, tok *Token) *Node {
 	// 	fmt.Printf("assignList: rhses: %#v\n\n", r)
 	// }
 
-	// Rhsesを逆順にする。Lhsesの値がスタック（LIFO）に入っている為
+	// // Rhsesを逆順にする。Lhsesの値がスタック（LIFO）に入っている為
 	// var work *Node
 	// for r := rhses.Next; r != nil; {
 	// 	tmp := r.Next
