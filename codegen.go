@@ -1228,7 +1228,7 @@ func (c *codeWriter) genStmt(node *Node) {
 			c.push()
 
 			c.genExpr(rhs) // push rvalue
-			if isFlonum(lhs.Ty) {
+			if isFlonum(rhs.Ty) {
 				c.pushf()
 			} else {
 				c.push()
@@ -1236,16 +1236,16 @@ func (c *codeWriter) genStmt(node *Node) {
 			rhs = rhs.Next
 		}
 
-		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
-			if lhs.Kind == ND_BLANKIDENT {
+		for rhs := node.Rhses; rhs != nil; rhs = rhs.Next {
+			if rhs.Kind == ND_BLANKIDENT {
 				continue
 			}
-			if isFlonum(lhs.Ty) { // pop rvalue
+			if isFlonum(rhs.Ty) { // pop rvalue
 				c.popf(0)
 			} else {
 				c.pop("%rax")
 			}
-			c.store(lhs.Ty) // pop the address and store rvalue to the address
+			c.store(rhs.Ty) // pop the address and store rvalue to the address
 		}
 		return
 	case ND_MULTIRETASSIGN:
