@@ -1228,7 +1228,7 @@ func (c *codeWriter) genStmt(node *Node) {
 			c.push()
 
 			c.genExpr(rhs) // push rvalue
-			if isFlonum(rhs.Ty) {
+			if isFlonum(lhs.Ty) {
 				c.pushf()
 			} else {
 				c.push()
