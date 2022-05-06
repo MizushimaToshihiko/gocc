@@ -320,7 +320,8 @@ foo:
 	case x6 == y6: z6=switchFn(x6+y6)
 	}
 	assert(6, z6, "z6")
-	x6, y6 = 2, 0
+	x6 = 2
+	y6 = 0
 	z6 = 0
 	switch {
 	case x6 < y6: z6=switchFn(x6)
@@ -328,7 +329,8 @@ foo:
 	case x6 == y6: z6=switchFn(x6+y6)
 	}
 	assert(5, z6, "z6")
-	x6, y6 = 3, 3
+	x6 = 3
+	y6 = 3
 	z6 = 0
 	switch {
 	case x6 < y6: z6=switchFn(x6)
@@ -345,7 +347,8 @@ foo:
 	case x6 == y6: z6=switchFn(x6+y6)
 	}
 	assert(6, z6, "z6")
-	x6, y6 = 2.0, 0.0
+	x6 = 2.0
+	y6 = 0.0
 	z6 = 0
 	switch {
 	case x6 < y6: z6=switchFn(x6)
@@ -353,7 +356,8 @@ foo:
 	case x6 == y6: z6=switchFn(x6+y6)
 	}
 	assert(5, z6, "z6")
-	x6, y6 = 3.0, 3.0
+	x6 = 3.0
+	y6 = 3.0
 	z6 = 0
 	switch {
 	case x6 < y6: z6=switchFn(x6)
