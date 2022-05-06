@@ -78,6 +78,14 @@ func main() {
 	assert(3, e05, "e05")
 	assert(2, f05, "f05")
 	assert(1, g05, "g05")
+	a05, b05, c05, d05, e05, f05, g05 = 1, 2, 3, 4, 5, 6, 7
+	assert(1, a05, "a05")
+	assert(2, b05, "b05")
+	assert(3, c05, "c05")
+	assert(4, d05, "d05")
+	assert(5, e05, "e05")
+	assert(6, f05, "f05")
+	assert(7, g05, "g05")
 
 	var a06,
 		b06,
@@ -107,6 +115,26 @@ func main() {
 	assert(0, strcmp(e06, "ccc"), "strcmp(e06, \"ccc\")")
 	assert(0, strcmp(f06, "bbb"), "strcmp(f06, \"bbb\")")
 	assert(0, strcmp(g06, "aaa"), "strcmp(g06, \"aaa\")")
+	a06,
+		b06,
+		c06,
+		d06,
+		e06,
+		f06,
+		g06 = "aaa",
+		"bbb",
+		"ccc",
+		"ddd",
+		"eee",
+		"fff",
+		"ggg"
+	assert(0, strcmp(a06, "aaa"), "strcmp(a06, \"aaa\")")
+	assert(0, strcmp(b06, "bbb"), "strcmp(b06, \"bbb\")")
+	assert(0, strcmp(c06, "ccc"), "strcmp(c06, \"ccc\")")
+	assert(0, strcmp(d06, "ddd"), "strcmp(d06, \"ddd\")")
+	assert(0, strcmp(e06, "eee"), "strcmp(e06, \"eee\")")
+	assert(0, strcmp(f06, "fff"), "strcmp(f06, \"fff\")")
+	assert(0, strcmp(g06, "ggg"), "strcmp(g06, \"ggg\")")
 
 	var a07, b07, c07, d07 = 0.1, 0.2, 0.3, 0.4
 	assert(1, a07 == 0.1, "a07==0.1")
@@ -119,6 +147,11 @@ func main() {
 	assert(1, b07 == 0.3, "b07==0.3")
 	assert(1, c07 == 0.2, "c07==0.2")
 	assert(1, d07 == 0.1, "d07==0.1")
+	a07, b07, c07, d07 = 0.1, 0.2, 0.3, 0.4
+	assert(1, a07 == 0.1, "a07==0.1")
+	assert(1, b07 == 0.2, "b07==0.2")
+	assert(1, c07 == 0.3, "c07==0.3")
+	assert(1, d07 == 0.4, "d07==0.4")
 
 	println("OK")
 }

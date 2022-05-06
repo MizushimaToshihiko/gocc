@@ -1218,6 +1218,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.genStmt(node.Lhs)
 		return
 	case ND_MULTIVALASSIGN:
+		fmt.Println("depth 1:", depth)
 		rhs := node.Rhses
 		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
 			if lhs.Kind == ND_BLANKIDENT {
@@ -1236,6 +1237,7 @@ func (c *codeWriter) genStmt(node *Node) {
 			rhs = rhs.Next
 		}
 
+		fmt.Println("depth 2:", depth)
 		for rhs := node.Rhses; rhs != nil; rhs = rhs.Next {
 			if rhs.Kind == ND_BLANKIDENT {
 				continue
@@ -1247,6 +1249,7 @@ func (c *codeWriter) genStmt(node *Node) {
 			}
 			c.store(rhs.Ty) // pop the address and store rvalue to the address
 		}
+		fmt.Println("depth 3:", depth)
 		return
 	case ND_MULTIRETASSIGN:
 		c.genExpr(node.Lhs)

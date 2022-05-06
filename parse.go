@@ -1809,7 +1809,16 @@ func stmt(rest **Token, tok *Token) *Node {
 		}
 
 		tok = skip(tok, ":")
-		lhs := stmt(rest, tok)
+		head2 := &Node{}
+		cur2 := head2
+		for !equal(tok, "case") && !equal(tok, "default") && !equal(tok, "}") {
+			cur2.Next = stmt(&tok, tok)
+			cur2 = cur2.Next
+		}
+		*rest = tok
+		lhs := newNode(ND_BLOCK, tok)
+		lhs.Body = head2.Next
+
 		cur = head.Next
 
 		for cur != nil {
@@ -2077,6 +2086,16 @@ func assignList(rest **Token, tok *Token) *Node {
 		panic("\n" + errorTok(valtok,
 			"assignment mismatch: %d variables but %d values", i, j))
 	}
+
+	// // Rhsesを逆順にする。Lhsesの値がスタック（LIFO）に入っている為
+	// var work *Node
+	// for r := rhses.Next; r != nil; {
+	// 	tmp := r.Next
+	// 	r.Next = work
+	// 	work = r
+	// 	r = tmp
+	// }
+	// rhses.Next = work
 
 	node = newNode(ND_MULTIVALASSIGN, start)
 	node.Lhses = lhses.Next
