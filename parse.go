@@ -2087,16 +2087,6 @@ func assignList(rest **Token, tok *Token) *Node {
 			"assignment mismatch: %d variables but %d values", i, j))
 	}
 
-	// // Rhsesを逆順にする。Lhsesの値がスタック（LIFO）に入っている為
-	// var work *Node
-	// for r := rhses.Next; r != nil; {
-	// 	tmp := r.Next
-	// 	r.Next = work
-	// 	work = r
-	// 	r = tmp
-	// }
-	// rhses.Next = work
-
 	node = newNode(ND_MULTIVALASSIGN, start)
 	node.Lhses = lhses.Next
 	node.Rhses = rhses.Next
