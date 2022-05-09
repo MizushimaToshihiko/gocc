@@ -1218,18 +1218,20 @@ func (c *codeWriter) genStmt(node *Node) {
 		c.genStmt(node.Lhs)
 		return
 	case ND_MULTIVALASSIGN:
-		fmt.Println("depth 1:", depth)
 		rhs := node.Rhses
 		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
 			if lhs.Kind == ND_BLANKIDENT {
 				continue
 			}
-
-			c.genAddr(lhs) // push lvalue's address
+			// push lvalue's address
+			c.genAddr(lhs)
 			c.push()
-
-			c.genExpr(rhs) // push rvalue
+			// push rvalue
+			c.genExpr(rhs)
 			if isFlonum(rhs.Ty) {
+				if rhs.Ty != lhs.Ty {
+					c.cast(rhs.Ty, lhs.Ty)
+				}
 				c.pushf()
 			} else {
 				c.push()
@@ -1237,19 +1239,19 @@ func (c *codeWriter) genStmt(node *Node) {
 			rhs = rhs.Next
 		}
 
-		fmt.Println("depth 2:", depth)
-		for rhs := node.Rhses; rhs != nil; rhs = rhs.Next {
-			if rhs.Kind == ND_BLANKIDENT {
+		rhs = node.Rhses
+		for lhs := node.Lhses; lhs != nil; lhs = lhs.Next {
+			if lhs.Kind == ND_BLANKIDENT {
 				continue
 			}
-			if isFlonum(rhs.Ty) { // pop rvalue
+			if isFlonum(lhs.Ty) { // pop rvalue
 				c.popf(0)
 			} else {
 				c.pop("%rax")
 			}
-			c.store(rhs.Ty) // pop the address and store rvalue to the address
+			c.store(lhs.Ty) // pop the address and store rvalue to the address
+			rhs = rhs.Next
 		}
-		fmt.Println("depth 3:", depth)
 		return
 	case ND_MULTIRETASSIGN:
 		c.genExpr(node.Lhs)
