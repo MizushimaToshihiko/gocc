@@ -3316,9 +3316,15 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 
 	// If a function returns a struct, it is caller's responsibility
 	// to allocate a space for the return value.
-	if node.Ty.Kind == TY_STRUCT {
-		node.RetBuf = newLvar("", node.Ty)
+	vhead := &Obj{}
+	vcur := vhead
+	for r := ty.RetTy; r != nil; r = r.Next {
+		if node.Ty.Kind == TY_STRUCT {
+			vcur.Next = newLvar("", r)
+			vcur = vcur.Next
+		}
 	}
+	node.RetBuf = vhead.Next
 	return node
 }
 
