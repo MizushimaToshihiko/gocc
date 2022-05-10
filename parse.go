@@ -3318,8 +3318,11 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	// to allocate a space for the return value.
 	vhead := &Obj{}
 	vcur := vhead
+	j := 1
 	for r := ty.RetTy; r != nil; r = r.Next {
 		if node.Ty.Kind == TY_STRUCT {
+			fmt.Println("function: r count j:", j)
+			j++
 			vcur.Next = newLvar("", r)
 			vcur = vcur.Next
 		}
@@ -3730,11 +3733,14 @@ func function(tok *Token) *Token {
 
 	// A buffer for a struct return value is passed
 	// as the hidden first parameter.
-	rty := ty.RetTy
-	if rty.Kind == TY_STRUCT && rty.Sz > 16 {
-		newLvar("", pointerTo(rty))
+	i := 0
+	for rty := ty.RetTy; rty != nil; rty = rty.Next {
+		if rty.Kind == TY_STRUCT && rty.Sz > 16 {
+			fmt.Println("function: rty count i:", i)
+			i++
+			newLvar("", pointerTo(rty))
+		}
 	}
-
 	fn.Params = locals
 	if ty.IsVariadic {
 		fn.VaArea = newLvar("__va_area__", arrayOf(ty_char, 136))

@@ -624,8 +624,8 @@ func (c *codeWriter) copyRetBuf(v *Obj) {
 	}
 }
 
-func (c *codeWriter) copyStructReg() {
-	ty := curFnInGen.Ty.RetTy
+func (c *codeWriter) copyStructReg(ty *Type) {
+	// ty := curFnInGen.Ty.RetTy
 	var gp, fp int
 
 	c.println("	mov %%rax, %%rdi")
@@ -676,8 +676,8 @@ func (c *codeWriter) copyStructReg() {
 	}
 }
 
-func (c *codeWriter) copyStructMem() {
-	ty := curFnInGen.Ty.RetTy
+func (c *codeWriter) copyStructMem(ty *Type) {
+	// ty := curFnInGen.Ty.RetTy
 	v := curFnInGen.Params
 
 	c.println("	mov %d(%%rbp), %%rdi", v.Offset)
@@ -934,9 +934,14 @@ func (c *codeWriter) genExpr(node *Node) {
 
 		// If the return type is a small struct, a value is returned
 		// using up to two registers.
-		if node.RetBuf != nil && node.Ty.Sz <= 16 {
-			c.copyRetBuf(node.RetBuf)
-			c.println("	lea %d(%%rbp), %%rax", node.RetBuf.Offset)
+		if node.RetBuf != nil {
+			for r := node.RetBuf; r != nil; r = r.Next {
+				if r.Ty.Sz <= 16 {
+					c.println("# copy_ret_buffer")
+					c.copyRetBuf(r)
+					c.println("	lea %d(%%rbp), %%rax", r.Offset)
+				}
+			}
 		}
 
 		return
@@ -1281,9 +1286,9 @@ func (c *codeWriter) genStmt(node *Node) {
 			ty := ret.Ty
 			if ty.Kind == TY_STRUCT {
 				if ty.Sz <= 16 {
-					c.copyStructReg()
+					c.copyStructReg(ty)
 				} else {
-					c.copyStructMem()
+					c.copyStructMem(ty)
 				}
 			} else {
 				c.println("	mov %%rax, %s", argreg64[i])
