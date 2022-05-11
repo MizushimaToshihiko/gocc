@@ -939,9 +939,9 @@ func (c *codeWriter) genExpr(node *Node) {
 				if r.Ty.Sz <= 16 {
 					c.println("# copy_ret_buffer")
 					c.copyRetBuf(r)
-					c.println("	lea %d(%%rbp), %%rax", r.Offset)
 				}
 			}
+			c.println("	lea %d(%%rbp), %%rax", node.RetBuf.Offset)
 		}
 
 		return
