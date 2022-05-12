@@ -1496,41 +1496,41 @@ func (c *codeWriter) emitText(prog *Obj) {
 		c.println("	mov %%rsp, %%rbp")
 		c.println("	sub $%d, %%rsp", int(fn.StackSz))
 
-		// Save arg registers if function is variadic.
-		if fn.VaArea != nil {
-			var gp, fp int
-			for v := fn.Params; v != nil; v = v.Next {
-				if isFlonum(v.Ty) {
-					fp++
-				} else {
-					gp++
-				}
-			}
+		// // Save arg registers if function is variadic.
+		// if fn.VaArea != nil {
+		// 	var gp, fp int
+		// 	for v := fn.Params; v != nil; v = v.Next {
+		// 		if isFlonum(v.Ty) {
+		// 			fp++
+		// 		} else {
+		// 			gp++
+		// 		}
+		// 	}
 
-			off := fn.VaArea.Offset
+		// 	off := fn.VaArea.Offset
 
-			// va_elem
-			c.println("  movl $%d, %d(%%rbp)", gp*8, off)
-			c.println("  movl $%d, %d(%%rbp)", fp*8+48, off+4)
-			c.println("  movq %%rbp, %d(%%rbp)", off+16)
-			c.println("  addq $%d, %d(%%rbp)", off+24, off+16)
+		// 	// va_elem
+		// 	c.println("  movl $%d, %d(%%rbp)", gp*8, off)
+		// 	c.println("  movl $%d, %d(%%rbp)", fp*8+48, off+4)
+		// 	c.println("  movq %%rbp, %d(%%rbp)", off+16)
+		// 	c.println("  addq $%d, %d(%%rbp)", off+24, off+16)
 
-			// __reg_save_area__
-			c.println("  movq %%rdi, %d(%%rbp)", off+24)
-			c.println("  movq %%rsi, %d(%%rbp)", off+32)
-			c.println("  movq %%rdx, %d(%%rbp)", off+40)
-			c.println("  movq %%rcx, %d(%%rbp)", off+48)
-			c.println("  movq %%r8, %d(%%rbp)", off+56)
-			c.println("  movq %%r9, %d(%%rbp)", off+64)
-			c.println("  movsd %%xmm0, %d(%%rbp)", off+72)
-			c.println("  movsd %%xmm1, %d(%%rbp)", off+80)
-			c.println("  movsd %%xmm2, %d(%%rbp)", off+88)
-			c.println("  movsd %%xmm3, %d(%%rbp)", off+96)
-			c.println("  movsd %%xmm4, %d(%%rbp)", off+104)
-			c.println("  movsd %%xmm5, %d(%%rbp)", off+112)
-			c.println("  movsd %%xmm6, %d(%%rbp)", off+120)
-			c.println("  movsd %%xmm7, %d(%%rbp)", off+128)
-		}
+		// 	// __reg_save_area__
+		// 	c.println("  movq %%rdi, %d(%%rbp)", off+24)
+		// 	c.println("  movq %%rsi, %d(%%rbp)", off+32)
+		// 	c.println("  movq %%rdx, %d(%%rbp)", off+40)
+		// 	c.println("  movq %%rcx, %d(%%rbp)", off+48)
+		// 	c.println("  movq %%r8, %d(%%rbp)", off+56)
+		// 	c.println("  movq %%r9, %d(%%rbp)", off+64)
+		// 	c.println("  movsd %%xmm0, %d(%%rbp)", off+72)
+		// 	c.println("  movsd %%xmm1, %d(%%rbp)", off+80)
+		// 	c.println("  movsd %%xmm2, %d(%%rbp)", off+88)
+		// 	c.println("  movsd %%xmm3, %d(%%rbp)", off+96)
+		// 	c.println("  movsd %%xmm4, %d(%%rbp)", off+104)
+		// 	c.println("  movsd %%xmm5, %d(%%rbp)", off+112)
+		// 	c.println("  movsd %%xmm6, %d(%%rbp)", off+120)
+		// 	c.println("  movsd %%xmm7, %d(%%rbp)", off+128)
+		// }
 
 		// Push passed-by-register arguments to the stack
 		gp := 0
