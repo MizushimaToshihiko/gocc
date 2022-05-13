@@ -102,6 +102,7 @@ func (c *codeWriter) genAddr(node *Node) {
 	case ND_VAR:
 		//  Local variable
 		if node.Obj.IsLocal {
+			c.println("# %s", node.Obj.Name)
 			c.println("	lea %d(%%rbp), %%rax", node.Obj.Offset)
 			return
 		}
@@ -738,6 +739,11 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_VAR, ND_MEMBER:
 		// c.println("# ND_VAR or ND_MEMBER")
+		if node.Kind == ND_VAR {
+			c.println("# ND_VAR: %s", node.Obj.Name)
+		} else {
+			c.println("# ND_MEMBER: %s", node.MemName)
+		}
 		c.genAddr(node)
 		c.load(node.Ty)
 		return
@@ -936,11 +942,15 @@ func (c *codeWriter) genExpr(node *Node) {
 		// using up to two registers.
 		if node.RetBuf != nil {
 			for r := node.RetBuf; r != nil; r = r.Next {
+				if len(r.Name) < 6 || r.Name[:6] != "retbuf" {
+					break
+				}
 				if r.Ty.Sz <= 16 {
 					c.println("# copy_ret_buffer")
 					c.copyRetBuf(r)
 				}
 			}
+			c.println("# store node.RetBuf's address to %%rax")
 			c.println("	lea %d(%%rbp), %%rax", node.RetBuf.Offset)
 		}
 
@@ -1263,9 +1273,13 @@ func (c *codeWriter) genStmt(node *Node) {
 
 		i := 0
 		n := node.Masg
+		// retbuf := node.Lhs.RetBuf
 		for ; n != nil; n = n.Next {
 			c.genAddr(n)
 			c.push()
+			// if n.Ty.Kind == TY_STRUCT && retbuf != nil && retbuf.Name[:6] == "retbuf" {
+			// 	c.println("	mov %d(%%rbp), %%rax", retbuf.Offset)
+			// } else
 			if isFlonum(n.Ty) {
 				c.println("	movq %s, %%xmm0", argreg64[i])
 			} else {

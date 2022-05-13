@@ -3309,6 +3309,8 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 
 	*rest = skip(tok, ")")
 
+	fmt.Printf("funcall: ty: %#v\n\n", ty)
+
 	node := newUnary(ND_FUNCALL, fn, tok)
 	node.FuncTy = ty
 	node.Ty = ty.RetTy
@@ -3319,8 +3321,9 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	vhead := &Obj{}
 	vcur := vhead
 	for r := ty.RetTy; r != nil; r = r.Next {
-		if node.Ty.Kind == TY_STRUCT {
-			vcur.Next = newLvar("", r)
+		fmt.Printf("funcall: r: %#v\n\n", r)
+		if r.Kind == TY_STRUCT {
+			vcur.Next = newLvar(fmt.Sprintf("retbuf%d", count()), r)
 			vcur = vcur.Next
 		}
 	}

@@ -23,7 +23,10 @@ type gT01 struct {
 }
 
 func multiRetStruct() (int, string, gT01) {
-	var g = gT01{a: 1, b: "aaa"}
+	var g = gT01{
+		a: 1,
+		b: "aaa",
+	}
 	return g.a, g.b, g
 }
 
