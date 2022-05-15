@@ -941,17 +941,26 @@ func (c *codeWriter) genExpr(node *Node) {
 		// If the return type is a small struct, a value is returned
 		// using up to two registers.
 		if node.RetBuf != nil {
-			for r := node.RetBuf; r != nil; r = r.Next {
-				if len(r.Name) < 6 || r.Name[:6] != "retbuf" {
+			r := node.RetBuf
+			retTy := node.Ty
+			idx := 0
+			for ; idx < 6; idx++ { // 6 is the number of general registers in this compiler.
+				if retTy == nil {
 					break
 				}
-				if r.Ty.Sz <= 16 {
-					c.println("# copy_ret_buffer")
-					c.copyRetBuf(r)
+				if retTy.Kind == TY_STRUCT {
+					if len(r.Name) < 6 || r.Name[:6] != "retbuf" {
+						break
+					}
+					if r.Ty.Sz <= 16 {
+						c.println("# copy_ret_buffer")
+						c.copyRetBuf(r)
+						c.println("# store node.RetBuf's address to a general register")
+						c.println("	lea %d(%%rbp), %s", node.RetBuf.Offset, argreg64[idx])
+					}
 				}
+				retTy = retTy.Next
 			}
-			c.println("# store node.RetBuf's address to %%rax")
-			c.println("	lea %d(%%rbp), %%rax", node.RetBuf.Offset)
 		}
 
 		return
@@ -1275,11 +1284,10 @@ func (c *codeWriter) genStmt(node *Node) {
 		n := node.Masg
 		// retbuf := node.Lhs.RetBuf
 		for ; n != nil; n = n.Next {
+			c.println("# generate addrs of Lhs nodes")
 			c.genAddr(n)
 			c.push()
-			// if n.Ty.Kind == TY_STRUCT && retbuf != nil && retbuf.Name[:6] == "retbuf" {
-			// 	c.println("	mov %d(%%rbp), %%rax", retbuf.Offset)
-			// } else
+
 			if isFlonum(n.Ty) {
 				c.println("	movq %s, %%xmm0", argreg64[i])
 			} else {
@@ -1304,10 +1312,10 @@ func (c *codeWriter) genStmt(node *Node) {
 				} else {
 					c.copyStructMem(ty)
 				}
-			} else {
-				c.println("	mov %%rax, %s", argreg64[i])
-				i++
 			}
+			c.println("	mov %%rax, %s", argreg64[i])
+			i++
+
 		}
 
 		c.println("	jmp .L.return.%s", curFnInGen.Name)

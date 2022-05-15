@@ -30,6 +30,14 @@ func multiRetStruct() (int, string, gT01) {
 	return g.a, g.b, g
 }
 
+func retStruct() gT01 {
+	var g = gT01{
+		a: 1,
+		b: "aaa",
+	}
+	return g
+}
+
 func main() {
 	// var a01, b01, c01, d01, e01, f01 int
 	// a01, b01, c01, d01, e01, f01 = multiRet()
@@ -65,6 +73,9 @@ func main() {
 	assert(1, c04.a, "c04.a")
 	assert(0, strcmp(c04.b, "aaa"), "strcmp(c04.b, \"aaa\")")
 
+	var c05 gT01
+	c05 = retStruct()
+	assert(1, c05.a, "c05.a")
 	// var a05, b05, c05, d05, e05, f05, g05 = 1, 2, 3, 4, 5, 6, 7
 	// assert(1, a05, "a05")
 	// assert(2, b05, "b05")
