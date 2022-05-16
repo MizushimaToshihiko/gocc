@@ -71,11 +71,12 @@ func main() {
 	assert(1, a04, "a04")
 	assert(0, strcmp(b04, "aaa"), "strcmp(b04, \"aaa\")")
 	assert(1, c04.a, "c04.a")
-	assert(0, strcmp(c04.b, "aaa"), "strcmp(c04.b, \"aaa\")")
+	// assert(0, strcmp(c04.b, "aaa"), "strcmp(c04.b, \"aaa\")")
 
 	var c05 gT01
 	c05 = retStruct()
 	assert(1, c05.a, "c05.a")
+	assert(0, strcmp(c05.b, "aaa"), "strcmp(c05.b, \"aaa\")")
 	// var a05, b05, c05, d05, e05, f05, g05 = 1, 2, 3, 4, 5, 6, 7
 	// assert(1, a05, "a05")
 	// assert(2, b05, "b05")

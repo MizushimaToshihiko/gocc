@@ -45,7 +45,6 @@ var argreg8 = []string{"%dil", "%sil", "%dl", "%cl", "%r8b", "%r9b"}
 var argreg16 = []string{"%di", "%si", "%dx", "%cx", "%r8w", "%r9w"}
 var argreg32 = []string{"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"}
 var argreg64 = []string{"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}
-
 var curFnInGen *Obj
 
 func (c *codeWriter) push() {
@@ -944,6 +943,15 @@ func (c *codeWriter) genExpr(node *Node) {
 			r := node.RetBuf
 			retTy := node.Ty
 			idx := 0
+			if retTy.Next == nil { // If the called function returns one value.
+				if retTy.Sz <= 16 {
+					c.println("# copy_ret_buffer")
+					c.copyRetBuf(r)
+					c.println("# store node.RetBuf's address to a general register")
+					c.println("	lea %d(%%rbp), %%rax", r.Offset)
+					return
+				}
+			}
 			for ; idx < 6; idx++ { // 6 is the number of general registers in this compiler.
 				if retTy == nil {
 					break
@@ -956,7 +964,7 @@ func (c *codeWriter) genExpr(node *Node) {
 						c.println("# copy_ret_buffer")
 						c.copyRetBuf(r)
 						c.println("# store node.RetBuf's address to a general register")
-						c.println("	lea %d(%%rbp), %s", node.RetBuf.Offset, argreg64[idx])
+						c.println("	lea %d(%%rbp), %s", r.Offset, argreg64[idx])
 					}
 				}
 				retTy = retTy.Next
@@ -1315,7 +1323,6 @@ func (c *codeWriter) genStmt(node *Node) {
 			}
 			c.println("	mov %%rax, %s", argreg64[i])
 			i++
-
 		}
 
 		c.println("	jmp .L.return.%s", curFnInGen.Name)

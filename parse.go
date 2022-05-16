@@ -1713,6 +1713,9 @@ func stmt(rest **Token, tok *Token) *Node {
 		first := true
 		ty := copyType(curFn.Ty.RetTy)
 
+		// Return values will be stored in stack temporary,
+		// so node.RetVals is reverse order.
+		var tmp []*Node
 		for !equal(tok, ";") {
 			if !first {
 				tok = skip(tok, ",")
@@ -1723,10 +1726,14 @@ func stmt(rest **Token, tok *Token) *Node {
 			if ty.Kind != TY_STRUCT {
 				exp = newCast(exp, ty)
 			}
+			tmp = append(tmp, exp)
 			ty = ty.Next
-			cur.Next = exp
+		}
+		for i := len(tmp) - 1; i >= 0; i-- {
+			cur.Next = tmp[i]
 			cur = cur.Next
 		}
+
 		node.RetVals = head.Next
 
 		return node
