@@ -1696,16 +1696,6 @@ func stmt(rest **Token, tok *Token) *Node {
 		if consume(rest, tok.Next, ";") {
 			return node
 		}
-
-		// exp := expr(&tok, tok.Next)
-		// *rest = skip(tok, ";")
-
-		// addType(exp)
-		// ty := curFn.Ty.RetTy
-		// if ty.Kind != TY_STRUCT {
-		// 	exp = newCast(exp, curFn.Ty.RetTy)
-		// }
-		// node.Lhs = exp
 		tok = skip(tok, "return")
 
 		head := &Node{}
@@ -1713,9 +1703,6 @@ func stmt(rest **Token, tok *Token) *Node {
 		first := true
 		ty := copyType(curFn.Ty.RetTy)
 
-		// Return values will be stored in stack temporary,
-		// so node.RetVals is reverse order.
-		var tmp []*Node
 		for !equal(tok, ";") {
 			if !first {
 				tok = skip(tok, ",")
@@ -1726,16 +1713,11 @@ func stmt(rest **Token, tok *Token) *Node {
 			if ty.Kind != TY_STRUCT {
 				exp = newCast(exp, ty)
 			}
-			tmp = append(tmp, exp)
-			ty = ty.Next
-		}
-		for i := len(tmp) - 1; i >= 0; i-- {
-			cur.Next = tmp[i]
+			cur.Next = exp
 			cur = cur.Next
 		}
 
 		node.RetVals = head.Next
-
 		return node
 	}
 
@@ -3316,7 +3298,7 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 
 	*rest = skip(tok, ")")
 
-	fmt.Printf("funcall: ty: %#v\n\n", ty)
+	// fmt.Printf("funcall: ty: %#v\n\n", ty)
 
 	node := newUnary(ND_FUNCALL, fn, tok)
 	node.FuncTy = ty
@@ -3328,7 +3310,7 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	vhead := &Obj{}
 	vcur := vhead
 	for r := ty.RetTy; r != nil; r = r.Next {
-		fmt.Printf("funcall: r: %#v\n\n", r)
+		// fmt.Printf("funcall: r: %#v\n\n", r)
 		if r.Kind == TY_STRUCT {
 			vcur.Next = newLvar(fmt.Sprintf("retbuf%d", count()), r)
 			vcur = vcur.Next

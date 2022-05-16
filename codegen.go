@@ -45,6 +45,7 @@ var argreg8 = []string{"%dil", "%sil", "%dl", "%cl", "%r8b", "%r9b"}
 var argreg16 = []string{"%di", "%si", "%dx", "%cx", "%r8w", "%r9w"}
 var argreg32 = []string{"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"}
 var argreg64 = []string{"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}
+var retreg64 = []string{"%r10", "%r11", "%r12", "%r13", "%r14", "%r15"}
 var curFnInGen *Obj
 
 func (c *codeWriter) push() {
@@ -957,7 +958,7 @@ func (c *codeWriter) genExpr(node *Node) {
 					break
 				}
 				if retTy.Kind == TY_STRUCT {
-					if len(r.Name) < 6 || r.Name[:6] != "retbuf" {
+					if r == nil || len(r.Name) < 6 || r.Name[:6] != "retbuf" {
 						break
 					}
 					if r.Ty.Sz <= 16 {
@@ -966,11 +967,11 @@ func (c *codeWriter) genExpr(node *Node) {
 						c.println("# store node.RetBuf's address to a general register")
 						c.println("	lea %d(%%rbp), %s", r.Offset, argreg64[idx])
 					}
+					r = r.Next
 				}
 				retTy = retTy.Next
 			}
 		}
-
 		return
 	}
 
@@ -1292,15 +1293,18 @@ func (c *codeWriter) genStmt(node *Node) {
 		n := node.Masg
 		// retbuf := node.Lhs.RetBuf
 		for ; n != nil; n = n.Next {
-			c.println("# generate addrs of Lhs nodes")
+			c.println("# generate addr of Lhs node")
 			c.genAddr(n)
+			c.println("# push addr of Lhs node")
 			c.push()
 
+			c.println("# take out the value in a general register and store to rax")
 			if isFlonum(n.Ty) {
-				c.println("	movq %s, %%xmm0", argreg64[i])
+				c.println("	movq %s, %%xmm0", retreg64[i])
 			} else {
-				c.println("	mov %s, %%rax", argreg64[i])
+				c.println("	mov %s, %%rax", retreg64[i])
 			}
+			c.println("# store the value in rax to Lhs")
 			c.store(n.Ty)
 			i++
 		}
@@ -1321,7 +1325,7 @@ func (c *codeWriter) genStmt(node *Node) {
 					c.copyStructMem(ty)
 				}
 			}
-			c.println("	mov %%rax, %s", argreg64[i])
+			c.println("	mov %%rax, %s", retreg64[i])
 			i++
 		}
 
