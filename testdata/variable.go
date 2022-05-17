@@ -100,7 +100,6 @@ func main() {
 	var x35, _ = ret3()+3, printf("blank ident test\n")
 	assert(6, x35, "x35")
 	assert(2, g3, "g3")
-	// assert(2, _, "_")
 
 	println("OK")
 }
