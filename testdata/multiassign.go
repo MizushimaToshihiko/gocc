@@ -126,7 +126,8 @@ func main() {
 	assert(0, strcmp(b043, "ccc"), "strcmp(b043, \"ccc\")")
 	assert(3, c043.a, "c043.a")
 	assert(0, strcmp(c043.b, "ccc"), "strcmp(c043.b, \"ccc\")")
-	assert(2, d043.a[1], "d043.a")
+	assert(2, d043.a[1], "d043.a[1]")
+	assert(20, d043.a[19], "d043.a[19]")
 
 	var a05, b05, c05, d05, e05, f05, g05 = 1, 2, 3, 4, 5, 6, 7
 	assert(1, a05, "a05")
