@@ -511,8 +511,12 @@ func (c *codeWriter) pushArgs(node *Node) int {
 
 	// If the return type is a large struct, the caller passes
 	// a pointer to a buffer as if it were the first argument.
-	if node.RetBuf != nil && node.Ty.Sz > 16 {
-		gp++
+	if node.RetBuf != nil {
+		for r := node.RetBuf; r != nil; r = r.RetNext {
+			if r.Ty.Sz > 16 {
+				gp++
+			}
+		}
 	}
 
 	// Load as many arguments to the registers as possible.
@@ -570,9 +574,13 @@ func (c *codeWriter) pushArgs(node *Node) int {
 
 	// If the return type is a large struct, the caller passes
 	// a pointer to a buffer as if it were the first argument.
-	if node.RetBuf != nil && node.Ty.Sz > 16 {
-		c.println("	lea %d(%%rbp), %%rax", node.RetBuf.Offset)
-		c.push()
+	if node.RetBuf != nil {
+		for r := node.RetBuf; r != nil; r = r.RetNext {
+			if r.Ty.Sz > 16 {
+				c.println("	lea %d(%%rbp), %%rax", r.Offset)
+				c.push()
+			}
+		}
 	}
 
 	return stack
@@ -854,9 +862,13 @@ func (c *codeWriter) genExpr(node *Node) {
 
 		// If the return type is a large struct, the caller passes
 		// a pointer to a buffer as if it were the first argument.
-		if node.RetBuf != nil && node.Ty.Sz > 16 {
-			c.pop(argreg64[gp])
-			gp++
+		if node.RetBuf != nil {
+			for r := node.RetBuf; r != nil; r = r.RetNext {
+				if r.Ty.Sz > 16 {
+					c.pop(argreg64[gp])
+					gp++
+				}
+			}
 		}
 
 		for arg := node.Args; arg != nil; arg = arg.Next {

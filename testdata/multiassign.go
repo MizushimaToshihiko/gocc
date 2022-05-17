@@ -65,6 +65,44 @@ func multiRet2BigStruct() (int, gT01, gT02, string) {
 	return g1.a, g1, g2, g1.b
 }
 
+func multiRetSlice() ([]int, []string) {
+	var a = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+	var b = []string{"aaa", "bbb", "ccc", "ddd", "eee", "fff"}
+	return a, b
+}
+
+// func multiRetArged(a int, b string) (gT01, gT02) {
+// 	var g1 = gT01{
+// 		a: a + 1,
+// 		b: b,
+// 	}
+// 	var g2 = gT02{
+// 		a: [20]int{
+// 			a + 1,
+// 			a + 2,
+// 			a + 3,
+// 			a + 4,
+// 			a + 5,
+// 			a + 6,
+// 			a + 7,
+// 			a + 8,
+// 			a + 9,
+// 			a + 10,
+// 			a + 11,
+// 			a + 12,
+// 			a + 13,
+// 			a + 14,
+// 			a + 15,
+// 			a + 16,
+// 			a + 17,
+// 			a + 18,
+// 			a + 19,
+// 			a + 20,
+// 		},
+// 	}
+// 	return g1, g2
+// }
+
 func main() {
 	var a01, b01, c01, d01, e01, f01 int
 	a01, b01, c01, d01, e01, f01 = multiRet()
@@ -237,6 +275,24 @@ func main() {
 	assert(1, b07 == 0.2, "b07==0.2")
 	assert(1, c07 == 0.3, "c07==0.3")
 	assert(1, d07 == 0.4, "d07==0.4")
+
+	var a08 []int
+	var b08 []string
+	a08, b08 = multiRetSlice()
+	assert(1, a08[0], "a08[0]")
+	assert(11, a08[10], "a08[10]")
+	assert(20, a08[19], "a08[19]")
+	assert(0, strcmp(b08[0], "aaa"), "strcmp(b08[0], \"aaa\")")
+	assert(0, strcmp(b08[3], "ddd"), "strcmp(b08[3], \"ddd\")")
+	assert(0, strcmp(b08[5], "fff"), "strcmp(b08[5], \"fff\")")
+
+	// // このテストは未だ通りません
+	// var a09 gT01
+	// var b09 gT02
+	// a09, b09 = multiRetArged(100, "abc")
+	// assert(2, a09.a, "a09.a")
+	// assert(0, strcmp(a09.b, "abc"), "strcmp(b09.b, \"abc\")")
+	// assert(101, b09.a[0], "b09.a[0]")
 
 	println("OK")
 }
