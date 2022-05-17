@@ -973,7 +973,7 @@ func (c *codeWriter) genExpr(node *Node) {
 					break
 				}
 				if retTy.Kind == TY_STRUCT {
-					if r == nil || len(r.Name) < 6 || r.Name[:6] != "retbuf" {
+					if r == nil {
 						break
 					}
 					if r.Ty.Sz <= 16 {
@@ -1319,6 +1319,8 @@ func (c *codeWriter) genStmt(node *Node) {
 				c.println("	mov %s, %%rax", retreg64[i])
 			}
 			c.println("# store the value in rax to Lhs")
+			fmt.Printf("c.genStmt: n: %#v\n\n", n)
+			fmt.Printf("c.genStmt: n.Ty: %#v\n\n", n.Ty)
 			c.store(n.Ty)
 			i++
 		}

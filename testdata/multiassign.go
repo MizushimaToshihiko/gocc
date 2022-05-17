@@ -71,37 +71,37 @@ func multiRetSlice() ([]int, []string) {
 	return a, b
 }
 
-// func multiRetArged(a int, b string) (gT01, gT02) {
-// 	var g1 = gT01{
-// 		a: a + 1,
-// 		b: b,
-// 	}
-// 	var g2 = gT02{
-// 		a: [20]int{
-// 			a + 1,
-// 			a + 2,
-// 			a + 3,
-// 			a + 4,
-// 			a + 5,
-// 			a + 6,
-// 			a + 7,
-// 			a + 8,
-// 			a + 9,
-// 			a + 10,
-// 			a + 11,
-// 			a + 12,
-// 			a + 13,
-// 			a + 14,
-// 			a + 15,
-// 			a + 16,
-// 			a + 17,
-// 			a + 18,
-// 			a + 19,
-// 			a + 20,
-// 		},
-// 	}
-// 	return g1, g2
-// }
+func multiRetArged(a int, b string) (gT01, gT02) {
+	var g1 = gT01{
+		a: a + 1,
+		b: b,
+	}
+	var g2 = gT02{
+		a: [20]int{
+			a + 1,
+			a + 2,
+			a + 3,
+			a + 4,
+			a + 5,
+			a + 6,
+			a + 7,
+			a + 8,
+			a + 9,
+			a + 10,
+			a + 11,
+			a + 12,
+			a + 13,
+			a + 14,
+			a + 15,
+			a + 16,
+			a + 17,
+			a + 18,
+			a + 19,
+			a + 20,
+		},
+	}
+	return g1, g2
+}
 
 func main() {
 	var a01, b01, c01, d01, e01, f01 int
@@ -290,7 +290,7 @@ func main() {
 	// var a09 gT01
 	// var b09 gT02
 	// a09, b09 = multiRetArged(100, "abc")
-	// assert(2, a09.a, "a09.a")
+	// assert(101, a09.a, "a09.a")
 	// assert(0, strcmp(a09.b, "abc"), "strcmp(b09.b, \"abc\")")
 	// assert(101, b09.a[0], "b09.a[0]")
 
