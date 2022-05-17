@@ -56,6 +56,9 @@ type Obj struct {
 	InitData []int64
 	Rel      *Relocation
 
+	// ret_buffer
+	RetNext *Obj
+
 	// Function
 	Params  *Obj
 	Body    *Node
@@ -3312,11 +3315,11 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	for r := ty.RetTy; r != nil; r = r.Next {
 		// fmt.Printf("funcall: r: %#v\n\n", r)
 		if r.Kind == TY_STRUCT {
-			vcur.Next = newLvar(fmt.Sprintf("retbuf%d", count()), r)
-			vcur = vcur.Next
+			vcur.RetNext = newLvar(fmt.Sprintf("retbuf%d", count()), r)
+			vcur = vcur.RetNext
 		}
 	}
-	node.RetBuf = vhead.Next
+	node.RetBuf = vhead.RetNext
 	return node
 }
 

@@ -970,7 +970,7 @@ func (c *codeWriter) genExpr(node *Node) {
 						c.println("# store node.RetBuf's address to a general register")
 						c.println("	lea %d(%%rbp), %s", r.Offset, argreg64[idx])
 					}
-					r = r.Next
+					r = r.RetNext
 				}
 				retTy = retTy.Next
 			}
@@ -1294,7 +1294,6 @@ func (c *codeWriter) genStmt(node *Node) {
 
 		i := 0
 		n := node.Masg
-		// retbuf := node.Lhs.RetBuf
 		for ; n != nil; n = n.Next {
 			c.println("# generate addr of Lhs node")
 			c.genAddr(n)
