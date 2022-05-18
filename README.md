@@ -1,3 +1,4 @@
+[![Go](https://github.com/MizushimaToshihiko/gocc/actions/workflows/go.yml/badge.svg)](https://github.com/MizushimaToshihiko/gocc/actions/workflows/go.yml)
 ### The toy compiler for Go
 - It's based on rui314's [chibicc](https://github.com/rui314/chibicc/tree/reference) and https://www.sigbus.info/compilerbook . 
 - This is for my own learning.
