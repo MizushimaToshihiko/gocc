@@ -222,12 +222,14 @@ func (c *codeWriter) store(ty *Type) {
 
 	switch ty.Kind {
 	case TY_STRUCT:
+		// For structs, RAX should have the address.
 		for i := 0; i < ty.Sz; i++ {
 			c.println("	mov %d(%%rax), %%r8b", i)
 			c.println("	mov %%r8b, %d(%%rdi)", i)
 		}
 		return
 	case TY_FLOAT:
+		// For floating-point, XMM0 should have a value.
 		c.println("	movss %%xmm0, (%%rdi)")
 		return
 	case TY_DOUBLE:
@@ -236,6 +238,7 @@ func (c *codeWriter) store(ty *Type) {
 	}
 
 	switch ty.Sz {
+	// In other cases, RAX should have a value.
 	case 1:
 		c.println("	mov %%al, (%%rdi)")
 	case 2:
