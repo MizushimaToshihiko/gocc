@@ -95,7 +95,8 @@ func alignTo(n int, align int) int {
 	return (n + align - 1) / align * align
 }
 
-// Pushes the given node's address to the stack
+// genAddr compute the absolute address of a given node.
+// It's an error if a given node does not reside in memory.
 func (c *codeWriter) genAddr(node *Node) {
 	if c.err != nil {
 		return
@@ -167,6 +168,7 @@ func (c *codeWriter) genAddr(node *Node) {
 	c.unreachable(errorTok(node.Tok, "not a lvalue"))
 }
 
+// Load the value from where %rax is pointing to.
 func (c *codeWriter) load(ty *Type) {
 	if c.err != nil {
 		return
@@ -416,7 +418,7 @@ func (c *codeWriter) cast(from *Type, to *Type) {
 // applied to the next 8 bytes chunk.
 //
 // This function returns true if `ty` has only floating-point
-// member in its byte tange [lo hi).
+// member in its byte range [lo hi).
 func hasFlonum(ty *Type, lo int, hi int, offset int) bool {
 	if ty.Kind == TY_STRUCT {
 		for mem := ty.Mems; mem != nil; mem = mem.Next {
