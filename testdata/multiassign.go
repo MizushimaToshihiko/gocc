@@ -310,7 +310,7 @@ func main() {
 	var a09 gT02
 	var b09 gT02
 	a09, b09 = multiRetArged(100, "abc")
-	assert(101, a09.a[0], "a09.a")
+	assert(101, a09.a[0], "a09.a[0]")
 	// assert(0, strcmp(a09.b, "abc"), "strcmp(b09.b, \"abc\")")
 	assert(101, b09.a[0], "b09.a[0]")
 
