@@ -71,33 +71,53 @@ func multiRetSlice() ([]int, []string) {
 	return a, b
 }
 
-func multiRetArged(a int, b string) (gT01, gT02) {
-	var g1 = gT01{
-		a: a + 1,
-		b: b,
+func multiRetArged(x int, y string) (gT02, gT02) {
+	var g1 = gT02{
+		a: [20]int{
+			x + 1,
+			x + 2,
+			x + 3,
+			x + 4,
+			x + 5,
+			x + 6,
+			x + 7,
+			x + 8,
+			x + 9,
+			x + 10,
+			x + 11,
+			x + 12,
+			x + 13,
+			x + 14,
+			x + 15,
+			x + 16,
+			x + 17,
+			x + 18,
+			x + 19,
+			x + 20,
+		},
 	}
 	var g2 = gT02{
 		a: [20]int{
-			a + 1,
-			a + 2,
-			a + 3,
-			a + 4,
-			a + 5,
-			a + 6,
-			a + 7,
-			a + 8,
-			a + 9,
-			a + 10,
-			a + 11,
-			a + 12,
-			a + 13,
-			a + 14,
-			a + 15,
-			a + 16,
-			a + 17,
-			a + 18,
-			a + 19,
-			a + 20,
+			x + 1,
+			x + 2,
+			x + 3,
+			x + 4,
+			x + 5,
+			x + 6,
+			x + 7,
+			x + 8,
+			x + 9,
+			x + 10,
+			x + 11,
+			x + 12,
+			x + 13,
+			x + 14,
+			x + 15,
+			x + 16,
+			x + 17,
+			x + 18,
+			x + 19,
+			x + 20,
 		},
 	}
 	return g1, g2
@@ -286,13 +306,13 @@ func main() {
 	assert(0, strcmp(b08[3], "ddd"), "strcmp(b08[3], \"ddd\")")
 	assert(0, strcmp(b08[5], "fff"), "strcmp(b08[5], \"fff\")")
 
-	// // このテストは未だ通りません
-	// var a09 gT01
-	// var b09 gT02
-	// a09, b09 = multiRetArged(100, "abc")
-	// assert(101, a09.a, "a09.a")
+	// このテストは未だ通りません。a09をgT01=>gT02にしたら通ったのですがわからん。
+	var a09 gT02
+	var b09 gT02
+	a09, b09 = multiRetArged(100, "abc")
+	assert(101, a09.a[0], "a09.a")
 	// assert(0, strcmp(a09.b, "abc"), "strcmp(b09.b, \"abc\")")
-	// assert(101, b09.a[0], "b09.a[0]")
+	assert(101, b09.a[0], "b09.a[0]")
 
 	println("OK")
 }

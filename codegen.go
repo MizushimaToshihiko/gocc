@@ -1307,6 +1307,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		}
 		return
 	case ND_MULTIRETASSIGN:
+		// generate the 'funcall' node.
 		c.genExpr(node.Lhs)
 
 		i := 0
@@ -1324,8 +1325,8 @@ func (c *codeWriter) genStmt(node *Node) {
 				c.println("	mov %s, %%rax", retreg64[i])
 			}
 			c.println("# store the value in rax to Lhs")
-			fmt.Printf("c.genStmt: n: %#v\n\n", n)
-			fmt.Printf("c.genStmt: n.Ty: %#v\n\n", n.Ty)
+			// fmt.Printf("c.genStmt: n: %#v\n\n", n)
+			// fmt.Printf("c.genStmt: n.Ty: %#v\n\n", n.Ty)
 			c.store(n.Ty)
 			i++
 		}
