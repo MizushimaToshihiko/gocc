@@ -592,6 +592,10 @@ func (c *codeWriter) pushArgs(node *Node) int {
 }
 
 func (c *codeWriter) copyRetBuf(v *Obj) {
+	if c.err != nil {
+		return
+	}
+
 	ty := v.Ty
 	var gp, fp int
 
@@ -642,6 +646,9 @@ func (c *codeWriter) copyRetBuf(v *Obj) {
 }
 
 func (c *codeWriter) copyStructReg(ty *Type) {
+	if c.err != nil {
+		return
+	}
 	// ty := curFnInGen.Ty.RetTy
 	var gp, fp int
 
@@ -1342,6 +1349,8 @@ func (c *codeWriter) genStmt(node *Node) {
 			ty := ret.Ty
 			if ty.Kind == TY_STRUCT {
 				if ty.Sz <= 16 {
+					// The size is 8-16 bytes, the value is stored in RAX and RDX.
+					// And it is no more than 8 bytes, the value is stored in RAX only.
 					c.copyStructReg(ty)
 				} else {
 					c.copyStructMem(ty)

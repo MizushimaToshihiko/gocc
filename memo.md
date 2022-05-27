@@ -410,3 +410,6 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
  - 2022/04/24 原因判明:
   - initializer2の処理が間違っており基底配列を二つ作っていた
   - 型推論（左辺がTY_VOID）の時に、make関数で作られる基底配列（一回目）をNode.Ty.UArrNodeに入れているが、sliceを示す変数には二回目に作られた基底配列へのポインタアドレスを代入していた為
+
+ - 2022/05/27 compiler explorerのリンク
+ https://godbolt.org/z/aT4dWqsM1
