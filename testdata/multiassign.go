@@ -56,13 +56,13 @@ type gT02 struct {
 
 func multiRet2BigStruct(a int, b string) (int, gT01, gT02, string) {
 	var g1 = gT01{
-		a: a + 2,
+		a: int64(a + 2),
 		b: b,
 	}
 	var g2 = gT02{
 		a: [20]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
 	}
-	return g1.a, g1, g2, g1.b
+	return int(g1.a), g1, g2, g1.b
 }
 
 func multiRetSlice() ([]int, []string) {
@@ -291,11 +291,19 @@ func main() {
 	var b09 gT02
 	a09, b09 = multiRetArged(100, "abc")
 	assert(101, a09.a, "a09.a")
-	// assert(0, strcmp(a09.b, "abc"), "strcmp(a09.b, \"abc\")")
+	// assert(0, strcmp(a09.b, "abc"), "strcmp(a09.b, \"abc\")") // なぜかa09.bは、[101 0 0]になっている??
 	println("a09.b[0]: %d", a09.b[0])
 	println("a09.b[1]: %d", a09.b[1])
 	println("a09.b[2]: %d", a09.b[2])
 	assert(101, b09.a[0], "b09.a[0]")
+	assert(102, b09.a[1], "b09.a[1]")
+	assert(103, b09.a[2], "b09.a[2]")
+	assert(104, b09.a[3], "b09.a[3]")
+	assert(105, b09.a[4], "b09.a[4]")
+	assert(106, b09.a[5], "b09.a[5]")
+	assert(110, b09.a[9], "b09.a[9]")
+	assert(115, b09.a[14], "b09.a[14]")
+	assert(120, b09.a[19], "b09.a[19]")
 
 	println("OK")
 }
