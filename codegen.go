@@ -47,6 +47,7 @@ var argreg32 = []string{"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"}
 var argreg64 = []string{"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}
 
 // registers for return values
+var retreg8 = []string{"%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b"}
 var retreg64 = []string{"%r10", "%r11", "%r12", "%r13", "%r14", "%r15"}
 
 var curFnInGen *Obj
@@ -591,7 +592,9 @@ func (c *codeWriter) pushArgs(node *Node) int {
 	return stack
 }
 
-func (c *codeWriter) copyRetBuf(v *Obj) {
+// reg11, reg12, reg21, reg22 are respectivly
+// %al, %rax, %dl, %rdx in case of integer,
+func (c *codeWriter) copyRetBuf(v *Obj, reg11, reg12, reg21, reg22 string) {
 	if c.err != nil {
 		return
 	}
@@ -613,8 +616,8 @@ func (c *codeWriter) copyRetBuf(v *Obj) {
 		fp++
 	} else {
 		for i := 0; i < min(8, ty.Sz); i++ {
-			c.println("	mov %%al, %d(%%rbp)", v.Offset+i)
-			c.println("	shr $8, %%rax")
+			c.println("	mov %s, %d(%%rbp)", reg11, v.Offset+i)
+			c.println("	shr $8, %s", reg12)
 		}
 		gp++
 	}
@@ -631,11 +634,11 @@ func (c *codeWriter) copyRetBuf(v *Obj) {
 				c.println("	movsd %%xmm%d, %d(%%rbp)", fp, v.Offset+8)
 			}
 		} else {
-			var reg1 string = "%al"
-			var reg2 string = "%rax"
+			var reg1 string = reg11
+			var reg2 string = reg12
 			if gp != 0 {
-				reg1 = "%dl"
-				reg2 = "%rdx"
+				reg1 = reg21
+				reg2 = reg22
 			}
 			for i := 8; i < min(16, ty.Sz); i++ {
 				c.println("	mov %s, %d(%%rbp)", reg1, v.Offset+i)
@@ -974,7 +977,7 @@ func (c *codeWriter) genExpr(node *Node) {
 			if retTy.Next == nil { // If the called function returns one value.
 				if retTy.Sz <= 16 {
 					c.println("# copy_ret_buffer")
-					c.copyRetBuf(r)
+					c.copyRetBuf(r, "%al", "%rax", "%dl", "%rdx")
 					c.println("# store node.RetBuf's address to a general register")
 					c.println("	lea %d(%%rbp), %%rax", r.Offset)
 					return
@@ -990,9 +993,9 @@ func (c *codeWriter) genExpr(node *Node) {
 					}
 					if r.Ty.Sz <= 16 {
 						c.println("# copy_ret_buffer")
-						c.copyRetBuf(r)
+						c.copyRetBuf(r, retreg8[idx], retreg64[idx], argreg8[idx], argreg64[idx])
 						c.println("# store node.RetBuf's address to a general register")
-						c.println("	lea %d(%%rbp), %s", r.Offset, argreg64[idx])
+						c.println("	lea %d(%%rbp), %s", r.Offset, retreg64[idx])
 					}
 					r = r.RetNext
 				}
@@ -1352,6 +1355,9 @@ func (c *codeWriter) genStmt(node *Node) {
 					// The size is 8-16 bytes, the value is stored in RAX and RDX.
 					// And it is no more than 8 bytes, the value is stored in RAX only.
 					c.copyStructReg(ty)
+					if ty.Sz > 8 {
+						c.println("	mov %%rdx, %s", argreg64[i])
+					}
 				} else {
 					c.copyStructMem(ty)
 				}

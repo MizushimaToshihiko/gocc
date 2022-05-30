@@ -1718,6 +1718,7 @@ func stmt(rest **Token, tok *Token) *Node {
 			}
 			cur.Next = exp
 			cur = cur.Next
+			ty = ty.Next
 		}
 
 		node.RetVals = head.Next
