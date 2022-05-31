@@ -592,8 +592,11 @@ func (c *codeWriter) pushArgs(node *Node) int {
 	return stack
 }
 
-// reg11, reg12, reg21, reg22 are respectivly
-// %al, %rax, %dl, %rdx in case of integer,
+// copyRetBuf
+// reg11, reg12, reg21, reg22 are registers for the return values
+// and are respectivly in the case of integer,
+// reg11, reg12 (%al, %rax) => the register what the return valuegoes in, within 8 bytes
+// reg21, reg22 (%dl, %rdx) => If the return value is 16 bytes, the higher 8 bytes part.
 func (c *codeWriter) copyRetBuf(v *Obj, reg11, reg12, reg21, reg22 string) {
 	if c.err != nil {
 		return
