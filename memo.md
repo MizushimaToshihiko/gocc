@@ -411,5 +411,6 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
   - initializer2の処理が間違っており基底配列を二つ作っていた
   - 型推論（左辺がTY_VOID）の時に、make関数で作られる基底配列（一回目）をNode.Ty.UArrNodeに入れているが、sliceを示す変数には二回目に作られた基底配列へのポインタアドレスを代入していた為
 
- - 2022/05/27 compiler explorerのリンク
- https://godbolt.org/z/aT4dWqsM1
+ - 2022/05/27 多値返却関数について参考になりそうなcompiler explorerのリンク  
+ https://godbolt.org/z/aT4dWqsM1  
+ https://godbolt.org/z/eGPxnn78x
