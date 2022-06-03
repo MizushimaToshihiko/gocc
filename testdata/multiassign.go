@@ -286,7 +286,6 @@ func main() {
 	assert(0, strcmp(b08[3], "ddd"), "strcmp(b08[3], \"ddd\")")
 	assert(0, strcmp(b08[5], "fff"), "strcmp(b08[5], \"fff\")")
 
-	// このテストは未だ通りません。
 	var a09 gT01
 	var b09 gT02
 	a09, b09 = multiRetArged(100, "abc")
