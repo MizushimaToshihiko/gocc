@@ -50,6 +50,10 @@ var argreg64 = []string{"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}
 var retreg8 = []string{"%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b"}
 var retreg64 = []string{"%r10", "%r11", "%r12", "%r13", "%r14", "%r15"}
 
+// registers for return buffer for structs whose size is 8 or more and 16 or less and 16 or less
+var bufreg8 = []string{"%cl", "%r8b", "%r9b", "dummy", "dummy"}
+var bufreg64 = []string{"%rcx", "%r8", "%r9", "dummy", "dummy"}
+
 var curFnInGen *Obj
 
 func (c *codeWriter) push() {
@@ -996,7 +1000,9 @@ func (c *codeWriter) genExpr(node *Node) {
 					}
 					if r.Ty.Sz <= 16 {
 						c.println("# copy_ret_buffer")
-						c.copyRetBuf(r, retreg8[idx], retreg64[idx], argreg8[idx], argreg64[idx])
+						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃっておかしくなる
+						// => 今のところ8-16bytesの構造体は３つまでしか返せない
+						c.copyRetBuf(r, retreg8[idx], retreg64[idx], bufreg8[idx], bufreg64[idx])
 						c.println("# store node.RetBuf's address to a general register")
 						c.println("	lea %d(%%rbp), %s", r.Offset, retreg64[idx])
 					}
@@ -1359,7 +1365,8 @@ func (c *codeWriter) genStmt(node *Node) {
 					// And it is no more than 8 bytes, the value is stored in RAX only.
 					c.copyStructReg(ty)
 					if ty.Sz > 8 {
-						c.println("	mov %%rdx, %s", argreg64[i])
+						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃう
+						c.println("	mov %%rdx, %s", bufreg64[i])
 					}
 				} else {
 					c.copyStructMem(ty)
