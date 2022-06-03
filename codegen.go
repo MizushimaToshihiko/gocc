@@ -51,8 +51,8 @@ var retreg8 = []string{"%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b"}
 var retreg64 = []string{"%r10", "%r11", "%r12", "%r13", "%r14", "%r15"}
 
 // registers for return buffer for structs whose size is 8 or more and 16 or less and 16 or less
-var bufreg8 = []string{"%cl", "%r8b", "%r9b", "dummy", "dummy"}
-var bufreg64 = []string{"%rcx", "%r8", "%r9", "dummy", "dummy"}
+var bufreg8 = []string{"%cl", "%r8b", "%r9b", "dummy", "dummy", "dummy"}
+var bufreg64 = []string{"%rcx", "%r8", "%r9", "dummy", "dummy", "dummy"}
 
 var curFnInGen *Obj
 
