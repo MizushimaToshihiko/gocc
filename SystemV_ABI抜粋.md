@@ -1,4 +1,4 @@
-From:https://www.uclibc.org/docs/psABI-x86_6From:
+From:https://www.uclibc.org/docs/psABI-x86_64.pdf
 
 #### 値の戻り値の戻りは、次のように行われます。
 アルゴリズム：
