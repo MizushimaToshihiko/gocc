@@ -103,6 +103,37 @@ func multiRetArged(x int, y string) (gT01, gT02) {
 	return g1, g2
 }
 
+func multiRetArged4(x int, y string) (gT01, gT01, gT01, gT02) {
+	var g1 = gT01{a: x + 1, b: y}
+	var g2 = gT01{a: x + 2, b: y}
+	var g3 = gT01{a: x + 3, b: y}
+	var g4 = gT02{
+		a: [20]int{
+			x + 1,
+			x + 2,
+			x + 3,
+			x + 4,
+			x + 5,
+			x + 6,
+			x + 7,
+			x + 8,
+			x + 9,
+			x + 10,
+			x + 11,
+			x + 12,
+			x + 13,
+			x + 14,
+			x + 15,
+			x + 16,
+			x + 17,
+			x + 18,
+			x + 19,
+			x + 20,
+		},
+	}
+	return g1, g2, g3, g4
+}
+
 func main() {
 	var a01, b01, c01, d01, e01, f01 int
 	a01, b01, c01, d01, e01, f01 = multiRet()
@@ -300,6 +331,27 @@ func main() {
 	assert(110, b09.a[9], "b09.a[9]")
 	assert(115, b09.a[14], "b09.a[14]")
 	assert(120, b09.a[19], "b09.a[19]")
+
+	var a10 gT01
+	var b10 gT01
+	var c10 gT01
+	var d10 gT02
+	a10, b10, c10, d10 = multiRetArged4(200, "abc")
+	assert(201, a10.a, "a10.a")
+	assert(0, strcmp(a10.b, "abc"), "strcmp(a10.b, \"abc\")")
+	assert(202, b10.a, "b10.a")
+	assert(0, strcmp(b10.b, "abc"), "strcmp(b10.b, \"abc\")")
+	assert(203, c10.a, "c10.a")
+	assert(0, strcmp(c10.b, "abc"), "strcmp(c10.b, \"abc\")")
+	assert(201, d10.a[0], "d10.a[0]")
+	assert(202, d10.a[1], "d10.a[1]")
+	assert(203, d10.a[2], "d10.a[2]")
+	assert(204, d10.a[3], "d10.a[3]")
+	assert(205, d10.a[4], "d10.a[4]")
+	assert(206, d10.a[5], "d10.a[5]")
+	assert(210, d10.a[9], "d10.a[9]")
+	assert(215, d10.a[14], "d10.a[14]")
+	assert(220, d10.a[19], "d10.a[19]")
 
 	println("OK")
 }
