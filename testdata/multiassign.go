@@ -65,9 +65,10 @@ func multiRet2BigStruct(a int, b string) (int, gT01, gT02, string) {
 	return int(g1.a), g1, g2, g1.b
 }
 
-func multiRetSlice() ([]int, []string) {
+func multiRetSlice() ([]int, []string, []float64) {
 	return []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
-		[]string{"aaa", "bbb", "ccc", "ddd", "eee", "fff"}
+		[]string{"aaa", "bbb", "ccc", "ddd", "eee", "fff"},
+		[]float64{1., 2., 3.}
 }
 
 func multiRetArged(x int, y string) (gT01, gT02) {
@@ -136,6 +137,11 @@ func multiRetArged4(x int, y string) (gT01, gT01, gT01, gT02) {
 func multiRetArr() ([3]int64, [4]int64, [5]int64) {
 	var a, b, c, d, e int64 = 1, 2, 3, 4, 5
 	return [3]int64{a, b, c}, [4]int64{a, b, c, d}, [5]int64{a, b, c, d, e}
+}
+
+func multiRetFloatArr() ([3]float64, [4]float64, [5]float64) {
+	var a, b, c, d, e float64 = 1.1, 2.2, 3.3, 4.4, 5.5
+	return [3]float64{a, b, c}, [4]float64{a, b, c, d}, [5]float64{a, b, c, d, e}
 }
 
 func main() {
@@ -313,13 +319,17 @@ func main() {
 
 	var a08 []int
 	var b08 []string
-	a08, b08 = multiRetSlice()
+	var c08 []float64
+	a08, b08, c08 = multiRetSlice()
 	assert(1, a08[0], "a08[0]")
 	assert(11, a08[10], "a08[10]")
 	assert(20, a08[19], "a08[19]")
 	assert(0, strcmp(b08[0], "aaa"), "strcmp(b08[0], \"aaa\")")
 	assert(0, strcmp(b08[3], "ddd"), "strcmp(b08[3], \"ddd\")")
 	assert(0, strcmp(b08[5], "fff"), "strcmp(b08[5], \"fff\")")
+	assert(1, c08[0], "c08[0]")
+	assert(2, c08[1], "c08[2]")
+	assert(3, c08[2], "c08[3]")
 
 	var a09 gT01
 	var b09 gT02
@@ -366,6 +376,16 @@ func main() {
 	assert(3, b11[2], "b11[2]")
 	assert(4, b11[3], "b11[3]")
 	assert(5, c11[4], "c11[4]")
+
+	var a12 [3]float64
+	var b12 [4]float64
+	var c12 [5]float64
+	a12, b12, c12 = multiRetFloatArr()
+	assert(1, a12[0] == 1.1, "a12[0]==1.1")
+	assert(1, a12[2] == 3.3, "a12[2]==3.3")
+	assert(1, b12[0] == 1.1, "b12[0]==1.1")
+	assert(1, b12[3] == 4.4, "b12[3]==4.4")
+	assert(1, c12[4] == 5.5, "c12[4]==5.5")
 
 	println("OK")
 }
