@@ -66,9 +66,8 @@ func multiRet2BigStruct(a int, b string) (int, gT01, gT02, string) {
 }
 
 func multiRetSlice() ([]int, []string) {
-	var a = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
-	var b = []string{"aaa", "bbb", "ccc", "ddd", "eee", "fff"}
-	return a, b
+	return []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+		[]string{"aaa", "bbb", "ccc", "ddd", "eee", "fff"}
 }
 
 func multiRetArged(x int, y string) (gT01, gT02) {
@@ -132,6 +131,11 @@ func multiRetArged4(x int, y string) (gT01, gT01, gT01, gT02) {
 		},
 	}
 	return g1, g2, g3, g4
+}
+
+func multiRetArr() ([3]int64, [4]int64, [5]int64) {
+	var a, b, c, d, e int64 = 1, 2, 3, 4, 5
+	return [3]int64{a, b, c}, [4]int64{a, b, c, d}, [5]int64{a, b, c, d, e}
 }
 
 func main() {
@@ -352,6 +356,16 @@ func main() {
 	assert(210, d10.a[9], "d10.a[9]")
 	assert(215, d10.a[14], "d10.a[14]")
 	assert(220, d10.a[19], "d10.a[19]")
+
+	var a11 [3]int64
+	var b11 [4]int64
+	var c11 [5]int64
+	a11, b11, c11 = multiRetArr()
+	assert(1, a11[0], "a11[0]")
+	assert(2, a11[1], "a11[1]")
+	assert(3, b11[2], "b11[2]")
+	assert(4, b11[3], "b11[3]")
+	assert(5, c11[4], "c11[4]")
 
 	println("OK")
 }

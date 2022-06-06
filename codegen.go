@@ -228,8 +228,8 @@ func (c *codeWriter) store(ty *Type) {
 	c.pop("%rdi")
 
 	switch ty.Kind {
-	case TY_STRUCT:
-		// For structs, RAX should have the address.
+	case TY_STRUCT, TY_ARRAY:
+		// For structs or array(?), RAX should have the address.
 		for i := 0; i < ty.Sz; i++ {
 			c.println("	mov %d(%%rax), %%r8b", i)
 			c.println("	mov %%r8b, %d(%%rdi)", i)
@@ -1455,8 +1455,17 @@ func (c *codeWriter) assignLvarOffsets(prog *Obj) {
 				continue
 			}
 
+			// AMD64 System V ABI has a special alignment rule for an array of
+			// length at least 16 bytes. We need to align such array to at least
+			// 16-bytes boundaries. See p.14 of
+			// https://github.com/hjl-tools/x86-psABI/wiki/x86-64-psABI-draft.pdf.
+			var align = v.Align
+			if v.Ty.Kind == TY_ARRAY && v.Ty.Sz >= 16 {
+				align = max(16, v.Align)
+			}
+
 			bottom += v.Ty.Sz
-			bottom = alignTo(bottom, v.Align)
+			bottom = alignTo(bottom, align)
 			v.Offset = -bottom
 		}
 
@@ -1479,7 +1488,12 @@ func (c *codeWriter) emitData(prog *Obj) {
 		} else {
 			c.println("	.globl %s", v.Name)
 		}
-		c.println("	.align %d", v.Align)
+
+		var align = v.Align
+		if v.Ty.Kind == TY_ARRAY && v.Ty.Sz >= 16 {
+			align = max(16, v.Align)
+		}
+		c.println("	.align %d", align)
 
 		if v.InitData != nil {
 			c.println("	.data")

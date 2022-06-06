@@ -383,7 +383,7 @@ func (e *errWriter) visit(node *Node) {
 	case ND_ADDR:
 		ty := node.Lhs.Ty
 		if ty.Kind == TY_ARRAY {
-			node.Ty = pointerTo(node.Lhs.Ty.Base)
+			node.Ty = pointerTo(ty.Base)
 			return
 		}
 		node.Ty = pointerTo(ty)
