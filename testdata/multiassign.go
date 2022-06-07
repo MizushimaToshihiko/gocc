@@ -387,5 +387,13 @@ func main() {
 	assert(1, b12[3] == 4.4, "b12[3]==4.4")
 	assert(1, c12[4] == 5.5, "c12[4]==5.5")
 
+	var a13, b13, c13, d13, e13 int
+	a13, b13, c13, _, d13, e13 = multiRet()
+	assert(1, a13, "a13")
+	assert(2, b13, "b13")
+	assert(3, c13, "c13")
+	assert(5, d13, "d13")
+	assert(6, e13, "e13")
+
 	println("OK")
 }

@@ -1332,6 +1332,10 @@ func (c *codeWriter) genStmt(node *Node) {
 		i := 0
 		n := node.Masg
 		for ; n != nil; n = n.Next {
+			if n.Kind == ND_BLANKIDENT {
+				i++
+				continue
+			}
 			c.println("# generate addr of Lhs node")
 			c.genAddr(n)
 			c.println("# push addr of Lhs node")
@@ -1344,8 +1348,6 @@ func (c *codeWriter) genStmt(node *Node) {
 				c.println("	mov %s, %%rax", retreg64[i])
 			}
 			c.println("# store the value in rax to Lhs")
-			// fmt.Printf("c.genStmt: n: %#v\n\n", n)
-			// fmt.Printf("c.genStmt: n.Ty: %#v\n\n", n.Ty)
 			c.store(n.Ty)
 			i++
 		}
