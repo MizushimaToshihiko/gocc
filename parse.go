@@ -1551,12 +1551,10 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 	printCurTok(tok)
 	printCalledFunc()
 
-	head := &Node{}
-	cur := head
 	var i int
-
 	identList := make([]*Obj, 0)
 
+	// Read the Lhs
 	for !equal(tok, "=") && !equal(tok, ":=") && !equal(tok, ";") {
 		if i > 0 {
 			tok = skip(tok, ",")
@@ -1579,7 +1577,39 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 		identList[j].Ty = ty
 	}
 
+	head := &Node{}
+	cur := head
+
+	// Read the Rhs or initialize the variables with 0.
 	if (!isShort && equal(tok, "=")) || (isShort && equal(tok, ":=")) {
+		start := tok
+
+		if len(identList) > 1 {
+			if rhs := expr(&tok, tok.Next); rhs.Kind == ND_FUNCALL {
+				// For funcall that the function returing multiple values.
+				// Read the variables in Lhs.
+				ty := rhs.Lhs.Obj.Ty.RetTy
+				for j := 0; j < len(identList); j++ {
+					identList[j].Ty = copyType(ty)
+					cur.Next = newVarNode(identList[j], identList[j].Tok)
+					cur = cur.Next
+					addType(cur)
+					ty = ty.Next
+				}
+				numVals := countRetTys(rhs.Lhs.Obj)
+				// とりあえずlhsesの長さだけで判定、エラーも適当
+				if len(identList) != numVals {
+					panic(errorTok(tok, "too many assigns: left:%d, right:%d", i, numVals))
+				}
+				node := newUnary(ND_MULTIRETASSIGN, rhs, tok)
+				node.Masg = head.Next
+				*rest = tok.Next
+				addType(node)
+				return node
+			}
+		}
+
+		tok = start
 		j := 0
 		for !equal(tok, ";") {
 			v := identList[j]

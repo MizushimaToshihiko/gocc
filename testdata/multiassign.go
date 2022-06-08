@@ -54,7 +54,7 @@ type gT02 struct {
 	a [20]int
 }
 
-func multiRet2BigStruct(a int, b string) (int, gT01, gT02, string) {
+func multiRet2BigStruct(a int, b string) (int, gT01, gT02, gT02, string) {
 	var g1 = gT01{
 		a: int64(a + 2),
 		b: b,
@@ -62,7 +62,10 @@ func multiRet2BigStruct(a int, b string) (int, gT01, gT02, string) {
 	var g2 = gT02{
 		a: [20]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
 	}
-	return int(g1.a), g1, g2, g1.b
+	var g3 = gT02{
+		a: [20]int{a + 1, a + 2, a + 3, a + 4, a + 5, a + 6, a + 7, a + 8, a + 9, a + 10, a + 11, a + 12, a + 13, a + 14, a + 15, a + 16, a + 17, a + 18, a + 19, a + 20},
+	}
+	return int(g1.a), g1, g2, g3, g1.b
 }
 
 func multiRetSlice() ([]int, []string, []float64) {
@@ -200,7 +203,8 @@ func main() {
 	var b043 string
 	var c043 gT01
 	var d043 gT02
-	a043, c043, d043, b043 = multiRet2BigStruct(1, "ccc")
+	var e043 gT02
+	a043, c043, d043, e043, b043 = multiRet2BigStruct(1, "ccc")
 	assert(3, a043, "a043")
 	assert(0, strcmp(b043, "ccc"), "strcmp(b043, \"ccc\")")
 	assert(3, c043.a, "c043.a")
@@ -225,6 +229,26 @@ func main() {
 	assert(18, d043.a[17], "d043.a[17]")
 	assert(19, d043.a[18], "d043.a[18]")
 	assert(20, d043.a[19], "d043.a[19]")
+	assert(2, e043.a[0], "e043.a[0]")
+	assert(3, e043.a[1], "e043.a[1]")
+	assert(4, e043.a[2], "e043.a[2]")
+	assert(5, e043.a[3], "e043.a[3]")
+	assert(6, e043.a[4], "e043.a[4]")
+	assert(7, e043.a[5], "e043.a[5]")
+	assert(8, e043.a[6], "e043.a[6]")
+	assert(9, e043.a[7], "e043.a[7]")
+	assert(10, e043.a[8], "e043.a[8]")
+	assert(11, e043.a[9], "e043.a[9]")
+	assert(12, e043.a[10], "e043.a[10]")
+	assert(13, e043.a[11], "e043.a[11]")
+	assert(14, e043.a[12], "e043.a[12]")
+	assert(15, e043.a[13], "e043.a[13]")
+	assert(16, e043.a[14], "e043.a[14]")
+	assert(17, e043.a[15], "e043.a[15]")
+	assert(18, e043.a[16], "e043.a[16]")
+	assert(19, e043.a[17], "e043.a[17]")
+	assert(20, e043.a[18], "e043.a[18]")
+	assert(21, e043.a[19], "e043.a[19]")
 
 	var a05, b05, c05, d05, e05, f05, g05 = 1, 2, 3, 4, 5, 6, 7
 	assert(1, a05, "a05")
@@ -394,6 +418,27 @@ func main() {
 	assert(3, c13, "c13")
 	assert(5, d13, "d13")
 	assert(6, e13, "e13")
+
+	a14, _, c14 := multiRetArr()
+	assert(1, a14[0], "a14[0]")
+	assert(2, a14[1], "a14[1]")
+	assert(3, a14[2], "a14[2]")
+	assert(4, c14[3], "c14[3]")
+	assert(5, c14[4], "c14[4]")
+
+	a15, b15, c15 := multiRetSlice()
+	assert(1, a15[0], "a15[0]")
+	assert(11, a15[10], "a15[10]")
+	assert(20, a15[19], "a15[19]")
+	assert(0, strcmp(b15[0], "aaa"), "strcmp(b15[0], \"aaa\")")
+	assert(0, strcmp(b15[3], "ddd"), "strcmp(b15[3], \"ddd\")")
+	assert(0, strcmp(b15[5], "fff"), "strcmp(b15[5], \"fff\")")
+	assert(1, c15[0], "c15[0]")
+	assert(2, c15[1], "c15[2]")
+	assert(3, c15[2], "c15[3]")
+	println("len(a15): %d", len(a15)) // 今のSliceのデータ構造やparserでは関数間のlen,capの受渡ができない
+	println("len(b15): %d", len(b15))
+	println("len(c15): %d", len(c15))
 
 	println("OK")
 }
