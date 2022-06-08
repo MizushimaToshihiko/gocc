@@ -1590,7 +1590,9 @@ func declaration(rest **Token, tok *Token, isShort bool) *Node {
 				// Read the variables in Lhs.
 				ty := rhs.Lhs.Obj.Ty.RetTy
 				for j := 0; j < len(identList); j++ {
-					identList[j].Ty = copyType(ty)
+					if identList[j].Ty.Kind == TY_VOID {
+						identList[j].Ty = copyType(ty)
+					}
 					cur.Next = newVarNode(identList[j], identList[j].Tok)
 					cur = cur.Next
 					addType(cur)
