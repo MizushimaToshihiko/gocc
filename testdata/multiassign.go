@@ -147,6 +147,14 @@ func multiRetFloatArr() ([3]float64, [4]float64, [5]float64) {
 	return [3]float64{a, b, c}, [4]float64{a, b, c, d}, [5]float64{a, b, c, d, e}
 }
 
+func multiRet8Int(a int) (int, int, int, int, int, int, int, int) {
+	return a + 1, a + 2, a + 3, a + 4, a + 5, a + 6, a + 7, a + 8
+}
+
+// func multiRet8Float32(a float32) (float32, float32, float32, float32, float32, float32, float32, float32) {
+// 	return a + 1, a + 2, a + 3, a + 4, a + 5, a + 6, a + 7, a + 8
+// }
+
 func main() {
 	var a01, b01, c01, d01, e01, f01 int
 	a01, b01, c01, d01, e01, f01 = multiRet()
@@ -443,6 +451,26 @@ func main() {
 	println("len(a15): %d", len(a15)) // 今のSliceのデータ構造やparserでは関数間のlen,capの受渡ができない
 	println("len(b15): %d", len(b15))
 	println("len(c15): %d", len(c15))
+
+	a16, b16, c16, d16, e16, f16, g16, h16 := multiRet8Int(1)
+	assert(2, a16, "a16")
+	assert(3, b16, "b16")
+	assert(4, c16, "c16")
+	assert(5, d16, "d16")
+	assert(6, e16, "e16")
+	assert(7, f16, "f16")
+	assert(8, g16, "g16")
+	assert(9, h16, "h16")
+
+	// a17, b17, c17, d17, e17, f17, g17, h17 := multiRet8Float32(1.)
+	// assert(2, a17, "a17")
+	// assert(3, b17, "b17")
+	// assert(4, c17, "c17")
+	// assert(5, d17, "d17")
+	// assert(6, e17, "e17")
+	// assert(7, f17, "f17")
+	// assert(8, g17, "g17")
+	// assert(9, h17, "h17")
 
 	println("OK")
 }

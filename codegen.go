@@ -51,8 +51,8 @@ var retreg8 = []string{"%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b"}
 var retreg64 = []string{"%r10", "%r11", "%r12", "%r13", "%r14", "%r15"}
 
 // registers for return buffer for structs whose size is 8 or more and 16 or less and 16 or less
-var bufreg8 = []string{"%cl", "%r8b", "%r9b", "dummy", "dummy", "dummy"}
-var bufreg64 = []string{"%rcx", "%r8", "%r9", "dummy", "dummy", "dummy"}
+var bufreg8 = []string{"%cl", "%r8b", "%r9b"}
+var bufreg64 = []string{"%rcx", "%r8", "%r9"}
 
 var curFnInGen *Obj
 
@@ -993,7 +993,7 @@ func (c *codeWriter) genExpr(node *Node) {
 
 			bufidx := 0
 			// 6 is the number of general registers in this compiler.
-			for ; idx < 6; idx++ {
+			for ; ; idx++ { //idx < 6
 				if retTy == nil {
 					break
 				}
@@ -1336,6 +1336,7 @@ func (c *codeWriter) genStmt(node *Node) {
 
 		i := 0
 		n := node.Masg
+		retGv := node.Lhs.Lhs.Obj.RetValGv
 		for ; n != nil; n = n.Next {
 			if n.Kind == ND_BLANKIDENT {
 				i++
@@ -1347,12 +1348,21 @@ func (c *codeWriter) genStmt(node *Node) {
 			c.push()
 
 			c.println("# take out the value in a general register and store to rax")
-			if isFlonum(n.Ty) {
-				c.println("	movq %s, %%xmm0", retreg64[i])
+			if i < 6 {
+				if isFlonum(n.Ty) {
+					c.println("	movq %s, %%xmm0", retreg64[i])
+				} else {
+					c.println("	mov %s, %%rax", retreg64[i])
+				}
 			} else {
-				c.println("	mov %s, %%rax", retreg64[i])
+				// fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: retGv: %#v\n\n", retGv)
+				// fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: retGv.Ty: %#v\n\n", retGv.Ty)
+				c.genAddr(retGv)
+				c.load(retGv.Ty)
+				retGv = retGv.Next
 			}
 			c.println("# store the value in rax to Lhs")
+			// fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: n.Ty: %#v\n\n", n.Ty)
 			c.store(n.Ty)
 			i++
 		}
@@ -1363,6 +1373,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		// Save passed-by-register return values to the stack.
 		i := 0
 		bufi := 0
+		retGv := curFnInGen.RetValGv
 		for ret := node.RetVals; ret != nil; ret = ret.Next {
 			c.genExpr(ret)
 
@@ -1381,7 +1392,16 @@ func (c *codeWriter) genStmt(node *Node) {
 					c.copyStructMem(ty)
 				}
 			}
-			c.println("	mov %%rax, %s", retreg64[i])
+			if i < 6 {
+				c.println("	mov %%rax, %s", retreg64[i])
+			} else {
+				c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
+				c.genAddr(retGv)
+				c.push()
+				c.println("	mov %%rsi, %%rax")
+				c.store(ty)
+				retGv = retGv.Next
+			}
 			i++
 		}
 

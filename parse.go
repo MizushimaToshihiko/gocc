@@ -65,6 +65,8 @@ type Obj struct {
 	Locals  *Obj
 	VaArea  *Obj
 	StackSz int
+	// Global var node for when there are more than 6 return values
+	RetValGv *Node
 }
 
 type NodeKind int
@@ -470,6 +472,20 @@ func newStringLiteral(p []int64, ty *Type) *Obj {
 	v := newAnonGvar(ty)
 	v.InitData = p
 	return v
+}
+
+func newFavName(s string) string {
+	printCalledFunc()
+
+	res := fmt.Sprintf("%s.%d", s, cnt)
+	cnt++
+	return res
+}
+
+func newFavGvar(s string, ty *Type) *Obj {
+	printCalledFunc()
+
+	return newGvar(newFavName(s), ty)
 }
 
 func getIdent(tok *Token) string {
@@ -1012,7 +1028,7 @@ func initializer2(rest **Token, tok *Token, init *Initializer) {
 		// make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, 0)
 		uArrTy.IsFlex = true
-		uArr := newGvar(fmt.Sprintf("underlying_array%d", cnt), uArrTy)
+		uArr := newFavGvar("underlying_array", uArrTy)
 		cnt++
 
 		gvarInitializer(rest, tok, uArr)
@@ -1499,7 +1515,7 @@ func zeroInit2(init *Initializer, tok *Token) {
 	if init.Ty.Kind == TY_SLICE {
 		// Make the underlying array.
 		uArrTy := arrayOf(init.Ty.Base, init.Ty.Cap)
-		uArr := newGvar(fmt.Sprintf("underlying_array%d", cnt), uArrTy)
+		uArr := newFavGvar("underlying_array", uArrTy)
 		cnt++
 		gvarZeroInit(uArr, tok)
 		uaNode := newVarNode(uArr, tok)
@@ -1735,25 +1751,36 @@ func stmt(rest **Token, tok *Token) *Node {
 
 		head := &Node{}
 		cur := head
-		first := true
+		rvghead := &Node{}
+		rvgcur := rvghead
+		idx := 0
 		ty := copyType(curFn.Ty.RetTy)
 
 		for !equal(tok, ";") {
-			if !first {
+			if idx > 0 {
 				tok = skip(tok, ",")
 			}
-			first = false
+
 			exp := assign(&tok, tok)
 			addType(exp)
 			if ty.Kind != TY_STRUCT {
 				exp = newCast(exp, ty)
 			}
+
+			if idx >= 6 {
+				rvgcur.Next = newVarNode(newFavGvar("ret_gv", ty), tok)
+				rvgcur = rvgcur.Next
+				addType(rvgcur)
+			}
+
 			cur.Next = exp
 			cur = cur.Next
 			ty = ty.Next
+			idx++
 		}
 
 		node.RetVals = head.Next
+		curFn.RetValGv = rvghead.Next
 		return node
 	}
 
@@ -3348,7 +3375,7 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	for r := ty.RetTy; r != nil; r = r.Next {
 		// fmt.Printf("funcall: r: %#v\n\n", r)
 		if r.Kind == TY_STRUCT {
-			vcur.RetNext = newLvar(fmt.Sprintf("retbuf%d", count()), r)
+			vcur.RetNext = newLvar(newFavName("retbuf"), r)
 			vcur = vcur.RetNext
 		}
 	}
@@ -3447,7 +3474,7 @@ func primary(rest **Token, tok *Token) *Node {
 			ty.Cap = int(cap)
 		}
 		// Make the underlying array.
-		uArr := newGvar(fmt.Sprintf("underlying_array%d", cnt), arrayOf(ty.Base, int(cap)))
+		uArr := newFavGvar("underlying_array", arrayOf(ty.Base, int(cap)))
 		cnt++
 		gvarZeroInit(uArr, tok)
 		uaNode := newVarNode(uArr, start)
@@ -3508,7 +3535,7 @@ func primary(rest **Token, tok *Token) *Node {
 		// In the case that the new length is more than original slice's capacity,
 		// Make a new underlying array.
 		uArrTy := arrayOf(slice.Ty.Base, slice.Ty.Cap*2+cntElem)
-		uArr := newGvar(fmt.Sprintf("underlying_array%d", cnt), uArrTy)
+		uArr := newFavGvar("underlying_array", uArrTy)
 		cnt++
 		gvarZeroInit(uArr, tok)
 		uaNode := newVarNode(uArr, tok)
