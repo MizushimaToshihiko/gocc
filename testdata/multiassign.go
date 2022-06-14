@@ -38,16 +38,16 @@ func retStruct() gT01 {
 	return g
 }
 
-func multiRet2Struct(a int, b string) (int, gT01, gT01, string) {
+func multiRet2Struct(a int, b string) (int, int, int, string, gT01, gT01) {
 	var g1 = gT01{
-		a: a,
+		a: int64(a),
 		b: b,
 	}
 	var g2 = gT01{
-		a: a + 1,
+		a: int64(a + 1),
 		b: "bbb",
 	}
-	return g1.a, g1, g2, g1.b
+	return int(g1.a), int(g2.a), 3, g1.b, g1, g2
 }
 
 type gT02 struct {
@@ -188,16 +188,20 @@ func main() {
 	assert(1, c04.a, "c04.a")
 
 	var a042 int
-	var b042 string
-	var c042 gT01
-	var d042 gT01
-	a042, c042, d042, b042 = multiRet2Struct(1, "aaa")
+	var b042 int
+	var c042 int
+	var d042 string
+	var e042 gT01
+	var f042 gT01
+	a042, b042, c042, d042, e042, f042 = multiRet2Struct(1, "aaa")
 	assert(1, a042, "a042")
-	assert(0, strcmp(b042, "aaa"), "strcmp(b042, \"aaa\")")
-	assert(1, c042.a, "c042.a")
-	assert(0, strcmp(c042.b, "aaa"), "strcmp(c042.b, \"aaa\")")
-	assert(2, d042.a, "d042.a")
-	assert(0, strcmp(d042.b, "bbb"), "strcmp(d042.b, \"bbb\")")
+	assert(2, b042, "b042")
+	assert(3, c042, "c042")
+	assert(0, strcmp(d042, "aaa"), "strcmp(d042, \"aaa\")")
+	assert(1, int(e042.a), "e042.a")
+	assert(0, strcmp(e042.b, "aaa"), "strcmp(e042.b, \"aaa\")")
+	assert(2, int(f042.a), "f042.a")
+	assert(0, strcmp(f042.b, "bbb"), "strcmp(f042.b, \"bbb\")")
 
 	var a043 int
 	var b043 string

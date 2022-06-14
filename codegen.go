@@ -990,7 +990,10 @@ func (c *codeWriter) genExpr(node *Node) {
 					return
 				}
 			}
-			for ; idx < 6; idx++ { // 6 is the number of general registers in this compiler.
+
+			bufidx := 0
+			// 6 is the number of general registers in this compiler.
+			for ; idx < 6; idx++ {
 				if retTy == nil {
 					break
 				}
@@ -1002,9 +1005,11 @@ func (c *codeWriter) genExpr(node *Node) {
 						c.println("# copy_ret_buffer")
 						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃっておかしくなる
 						// => 今のところ8-16bytesの構造体は３つまでしか返せない
-						c.copyRetBuf(r, retreg8[idx], retreg64[idx], bufreg8[idx], bufreg64[idx])
+						c.copyRetBuf(r, retreg8[idx], retreg64[idx],
+							bufreg8[bufidx], bufreg64[bufidx])
 						c.println("# store node.RetBuf's address to a general register")
 						c.println("	lea %d(%%rbp), %s", r.Offset, retreg64[idx])
+						bufidx++
 					}
 					r = r.RetNext
 				}
@@ -1357,6 +1362,7 @@ func (c *codeWriter) genStmt(node *Node) {
 
 		// Save passed-by-register return values to the stack.
 		i := 0
+		bufi := 0
 		for ret := node.RetVals; ret != nil; ret = ret.Next {
 			c.genExpr(ret)
 
@@ -1368,7 +1374,8 @@ func (c *codeWriter) genStmt(node *Node) {
 					c.copyStructReg(ty)
 					if ty.Sz > 8 {
 						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃう
-						c.println("	mov %%rdx, %s", bufreg64[i])
+						c.println("	mov %%rdx, %s", bufreg64[bufi])
+						bufi++
 					}
 				} else {
 					c.copyStructMem(ty)
