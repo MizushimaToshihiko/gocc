@@ -1356,7 +1356,7 @@ func (c *codeWriter) genStmt(node *Node) {
 				}
 			} else {
 				// fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: retGv: %#v\n\n", retGv)
-				// fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: retGv.Ty: %#v\n\n", retGv.Ty)
+				fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: retGv.Ty: %#v\n\n", retGv.Ty)
 				c.genAddr(retGv)
 				c.load(retGv.Ty)
 				retGv = retGv.Next
@@ -1393,7 +1393,11 @@ func (c *codeWriter) genStmt(node *Node) {
 				}
 			}
 			if i < 6 {
-				c.println("	mov %%rax, %s", retreg64[i])
+				if isFlonum(ty) {
+					c.println("	movq %%xmm0, %s", retreg64[i])
+				} else {
+					c.println("	mov %%rax, %s", retreg64[i])
+				}
 			} else {
 				c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
 				c.genAddr(retGv)
