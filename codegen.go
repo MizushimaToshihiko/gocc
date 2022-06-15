@@ -1355,14 +1355,11 @@ func (c *codeWriter) genStmt(node *Node) {
 					c.println("	mov %s, %%rax", retreg64[i])
 				}
 			} else {
-				// fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: retGv: %#v\n\n", retGv)
-				fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: retGv.Ty: %#v\n\n", retGv.Ty)
 				c.genAddr(retGv)
 				c.load(retGv.Ty)
 				retGv = retGv.Next
 			}
 			c.println("# store the value in rax to Lhs")
-			// fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: n.Ty: %#v\n\n", n.Ty)
 			c.store(n.Ty)
 			i++
 		}

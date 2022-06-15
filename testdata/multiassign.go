@@ -13,9 +13,9 @@ func strcmp(s1 string, s2 string) int
 // 	return "abc", "def", "ghi", "jkl", "mno", "pqr"
 // }
 
-func multiRetFloat() (float64, float64) {
-	return 0.1, 0.2
-}
+// func multiRetFloat() (float64, float64) {
+// 	return 0.1, 0.2
+// }
 
 // type gT01 struct {
 // 	a int64
@@ -151,8 +151,16 @@ func multiRetFloat() (float64, float64) {
 // 	return a + 1, a + 2, a + 3, a + 4, a + 5, a + 6, a + 7, a + 8
 // }
 
-func multiRet8Float32(a float32) (float32, float32, float32, float32, float32, float32, float32, float32) {
-	return a + 1, a + 2, a + 3, a + 4, a + 5, a + 6, a + 7, a + 8
+// func multiRet8Float32(a float32) (float32, float32, float32, float32, float32, float32, float32, float32) {
+// 	return a + 1, a + 2, a + 3, a + 4, a + 5, a + 6, a + 7, a + 8
+// }
+
+func multiRet9Float32() (float32, float32, float32, float32, float32, float32, float32, float32, float32) {
+	return 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9
+}
+
+func multiRet9Float64() (float64, float64, float64, float64, float64, float64, float64, float64, float64) {
+	return 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9
 }
 
 func main() {
@@ -179,12 +187,12 @@ func main() {
 	// assert(1, int(c041.a), "c041.a")
 	// assert(0, strcmp(c041.b, "aaa"), "strcmp(c041.b, \"aaa\")")
 
-	var a03, b03 float64
-	a03, b03 = multiRetFloat()
-	println("%lf", a03)
-	println("%lf", b03)
-	assert(1, a03 == 0.1, "a03==0.1")
-	assert(1, b03 == 0.2, "b03==0.2")
+	// var a03, b03 float64
+	// a03, b03 = multiRetFloat()
+	// println("%lf", a03)
+	// println("%lf", b03)
+	// assert(1, a03 == 0.1, "a03==0.1")
+	// assert(1, b03 == 0.2, "b03==0.2")
 
 	// var a04 int64
 	// var b04 string
@@ -462,15 +470,26 @@ func main() {
 	// assert(8, g16, "g16")
 	// assert(9, h16, "h16")
 
-	a17, b17, c17, d17, e17, f17, g17, h17 := multiRet8Float32(1.0)
-	assert(2, a17, "a17")
-	assert(3, b17, "b17")
-	assert(4, c17, "c17")
-	assert(5, d17, "d17")
-	assert(6, e17, "e17")
-	assert(7, f17, "f17")
-	assert(8, g17, "g17")
-	assert(9, h17, "h17")
+	// a17, b17, c17, d17, e17, f17, g17, h17 := multiRet8Float32(1.0)
+	// assert(2, a17, "a17")
+	// assert(3, b17, "b17")
+	// assert(4, c17, "c17")
+	// assert(5, d17, "d17")
+	// assert(6, e17, "e17")
+	// assert(7, f17, "f17")
+	// assert(8, g17, "g17")
+	// assert(9, h17, "h17")
+
+	a18, b18, c18, d18, e18, f18, g18, h18, i18 := multiRet9Float64()
+	assert(1, a18 == 1.1, "a18==1.1")
+	assert(1, b18 == 2.2, "b18==2.2")
+	assert(1, c18 == 3.3, "c18==3.3")
+	assert(1, d18 == 4.4, "d18==4.4")
+	assert(1, e18 == 5.5, "e18==5.5")
+	assert(1, f18 == 6.6, "f18==6.6")
+	assert(1, g18 == 7.7, "g18==7.7")
+	assert(1, h18 == 8.8, "h18==8.8")
+	assert(1, i18 == 9.9, "i18==9.9")
 
 	println("OK")
 }
