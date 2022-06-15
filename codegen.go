@@ -601,9 +601,23 @@ func (c *codeWriter) pushArgs(node *Node) int {
 // and are respectivly in the case of integer,
 // reg11, reg12 (%al, %rax) => the register what the return valuegoes in, within 8 bytes
 // reg21, reg22 (%dl, %rdx) => If the return value is 16 bytes, the higher 8 bytes part.
-func (c *codeWriter) copyRetBuf(v *Obj, reg11, reg12, reg21, reg22 string) {
+func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int) {
 	if c.err != nil {
 		return
+	}
+
+	var reg11, reg12, reg21, reg22 string
+	if isOne {
+		reg11, reg12, reg21, reg22 = "%al", "%rax", "%dl", "%rdx"
+	} else {
+		if idx < 6 {
+			reg11 = retreg8[idx]
+			reg12 = retreg64[idx]
+		}
+		if bufidx < 3 {
+			reg21 = bufreg8[bufidx]
+			reg22 = bufreg64[bufidx]
+		}
 	}
 
 	ty := v.Ty
@@ -878,6 +892,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		// c.println("# ND_FUNCALL")
 		stackArgs := c.pushArgs(node)
 		c.genExpr(node.Lhs)
+		fmt.Printf("c.genExpr: ND_FUNCALL: node.Lhs: %#v\n\n", node.Lhs)
 
 		gp := 0
 		fp := 0
@@ -984,7 +999,7 @@ func (c *codeWriter) genExpr(node *Node) {
 			if retTy.Next == nil { // If the called function returns one value.
 				if retTy.Sz <= 16 {
 					c.println("# copy_ret_buffer")
-					c.copyRetBuf(r, "%al", "%rax", "%dl", "%rdx")
+					c.copyRetBuf(r, true, 0, 0)
 					c.println("# store node.RetBuf's address to a general register")
 					c.println("	lea %d(%%rbp), %%rax", r.Offset)
 					return
@@ -1005,8 +1020,7 @@ func (c *codeWriter) genExpr(node *Node) {
 						c.println("# copy_ret_buffer")
 						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃっておかしくなる
 						// => 今のところ8-16bytesの構造体は３つまでしか返せない
-						c.copyRetBuf(r, retreg8[idx], retreg64[idx],
-							bufreg8[bufidx], bufreg64[bufidx])
+						c.copyRetBuf(r, false, idx, bufidx)
 						c.println("# store node.RetBuf's address to a general register")
 						c.println("	lea %d(%%rbp), %s", r.Offset, retreg64[idx])
 						bufidx++
@@ -1371,6 +1385,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		i := 0
 		bufi := 0
 		retGv := curFnInGen.RetValGv
+		bufGv := curFnInGen.RetBufGv
 		for ret := node.RetVals; ret != nil; ret = ret.Next {
 			c.genExpr(ret)
 
@@ -1382,7 +1397,14 @@ func (c *codeWriter) genStmt(node *Node) {
 					c.copyStructReg(ty)
 					if ty.Sz > 8 {
 						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃう
-						c.println("	mov %%rdx, %s", bufreg64[bufi])
+						if bufi < 3 {
+							c.println("	mov %%rdx, %s", bufreg64[bufi])
+						} else {
+							c.genAddr(bufGv)
+							c.push()
+							c.store(ty)
+							bufGv = bufGv.Next
+						}
 						bufi++
 					}
 				} else {

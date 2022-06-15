@@ -76,7 +76,7 @@ func multiRetSlice() ([]int, []string, []float64) {
 
 func multiRetArged(x int, y string) (gT01, gT02) {
 	var g1 = gT01{
-		a: x + 1,
+		a: int64(x + 1),
 		b: y,
 	}
 	var g2 = gT02{
@@ -162,6 +162,23 @@ func multiRet9Float32() (float32, float32, float32, float32, float32, float32, f
 func multiRet9Float64() (float64, float64, float64, float64, float64, float64, float64, float64, float64) {
 	return 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9
 }
+
+// type gT03 struct {
+// 	a float64
+// 	b float64
+// }
+
+// func multiRet2StructFlonum() (gT03, gT03) {
+// 	var g1 = gT03{
+// 		a: 1.1,
+// 		b: 2.2,
+// 	}
+// 	var g2 = gT03{
+// 		a: 3.3,
+// 		b: 4.4,
+// 	}
+// 	return g1, g2
+// }
 
 func main() {
 	var a01, b01, c01, d01, e01, f01 int
@@ -490,6 +507,11 @@ func main() {
 	assert(1, g18 == 7.7, "g18==7.7")
 	assert(1, h18 == 8.8, "h18==8.8")
 	assert(1, i18 == 9.9, "i18==9.9")
+
+	// hasFlonumな構造体で16bytes以下のものを返す処理を今後追加
+	// a19, b19 := multiRet2StructFlonum()
+	// assert(1, a19.a == 1.1, "a19.a==1.1")
+	// assert(1, b19.a == 3.3, "b19.a==3.3")
 
 	println("OK")
 }

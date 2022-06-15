@@ -67,6 +67,7 @@ type Obj struct {
 	StackSz int
 	// Global var node for when there are more than 6 return values
 	RetValGv *Node
+	RetBufGv *Node
 }
 
 type NodeKind int
@@ -1753,6 +1754,8 @@ func stmt(rest **Token, tok *Token) *Node {
 		cur := head
 		rvghead := &Node{}
 		rvgcur := rvghead
+		bufgvhead := &Node{}
+		bufgvcur := bufgvhead
 		idx := 0
 		ty := copyType(curFn.Ty.RetTy)
 
@@ -1771,6 +1774,12 @@ func stmt(rest **Token, tok *Token) *Node {
 				rvgcur.Next = newVarNode(newFavGvar("ret_gv", ty), tok)
 				rvgcur = rvgcur.Next
 				addType(rvgcur)
+
+				if ty.Kind == TY_STRUCT && 8 < ty.Sz && ty.Sz <= 16 {
+					bufgvcur.Next = newVarNode(newFavGvar("buf_gv", ty), tok)
+					bufgvcur = bufgvcur.Next
+					addType(bufgvcur)
+				}
 			}
 
 			cur.Next = exp
@@ -1781,6 +1790,7 @@ func stmt(rest **Token, tok *Token) *Node {
 
 		node.RetVals = head.Next
 		curFn.RetValGv = rvghead.Next
+		curFn.RetBufGv = bufgvhead.Next
 		return node
 	}
 
