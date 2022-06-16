@@ -892,7 +892,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		// c.println("# ND_FUNCALL")
 		stackArgs := c.pushArgs(node)
 		c.genExpr(node.Lhs)
-		fmt.Printf("c.genExpr: ND_FUNCALL: node.Lhs: %#v\n\n", node.Lhs)
+		// fmt.Printf("c.genExpr: ND_FUNCALL: node.Lhs: %#v\n\n", node.Lhs)
 
 		gp := 0
 		fp := 0
@@ -991,11 +991,10 @@ func (c *codeWriter) genExpr(node *Node) {
 		}
 
 		// If the return type is a small struct, a value is returned
-		// using up to two registers.
+		// using up to two registers(RAX and RDX).
 		if node.RetBuf != nil {
 			r := node.RetBuf
 			retTy := node.Ty
-			idx := 0
 			if retTy.Next == nil { // If the called function returns one value.
 				if retTy.Sz <= 16 {
 					c.println("# copy_ret_buffer")
@@ -1006,6 +1005,7 @@ func (c *codeWriter) genExpr(node *Node) {
 				}
 			}
 
+			idx := 0
 			bufidx := 0
 			// 6 is the number of general registers in this compiler.
 			for ; ; idx++ { //idx < 6

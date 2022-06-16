@@ -163,6 +163,10 @@ func multiRet9Float64() (float64, float64, float64, float64, float64, float64, f
 	return 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9
 }
 
+// func multiRet8Struct() (gT02, gT02, gT02, gT02, gT02, gT02, gT02, gT02) {
+// 	return gT02{}, gT02{}, gT02{}, gT02{}, gT02{}, gT02{}, gT02{}, gT02{}
+// }
+
 // type gT03 struct {
 // 	a float64
 // 	b float64
@@ -507,6 +511,16 @@ func main() {
 	assert(1, g18 == 7.7, "g18==7.7")
 	assert(1, h18 == 8.8, "h18==8.8")
 	assert(1, i18 == 9.9, "i18==9.9")
+
+	// a19, b19, c19, d19, e19, f19, g19, h19 := multiRet8Struct()
+	// assert(0, a19.a[0], "a19.a[0]")
+	// assert(0, b19.a[0], "b19.a[0]")
+	// assert(0, c19.a[0], "c19.a[0]")
+	// assert(0, d19.a[0], "d19.a[0]")
+	// assert(0, e19.a[0], "e19.a[0]")
+	// assert(0, f19.a[0], "f19.a[0]")
+	// assert(0, g19.a[0], "g19.a[0]")
+	// assert(0, h19.a[0], "h19.a[0]")
 
 	// hasFlonumな構造体で16bytes以下のものを返す処理を今後追加
 	// a19, b19 := multiRet2StructFlonum()
