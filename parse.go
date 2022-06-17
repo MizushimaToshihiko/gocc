@@ -1757,6 +1757,7 @@ func stmt(rest **Token, tok *Token) *Node {
 		bufgvhead := &Node{}
 		bufgvcur := bufgvhead
 		idx := 0
+		bufidx := 0
 		ty := copyType(curFn.Ty.RetTy)
 
 		for !equal(tok, ";") {
@@ -1774,12 +1775,15 @@ func stmt(rest **Token, tok *Token) *Node {
 				rvgcur.Next = newVarNode(newFavGvar("ret_gv", ty), tok)
 				rvgcur = rvgcur.Next
 				addType(rvgcur)
+			}
 
-				if ty.Kind == TY_STRUCT && 8 < ty.Sz && ty.Sz <= 16 {
+			if ty.Kind == TY_STRUCT {
+				if bufidx >= 3 {
 					bufgvcur.Next = newVarNode(newFavGvar("buf_gv", ty), tok)
 					bufgvcur = bufgvcur.Next
 					addType(bufgvcur)
 				}
+				bufidx++
 			}
 
 			cur.Next = exp

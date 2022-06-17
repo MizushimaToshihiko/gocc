@@ -601,7 +601,7 @@ func (c *codeWriter) pushArgs(node *Node) int {
 // and are respectivly in the case of integer,
 // reg11, reg12 (%al, %rax) => the register what the return valuegoes in, within 8 bytes
 // reg21, reg22 (%dl, %rdx) => If the return value is 16 bytes, the higher 8 bytes part.
-func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int) {
+func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *Node) {
 	if c.err != nil {
 		return
 	}
@@ -636,9 +636,16 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int) {
 		}
 		fp++
 	} else {
-		for i := 0; i < min(8, ty.Sz); i++ {
-			c.println("	mov %s, %d(%%rbp)", reg11, v.Offset+i)
-			c.println("	shr $8, %s", reg12)
+		if idx < 6 {
+			for i := 0; i < min(8, ty.Sz); i++ {
+				c.println("	mov %s, %d(%%rbp)", reg11, v.Offset+i)
+				c.println("	shr $8, %s", reg12)
+			}
+		} else {
+			c.println("	lea %d(%%rbp), %%rax", v.Offset)
+			c.push()
+			c.genExpr(ret)
+			c.store(v.Ty)
 		}
 		gp++
 	}
@@ -673,7 +680,7 @@ func (c *codeWriter) copyStructReg(ty *Type) {
 	if c.err != nil {
 		return
 	}
-	// ty := curFnInGen.Ty.RetTy
+
 	var gp, fp int
 
 	c.println("	mov %%rax, %%rdi")
@@ -797,6 +804,8 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_DEREF:
 		// c.println("# ND_DEREF")
 		c.genExpr(node.Lhs)
+		fmt.Printf("c.genExpr: ND_DEREF: node: %#v\n\n", node)
+		fmt.Printf("c.genExpr: ND_DEREF: node.Tok: %#v\n\n", node.Tok)
 		c.load(node.Ty)
 		return
 	case ND_ADDR:
@@ -890,6 +899,8 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_FUNCALL:
 		// c.println("# ND_FUNCALL")
+		fmt.Printf("c.genExpr: ND_FUNCALL: node: %#v\n\n", node)
+		fmt.Printf("c.genExpr: ND_FUNCALL: node.Args: %#v\n\n", node.Args)
 		stackArgs := c.pushArgs(node)
 		c.genExpr(node.Lhs)
 		// fmt.Printf("c.genExpr: ND_FUNCALL: node.Lhs: %#v\n\n", node.Lhs)
@@ -998,7 +1009,7 @@ func (c *codeWriter) genExpr(node *Node) {
 			if retTy.Next == nil { // If the called function returns one value.
 				if retTy.Sz <= 16 {
 					c.println("# copy_ret_buffer")
-					c.copyRetBuf(r, true, 0, 0)
+					c.copyRetBuf(r, true, 0, 0, nil, nil)
 					c.println("# store node.RetBuf's address to a general register")
 					c.println("	lea %d(%%rbp), %%rax", r.Offset)
 					return
@@ -1007,11 +1018,31 @@ func (c *codeWriter) genExpr(node *Node) {
 
 			idx := 0
 			bufidx := 0
+			var retgv *Node
+			var bufgv *Node
 			// 6 is the number of general registers in this compiler.
 			for ; ; idx++ { //idx < 6
 				if retTy == nil {
 					break
 				}
+
+				if idx == 6 {
+					retgv = node.Lhs.Obj.RetValGv
+					fmt.Printf("c.genExpr: ND_FUNCALL: retgv: %#v\n\n", retgv)
+				}
+				if idx > 6 {
+					retgv = retgv.Next
+				}
+				if bufidx == 3 {
+					bufgv = node.Lhs.Obj.RetBufGv
+					fmt.Printf("c.genExpr: ND_FUNCALL: bufgv: %#v\n\n", bufgv)
+				}
+				if bufidx > 3 {
+					if bufgv != nil {
+						bufgv = bufgv.Next
+					}
+				}
+
 				if retTy.Kind == TY_STRUCT {
 					if r == nil {
 						break
@@ -1020,9 +1051,17 @@ func (c *codeWriter) genExpr(node *Node) {
 						c.println("# copy_ret_buffer")
 						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃっておかしくなる
 						// => 今のところ8-16bytesの構造体は３つまでしか返せない
-						c.copyRetBuf(r, false, idx, bufidx)
-						c.println("# store node.RetBuf's address to a general register")
-						c.println("	lea %d(%%rbp), %s", r.Offset, retreg64[idx])
+						c.copyRetBuf(r, false, idx, bufidx, retgv, bufgv)
+						if idx < 6 {
+							c.println("# store node.RetBuf's address to a general register")
+							c.println("	lea %d(%%rbp), %s", r.Offset, retreg64[idx])
+						} else {
+							c.println("# store node.RetBuf's address to a global variable for return values")
+							c.genAddr(retgv)
+							c.push()
+							c.println("	lea %d(%%rbp), %%rax", r.Offset)
+							c.store(retgv.Ty)
+						}
 						bufidx++
 					}
 					r = r.RetNext
@@ -1400,10 +1439,13 @@ func (c *codeWriter) genStmt(node *Node) {
 						if bufi < 3 {
 							c.println("	mov %%rdx, %s", bufreg64[bufi])
 						} else {
+							c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
 							c.genAddr(bufGv)
 							c.push()
+							c.println("	mov %%rdx, %%rax")
 							c.store(ty)
 							bufGv = bufGv.Next
+							c.println("	mov %%rsi, %%rax")
 						}
 						bufi++
 					}
