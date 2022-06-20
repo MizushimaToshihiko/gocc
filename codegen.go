@@ -606,6 +606,9 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 		return
 	}
 
+	fmt.Println("idx:", idx)
+	fmt.Println("bufidx:", bufidx)
+
 	var reg11, reg12, reg21, reg22 string
 	if isOne {
 		reg11, reg12, reg21, reg22 = "%al", "%rax", "%dl", "%rdx"
@@ -668,10 +671,18 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 				reg1 = reg21
 				reg2 = reg22
 			}
-			for i := 8; i < min(16, ty.Sz); i++ {
-				c.println("	mov %s, %d(%%rbp)", reg1, v.Offset+i)
-				c.println("	shr $8, %s", reg2)
-			}
+			if bufidx < 3 {
+				fmt.Println("# ここ")
+				for i := 8; i < min(16, ty.Sz); i++ {
+					c.println("	mov %s, %d(%%rbp)", reg1, v.Offset+i)
+					c.println("	shr $8, %s", reg2)
+				}
+			} // else {
+			// 	c.println("	lea %d(%%rbp), %%rax", v.Offset+8)
+			// 	c.push()
+			// 	c.genAddr(buf)
+			// 	c.store(v.Ty)
+			// }
 		}
 	}
 }
@@ -796,7 +807,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		if node.Kind == ND_VAR {
 			c.println("# ND_VAR: %s", node.Obj.Name)
 		} else {
-			c.println("# ND_MEMBER: %s", node.MemName)
+			c.println("# ND_MEMBER: %s", node.Tok.Str)
 		}
 		c.genAddr(node)
 		c.load(node.Ty)
@@ -1037,11 +1048,6 @@ func (c *codeWriter) genExpr(node *Node) {
 					bufgv = node.Lhs.Obj.RetBufGv
 					// fmt.Printf("c.genExpr: ND_FUNCALL: bufgv: %#v\n\n", bufgv)
 				}
-				if bufidx > 3 {
-					if bufgv != nil {
-						bufgv = bufgv.Next
-					}
-				}
 
 				if retTy.Kind == TY_STRUCT {
 					if r == nil {
@@ -1060,9 +1066,15 @@ func (c *codeWriter) genExpr(node *Node) {
 							c.genAddr(retgv)
 							c.push()
 							c.println("	lea %d(%%rbp), %%rax", r.Offset)
+							fmt.Printf("c.genExpr: ND_FUNCALL: retgv.Ty: %#v\n\n", retgv.Ty)
 							c.store(retgv.Ty)
 						}
 						bufidx++
+						if bufidx > 3 {
+							if bufgv != nil {
+								bufgv = bufgv.Next
+							}
+						}
 					}
 					r = r.RetNext
 				}
@@ -1413,6 +1425,13 @@ func (c *codeWriter) genStmt(node *Node) {
 				retGv = retGv.Next
 			}
 			c.println("# store the value in rax to Lhs")
+			// fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: n.Ty: %#v\n\n", n.Ty)
+			// if n.Ty.Kind == TY_STRUCT {
+			// 	for m := n.Ty.Mems; m != nil; m = m.Next {
+			// 		fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: n.Ty.Mems: %#v\n\n", m)
+			// 		fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: n.Ty.Mems.Ty: %#v\n\n", m.Ty)
+			// 	}
+			// }
 			c.store(n.Ty)
 			i++
 		}
@@ -1424,29 +1443,30 @@ func (c *codeWriter) genStmt(node *Node) {
 		i := 0
 		bufi := 0
 		retGv := curFnInGen.RetValGv
-		bufGv := curFnInGen.RetBufGv
+		// bufGv := curFnInGen.RetBufGv
 		for ret := node.RetVals; ret != nil; ret = ret.Next {
 			c.genExpr(ret)
 
 			ty := ret.Ty
 			if ty.Kind == TY_STRUCT {
 				if ty.Sz <= 16 {
-					// The size is 8-16 bytes, the value is stored in RAX and RDX.
-					// And it is no more than 8 bytes, the value is stored in RAX only.
+					// The size is 8-16 bytes, the value is stored directly in RAX and RDX.
+					// And it is no more than 8 bytes, the value is stored directly in RAX only.
 					c.copyStructReg(ty)
 					if ty.Sz > 8 {
 						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃう
 						if bufi < 3 {
 							c.println("	mov %%rdx, %s", bufreg64[bufi])
-						} else {
-							c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
-							c.genAddr(bufGv)
-							c.push()
-							c.println("	mov %%rdx, %%rax")
-							c.store(ty)
-							bufGv = bufGv.Next
-							c.println("	mov %%rsi, %%rax")
-						}
+						} //else {
+						// c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
+						// c.genAddr(bufGv)
+						// c.push()
+						// c.println("	mov %%rdx, %%rax")
+						// c.pop("%rdi")
+						// c.println("	mov %%rax, (%%rdi)")
+						// bufGv = bufGv.Next
+						// c.println("	mov %%rsi, %%rax")
+						// }
 						bufi++
 					}
 				} else {
@@ -1468,6 +1488,12 @@ func (c *codeWriter) genStmt(node *Node) {
 					// For small structs, RAX now contains the value directly, not the pointer.
 					c.pop("%rdi")
 					c.println("	mov %%rax, (%%rdi)")
+					if ty.Sz > 8 {
+						for i := 8; i < min(16, ty.Sz); i++ {
+							c.println("	mov %%dl, %d(%%rdi)", i)
+							c.println("	shr $8, %%rdx")
+						}
+					}
 				} else {
 					c.store(ty)
 				}
