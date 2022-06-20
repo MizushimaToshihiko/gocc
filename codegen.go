@@ -804,8 +804,8 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_DEREF:
 		// c.println("# ND_DEREF")
 		c.genExpr(node.Lhs)
-		fmt.Printf("c.genExpr: ND_DEREF: node: %#v\n\n", node)
-		fmt.Printf("c.genExpr: ND_DEREF: node.Tok: %#v\n\n", node.Tok)
+		// fmt.Printf("c.genExpr: ND_DEREF: node: %#v\n\n", node)
+		// fmt.Printf("c.genExpr: ND_DEREF: node.Tok: %#v\n\n", node.Tok)
 		c.load(node.Ty)
 		return
 	case ND_ADDR:
@@ -899,8 +899,8 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_FUNCALL:
 		// c.println("# ND_FUNCALL")
-		fmt.Printf("c.genExpr: ND_FUNCALL: node: %#v\n\n", node)
-		fmt.Printf("c.genExpr: ND_FUNCALL: node.Args: %#v\n\n", node.Args)
+		// fmt.Printf("c.genExpr: ND_FUNCALL: node: %#v\n\n", node)
+		// fmt.Printf("c.genExpr: ND_FUNCALL: node.Args: %#v\n\n", node.Args)
 		stackArgs := c.pushArgs(node)
 		c.genExpr(node.Lhs)
 		// fmt.Printf("c.genExpr: ND_FUNCALL: node.Lhs: %#v\n\n", node.Lhs)
@@ -1028,14 +1028,14 @@ func (c *codeWriter) genExpr(node *Node) {
 
 				if idx == 6 {
 					retgv = node.Lhs.Obj.RetValGv
-					fmt.Printf("c.genExpr: ND_FUNCALL: retgv: %#v\n\n", retgv)
+					// fmt.Printf("c.genExpr: ND_FUNCALL: retgv: %#v\n\n", retgv)
 				}
 				if idx > 6 {
 					retgv = retgv.Next
 				}
 				if bufidx == 3 {
 					bufgv = node.Lhs.Obj.RetBufGv
-					fmt.Printf("c.genExpr: ND_FUNCALL: bufgv: %#v\n\n", bufgv)
+					// fmt.Printf("c.genExpr: ND_FUNCALL: bufgv: %#v\n\n", bufgv)
 				}
 				if bufidx > 3 {
 					if bufgv != nil {
@@ -1464,7 +1464,13 @@ func (c *codeWriter) genStmt(node *Node) {
 				c.genAddr(retGv)
 				c.push()
 				c.println("	mov %%rsi, %%rax")
-				c.store(ty)
+				if ty.Kind == TY_STRUCT && ty.Sz <= 16 {
+					// For small structs, RAX now contains the value directly, not the pointer.
+					c.pop("%rdi")
+					c.println("	mov %%rax, (%%rdi)")
+				} else {
+					c.store(ty)
+				}
 				retGv = retGv.Next
 			}
 			i++

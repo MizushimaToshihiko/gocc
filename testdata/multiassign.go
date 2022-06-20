@@ -168,7 +168,7 @@ type gT011 struct {
 }
 
 func multiRet8SmallStruct() (gT011, gT011, gT011, gT011, gT011, gT011, gT011, gT011) {
-	return gT011{}, gT011{}, gT011{}, gT011{}, gT011{}, gT011{}, gT011{}, gT011{}
+	return gT011{11}, gT011{22}, gT011{33}, gT011{44}, gT011{55}, gT011{66}, gT011{77}, gT011{88}
 }
 
 // func multiRet8Struct() (gT02, gT02, gT02, gT02, gT02, gT02, gT02, gT02) {
@@ -521,14 +521,14 @@ func main() {
 	// assert(1, i18 == 9.9, "i18==9.9")
 
 	a181, b181, c181, d181, e181, f181, g181, h181 := multiRet8SmallStruct()
-	assert(0, a181.a, "a181.a")
-	assert(0, b181.a, "b181.a")
-	assert(0, c181.a, "c181.a")
-	assert(0, d181.a, "d181.a")
-	assert(0, e181.a, "e181.a")
-	assert(0, f181.a, "f181.a")
-	assert(0, g181.a, "g181.a")
-	assert(0, h181.a, "h181.a")
+	assert(11, a181.a, "a181.a")
+	assert(22, b181.a, "b181.a")
+	assert(33, c181.a, "c181.a")
+	assert(44, d181.a, "d181.a")
+	assert(55, e181.a, "e181.a")
+	assert(66, f181.a, "f181.a")
+	assert(77, g181.a, "g181.a")
+	assert(88, h181.a, "h181.a")
 
 	// a19, b19, c19, d19, e19, f19, g19, h19 := multiRet8Struct()
 	// assert(0, a19.a[0], "a19.a[0]")
