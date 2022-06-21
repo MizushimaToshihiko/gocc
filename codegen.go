@@ -606,9 +606,6 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 		return
 	}
 
-	fmt.Println("idx:", idx)
-	fmt.Println("bufidx:", bufidx)
-
 	var reg11, reg12, reg21, reg22 string
 	if isOne {
 		reg11, reg12, reg21, reg22 = "%al", "%rax", "%dl", "%rdx"
@@ -815,8 +812,6 @@ func (c *codeWriter) genExpr(node *Node) {
 	case ND_DEREF:
 		// c.println("# ND_DEREF")
 		c.genExpr(node.Lhs)
-		// fmt.Printf("c.genExpr: ND_DEREF: node: %#v\n\n", node)
-		// fmt.Printf("c.genExpr: ND_DEREF: node.Tok: %#v\n\n", node.Tok)
 		c.load(node.Ty)
 		return
 	case ND_ADDR:
@@ -910,11 +905,8 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	case ND_FUNCALL:
 		// c.println("# ND_FUNCALL")
-		// fmt.Printf("c.genExpr: ND_FUNCALL: node: %#v\n\n", node)
-		// fmt.Printf("c.genExpr: ND_FUNCALL: node.Args: %#v\n\n", node.Args)
 		stackArgs := c.pushArgs(node)
 		c.genExpr(node.Lhs)
-		// fmt.Printf("c.genExpr: ND_FUNCALL: node.Lhs: %#v\n\n", node.Lhs)
 
 		gp := 0
 		fp := 0
@@ -1031,22 +1023,19 @@ func (c *codeWriter) genExpr(node *Node) {
 			bufidx := 0
 			var retgv *Node
 			var bufgv *Node
-			// 6 is the number of general registers in this compiler.
-			for ; ; idx++ { //idx < 6
+			for ; ; idx++ {
 				if retTy == nil {
 					break
 				}
 
 				if idx == 6 {
 					retgv = node.Lhs.Obj.RetValGv
-					// fmt.Printf("c.genExpr: ND_FUNCALL: retgv: %#v\n\n", retgv)
 				}
 				if idx > 6 {
 					retgv = retgv.Next
 				}
 				if bufidx == 3 {
 					bufgv = node.Lhs.Obj.RetBufGv
-					// fmt.Printf("c.genExpr: ND_FUNCALL: bufgv: %#v\n\n", bufgv)
 				}
 
 				if retTy.Kind == TY_STRUCT {
@@ -1066,7 +1055,6 @@ func (c *codeWriter) genExpr(node *Node) {
 							c.genAddr(retgv)
 							c.push()
 							c.println("	lea %d(%%rbp), %%rax", r.Offset)
-							fmt.Printf("c.genExpr: ND_FUNCALL: retgv.Ty: %#v\n\n", retgv.Ty)
 							c.store(retgv.Ty)
 						}
 						bufidx++
@@ -1425,13 +1413,6 @@ func (c *codeWriter) genStmt(node *Node) {
 				retGv = retGv.Next
 			}
 			c.println("# store the value in rax to Lhs")
-			// fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: n.Ty: %#v\n\n", n.Ty)
-			// if n.Ty.Kind == TY_STRUCT {
-			// 	for m := n.Ty.Mems; m != nil; m = m.Next {
-			// 		fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: n.Ty.Mems: %#v\n\n", m)
-			// 		fmt.Printf("c.genStmt: ND_MULTIRETASSIGN: n.Ty.Mems.Ty: %#v\n\n", m.Ty)
-			// 	}
-			// }
 			c.store(n.Ty)
 			i++
 		}
