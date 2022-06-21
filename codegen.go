@@ -1443,7 +1443,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		i := 0
 		bufi := 0
 		retGv := curFnInGen.RetValGv
-		// bufGv := curFnInGen.RetBufGv
+		bufGv := curFnInGen.RetBufGv
 		for ret := node.RetVals; ret != nil; ret = ret.Next {
 			c.genExpr(ret)
 
@@ -1455,18 +1455,18 @@ func (c *codeWriter) genStmt(node *Node) {
 					c.copyStructReg(ty)
 					if ty.Sz > 8 {
 						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃう
-						if bufi < 3 {
+						if bufi < 3 && i < 6 {
 							c.println("	mov %%rdx, %s", bufreg64[bufi])
-						} //else {
-						// c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
-						// c.genAddr(bufGv)
-						// c.push()
-						// c.println("	mov %%rdx, %%rax")
-						// c.pop("%rdi")
-						// c.println("	mov %%rax, (%%rdi)")
-						// bufGv = bufGv.Next
-						// c.println("	mov %%rsi, %%rax")
-						// }
+						} else {
+							c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
+							c.genAddr(bufGv)
+							c.push()
+							c.println("	mov %%rdx, %%rax")
+							c.pop("%rdi")
+							c.println("	mov %%rax, (%%rdi)")
+							bufGv = bufGv.Next
+							c.println("	mov %%rsi, %%rax")
+						}
 						bufi++
 					}
 				} else {
