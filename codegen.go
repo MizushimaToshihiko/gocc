@@ -633,9 +633,9 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 		}
 
 		if ty.Sz == 4 {
-			c.println("	movss %%xmm0, %d(%%rbp)", v.Offset)
+			c.println("	movss %%xmm%d, %d(%%rbp)", idx, v.Offset)
 		} else {
-			c.println("	movsd %%xmm0, %d(%%rbp)", v.Offset)
+			c.println("	movsd %%xmm%d, %d(%%rbp)", idx, v.Offset)
 		}
 		fp++
 	} else {
