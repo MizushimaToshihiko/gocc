@@ -584,14 +584,17 @@ func (c *codeWriter) pushArgs(node *Node) int {
 
 	// If the return type is a large struct, the caller passes
 	// a pointer to a buffer as if it were the first argument.
+	rstack := 0
 	if node.RetBuf != nil {
 		for r := node.RetBuf; r != nil; r = r.RetNext {
 			if r.Ty.Sz > 16 {
 				c.println("	lea %d(%%rbp), %%rax", r.Offset)
 				c.push()
+				rstack++
 			}
 		}
 	}
+	stack += max(0, rstack-6)
 
 	return stack
 }
@@ -915,6 +918,9 @@ func (c *codeWriter) genExpr(node *Node) {
 		// a pointer to a buffer as if it were the first argument.
 		if node.RetBuf != nil {
 			for r := node.RetBuf; r != nil; r = r.RetNext {
+				if gp >= GP_MAX {
+					break
+				}
 				if r.Ty.Sz > 16 {
 					c.pop(argreg64[gp])
 					gp++
