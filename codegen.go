@@ -632,10 +632,14 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 			return
 		}
 
-		if ty.Sz == 4 {
-			c.println("	movss %%xmm%d, %d(%%rbp)", idx, v.Offset)
+		if isOne {
+			if ty.Sz == 4 {
+				c.println("	movss %%xmm0, %d(%%rbp)", v.Offset)
+			} else {
+				c.println("	movsd %%xmm0, %d(%%rbp)", v.Offset)
+			}
 		} else {
-			c.println("	movsd %%xmm%d, %d(%%rbp)", idx, v.Offset)
+			c.println("mov %s, %d(%%rbp)", reg12, v.Offset)
 		}
 		fp++
 	} else {
@@ -1461,7 +1465,7 @@ func (c *codeWriter) genStmt(node *Node) {
 				}
 			}
 			if i < 6 {
-				if isFlonum(ty) {
+				if isFlonum(ty) || (ty.Kind == TY_STRUCT && hasFlonum1(ty)) {
 					c.println("	movq %%xmm0, %s", retreg64[i])
 				} else {
 					c.println("	mov %%rax, %s", retreg64[i])
