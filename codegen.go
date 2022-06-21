@@ -51,8 +51,8 @@ var retreg8 = []string{"%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b"}
 var retreg64 = []string{"%r10", "%r11", "%r12", "%r13", "%r14", "%r15"}
 
 // registers for return buffer for structs whose size is 8 or more and 16 or less and 16 or less
-var bufreg8 = []string{"%cl", "%r8b", "%r9b"}
-var bufreg64 = []string{"%rcx", "%r8", "%r9"}
+var bufreg8 = []string{"%bl", "%r8b", "%r9b"}
+var bufreg64 = []string{"%rbx", "%r8", "%r9"}
 
 var curFnInGen *Obj
 
@@ -672,17 +672,17 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 				reg2 = reg22
 			}
 			if bufidx < 3 {
-				fmt.Println("# ここ")
+				// the data more than 8 bytes is in RDX or 'bufreg'
 				for i := 8; i < min(16, ty.Sz); i++ {
 					c.println("	mov %s, %d(%%rbp)", reg1, v.Offset+i)
 					c.println("	shr $8, %s", reg2)
 				}
-			} // else {
-			// 	c.println("	lea %d(%%rbp), %%rax", v.Offset+8)
-			// 	c.push()
-			// 	c.genAddr(buf)
-			// 	c.store(v.Ty)
-			// }
+			} else if idx < 6 {
+				c.println("	lea %d(%%rbp), %%rax", v.Offset+8)
+				c.push()
+				c.genAddr(buf)
+				c.store(v.Ty)
+			}
 		}
 	}
 }
@@ -1489,10 +1489,7 @@ func (c *codeWriter) genStmt(node *Node) {
 					c.pop("%rdi")
 					c.println("	mov %%rax, (%%rdi)")
 					if ty.Sz > 8 {
-						for i := 8; i < min(16, ty.Sz); i++ {
-							c.println("	mov %%dl, %d(%%rdi)", i)
-							c.println("	shr $8, %%rdx")
-						}
+						c.println("	mov %%rdx, 8(%%rdi)")
 					}
 				} else {
 					c.store(ty)
