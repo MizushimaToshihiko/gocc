@@ -208,7 +208,7 @@ type gT04 struct {
 	b float32
 }
 
-func multiRet2StructFlonum2() (gT04, gT04) {
+func multiRet2StructFlonum2() (gT04, gT04, gT04, gT04, gT04, gT04) {
 	var g1 = gT04{
 		a: 1.1,
 		b: 2.2,
@@ -217,7 +217,7 @@ func multiRet2StructFlonum2() (gT04, gT04) {
 		a: 3.3,
 		b: 4.4,
 	}
-	return g1, g2
+	return g1, g2, gT04{5.5, 6.6}, gT04{7.7, 8.8}, gT04{9.9, 11.11}, gT04{12.12, 13.13}
 }
 
 type gT05 struct {
@@ -269,6 +269,23 @@ func multiRet2StructFlonum5() (gT07, gT07, gT07, gT07, gT07, gT07) { // , gT07
 		b: 2,
 	}
 	return g1, g2, gT07{3.3, 3}, gT07{4.4, 4}, gT07{5.5, 5}, gT07{6.6, 6} // , gT07{7.7, 7}
+}
+
+type gT08 struct {
+	a int
+	b float64
+}
+
+func multiRet2StructFlonum6() (gT08, gT08, gT08, gT08, gT08, gT08) { // , gT07
+	var g1 = gT08{
+		a: 1,
+		b: 1.1,
+	}
+	var g2 = gT08{
+		a: 2,
+		b: 2.2,
+	}
+	return g1, g2, gT08{3, 3.3}, gT08{4, 4.4}, gT08{5, 5.5}, gT08{6, 6.6} // , gT07{7.7, 7}
 }
 
 func main() {
@@ -648,11 +665,19 @@ func main() {
 	assert(1, a20.a == 1.1, "a20.a==1.1")
 	assert(1, b20.a == 3.3, "b20.a==3.3")
 
-	a21, b21 := multiRet2StructFlonum2()
+	a21, b21, c21, d21, e21, f21 := multiRet2StructFlonum2()
 	assert(1, a21.a == 1.1, "a21.a==1.1")
 	assert(1, a21.b == float32(2.2), "a21.b==float32(2.2)")
 	assert(1, b21.a == 3.3, "b21.a==3.3")
 	assert(1, b21.b == float32(4.4), "b21.b==float32(4.4)")
+	assert(1, c21.a == 5.5, "c21.a==5.5")
+	assert(1, c21.b == float32(6.6), "c21.b==float32(6.6)")
+	assert(1, d21.a == 7.7, "d21.a==7.7")
+	assert(1, d21.b == float32(8.8), "d21.b==float32(8.8)")
+	assert(1, e21.a == 9.9, "e21.a==9.9")
+	assert(1, e21.b == float32(11.11), "e21.b==float32(11.11)")
+	assert(1, f21.a == 12.12, "f21.a==12.12")
+	assert(1, f21.b == float32(13.13), "f21.b==float32(12.12)")
 
 	a22, b22 := multiRet2StructFlonum3()
 	assert(1, a22.a == float32(1.1), "a22.a==float32(1.1)")
@@ -681,6 +706,22 @@ func main() {
 	assert(6, f24.b, "f24.b")
 	// assert(1, g24.a == 7.7, "g24.a==7.7")
 	// // assert(7, g24.b, "g24.b")
+
+	a25, b25, c25, d25, e25, f25 := multiRet2StructFlonum6() // , g25
+	assert(1, a25.a, "a25.a")
+	assert(1, a25.b == 1.1, "a25.b==1.1")
+	assert(2, b25.a, "b25.a")
+	assert(1, b25.b == 2.2, "b25.b==2.2")
+	assert(3, c25.a, "c25.a")
+	assert(1, c25.b == 3.3, "c25.b==3.3")
+	assert(4, d25.a, "d25.a")
+	assert(1, d25.b == 4.4, "d25.b==4.4")
+	assert(5, e25.a, "e25.a")
+	assert(1, e25.b == 5.5, "e25.b==5.5")
+	assert(6, f25.a, "f25.a")
+	assert(1, f25.b == 6.6, "f25.b==6.6")
+	// ssert(7, g25.a, "g25.a")
+	// assert(1, g25.b == 7.7, "g25.b==7.7")
 
 	println("OK")
 }
