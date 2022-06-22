@@ -192,15 +192,13 @@ type gT03 struct {
 
 // 小数点を含む16 bytes以下のstructを２つ以上返す関数
 func multiRet2StructFlonum() (gT03, gT03, gT03, gT03, gT03, gT03, gT03) {
-	// b: 2.2,
 	var g1 = gT03{
 		a: 1.1,
 	}
-	// b: 4.4,
 	var g2 = gT03{
-		a: 3.3,
+		a: 2.2,
 	}
-	return g1, g2, gT03{}, gT03{}, gT03{}, gT03{}, gT03{7.7}
+	return g1, g2, gT03{3.3}, gT03{4.4}, gT03{5.5}, gT03{6.6}, gT03{7.7}
 }
 
 // type gT04 struct {
@@ -663,9 +661,12 @@ func main() {
 	// hasFlonumな構造体で16bytes以下のものを2つ以上返す関数
 	a20, b20, c20, d20, e20, f20, g20 := multiRet2StructFlonum()
 	assert(1, a20.a == 1.1, "a20.a==1.1")
-	assert(1, b20.a == 3.3, "b20.a==3.3")
-	// assert(1, g20.a == 7.7, "g20.a==7.7")
-	println("g20.a: %f", g20.a)
+	assert(1, b20.a == 2.2, "b20.a==2.2")
+	assert(1, c20.a == 3.3, "c20.a==3.3")
+	assert(1, d20.a == 4.4, "d20.a==4.4")
+	assert(1, e20.a == 5.5, "e20.a==5.5")
+	assert(1, f20.a == 6.6, "f20.a==6.6")
+	assert(1, g20.a == 7.7, "g20.a==7.7")
 
 	// a21, b21, c21, d21, e21, f21 := multiRet2StructFlonum2()
 	// assert(1, a21.a == 1.1, "a21.a==1.1")

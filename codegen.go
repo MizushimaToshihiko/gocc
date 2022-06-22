@@ -1512,17 +1512,41 @@ func (c *codeWriter) genStmt(node *Node) {
 					c.println("	mov %%rax, %s", retreg64[i])
 				}
 			} else {
-				c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
+				if !isFlonum(ty) && !(ty.Kind == TY_STRUCT && hasFlonum1(ty)) {
+					c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
+				}
+
 				c.genAddr(retGv)
 				c.push()
-				c.println("	mov %%rsi, %%rax")
+
+				if !isFlonum(ty) && !(ty.Kind == TY_STRUCT && hasFlonum1(ty)) {
+					c.println("	mov %%rsi, %%rax")
+				}
+
 				if ty.Kind == TY_STRUCT && ty.Sz <= 16 {
 					// For small structs, RAX now contains the value directly, not the pointer.
 					// All data that would normally be written to RAX and RDX is saved in retgv.
 					c.pop("%rdi")
-					c.println("	mov %%rax, (%%rdi)")
-					if ty.Sz > 8 {
-						c.println("	mov %%rdx, 8(%%rdi)")
+					if hasFlonum1(ty) && hasFlonum2(ty) {
+						c.println("	movq %%xmm0, (%%rdi)")
+						if ty.Sz > 8 {
+							c.println("	movq %%xmm1, 8(%%rdi)")
+						}
+					} else if !hasFlonum1(ty) && hasFlonum2(ty) {
+						c.println("	mov %%rax, (%%rdi)")
+						if ty.Sz > 8 {
+							c.println("	movq %%xmm0, 8(%%rdi)")
+						}
+					} else if hasFlonum1(ty) && !hasFlonum2(ty) {
+						c.println("	movq %%xmm0, (%%rdi)")
+						if ty.Sz > 8 {
+							c.println("	mov %%rax, 8(%%rdi)")
+						}
+					} else {
+						c.println("	mov %%rax, (%%rdi)")
+						if ty.Sz > 8 {
+							c.println("	mov %%rdx, 8(%%rdi)")
+						}
 					}
 				} else {
 					c.store(ty)
