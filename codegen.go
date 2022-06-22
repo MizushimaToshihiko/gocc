@@ -663,10 +663,16 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 				c.unreachable("internal error")
 				return
 			}
-			if ty.Sz == 12 {
-				c.println("	movss %%xmm%d, %d(%%rbp)", fp, v.Offset+8)
+			if isOne {
+				if ty.Sz == 12 {
+					c.println("	movss %%xmm%d, %d(%%rbp)", fp, v.Offset+8)
+				} else {
+					c.println("	movsd %%xmm%d, %d(%%rbp)", fp, v.Offset+8)
+				}
 			} else {
-				c.println("	movsd %%xmm%d, %d(%%rbp)", fp, v.Offset+8)
+				if bufidx < 3 {
+					c.println("	mov %s, %d(%%rbp)", reg22, v.Offset+8)
+				}
 			}
 		} else {
 			var reg1 string = reg11
@@ -1447,8 +1453,16 @@ func (c *codeWriter) genStmt(node *Node) {
 					if ty.Sz > 8 {
 						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃう
 						if bufi < 3 && i < 6 {
-							c.println("	mov %%rdx, %s", bufreg64[bufi])
-						} else {
+							if hasFlonum1(ty) && hasFlonum2(ty) {
+								c.println("	movq %%xmm1, %s", bufreg64[bufi])
+							} else if !hasFlonum1(ty) && hasFlonum2(ty) {
+								c.println("	movq %%xmm0, %s", bufreg64[bufi])
+							} else if hasFlonum1(ty) && !hasFlonum2(ty) {
+								c.println("	mov %%rax, %s", bufreg64[bufi])
+							} else {
+								c.println("	mov %%rdx, %s", bufreg64[bufi])
+							}
+						} else if i < 6 {
 							c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
 							c.genAddr(bufGv)
 							c.push()

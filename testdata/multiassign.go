@@ -204,6 +204,25 @@ func multiRet2StructFlonum() (gT03, gT03) {
 	return g1, g2
 }
 
+type gT04 struct {
+	a float64
+	b float64
+}
+
+// 以下未実装
+// 小数点を含む16 bytes以下のstructを２つ以上返す関数
+func multiRet2StructFlonum2() (gT04, gT04) {
+	var g1 = gT04{
+		a: 1.1,
+		b: 2.2,
+	}
+	var g2 = gT04{
+		a: 3.3,
+		b: 4.4,
+	}
+	return g1, g2
+}
+
 func main() {
 	var a01, b01, c01, d01, e01, f01 int
 	a01, b01, c01, d01, e01, f01 = multiRet()
@@ -580,6 +599,12 @@ func main() {
 	a20, b20 := multiRet2StructFlonum()
 	assert(1, a20.a == 1.1, "a20.a==1.1")
 	assert(1, b20.a == 3.3, "b20.a==3.3")
+
+	a21, b21 := multiRet2StructFlonum2()
+	assert(1, a21.a == 1.1, "a21.a==1.1")
+	assert(1, a21.b == 2.2, "a21.b==2.2")
+	assert(1, b21.a == 3.3, "b21.a==3.3")
+	assert(1, b21.b == 4.4, "b21.b==4.4")
 
 	println("OK")
 }
