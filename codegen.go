@@ -639,7 +639,14 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 				c.println("	movsd %%xmm0, %d(%%rbp)", v.Offset)
 			}
 		} else {
-			c.println("mov %s, %d(%%rbp)", reg12, v.Offset)
+			if idx < 6 {
+				c.println("	mov %s, %d(%%rbp)", reg12, v.Offset)
+			} else {
+				c.println("	lea %d(%%rbp), %%rax", v.Offset)
+				c.push()
+				c.genExpr(ret)
+				c.store(v.Ty)
+			}
 		}
 		fp++
 	} else {
@@ -672,10 +679,14 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 			} else {
 				if bufidx < 3 {
 					c.println("	mov %s, %d(%%rbp)", reg22, v.Offset+8)
+				} else if idx < 6 {
+					c.println("	lea %d(%%rbp), %%rax", v.Offset+8)
+					c.push()
+					c.genAddr(buf)
+					c.store(v.Ty)
 				}
 			}
 		} else {
-
 			var reg1 string = reg21
 			var reg2 string = reg22
 			if isOne {
@@ -1472,7 +1483,17 @@ func (c *codeWriter) genStmt(node *Node) {
 							c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
 							c.genAddr(bufGv)
 							c.push()
-							c.println("	mov %%rdx, %%rax")
+
+							if hasFlonum1(ty) && hasFlonum2(ty) {
+								c.println("	movq %%xmm1, %%rax")
+							} else if !hasFlonum1(ty) && hasFlonum2(ty) {
+								c.println("	movq %%xmm0, %%rax")
+							} else if hasFlonum1(ty) && !hasFlonum2(ty) {
+								c.println("	mov %%rsi, %%rax")
+							} else {
+								c.println("	mov %%rdx, %%rax")
+							}
+
 							c.pop("%rdi")
 							c.println("	mov %%rax, (%%rdi)")
 							bufGv = bufGv.Next

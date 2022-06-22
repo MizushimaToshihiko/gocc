@@ -259,16 +259,16 @@ type gT07 struct {
 	b int
 }
 
-func multiRet2StructFlonum5() (gT07, gT07) {
+func multiRet2StructFlonum5() (gT07, gT07, gT07, gT07, gT07, gT07) { // , gT07
 	var g1 = gT07{
 		a: 1.1,
-		b: 2,
+		b: 1,
 	}
 	var g2 = gT07{
-		a: 3.3,
-		b: 4,
+		a: 2.2,
+		b: 2,
 	}
-	return g1, g2
+	return g1, g2, gT07{3.3, 3}, gT07{4.4, 4}, gT07{5.5, 5}, gT07{6.6, 6} // , gT07{7.7, 7}
 }
 
 func main() {
@@ -666,11 +666,21 @@ func main() {
 	assert(3, b23.a, "b23.a")
 	assert(1, b23.b == 4.4, "b23.b==4.4")
 
-	a24, b24 := multiRet2StructFlonum5()
+	a24, b24, c24, d24, e24, f24 := multiRet2StructFlonum5() // , g24
 	assert(1, a24.a == 1.1, "a24.a==1.1")
-	assert(2, a24.b, "a24.b")
-	assert(1, b24.a == 3.3, "b24.a==3.3")
-	assert(4, b24.b, "b24.b")
+	assert(1, a24.b, "a24.b")
+	assert(1, b24.a == 2.2, "b24.a==2.2")
+	assert(2, b24.b, "b24.b")
+	assert(1, c24.a == 3.3, "c24.a==3.3")
+	assert(3, c24.b, "c24.b")
+	assert(1, d24.a == 4.4, "d24.a==4.4")
+	assert(4, d24.b, "d24.b")
+	assert(1, e24.a == 5.5, "e24.a==5.5")
+	assert(5, e24.b, "e24.b")
+	assert(1, f24.a == 6.6, "f24.a==6.6")
+	assert(6, f24.b, "f24.b")
+	// assert(1, g24.a == 7.7, "g24.a==7.7")
+	// // assert(7, g24.b, "g24.b")
 
 	println("OK")
 }
