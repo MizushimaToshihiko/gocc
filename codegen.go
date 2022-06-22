@@ -1518,6 +1518,7 @@ func (c *codeWriter) genStmt(node *Node) {
 				c.println("	mov %%rsi, %%rax")
 				if ty.Kind == TY_STRUCT && ty.Sz <= 16 {
 					// For small structs, RAX now contains the value directly, not the pointer.
+					// All data that would normally be written to RAX and RDX is saved in retgv.
 					c.pop("%rdi")
 					c.println("	mov %%rax, (%%rdi)")
 					if ty.Sz > 8 {
