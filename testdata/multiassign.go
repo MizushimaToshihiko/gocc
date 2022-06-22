@@ -185,12 +185,11 @@ func multiRet12BigStruct() (gT02, gT02, gT02, gT02, gT02, gT02, gT02, gT02, gT02
 	return gT02{1}, gT02{2}, gT02{3}, gT02{4}, gT02{5}, gT02{6}, gT02{7}, gT02{8}, gT02{9}, gT02{10}, gT02{11}, gT02{12}
 }
 
-// b float64
+// 以下未実装
 type gT03 struct {
 	a float64
 }
 
-// 以下未実装
 // 小数点を含む16 bytes以下のstructを２つ以上返す関数
 func multiRet2StructFlonum() (gT03, gT03) {
 	// b: 2.2,
@@ -206,11 +205,9 @@ func multiRet2StructFlonum() (gT03, gT03) {
 
 type gT04 struct {
 	a float64
-	b float64
+	b float32
 }
 
-// 以下未実装
-// 小数点を含む16 bytes以下のstructを２つ以上返す関数
 func multiRet2StructFlonum2() (gT04, gT04) {
 	var g1 = gT04{
 		a: 1.1,
@@ -218,6 +215,40 @@ func multiRet2StructFlonum2() (gT04, gT04) {
 	}
 	var g2 = gT04{
 		a: 3.3,
+		b: 4.4,
+	}
+	return g1, g2
+}
+
+type gT05 struct {
+	a float32
+	b int32
+}
+
+func multiRet2StructFlonum3() (gT05, gT05) {
+	var g1 = gT05{
+		a: 1.1,
+		b: 2,
+	}
+	var g2 = gT05{
+		a: 3.3,
+		b: 4,
+	}
+	return g1, g2
+}
+
+type gT06 struct {
+	a int
+	b float64
+}
+
+func multiRet2StructFlonum4() (gT06, gT06) {
+	var g1 = gT06{
+		a: 1,
+		b: 2.2,
+	}
+	var g2 = gT06{
+		a: 3,
 		b: 4.4,
 	}
 	return g1, g2
@@ -602,9 +633,21 @@ func main() {
 
 	a21, b21 := multiRet2StructFlonum2()
 	assert(1, a21.a == 1.1, "a21.a==1.1")
-	assert(1, a21.b == 2.2, "a21.b==2.2")
+	assert(1, a21.b == float32(2.2), "a21.b==float32(2.2)")
 	assert(1, b21.a == 3.3, "b21.a==3.3")
-	assert(1, b21.b == 4.4, "b21.b==4.4")
+	assert(1, b21.b == float32(4.4), "b21.b==float32(4.4)")
+
+	a22, b22 := multiRet2StructFlonum3()
+	assert(1, a22.a == float32(1.1), "a22.a==float32(1.1)")
+	assert(2, a22.b, "a22.b")
+	assert(1, b22.a == float32(3.3), "b22.a==float32(3.3)")
+	assert(4, b22.b, "b22.b")
+
+	a23, b23 := multiRet2StructFlonum4()
+	assert(1, a23.a, "a22.a")
+	assert(1, a23.b == 2.2, "a22.b==2.2")
+	assert(3, b23.a, "b22.a")
+	assert(1, b23.b == 4.4, "b22.b==4.4")
 
 	println("OK")
 }
