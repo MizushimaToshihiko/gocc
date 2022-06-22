@@ -675,11 +675,17 @@ func (c *codeWriter) copyRetBuf(v *Obj, isOne bool, idx, bufidx int, ret, buf *N
 				}
 			}
 		} else {
-			var reg1 string = reg11
-			var reg2 string = reg12
-			if gp != 0 {
-				reg1 = reg21
-				reg2 = reg22
+
+			var reg1 string = reg21
+			var reg2 string = reg22
+			if isOne {
+				// In the case that 'fp' is 1.
+				reg1 = reg11
+				reg2 = reg12
+				if gp != 0 {
+					reg1 = reg21
+					reg2 = reg22
+				}
 			}
 			if bufidx < 3 {
 				// the data more than 8 bytes is in RDX or 'bufreg'

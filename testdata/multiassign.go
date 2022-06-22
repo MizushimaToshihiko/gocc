@@ -254,6 +254,23 @@ func multiRet2StructFlonum4() (gT06, gT06) {
 	return g1, g2
 }
 
+type gT07 struct {
+	a float64
+	b int
+}
+
+func multiRet2StructFlonum5() (gT07, gT07) {
+	var g1 = gT07{
+		a: 1.1,
+		b: 2,
+	}
+	var g2 = gT07{
+		a: 3.3,
+		b: 4,
+	}
+	return g1, g2
+}
+
 func main() {
 	var a01, b01, c01, d01, e01, f01 int
 	a01, b01, c01, d01, e01, f01 = multiRet()
@@ -644,10 +661,16 @@ func main() {
 	assert(4, b22.b, "b22.b")
 
 	a23, b23 := multiRet2StructFlonum4()
-	assert(1, a23.a, "a22.a")
-	assert(1, a23.b == 2.2, "a22.b==2.2")
-	assert(3, b23.a, "b22.a")
-	assert(1, b23.b == 4.4, "b22.b==4.4")
+	assert(1, a23.a, "a23.a")
+	assert(1, a23.b == 2.2, "a23.b==2.2")
+	assert(3, b23.a, "b23.a")
+	assert(1, b23.b == 4.4, "b23.b==4.4")
+
+	a24, b24 := multiRet2StructFlonum5()
+	assert(1, a24.a == 1.1, "a24.a==1.1")
+	assert(2, a24.b, "a24.b")
+	assert(1, b24.a == 3.3, "b24.a==3.3")
+	assert(4, b24.b, "b24.b")
 
 	println("OK")
 }
