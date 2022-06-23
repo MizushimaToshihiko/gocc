@@ -770,7 +770,6 @@ func (c *codeWriter) copyStructReg(ty *Type) {
 }
 
 func (c *codeWriter) copyStructMem(ty *Type) {
-	// ty := curFnInGen.Ty.RetTy
 	v := curFnInGen.Params
 
 	c.println("	mov %d(%%rbp), %%rdi", v.Offset)
@@ -1078,7 +1077,6 @@ func (c *codeWriter) genExpr(node *Node) {
 					if r.Ty.Sz <= 16 {
 						c.println("# copy_ret_buffer")
 						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃっておかしくなる
-						// => 今のところ8-16bytesの構造体は３つまでしか返せない
 						c.copyRetBuf(r, false, idx, bufidx, retgv, bufgv)
 						if idx < 6 {
 							c.println("# store node.RetBuf's address to a general register")
@@ -1512,14 +1510,16 @@ func (c *codeWriter) genStmt(node *Node) {
 					c.println("	mov %%rax, %s", retreg64[i])
 				}
 			} else {
-				if !isFlonum(ty) && !(ty.Kind == TY_STRUCT && hasFlonum1(ty)) {
+				if !isFlonum(ty) || (ty.Kind == TY_STRUCT &&
+					(!hasFlonum1(ty) && hasFlonum2(ty)) || (hasFlonum1(ty) && !hasFlonum2(ty))) {
 					c.println("	mov %%rax, %%rsi") // Temporarily save the RAX value to the RSI
 				}
 
 				c.genAddr(retGv)
 				c.push()
 
-				if !isFlonum(ty) && !(ty.Kind == TY_STRUCT && hasFlonum1(ty)) {
+				if !isFlonum(ty) || (ty.Kind == TY_STRUCT &&
+					(!hasFlonum1(ty) && hasFlonum2(ty)) || (hasFlonum1(ty) && !hasFlonum2(ty))) {
 					c.println("	mov %%rsi, %%rax")
 				}
 
