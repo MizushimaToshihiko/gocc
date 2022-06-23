@@ -239,9 +239,9 @@ func many_args_list3(a int, b float64, c, d int, e float64, f int,
 	return o / p
 }
 
-// func multi_return() (int, int, int) {
-// 	return 3, 5, 6
-// }
+func multi_return() (int, int, int) {
+	return 3, 5, 6
+}
 
 func main() {
 	assert(3, ret3(), "ret3()")
@@ -410,10 +410,10 @@ func main() {
 	assert(4, many_args_list2(1, 2, 3, 4, 5, 6, 7, 8, 40, 10), "many_args2(1,2,3,4,5,6,7,8,40,10)")
 	assert(8, many_args_list3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 80, 10), "many_args3(1,2,3,4,5,6,7,8,9,10,11,12,13,14,80,10)")
 
-	// var x10, x11, x12 = multi_return()
-	// assert(6, x10, "x10") // 最後の返り値以外は捨てられる。raxレジスタが最後の返り値で上書きされるため
-	// assert(0, x11, "x11")
-	// assert(0, x12, "x12")
+	var x10, x11, x12 = multi_return()
+	assert(3, x10, "x10")
+	assert(5, x11, "x11")
+	assert(6, x12, "x12")
 
 	assert(0, strcmp(struct_test39().a, "aaa"), "strcmp(struct_test39().a, \"aaa\")")
 	assert(0, strcmp(struct_test39().b, "bbb"), "strcmp(struct_test39().b, \"bbb\")")
