@@ -1451,6 +1451,32 @@ func (c *codeWriter) genStmt(node *Node) {
 	case ND_RETURN:
 		// c.println("# ND_RETURN")
 
+		// In this compiler, the return values are saved as below.
+		//
+		// - In the case that the return value is only one, and the return value is
+		//   (1) a floating-point number or a small (no more than 8 bytes) struct that has the floating-point number(s)
+		//     => the value is saved in XMM0.
+		//   (2) a small (8-16 bytes) struct that has the floating-point number(s) both within 8 bytes, and over 8 bytes.
+		//     => the value is saved in XMM0(within 8 bytes), and XMM1(over 8 bytes).
+		//   (3) a small (8-16 bytes) struct that has the floating-point number(s) in within 8 bytes, and non-flonum in over 8 bytes.
+		//     => the value is saved in XMM0(within 8 bytes), and RAX(over 8 bytes).
+		//   (4) a small (8-16 bytes) struct that has the floating-point number(s) in over 8 bytes, and non-flonum in within 8 bytes.
+		//     => the value is saved in RAX(within 8 bytes), and XMM0(over 8 bytes).
+		//   (5) other than the above (integer, pointer, etc.)
+		//     => the value is saved in RAX
+		//
+		// - In the case that the number of return values is within 6, and the return values are
+		//   (1),(5) => the values are saved in R10-15 registers.
+		//   (2),(3),(4)
+		//     => The value's data within 8 bytes are saved in RAX(if the struct has non-flonum), or XMM0(if the struct has flonums),
+		//        and are passed to R10-15 registers.
+		//     => It's data over 8 bytes are saved in RDX((if the struct has non-flonum), or XMM1 or XMM0(if the struct has flonums),
+		//        in the case that the number of the small struct is within 3, are passed to RBX, R8, and R9
+		//        in the other case, are passed to the global variables('buf_gv')
+		//
+		// - In the case that the number of return values is over 6,
+		//    => the values are saved in global variables('ret_gv').
+
 		// Save passed-by-register return values to the stack.
 		i := 0
 		bufi := 0
@@ -1462,11 +1488,12 @@ func (c *codeWriter) genStmt(node *Node) {
 			ty := ret.Ty
 			if ty.Kind == TY_STRUCT {
 				if ty.Sz <= 16 {
-					// The size is 8-16 bytes, the value is stored directly in RAX and RDX.
+					// If the struct has no floating-point numbers,
+					// the size is 8-16 bytes, the value is stored directly in RAX and RDX.
 					// And it is no more than 8 bytes, the value is stored directly in RAX only.
+					//
 					c.copyStructReg(ty)
 					if ty.Sz > 8 {
-						// ここでRDXの代わりにargregをそのまま使うと使用中のレジスタと被っちゃう
 						if bufi < 3 && i < 6 {
 							if hasFlonum1(ty) && hasFlonum2(ty) {
 								c.println("	movq %%xmm1, %s", bufreg64[bufi])
