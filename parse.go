@@ -1778,7 +1778,7 @@ func stmt(rest **Token, tok *Token) *Node {
 			}
 
 			if ty.Kind == TY_STRUCT {
-				if bufidx >= 3 {
+				if bufidx >= 3 && idx < 6 {
 					bufgvcur.Next = newVarNode(newFavGvar("buf_gv", ty), tok)
 					bufgvcur = bufgvcur.Next
 					addType(bufgvcur)
