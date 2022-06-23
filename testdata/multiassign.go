@@ -201,39 +201,39 @@ func multiRet2StructFlonum() (gT03, gT03, gT03, gT03, gT03, gT03, gT03) {
 	return g1, g2, gT03{3.3}, gT03{4.4}, gT03{5.5}, gT03{6.6}, gT03{7.7}
 }
 
-// type gT04 struct {
-// 	a float64
-// 	b float32
-// }
+type gT04 struct {
+	a float64
+	b float32
+}
 
-// func multiRet2StructFlonum2() (gT04, gT04, gT04, gT04, gT04, gT04) {
-// 	var g1 = gT04{
-// 		a: 1.1,
-// 		b: 2.2,
-// 	}
-// 	var g2 = gT04{
-// 		a: 3.3,
-// 		b: 4.4,
-// 	}
-// 	return g1, g2, gT04{5.5, 6.6}, gT04{7.7, 8.8}, gT04{9.9, 11.11}, gT04{12.12, 13.13}
-// }
+func multiRet2StructFlonum2() (gT04, gT04, gT04, gT04, gT04, gT04, gT04) {
+	var g1 = gT04{
+		a: 1.1,
+		b: 2.2,
+	}
+	var g2 = gT04{
+		a: 3.3,
+		b: 4.4,
+	}
+	return g1, g2, gT04{5.5, 6.6}, gT04{7.7, 8.8}, gT04{9.9, 11.11}, gT04{12.12, 13.13}, gT04{14.14, 15.15}
+}
 
-// type gT05 struct {
-// 	a float32
-// 	b int32
-// }
+type gT05 struct {
+	a float32
+	b int32
+}
 
-// func multiRet2StructFlonum3() (gT05, gT05) {
-// 	var g1 = gT05{
-// 		a: 1.1,
-// 		b: 2,
-// 	}
-// 	var g2 = gT05{
-// 		a: 3.3,
-// 		b: 4,
-// 	}
-// 	return g1, g2
-// }
+func multiRet2StructFlonum3() (gT05, gT05, gT05, gT05, gT05, gT05, gT05, gT05, gT05) {
+	var g1 = gT05{
+		a: 1.1,
+		b: 2,
+	}
+	var g2 = gT05{
+		a: 3.3,
+		b: 4,
+	}
+	return g1, g2, gT05{5.5, 5}, gT05{6.6, 6}, gT05{7.7, 7}, gT05{8.8, 8}, gT05{9.9, 9}, gT05{11.11, 11}, gT05{12.12, 12}
+}
 
 // type gT06 struct {
 // 	a int
@@ -668,25 +668,41 @@ func main() {
 	assert(1, f20.a == 6.6, "f20.a==6.6")
 	assert(1, g20.a == 7.7, "g20.a==7.7")
 
-	// a21, b21, c21, d21, e21, f21 := multiRet2StructFlonum2()
-	// assert(1, a21.a == 1.1, "a21.a==1.1")
-	// assert(1, a21.b == float32(2.2), "a21.b==float32(2.2)")
-	// assert(1, b21.a == 3.3, "b21.a==3.3")
-	// assert(1, b21.b == float32(4.4), "b21.b==float32(4.4)")
-	// assert(1, c21.a == 5.5, "c21.a==5.5")
-	// assert(1, c21.b == float32(6.6), "c21.b==float32(6.6)")
-	// assert(1, d21.a == 7.7, "d21.a==7.7")
-	// assert(1, d21.b == float32(8.8), "d21.b==float32(8.8)")
-	// assert(1, e21.a == 9.9, "e21.a==9.9")
-	// assert(1, e21.b == float32(11.11), "e21.b==float32(11.11)")
-	// assert(1, f21.a == 12.12, "f21.a==12.12")
-	// assert(1, f21.b == float32(13.13), "f21.b==float32(12.12)")
+	a21, b21, c21, d21, e21, f21, g21 := multiRet2StructFlonum2()
+	assert(1, a21.a == 1.1, "a21.a==1.1")
+	assert(1, a21.b == float32(2.2), "a21.b==float32(2.2)")
+	assert(1, b21.a == 3.3, "b21.a==3.3")
+	assert(1, b21.b == float32(4.4), "b21.b==float32(4.4)")
+	assert(1, c21.a == 5.5, "c21.a==5.5")
+	assert(1, c21.b == float32(6.6), "c21.b==float32(6.6)")
+	assert(1, d21.a == 7.7, "d21.a==7.7")
+	assert(1, d21.b == float32(8.8), "d21.b==float32(8.8)")
+	assert(1, e21.a == 9.9, "e21.a==9.9")
+	assert(1, e21.b == float32(11.11), "e21.b==float32(11.11)")
+	assert(1, f21.a == 12.12, "f21.a==12.12")
+	assert(1, f21.b == float32(13.13), "f21.b==float32(12.12)")
+	assert(1, g21.a == 14.14, "g21.a==14.14")
+	assert(1, g21.b == float32(15.15), "g21.b==float32(15.15)")
 
-	// a22, b22 := multiRet2StructFlonum3()
-	// assert(1, a22.a == float32(1.1), "a22.a==float32(1.1)")
-	// assert(2, a22.b, "a22.b")
-	// assert(1, b22.a == float32(3.3), "b22.a==float32(3.3)")
-	// assert(4, b22.b, "b22.b")
+	a22, b22, c22, d22, e22, f22, g22, h22, i22 := multiRet2StructFlonum3()
+	assert(1, a22.a == float32(1.1), "a22.a==float32(1.1)")
+	assert(2, a22.b, "a22.b")
+	assert(1, b22.a == float32(3.3), "b22.a==float32(3.3)")
+	assert(4, b22.b, "b22.b")
+	assert(1, c22.a == float32(5.5), "c22.a==float32(5.5)")
+	assert(5, c22.b, "c22.b")
+	assert(1, d22.a == float32(6.6), "d22.a==float32(6.6)")
+	assert(6, d22.b, "d22.b")
+	assert(1, e22.a == float32(7.7), "e22.a==float32(7.7)")
+	assert(7, e22.b, "e22.b")
+	assert(1, f22.a == float32(8.8), "f22.a==float32(8.8)")
+	assert(8, f22.b, "f22.b")
+	assert(1, g22.a == float32(9.9), "g22.a==float32(9.9)")
+	assert(9, g22.b, "g22.b")
+	assert(1, h22.a == float32(11.11), "h22.a==float32(11.11)")
+	assert(11, h22.b, "h22.b")
+	assert(1, i22.a == float32(12.12), "i22.a==float32(12.12)")
+	assert(12, i22.b, "i22.b")
 
 	// a23, b23 := multiRet2StructFlonum4()
 	// assert(1, a23.a, "a23.a")
