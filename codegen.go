@@ -1470,7 +1470,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		//   (2),(3),(4)
 		//     => The value's data within 8 bytes are saved in RAX(if the struct has non-flonum), or XMM0(if the struct has flonums),
 		//        and are passed to R10-15 registers.
-		//     => It's data over 8 bytes are saved in RDX((if the struct has non-flonum), or XMM1 or XMM0(if the struct has flonums),
+		//     => It's data over 8 bytes are saved in RDX(if the struct has no flonum), or XMM1 or XMM0(if the struct has flonum(s)),
 		//        in the case that the number of the small struct is within 3, are passed to RBX, R8, and R9,
 		//        in the case that the number of the return values is within 6, are passed to the global variables('buf_gv').
 		//
