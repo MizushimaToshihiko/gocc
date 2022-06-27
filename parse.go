@@ -1,3 +1,24 @@
+//
+// parser
+//
+// This file contains a recursive descent parser for Go(or Go-like language).
+//
+// Most functions in this file are named after the symbols they are
+// supposed to read from an input token list. For example, stmt() is
+// responsible for reading a statement from a token list. The function
+// then construct an AST node representing a statement.
+//
+// Each function conceptually returns two values, an AST node and
+// remaining part of the input tokens. The remaining tokens are returned
+// the caller via a pointer argument. Because I imitate the structure of
+// chibicc(https://github.com/rui314/chibicc).
+//
+// Input tokens are represented by a linked list. Unlike many recursive
+// descent parsers, we don't have the notion of the "input token stream".
+// Most parsing functions don't change the global state of the parser.
+// So it is very easy to lookahead arbitrary number of tokens in this
+// parser.
+//
 package main
 
 import (

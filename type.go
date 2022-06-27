@@ -1,3 +1,6 @@
+//
+// Typing AST nodes
+//
 package main
 
 import (
