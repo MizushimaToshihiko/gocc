@@ -26,6 +26,7 @@ func compile(prtok bool, arg string, w io.Writer) error {
 		return fmt.Errorf("compile(): err: %s: %v", arg, os.ErrNotExist)
 	}
 
+	// tokenize
 	var err error
 	var tok *Token
 	tok, err = tokenizeFile(arg)
@@ -43,6 +44,7 @@ func compile(prtok bool, arg string, w io.Writer) error {
 		printTokens(tok)
 	}
 
+	// parse the tokens, and make the AST nodes.
 	prog := parse(tok)
 	if err != nil {
 		return err
@@ -61,6 +63,7 @@ func main() {
 	// setting log
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
+	// parse flags.
 	var outpath string
 	flag.StringVar(&outpath, "o", "", "The output file name")
 	var help bool
@@ -92,6 +95,7 @@ func main() {
 		}
 	}
 
+	// compile
 	if err := compile(prtok, inputPath, optOut); err != nil {
 		log.Fatal(err)
 	}
