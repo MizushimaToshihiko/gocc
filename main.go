@@ -94,14 +94,19 @@ func main() {
 	}
 
 	inputPaths = flag.Args()[0:]
+	fmt.Println("inputPaths:", inputPaths)
+
+	// '-o' option wasn't omitted or not
+	flagout := outpath != ""
 
 	// compile
 	for _, inpath := range inputPaths {
 		var err error
-		if outpath == "" {
+		if !flagout {
 			outpath = replaceExt(inpath, "s")
 		}
 
+		fmt.Println("outpath:", outpath)
 		optOut, err = os.Create(outpath)
 		if err != nil {
 			fmt.Println(inpath)
