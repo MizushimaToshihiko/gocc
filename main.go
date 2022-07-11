@@ -9,7 +9,7 @@ import (
 )
 
 var optOut *os.File
-var inputPath string
+var inputPaths []string
 
 var isdeb bool // Is debug mode or not.
 
@@ -82,7 +82,7 @@ func main() {
 		usage(1)
 	}
 
-	inputPath = flag.Args()[0]
+	inputPaths = flag.Args()[0:]
 
 	var err error
 	if outpath == "" {
@@ -90,13 +90,15 @@ func main() {
 	} else {
 		optOut, err = os.Create(outpath)
 		if err != nil {
-			fmt.Println(inputPath)
+			fmt.Println(inputPaths)
 			log.Fatal(err)
 		}
 	}
 
 	// compile
-	if err := compile(prtok, inputPath, optOut); err != nil {
-		log.Fatal(err)
+	for _, inpath := range inputPaths {
+		if err := compile(prtok, inpath, optOut); err != nil {
+			log.Fatal(err)
+		}
 	}
 }

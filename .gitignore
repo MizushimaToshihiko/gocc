@@ -3,5 +3,6 @@ testdata/*
 !testdata/*.go
 !testdata/common
 !testdata/esc
+!testdata/*.sh
 profile
 debug*.txt
