@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 var optOut *os.File
@@ -16,6 +17,16 @@ var isdeb bool // Is debug mode or not.
 func exists(name string) bool {
 	_, err := os.Stat(name)
 	return !os.IsNotExist(err)
+}
+
+// baseName returns the filepath without a extension.
+func baseName(filePath string) string {
+	ext := filepath.Ext(filePath)
+	return filePath[:len(filePath)-len(ext)]
+}
+
+func replaceExt(tmpl, ext string) string {
+	return fmt.Sprintf("%s.%s", baseName(tmpl), ext)
 }
 
 func compile(prtok bool, arg string, w io.Writer) error {
@@ -84,19 +95,19 @@ func main() {
 
 	inputPaths = flag.Args()[0:]
 
-	var err error
-	if outpath == "" {
-		optOut = os.Stdout
-	} else {
-		optOut, err = os.Create(outpath)
-		if err != nil {
-			fmt.Println(inputPaths)
-			log.Fatal(err)
-		}
-	}
-
 	// compile
 	for _, inpath := range inputPaths {
+		var err error
+		if outpath == "" {
+			outpath = replaceExt(inpath, "s")
+		}
+
+		optOut, err = os.Create(outpath)
+		if err != nil {
+			fmt.Println(inpath)
+			log.Fatal(err)
+		}
+
 		if err := compile(prtok, inpath, optOut); err != nil {
 			log.Fatal(err)
 		}
