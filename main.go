@@ -116,6 +116,7 @@ func main() {
 			log.Fatal(err)
 		}
 
+		// make the gnu-assembly file
 		if err := compile(prtok, inpath, optOut); err != nil {
 			log.Fatal(err)
 		}
@@ -123,7 +124,11 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		// fmt.Println(objfile.Name())
-		assemble(outpath, objfile.Name())
+
+		// make the object file
+		err = assemble(outpath, objfile.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
