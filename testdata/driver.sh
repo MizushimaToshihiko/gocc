@@ -21,4 +21,7 @@ echo 'var y int' > $tmp/bar.go
 [ -f $tmp/foo.o ] && [ -f $tmp/bar.o ]
 check 'multiple input files'
 
+[ -f $tmp/foo.s ] && [ -f $tmp/bar.s ]
+check 'multiple input files'
+
 echo OK
