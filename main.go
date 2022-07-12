@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -70,6 +71,10 @@ func usage(status int) {
 	os.Exit(status)
 }
 
+func assemble(input, output string) error {
+	return exec.Command("as", "-c", input, "-o", output).Run()
+}
+
 func main() {
 	// setting log
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
@@ -94,7 +99,6 @@ func main() {
 	}
 
 	inputPaths = flag.Args()[0:]
-	fmt.Println("inputPaths:", inputPaths)
 
 	// '-o' option wasn't omitted or not
 	flagout := outpath != ""
@@ -106,7 +110,6 @@ func main() {
 			outpath = replaceExt(inpath, "s")
 		}
 
-		fmt.Println("outpath:", outpath)
 		optOut, err = os.Create(outpath)
 		if err != nil {
 			fmt.Println(inpath)
@@ -116,5 +119,11 @@ func main() {
 		if err := compile(prtok, inpath, optOut); err != nil {
 			log.Fatal(err)
 		}
+		objfile, err := os.Create(replaceExt(outpath, "o"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		// fmt.Println(objfile.Name())
+		assemble(outpath, objfile.Name())
 	}
 }

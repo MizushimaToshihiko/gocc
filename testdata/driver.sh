@@ -18,7 +18,7 @@ rm -f $tmp/foo.go $tmp/bar.go
 echo 'var x int' > $tmp/foo.go
 echo 'var y int' > $tmp/bar.go
 (cd $tmp; $OLDPWD/$gocc $tmp/foo.go $tmp/bar.go)
-[ -f $tmp/foo.s ] && [ -f $tmp/bar.s ]
+[ -f $tmp/foo.o ] && [ -f $tmp/bar.o ]
 check 'multiple input files'
 
 echo OK
