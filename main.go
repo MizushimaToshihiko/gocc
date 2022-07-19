@@ -97,7 +97,7 @@ func findGccLibPath() (string, error) {
 	for _, path := range paths {
 		p, err := filepath.Glob(path)
 		if p != nil {
-			return filepath.Dir(p[0]), err
+			return filepath.Dir(p[len(p)-1]), err
 		}
 	}
 
@@ -116,12 +116,14 @@ func runLinker(inputs []string, output string) error {
 	arr = append(arr, "/lib64/ld-linux-x86-64.so.2")
 
 	libPath, err := findLibpath()
+	// fmt.Println("libPath:", libPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("findLibPath: %s", err)
 	}
 	gccLibPath, err := findGccLibPath()
+	// fmt.Println("gccLibPath:", gccLibPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("findGccLibPath: %s", err)
 	}
 
 	arr = append(arr, fmt.Sprintf("%s/crt1.o", libPath))
@@ -185,6 +187,7 @@ func main() {
 
 	// compile
 	for _, inpath := range inputPaths {
+
 		var err error
 		if !opto {
 			outpath = replaceExt(inpath, "s")
@@ -195,6 +198,9 @@ func main() {
 			fmt.Println(inpath)
 			log.Fatal(err)
 		}
+
+		fmt.Println("outpath:", outpath)
+		fmt.Println("optOut.Name():", optOut.Name())
 
 		if optc {
 			// make the gnu-assembly file
@@ -242,7 +248,10 @@ func main() {
 		if !opto {
 			outpath = "a.out"
 		}
-		runLinker(ldArgs, outpath)
+		err := runLinker(ldArgs, outpath)
+		if err != nil {
+			log.Fatal(err)
+		}
 		if err := os.RemoveAll("./testdata/tmp"); err != nil {
 			log.Fatal(err)
 		}
