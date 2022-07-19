@@ -959,17 +959,24 @@ func tokenize(filename string) (*Token, error) {
 }
 
 func readFile(path string) ([]rune, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			log.Fatal(err)
+	var r io.Reader
+	switch path {
+	case "-":
+		r = os.Stdin
+	default:
+		f, err := os.Open(path)
+		if err != nil {
+			return nil, err
 		}
-	}()
+		defer func() {
+			if err := f.Close(); err != nil {
+				log.Fatal(err)
+			}
+		}()
+		r = f
+	}
 
-	br := bufio.NewReader(f)
+	br := bufio.NewReader(r)
 
 	ret := make([]rune, 0, 1064)
 	for {
