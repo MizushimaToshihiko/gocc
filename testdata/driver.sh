@@ -14,13 +14,17 @@ check() {
   fi
 }
 
-rm -f $tmp/foo.go $tmp/bar.go
+rm -f $tmp/foo.o $tmp/bar.o
 echo 'var x int' > $tmp/foo.go
 echo 'var y int' > $tmp/bar.go
 (cd $tmp; $OLDPWD/$gocc -c $tmp/foo.go $tmp/bar.go)
 [ -f $tmp/foo.o ] && [ -f $tmp/bar.o ]
 check 'multiple input files'
 
+rm -f $tmp/foo.s $tmp/bar.s
+echo 'var x int' > $tmp/foo.go
+echo 'var y int' > $tmp/bar.go
+(cd $tmp; $OLDPWD/$gocc -S $tmp/foo.go $tmp/bar.go)
 [ -f $tmp/foo.s ] && [ -f $tmp/bar.s ]
 check 'multiple input files'
 

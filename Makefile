@@ -19,7 +19,7 @@ build: $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
 
 testdata/%.exe: testdata/%.go
-	$(BINARY_NAME) -c -o $(^D)/$*.s $^
+	$(BINARY_NAME) -c -o $(^D)/$*.o $^
 	$(CC) -static -g -o $@ $(^D)/$*.o -xc $(^D)/common
 
 test: $(TESTS)

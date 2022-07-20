@@ -72,6 +72,22 @@ func usage(status int) {
 	os.Exit(status)
 }
 
+func createTmpFile() (*os.File, error) {
+	if !exists("./testdata/tmp") {
+		err := os.MkdirAll("./testdata/tmp", 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	tmp, err := os.CreateTemp("./testdata/tmp", "temp-*")
+	if err != nil {
+		return nil, err
+	}
+
+	return tmp, nil
+}
+
 func assemble(input, output string) error {
 	return exec.Command("as", "-c", input, "-o", output).Run()
 }
@@ -165,6 +181,8 @@ func main() {
 	flag.BoolVar(&isdeb, "deb", false, "debug mode or not")
 	var optc bool
 	flag.BoolVar(&optc, "c", false, "compile and assemble only, or not")
+	var optS bool
+	flag.BoolVar(&optS, "S", false, "compile only or not")
 	flag.Parse()
 
 	if help {
@@ -187,46 +205,52 @@ func main() {
 	for _, inpath := range inputPaths {
 
 		var err error
-		if !opto {
+		if optS {
 			outpath = replaceExt(inpath, "s")
+		} else if !opto {
+			outpath = replaceExt(inpath, "o")
 		}
 
-		optOut, err = os.Create(outpath)
-		if err != nil {
-			fmt.Println(inpath)
-			log.Fatal(err)
+		// Just compile
+		if optS {
+			out, err := os.Create(outpath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err := compile(prtok, inpath, out); err != nil {
+				log.Fatal(err)
+			}
+			continue
 		}
 
 		if optc {
+			temp, err := createTmpFile()
+			if err != nil {
+				log.Fatal(err)
+			}
 			// make the gnu-assembly file
-			if err := compile(prtok, inpath, optOut); err != nil {
+			if err := compile(prtok, inpath, temp); err != nil {
 				log.Fatal(err)
 			}
 
 			// make the object file
-			objfile, err := os.Create(replaceExt(outpath, "o"))
+			objfile, err := os.Create(outpath)
 			if err != nil {
 				log.Fatal(err)
 			}
-			err = assemble(outpath, objfile.Name())
+			err = assemble(temp.Name(), objfile.Name())
 			if err != nil {
 				log.Fatal(err)
 			}
 			continue
 		}
 
-		if !exists("./testdata/tmp") {
-			err := os.MkdirAll("./testdata/tmp", 0755)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
 		// Compile, assemble and link
-		tmp1, err := os.CreateTemp("./testdata/tmp", "temp1_*.s")
+		tmp1, err := createTmpFile()
 		if err != nil {
 			log.Fatal(err)
 		}
-		tmp2, err := os.CreateTemp("./testdata/tmp", "temp2_*.o")
+		tmp2, err := createTmpFile()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -247,8 +271,9 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := os.RemoveAll("./testdata/tmp"); err != nil {
-			log.Fatal(err)
-		}
+	}
+
+	if err := os.RemoveAll("./testdata/tmp"); err != nil {
+		log.Fatal(err)
 	}
 }
