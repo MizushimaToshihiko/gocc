@@ -69,4 +69,10 @@ $tmp/foo
 [ "$?" = 42 ]
 check linker
 
+rm -f $tmp/a.out
+echo 'func main() {}' > $tmp/foo.go
+(cd $tmp; $OLDPWD/$gocc foo.go)
+[ -f $tmp/a.out ]
+check a.out
+
 echo OK

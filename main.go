@@ -128,9 +128,6 @@ func runLinker(inputs []string, output string) error {
 	var err error
 	arr := []string{}
 
-	// arr = append(arr, "cc")
-	// arr = append(arr, "-o")
-	// arr = append(arr, output)
 	arr = append(arr, "ld")
 	arr = append(arr, "-o")
 	arr = append(arr, output)
