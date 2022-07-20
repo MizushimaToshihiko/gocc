@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -12,7 +13,7 @@ import (
 )
 
 // flags
-var optOut *os.File
+var tmpfiles []string
 var inputPaths []string
 var isdeb bool // Is debug mode or not.
 
@@ -72,19 +73,22 @@ func usage(status int) {
 	os.Exit(status)
 }
 
-func createTmpFile() (*os.File, error) {
-	if !exists("./testdata/tmp") {
-		err := os.MkdirAll("./testdata/tmp", 0755)
-		if err != nil {
-			log.Fatal(err)
+func cleanup() error {
+	for _, tmp := range tmpfiles {
+		if err := os.Remove(tmp); err != nil {
+			return err
 		}
 	}
+	return nil
+}
 
-	tmp, err := os.CreateTemp("./testdata/tmp", "temp-*")
+func createTmpFile() (*os.File, error) {
+	tmp, err := os.CreateTemp("/tmp", "gocc-*")
 	if err != nil {
 		return nil, err
 	}
 
+	tmpfiles = append(tmpfiles, tmp.Name())
 	return tmp, nil
 }
 
@@ -121,8 +125,12 @@ func findGccLibPath() (string, error) {
 }
 
 func runLinker(inputs []string, output string) error {
+	var err error
 	arr := []string{}
 
+	// arr = append(arr, "cc")
+	// arr = append(arr, "-o")
+	// arr = append(arr, output)
 	arr = append(arr, "ld")
 	arr = append(arr, "-o")
 	arr = append(arr, output)
@@ -164,10 +172,27 @@ func runLinker(inputs []string, output string) error {
 	arr = append(arr, fmt.Sprintf("%s/crtend.o", gccLibPath))
 	arr = append(arr, fmt.Sprintf("%s/crtn.o", libPath))
 
-	return exec.Command(arr[0], arr[1:]...).Run()
+	cmd := exec.Command(arr[0], arr[1:]...)
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(out.String())
+		return fmt.Errorf(fmt.Sprint(err) + ":\n" + stderr.String())
+	}
+
+	return nil
 }
 
 func main() {
+	defer func() {
+		if err := cleanup(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	// setting log
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
@@ -205,7 +230,7 @@ func main() {
 	for _, inpath := range inputPaths {
 
 		var err error
-		if optS {
+		if optS && outpath != "-" {
 			outpath = replaceExt(inpath, "s")
 		} else if !opto {
 			outpath = replaceExt(inpath, "o")
@@ -213,10 +238,19 @@ func main() {
 
 		// Just compile
 		if optS {
-			out, err := os.Create(outpath)
-			if err != nil {
-				log.Fatal(err)
+
+			var out *os.File
+			var err error
+			switch outpath {
+			case "-":
+				out = os.Stdout
+			default:
+				out, err = os.Create(outpath)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
+
 			if err := compile(prtok, inpath, out); err != nil {
 				log.Fatal(err)
 			}
@@ -267,13 +301,17 @@ func main() {
 		if !opto {
 			outpath = "a.out"
 		}
+
+		if !exists(outpath) {
+			_, err := os.Create(outpath)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		err := runLinker(ldArgs, outpath)
 		if err != nil {
 			log.Fatal(err)
 		}
-	}
-
-	if err := os.RemoveAll("./testdata/tmp"); err != nil {
-		log.Fatal(err)
 	}
 }
