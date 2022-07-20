@@ -61,13 +61,12 @@ $gocc -o $tmp/foo $tmp/foo.go
 $tmp/foo
 check linker
 
-# error occurs
-# rm -f $tmp/foo
-# echo 'func bar() int; func main() { return bar(); }' > $tmp/foo.go
-# echo 'func bar() int { return 42; }' > $tmp/bar.go
-# $gocc -o $tmp/foo $tmp/foo.go $tmp/bar.go
-# $tmp/foo
-# [ "$?" = 42 ]
-# check linker
+rm -f $tmp/foo
+echo 'func Bar() int; func main() { return Bar(); }' > $tmp/foo.go
+echo 'func Bar() int { return 42; }' > $tmp/bar.go
+$gocc -o $tmp/foo $tmp/foo.go $tmp/bar.go
+$tmp/foo
+[ "$?" = 42 ]
+check linker
 
 echo OK
