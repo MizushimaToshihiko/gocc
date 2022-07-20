@@ -116,19 +116,17 @@ func runLinker(inputs []string, output string) error {
 	arr = append(arr, "/lib64/ld-linux-x86-64.so.2")
 
 	libPath, err := findLibpath()
-	// fmt.Println("libPath:", libPath)
 	if err != nil {
 		return fmt.Errorf("findLibPath: %s", err)
 	}
 	gccLibPath, err := findGccLibPath()
-	// fmt.Println("gccLibPath:", gccLibPath)
 	if err != nil {
 		return fmt.Errorf("findGccLibPath: %s", err)
 	}
 
 	arr = append(arr, fmt.Sprintf("%s/crt1.o", libPath))
 	arr = append(arr, fmt.Sprintf("%s/crti.o", libPath))
-	arr = append(arr, fmt.Sprintf("%s/crtbegin.o", libPath))
+	arr = append(arr, fmt.Sprintf("%s/crtbegin.o", gccLibPath))
 	arr = append(arr, fmt.Sprintf("-L%s", gccLibPath))
 	arr = append(arr, fmt.Sprintf("-L%s", libPath))
 	arr = append(arr, fmt.Sprintf("-L%s/..", libPath))
@@ -198,9 +196,6 @@ func main() {
 			fmt.Println(inpath)
 			log.Fatal(err)
 		}
-
-		fmt.Println("outpath:", outpath)
-		fmt.Println("optOut.Name():", optOut.Name())
 
 		if optc {
 			// make the gnu-assembly file
