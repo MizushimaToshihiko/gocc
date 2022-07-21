@@ -4,5 +4,6 @@ testdata/*
 !testdata/common
 !testdata/esc
 !testdata/*.sh
+!testdata/*.h
 profile
 debug*.txt
