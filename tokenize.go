@@ -154,10 +154,6 @@ func skip(tok *Token, s string) *Token {
 		panic("\n" + errorTok(tok, "'%s' expected", string(s)))
 	}
 
-	for tok.Kind == TK_COMM {
-		tok = tok.Next
-	}
-
 	return tok.Next
 }
 
