@@ -805,14 +805,23 @@ func isEnd(tok *Token) bool {
 func consumeEnd(rest **Token, tok *Token) bool {
 	printCalledFunc()
 
+	for tok.Kind == TK_COMM {
+		tok = tok.Next
+	}
+
 	if equal(tok, "}") {
 		*rest = tok.Next
 		return true
 	}
 
-	if equal(tok, ",") && equal(tok.Next, "}") {
-		*rest = tok.Next.Next
-		return true
+	if equal(tok, ",") {
+		for tok.Kind == TK_COMM {
+			tok = tok.Next
+		}
+		if equal(tok.Next, "}") {
+			*rest = tok.Next.Next
+			return true
+		}
 	}
 
 	return false

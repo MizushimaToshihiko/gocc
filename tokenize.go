@@ -146,9 +146,18 @@ func skip(tok *Token, s string) *Token {
 	printCurTok(tok)
 	printCalledFunc()
 
+	for tok.Kind == TK_COMM {
+		tok = tok.Next
+	}
+
 	if !equal(tok, s) {
 		panic("\n" + errorTok(tok, "'%s' expected", string(s)))
 	}
+
+	for tok.Kind == TK_COMM {
+		tok = tok.Next
+	}
+
 	return tok.Next
 }
 

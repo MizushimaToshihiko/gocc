@@ -6,7 +6,7 @@ func strcmp(s1 string, s2 string) int
 
 func main() {
 	type T1 struct {
-		a int
+		a int // comment
 		b int
 	}
 	var x1 T1
