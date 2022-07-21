@@ -1770,6 +1770,9 @@ func stmt(rest **Token, tok *Token) *Node {
 			return node
 		}
 		tok = skip(tok, "return")
+		if equal(tok, "}") {
+			return node
+		}
 
 		head := &Node{}
 		cur := head
@@ -1781,12 +1784,13 @@ func stmt(rest **Token, tok *Token) *Node {
 		bufidx := 0
 		ty := copyType(curFn.Ty.RetTy)
 
-		for !equal(tok, ";") {
+		for !equal(tok, ";") && !equal(tok, "}") {
 			if idx > 0 {
 				tok = skip(tok, ",")
 			}
 
 			exp := assign(&tok, tok)
+			// fmt.Printf("stmt: tok: %#v\n\n", tok)
 			addType(exp)
 			if ty.Kind != TY_STRUCT {
 				exp = newCast(exp, ty)
@@ -1816,6 +1820,7 @@ func stmt(rest **Token, tok *Token) *Node {
 		node.RetVals = head.Next
 		curFn.RetValGv = rvghead.Next
 		curFn.RetBufGv = bufgvhead.Next
+		*rest = tok
 		return node
 	}
 
@@ -2234,7 +2239,7 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 
 		} else {
 			cur.Next = stmt(&tok, tok)
-
+			// fmt.Printf("compoundStmt: tok: %#v\n\n", tok)
 			if isAppend {
 				cur = cur.Next
 				addType(cur)
@@ -2253,6 +2258,7 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 
 	node.Body = head.Next
 	*rest = tok.Next
+	// fmt.Printf("compoundStmt: tok: %#v\n\n", tok)
 	return node
 }
 
