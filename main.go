@@ -68,7 +68,6 @@ func compile(prtok bool, arg string, w io.Writer) error {
 		return err
 	}
 
-	fmt.Fprintf(w, ".file 1 \"%s\"\n", curFilename)
 	return codegen(w, prog) // make the asm code, down on the AST
 }
 

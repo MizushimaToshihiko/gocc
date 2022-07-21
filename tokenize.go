@@ -30,6 +30,12 @@ const (
 	TK_EOF // 7: the end of tokens
 )
 
+type File struct {
+	Name     string
+	FileNo   int
+	Contents []rune
+}
+
 type Token struct {
 	Kind TokenKind // type of token
 	Next *Token    // next
@@ -43,14 +49,16 @@ type Token struct {
 	Contents []int64 // string literal contents including terminating '\0'
 	ContLen  int     // string literal length
 
-	LineNo int  // Line number
-	AtBol  bool // True if this token is at begging of line
+	File   *File // Source location
+	LineNo int   // Line number
+	AtBol  bool  // True if this token is at begging of line
 }
 
-var curFilename string
+// Input file
+var curFile *File
 
-// inputted program
-var userInput []rune
+// A list of all input files.
+var inputFiles []*File
 
 // True if the current position is at the beginning of line.
 var atBol bool
@@ -63,22 +71,23 @@ var curIdx int
 // foo.go:
 // 10:x = y + 1;
 //        ^ <error message here>
-func verrorAt(lineNum, errIdx int, formt string, a ...interface{}) string {
+func verrorAt(filename string, input []rune,
+	lineNum, errIdx int, formt string, a ...interface{}) string {
 	// get the start and end of the line 'errIdx' exists
 	line := errIdx
-	for 0 < line && userInput[line-1] != rune('\n') {
+	for 0 < line && input[line-1] != rune('\n') {
 		line--
 	}
 
 	end := errIdx
-	for end < len(userInput) && userInput[end] != rune('\n') {
+	for end < len(input) && input[end] != rune('\n') {
 		end++
 	}
 
 	// Show found lines along with file name and line number.
-	res := fmt.Sprintf("\n%s:%d: ", curFilename, lineNum)
+	res := fmt.Sprintf("\n%s:%d: ", filename, lineNum)
 	indent := len(res)
-	res += fmt.Sprintf("%.*s\n", end-line, string(userInput[line:end]))
+	res += fmt.Sprintf("%.*s\n", end-line, string(input[line:end]))
 
 	// Point the error location with "^" and display the error message.
 	pos := errIdx - line + indent
@@ -94,20 +103,22 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 
 	// Find out what line the found line is in the whole.
 	lineNum := 1
-	for i := 0; i < len(userInput); i++ {
-		if userInput[i] == rune('\n') {
+	for i := 0; i < len(curFile.Contents); i++ {
+		if curFile.Contents[i] == rune('\n') {
 			lineNum++
 		}
 	}
-	return verrorAt(lineNum, errIdx, formt, a...)
+	return verrorAt(curFile.Name, curFile.Contents, lineNum, errIdx, formt, a...)
 }
 
 func errorTok(tok *Token, formt string, ap ...interface{}) string {
 	var errStr string
 
 	if tok != nil {
-		errStr = fmt.Sprintf("tok: '%s': kind: %d: pos :%d\n", tok.Str, tok.Kind, tok.Loc)
-		errStr += verrorAt(tok.LineNo, tok.Loc, formt, ap...)
+		errStr = fmt.Sprintf("tok: '%s': kind: %d: pos :%d\n",
+			tok.Str, tok.Kind, tok.Loc)
+		errStr += verrorAt(tok.File.Name, tok.File.Contents,
+			tok.LineNo, tok.Loc, formt, ap...)
 	}
 
 	return errStr
@@ -159,7 +170,14 @@ func atEof(tok *Token) bool {
 
 // make new token and append to the end of cur.
 func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
-	tok := &Token{Kind: kind, Str: str, Len: len, Loc: curIdx, AtBol: atBol}
+	tok := &Token{
+		Kind:  kind,
+		Str:   str,
+		Len:   len,
+		Loc:   curIdx,
+		File:  curFile,
+		AtBol: atBol,
+	}
 	atBol = false
 	cur.Next = tok
 	return tok
@@ -167,7 +185,14 @@ func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
 
 // make new token and append to the end of cur.
 func newToken2(kind TokenKind, cur *Token, str string, len int, loc int) *Token {
-	tok := &Token{Kind: kind, Str: str, Len: len, Loc: loc}
+	tok := &Token{
+		Kind:  kind,
+		Str:   str,
+		Len:   len,
+		Loc:   loc,
+		File:  curFile,
+		AtBol: atBol,
+	}
 	cur.Next = tok
 	return tok
 }
@@ -474,46 +499,46 @@ func readIntLiteral(cur *Token) (*Token, error) {
 	var err error
 	var startIdx = curIdx
 
-	if startsWith(string(userInput[curIdx:curIdx+2]), "0x") ||
-		startsWith(string(userInput[curIdx:curIdx+2]), "0X") {
+	if startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0x") ||
+		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0X") {
 		base = 16
 		curIdx += 2
 		sVal, err = readHexDigit()
 		if err != nil {
 			return nil, err
 		}
-	} else if startsWith(string(userInput[curIdx:curIdx+2]), "0b") ||
-		startsWith(string(userInput[curIdx:curIdx+2]), "0B") {
+	} else if startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0b") ||
+		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0B") {
 		base = 2
 		curIdx += 2
-	} else if startsWith(string(userInput[curIdx:curIdx+2]), "0o") ||
-		startsWith(string(userInput[curIdx:curIdx+2]), "0O") ||
-		startsWith(string(userInput[curIdx:curIdx+2]), "0_") {
+	} else if startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0o") ||
+		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0O") ||
+		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0_") {
 		base = 8
 		curIdx += 2
-	} else if startsWith(string(userInput[curIdx:curIdx+1]), "0") &&
-		isDigit(userInput[curIdx+1]) {
+	} else if startsWith(string(curFile.Contents[curIdx:curIdx+1]), "0") &&
+		isDigit(curFile.Contents[curIdx+1]) {
 		base = 8
 		curIdx += 1
 	}
 
-	for ; curIdx < len(userInput) &&
-		(isDigit(userInput[curIdx]) || userInput[curIdx] == '_'); curIdx++ {
+	for ; curIdx < len(curFile.Contents) &&
+		(isDigit(curFile.Contents[curIdx]) || curFile.Contents[curIdx] == '_'); curIdx++ {
 
-		if userInput[curIdx-1] == '_' && userInput[curIdx] == '_' {
+		if curFile.Contents[curIdx-1] == '_' && curFile.Contents[curIdx] == '_' {
 			return nil, errMustSeparateSuccessiveDigits(startIdx)
 		}
 
-		if isDigit(userInput[curIdx]) {
-			sVal += string(userInput[curIdx])
+		if isDigit(curFile.Contents[curIdx]) {
+			sVal += string(curFile.Contents[curIdx])
 		}
 	}
 
-	if userInput[curIdx-1] == '_' {
+	if curFile.Contents[curIdx-1] == '_' {
 		return nil, errMustSeparateSuccessiveDigits(startIdx)
 	}
 
-	cur = newToken(TK_NUM, cur, string(userInput[startIdx:curIdx]), curIdx-startIdx+1)
+	cur = newToken(TK_NUM, cur, string(curFile.Contents[startIdx:curIdx]), curIdx-startIdx+1)
 	var v int64
 	if sVal != "" {
 		v = parseInt(sVal, base)
@@ -535,23 +560,23 @@ func readNumber(cur *Token) (*Token, error) {
 		return nil, err
 	}
 
-	if !contains(".eEfF", userInput[curIdx]) {
+	if !contains(".eEfF", curFile.Contents[curIdx]) {
 		return tok, nil
 	}
 
-	var sVal string = string(userInput[curIdx])
+	var sVal string = string(curFile.Contents[curIdx])
 	curIdx++
-	for isDigit(userInput[curIdx]) ||
-		contains("eEfFpP_", userInput[curIdx]) ||
-		(contains("EePp", userInput[curIdx-1]) &&
-			contains("+-", userInput[curIdx])) {
+	for isDigit(curFile.Contents[curIdx]) ||
+		contains("eEfFpP_", curFile.Contents[curIdx]) ||
+		(contains("EePp", curFile.Contents[curIdx-1]) &&
+			contains("+-", curFile.Contents[curIdx])) {
 
-		if (userInput[curIdx-1] == '_' && !isDigit(userInput[curIdx])) ||
-			(userInput[curIdx] == '_' && !isDigit(userInput[curIdx-1])) {
+		if (curFile.Contents[curIdx-1] == '_' && !isDigit(curFile.Contents[curIdx])) ||
+			(curFile.Contents[curIdx] == '_' && !isDigit(curFile.Contents[curIdx-1])) {
 			return nil, errMustSeparateSuccessiveDigits(curIdx)
 		}
 
-		sVal += string(userInput[curIdx])
+		sVal += string(curFile.Contents[curIdx])
 		curIdx++
 	}
 
@@ -568,19 +593,19 @@ func readNumber(cur *Token) (*Token, error) {
 func readHexDigit() (string, error) {
 	var sVal string
 	var errIdx = curIdx
-	for ; isxdigit(userInput[curIdx]) ||
-		userInput[curIdx] == '_'; curIdx++ {
+	for ; isxdigit(curFile.Contents[curIdx]) ||
+		curFile.Contents[curIdx] == '_'; curIdx++ {
 
-		if userInput[curIdx-1] == '_' && userInput[curIdx] == '_' {
+		if curFile.Contents[curIdx-1] == '_' && curFile.Contents[curIdx] == '_' {
 			return "", errMustSeparateSuccessiveDigits(errIdx)
 		}
 
-		if isxdigit(userInput[curIdx]) {
-			sVal += string(userInput[curIdx])
+		if isxdigit(curFile.Contents[curIdx]) {
+			sVal += string(curFile.Contents[curIdx])
 		}
 	}
 
-	if userInput[curIdx-1] == '_' {
+	if curFile.Contents[curIdx-1] == '_' {
 		return "", errMustSeparateSuccessiveDigits(errIdx)
 	}
 
@@ -604,15 +629,15 @@ func fromHex(c int) int {
 }
 
 func getEscapeChar(newPos *int, idx int) (rune, error) {
-	if '0' <= userInput[idx] && userInput[idx] <= '7' {
+	if '0' <= curFile.Contents[idx] && curFile.Contents[idx] <= '7' {
 		// Read octal number.
-		c := userInput[idx] - '0'
+		c := curFile.Contents[idx] - '0'
 		idx++
-		if '0' <= userInput[idx] && userInput[idx] <= '7' {
-			c = (c << 3) + (userInput[idx] - '0')
+		if '0' <= curFile.Contents[idx] && curFile.Contents[idx] <= '7' {
+			c = (c << 3) + (curFile.Contents[idx] - '0')
 			idx++
-			if '0' <= userInput[idx] && userInput[idx] <= '7' {
-				c = (c << 3) + (userInput[idx] - '0')
+			if '0' <= curFile.Contents[idx] && curFile.Contents[idx] <= '7' {
+				c = (c << 3) + (curFile.Contents[idx] - '0')
 				idx++
 			}
 		}
@@ -620,17 +645,17 @@ func getEscapeChar(newPos *int, idx int) (rune, error) {
 		return c, nil
 	}
 
-	if userInput[idx] == 'x' {
+	if curFile.Contents[idx] == 'x' {
 		// Read hexadecimal number.
 		idx++
-		if !isxdigit(userInput[idx]) {
+		if !isxdigit(curFile.Contents[idx]) {
 			return -1, fmt.Errorf(
 				"tokenize(): err:\n%s",
 				errorAt(idx, "invalid hex escape sequence"))
 		}
 		var c rune
-		for ; isxdigit(userInput[idx]); idx++ {
-			c = (c << 4) + rune(fromHex(int(userInput[idx])))
+		for ; isxdigit(curFile.Contents[idx]); idx++ {
+			c = (c << 4) + rune(fromHex(int(curFile.Contents[idx])))
 		}
 		*newPos = idx
 		return c, nil
@@ -638,7 +663,7 @@ func getEscapeChar(newPos *int, idx int) (rune, error) {
 
 	*newPos = idx
 
-	switch userInput[idx] {
+	switch curFile.Contents[idx] {
 	case 'a':
 		return '\a', nil
 	case 'b':
@@ -656,21 +681,21 @@ func getEscapeChar(newPos *int, idx int) (rune, error) {
 	case 'e':
 		return 27, nil
 	default:
-		return userInput[idx], nil
+		return curFile.Contents[idx], nil
 	}
 }
 
 // stringLiteralEnd finds a closing double-quote.
 func stringLiteralEnd(idx int) (int, error) {
 	var start int = idx
-	for ; userInput[idx] != '"'; idx++ {
-		if userInput[idx] == '\n' || userInput[idx] == 0 {
+	for ; curFile.Contents[idx] != '"'; idx++ {
+		if curFile.Contents[idx] == '\n' || curFile.Contents[idx] == 0 {
 			return -1, fmt.Errorf(
 				"tokenize(): stringLiteralEnd: err:\n%s",
 				errorAt(start, "unclosed string literal"),
 			)
 		}
-		if userInput[idx] == '\\' {
+		if curFile.Contents[idx] == '\\' {
 			idx++
 		}
 	}
@@ -698,7 +723,7 @@ func readStringLiteral(start int, cur *Token) (*Token, error) {
 	for idx = start + 1; idx < end; idx++ {
 
 		var c rune
-		if userInput[idx] == '\\' {
+		if curFile.Contents[idx] == '\\' {
 			c, err = getEscapeChar(&idx, idx+1)
 			if err != nil {
 				return nil, err
@@ -708,7 +733,7 @@ func readStringLiteral(start int, cur *Token) (*Token, error) {
 			continue
 		}
 
-		buf = append(buf, int64(userInput[idx]))
+		buf = append(buf, int64(curFile.Contents[idx]))
 	}
 	idx++
 
@@ -723,7 +748,7 @@ func readStringLiteral(start int, cur *Token) (*Token, error) {
 func readCharLiteral(cur *Token) (*Token, error) {
 	start := curIdx
 	idx := start + 1
-	if idx < len(userInput) && userInput[idx] == 0 {
+	if idx < len(curFile.Contents) && curFile.Contents[idx] == 0 {
 		return nil, fmt.Errorf(
 			"tokenize(): err:\n%s",
 			errorAt(idx, "EOF: unclosed char literal"),
@@ -732,18 +757,18 @@ func readCharLiteral(cur *Token) (*Token, error) {
 
 	var c rune
 	var err error
-	if userInput[idx] == '\\' {
+	if curFile.Contents[idx] == '\\' {
 		c, err = getEscapeChar(&idx, idx+1)
 		if err != nil {
 			return nil, err
 		}
 		idx++
 	} else {
-		c = userInput[idx]
+		c = curFile.Contents[idx]
 		idx++
 	}
 
-	if userInput[idx] != '\'' {
+	if curFile.Contents[idx] != '\'' {
 		return nil, fmt.Errorf(
 			"tokenize(): err:\n%s",
 			errorAt(idx, "char literal too long"),
@@ -751,7 +776,7 @@ func readCharLiteral(cur *Token) (*Token, error) {
 	}
 	idx++
 
-	tok := newToken(TK_NUM, cur, string(userInput[start:idx]), idx-start)
+	tok := newToken(TK_NUM, cur, string(curFile.Contents[start:idx]), idx-start)
 	tok.Val = int64(c)
 	tok.Ty = ty_int
 	curIdx += tok.Len
@@ -812,8 +837,8 @@ func addLineNumbers(head *Token) {
 	var tok *Token = head
 	var n int = 1
 
-	for i := 0; i < len(userInput); i++ {
-		for i == tok.Loc && i < len(userInput) {
+	for i := 0; i < len(curFile.Contents); i++ {
+		for i == tok.Loc && i < len(curFile.Contents) {
 			tok.LineNo = n
 			tok = tok.Next
 			if tok == nil {
@@ -824,7 +849,7 @@ func addLineNumbers(head *Token) {
 				tok.Loc = i + l
 			}
 		}
-		if userInput[i] == '\n' {
+		if curFile.Contents[i] == '\n' {
 			n++
 		}
 	}
@@ -839,24 +864,25 @@ func convKw(tok *Token) {
 }
 
 // tokenize inputted string 'userInput', and return new tokens.
-func tokenize(filename string) (*Token, error) {
-	curFilename = filename
+func tokenize(file *File) (*Token, error) {
+	curFile = file
+
 	var head Token
 	head.Next = nil
 	cur := &head
 
 	atBol = true
 
-	for curIdx < len(userInput) && userInput[curIdx] != 0 {
+	for curIdx < len(curFile.Contents) && curFile.Contents[curIdx] != 0 {
 
 		// skip space(s)
-		if isSpace(userInput[curIdx]) {
+		if isSpace(curFile.Contents[curIdx]) {
 			curIdx++
 			continue
 		}
 
 		// new line
-		if userInput[curIdx] == '\n' {
+		if curFile.Contents[curIdx] == '\n' {
 			cur = newToken(TK_NL, cur, "", 0)
 			curIdx++
 			atBol = true
@@ -864,9 +890,9 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// skip line comment
-		if startsWith(string(userInput[curIdx:]), "//") {
+		if startsWith(string(curFile.Contents[curIdx:]), "//") {
 			curIdx += 2
-			for ; curIdx < len(userInput) && userInput[curIdx] != '\n'; curIdx++ {
+			for ; curIdx < len(curFile.Contents) && curFile.Contents[curIdx] != '\n'; curIdx++ {
 				// skip to the end of line.
 			}
 			cur = newToken(TK_COMM, cur, "<line comment>", 0)
@@ -874,10 +900,10 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// skip block comment
-		if startsWith(string(userInput[curIdx:]), "/*") {
+		if startsWith(string(curFile.Contents[curIdx:]), "/*") {
 			// skip to the first of '*/' in userInput[curIdx:].
 			isatBol := atBol // The block comment is at the beginning of line, or not
-			idx := strIndex(string(userInput[curIdx:]), "*/")
+			idx := strIndex(string(curFile.Contents[curIdx:]), "*/")
 			if idx == -1 {
 				return nil, fmt.Errorf(
 					"tokenize(): err:\n%s",
@@ -891,25 +917,25 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// blank identifier
-		if contains("_", userInput[curIdx]) && !isIdent3(userInput[curIdx+1]) {
-			cur = newToken(TK_BLANKIDENT, cur, string(userInput[curIdx]), 1)
+		if contains("_", curFile.Contents[curIdx]) && !isIdent3(curFile.Contents[curIdx+1]) {
+			cur = newToken(TK_BLANKIDENT, cur, string(curFile.Contents[curIdx]), 1)
 			curIdx++
 			continue
 		}
 
 		// identifier
 		// if 'userInput[cutIdx]' is alphabets, it makes a token of TK_IDENT type.
-		if isIdent1(userInput[curIdx]) {
+		if isIdent1(curFile.Contents[curIdx]) {
 			ident := make([]rune, 0, 20)
-			for ; curIdx < len(userInput) && isIdent2(userInput[curIdx]); curIdx++ {
-				ident = append(ident, userInput[curIdx])
+			for ; curIdx < len(curFile.Contents) && isIdent2(curFile.Contents[curIdx]); curIdx++ {
+				ident = append(ident, curFile.Contents[curIdx])
 			}
 			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
 			continue
 		}
 
 		// string literal
-		if userInput[curIdx] == '"' {
+		if curFile.Contents[curIdx] == '"' {
 			var err error
 			cur, err = readStringLiteral(curIdx, cur)
 			if err != nil {
@@ -919,7 +945,7 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// character literal
-		if userInput[curIdx] == '\'' {
+		if curFile.Contents[curIdx] == '\'' {
 			var err error
 			cur, err = readCharLiteral(cur)
 			if err != nil {
@@ -929,8 +955,8 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// number
-		if isDigit(userInput[curIdx]) ||
-			(userInput[curIdx] == '.' && isDigit(userInput[curIdx+1])) {
+		if isDigit(curFile.Contents[curIdx]) ||
+			(curFile.Contents[curIdx] == '.' && isDigit(curFile.Contents[curIdx+1])) {
 			var err error
 			cur, err = readNumber(cur)
 			if err != nil {
@@ -940,21 +966,21 @@ func tokenize(filename string) (*Token, error) {
 		}
 
 		// keyword or multi-letter punctuator
-		kw := startsWithPunctuator(string(userInput[curIdx:]))
+		kw := startsWithPunctuator(string(curFile.Contents[curIdx:]))
 		if kw != "" {
 			cur = newToken(TK_RESERVED, cur, kw, len(kw))
 			curIdx += len(kw)
 			continue
 		}
 		// single-letter punctuator
-		if contains("+-()*/<>=;{},&[].!|^:?%#", userInput[curIdx]) {
-			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
+		if contains("+-()*/<>=;{},&[].!|^:?%#", curFile.Contents[curIdx]) {
+			cur = newToken(TK_RESERVED, cur, string(curFile.Contents[curIdx]), 1)
 			curIdx++
 			continue
 		}
 
 		return nil, fmt.Errorf(
-			"tokenize(): err:\ncurIdx: %s\n%s", string(userInput[curIdx]),
+			"tokenize(): err:\ncurIdx: %s\n%s", string(curFile.Contents[curIdx]),
 			errorAt(curIdx, "invalid token"),
 		)
 	}
@@ -964,6 +990,7 @@ func tokenize(filename string) (*Token, error) {
 	addSemiColn(head.Next)
 	delNewLineTok(head.Next)
 	addLineNumbers(head.Next)
+	curIdx = 0
 	return head.Next, nil
 }
 
@@ -1002,11 +1029,29 @@ func readFile(path string) ([]rune, error) {
 	return ret, nil
 }
 
+func getInputFiles() []*File {
+	return inputFiles
+}
+
+func newFile(name string, fileNo int, contents []rune) *File {
+	return &File{Name: name, FileNo: fileNo, Contents: contents}
+}
+
+// For tokenizeFile function
+var fileno int
+
 func tokenizeFile(path string) (*Token, error) {
-	var err error
-	userInput, err = readFile(path)
+
+	p, err := readFile(path)
 	if err != nil {
 		return nil, err
 	}
-	return tokenize(path)
+
+	file := newFile(path, fileno+1, p)
+
+	// Save the filename for assembler .file directive.
+	inputFiles = append(inputFiles, file)
+	fileno++
+
+	return tokenize(file)
 }

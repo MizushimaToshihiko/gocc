@@ -785,7 +785,7 @@ func (c *codeWriter) genExpr(node *Node) {
 		return
 	}
 
-	c.println("	.loc 1 %d", node.Tok.LineNo)
+	c.println("	.loc %d %d", node.Tok.File.FileNo, node.Tok.LineNo)
 
 	switch node.Kind {
 	case ND_NULL_EXPR:
@@ -1279,7 +1279,7 @@ func (c *codeWriter) genStmt(node *Node) {
 		return
 	}
 
-	c.println("	.loc 1 %d", node.Tok.LineNo)
+	c.println("	.loc %d %d", node.Tok.File.FileNo, node.Tok.LineNo)
 
 	switch node.Kind {
 	case ND_IF:
@@ -1902,6 +1902,11 @@ func (c *codeWriter) emitText(prog *Obj) {
 
 func codegen(w io.Writer, prog *Obj) error {
 	c := &codeWriter{w: w}
+
+	files := getInputFiles()
+	for _, f := range files {
+		c.println("	.file %d \"%s\"", f.FileNo, f.Name)
+	}
 
 	c.assignLvarOffsets(prog)
 	c.emitData(prog)
