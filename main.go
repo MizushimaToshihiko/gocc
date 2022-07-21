@@ -49,6 +49,8 @@ func compile(prtok bool, arg string, w io.Writer) error {
 		return err
 	}
 
+	tok = preprocess(tok)
+
 	if prtok {
 		printTokens(tok)
 		return nil

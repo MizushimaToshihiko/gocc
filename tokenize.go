@@ -954,7 +954,6 @@ func tokenize(filename string) (*Token, error) {
 	addSemiColn(head.Next)
 	delNewLineTok(head.Next)
 	addLineNumbers(head.Next)
-	convKw(head.Next)
 	return head.Next, nil
 }
 

@@ -1,4 +1,4 @@
-package test_mytest
+package test_omitsemicolon
 
 func assert(want int, act int, code string)
 func println(format ...string)
