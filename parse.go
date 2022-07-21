@@ -805,6 +805,7 @@ func isEnd(tok *Token) bool {
 func consumeEnd(rest **Token, tok *Token) bool {
 	printCalledFunc()
 
+	start := tok
 	for tok.Kind == TK_COMM {
 		tok = tok.Next
 	}
@@ -824,6 +825,7 @@ func consumeEnd(rest **Token, tok *Token) bool {
 		}
 	}
 
+	tok = start
 	return false
 }
 
