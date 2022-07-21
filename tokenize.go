@@ -43,13 +43,17 @@ type Token struct {
 	Contents []int64 // string literal contents including terminating '\0'
 	ContLen  int     // string literal length
 
-	LineNo int // Line number
+	LineNo int  // Line number
+	AtBol  bool // True if this token is at begging of line
 }
 
 var curFilename string
 
 // inputted program
 var userInput []rune
+
+// True if the current position is at the beginning of line.
+var atBol bool
 
 // current index in 'userInput'
 var curIdx int
@@ -155,7 +159,8 @@ func atEof(tok *Token) bool {
 
 // make new token and append to the end of cur.
 func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
-	tok := &Token{Kind: kind, Str: str, Len: len, Loc: curIdx}
+	tok := &Token{Kind: kind, Str: str, Len: len, Loc: curIdx, AtBol: atBol}
+	atBol = false
 	cur.Next = tok
 	return tok
 }
@@ -840,6 +845,8 @@ func tokenize(filename string) (*Token, error) {
 	head.Next = nil
 	cur := &head
 
+	atBol = true
+
 	for curIdx < len(userInput) && userInput[curIdx] != 0 {
 
 		// skip space(s)
@@ -852,6 +859,7 @@ func tokenize(filename string) (*Token, error) {
 		if userInput[curIdx] == '\n' {
 			cur = newToken(TK_NL, cur, "", 0)
 			curIdx++
+			atBol = true
 			continue
 		}
 
@@ -877,6 +885,7 @@ func tokenize(filename string) (*Token, error) {
 			}
 			cur = newToken(TK_COMM, cur, "<block comment>", 0)
 			curIdx += idx + 2
+			atBol = true
 			continue
 		}
 
@@ -937,7 +946,7 @@ func tokenize(filename string) (*Token, error) {
 			continue
 		}
 		// single-letter punctuator
-		if contains("+-()*/<>=;{},&[].!|^:?%", userInput[curIdx]) {
+		if contains("+-()*/<>=;{},&[].!|^:?%#", userInput[curIdx]) {
 			cur = newToken(TK_RESERVED, cur, string(userInput[curIdx]), 1)
 			curIdx++
 			continue
