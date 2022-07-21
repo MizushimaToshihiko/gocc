@@ -12,8 +12,10 @@ import (
 	"path/filepath"
 )
 
-// flags
+// Temporary files for compiling and assembling
 var tmpfiles []string
+
+// flags
 var inputPaths []string
 var isdeb bool // Is debug mode or not.
 

@@ -876,6 +876,7 @@ func tokenize(filename string) (*Token, error) {
 		// skip block comment
 		if startsWith(string(userInput[curIdx:]), "/*") {
 			// skip to the first of '*/' in userInput[curIdx:].
+			isatBol := atBol // The block comment is at the beginning of line, or not
 			idx := strIndex(string(userInput[curIdx:]), "*/")
 			if idx == -1 {
 				return nil, fmt.Errorf(
@@ -885,7 +886,7 @@ func tokenize(filename string) (*Token, error) {
 			}
 			cur = newToken(TK_COMM, cur, "<block comment>", 0)
 			curIdx += idx + 2
-			atBol = true
+			atBol = isatBol
 			continue
 		}
 
