@@ -25,22 +25,17 @@ func printTokens(w io.Writer, tok *Token) {
 	line := 1
 	for ; tok.Next != nil; tok = tok.Next {
 		if line > 1 && tok.AtBol {
-			_, err := fmt.Fprintln(w)
-			if err != nil {
-				panic(err)
-			}
+			fmt.Fprintln(w)
 		}
-		_, err := fmt.Fprintf(w, " %s", tok.Str)
-		if err != nil {
-			panic(err)
+		if tok.Kind == TK_STR {
+			fmt.Fprintf(w, " %q", tok.Str)
+		} else {
+			fmt.Fprintf(w, " %s", tok.Str)
 		}
 		line++
 	}
 
-	_, err := fmt.Fprintln(w)
-	if err != nil {
-		panic(err)
-	}
+	fmt.Fprintln(w)
 }
 
 // printTokens2 is for debugging.

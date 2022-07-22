@@ -80,7 +80,13 @@ func preprocess2(tok *Token) *Token {
 				panic("\n" + errorTok(tok, "expected a filename"))
 			}
 
-			path := fmt.Sprintf("%s/%s", filepath.Dir(tok.File.Name), tok.Str)
+			var path string
+			if tok.Str[0] == '/' {
+				path = tok.Str
+			} else {
+				path = fmt.Sprintf("%s/%s", filepath.Dir(tok.File.Name), tok.Str)
+			}
+
 			tok2, err := tokenizeFile(path)
 			if err != nil || tok2 == nil {
 				panic("\n" + errorTok(tok, err.Error()))

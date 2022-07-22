@@ -13,5 +13,5 @@ func main() {
 	assert(5, include1, "include1")
 	assert(7, include2, "include2")
 
-	println("OK")
+	println("OK\n")
 }
