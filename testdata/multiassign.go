@@ -435,7 +435,7 @@ func main() {
 		e06,
 		f06,
 		g06 = "aaa",
-		"bbb",
+		"bbb", // comment
 		"ccc",
 		"ddd",
 		"eee",
