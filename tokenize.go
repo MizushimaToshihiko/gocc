@@ -124,6 +124,16 @@ func errorTok(tok *Token, formt string, ap ...interface{}) string {
 	return errStr
 }
 
+func warnTok(tok *Token, formt string, ap ...interface{}) {
+	_, err := fmt.Fprintln(
+		os.Stderr,
+		verrorAt(tok.File.Name, tok.File.Contents, tok.LineNo, tok.Loc, formt, ap...),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // strNdUp function returns the []rune terminates with '\0'
 func strNdUp(b []int64, len int) []int64 {
 	res := make([]int64, len)

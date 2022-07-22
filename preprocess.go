@@ -18,6 +18,20 @@ func isHash(tok *Token) bool {
 	return tok.AtBol && equal(tok, "#")
 }
 
+func skipLine(tok *Token) *Token {
+	// Skip the ";" token.
+	consume(&tok, tok, ";")
+
+	if tok.AtBol {
+		return tok
+	}
+	warnTok(tok, "extra token")
+	for tok.AtBol {
+		tok = tok.Next
+	}
+	return tok
+}
+
 func copyTok(tok *Token) *Token {
 	var t = &Token{}
 	*t = *tok
@@ -42,6 +56,8 @@ func appendTok(tok1, tok2 *Token) *Token {
 	return head.Next
 }
 
+// Visit all tokens int `tok` while evaluating preprocessing
+// macros and directives.
 func preprocess2(tok *Token) *Token {
 	head := &Token{}
 	cur := head
@@ -69,7 +85,8 @@ func preprocess2(tok *Token) *Token {
 			if err != nil || tok2 == nil {
 				panic("\n" + errorTok(tok, err.Error()))
 			}
-			tok = appendTok(tok2, tok.Next)
+			tok = skipLine(tok.Next)
+			tok = appendTok(tok2, tok)
 			continue
 		}
 
@@ -85,6 +102,7 @@ func preprocess2(tok *Token) *Token {
 	return head.Next
 }
 
+// Entry point function of the preprocessor.
 func preprocess(tok *Token) *Token {
 	tok = preprocess2(tok)
 	convKw(tok)
