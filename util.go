@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"runtime"
 )
 
@@ -19,21 +20,46 @@ func max(x, y int) int {
 	return y
 }
 
-func printTokens(tok *Token) {
-	fmt.Print("# Tokens:\n")
-	for tok.Next != nil {
-		fmt.Printf(" '%s' ", tok.Str)
-		if tok.Str == ";" || tok.Str == "{" || tok.Kind == TK_COMM {
-			fmt.Println()
+// printTokens: Print tokens to stdout. Used for -E.
+func printTokens(w io.Writer, tok *Token) {
+	line := 1
+	for ; tok.Next != nil; tok = tok.Next {
+		if line > 1 && tok.AtBol {
+			_, err := fmt.Fprintln(w)
+			if err != nil {
+				panic(err)
+			}
 		}
-		tok = tok.Next
+		_, err := fmt.Fprintf(w, " %s", tok.Str)
+		if err != nil {
+			panic(err)
+		}
+		line++
+	}
+
+	_, err := fmt.Fprintln(w)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// printTokens2 is for debugging.
+func printTokens2(w io.Writer, tok *Token) {
+	fmt.Fprint(w, "# Tokens:\n")
+	line := 1
+	for ; tok.Next != nil; tok = tok.Next {
+		if line > 1 && tok.AtBol {
+			fmt.Fprintln(w)
+		}
+		fmt.Fprintf(w, " '%s' ", tok.Str)
+		line++
 	}
 
 	if tok.Kind == TK_EOF {
-		fmt.Print(" EOF ")
+		fmt.Fprint(w, " EOF ")
 	}
 
-	fmt.Print("\n\n")
+	fmt.Fprint(w, "\n\n")
 }
 
 func printCurTok(tok *Token) {

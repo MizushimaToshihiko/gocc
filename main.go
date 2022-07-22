@@ -18,6 +18,7 @@ var tmpfiles []string
 // flags
 var inputPaths []string
 var isdeb bool // Is debug mode or not.
+var optE bool  // -E option
 
 func exists(name string) bool {
 	_, err := os.Stat(name)
@@ -53,13 +54,20 @@ func compile(prtok bool, arg string, w io.Writer) error {
 
 	tok = preprocess(tok)
 
+	// If -E is given, print out preprocessed C code as a result.
+	if optE {
+		printTokens(w, tok)
+		return nil
+	}
+
+	// If 'prtok' option is given, just print tokens for debugging.
 	if prtok {
-		printTokens(tok)
+		printTokens2(w, tok)
 		return nil
 	}
 
 	if isdeb {
-		printTokens(tok)
+		printTokens2(w, tok)
 	}
 
 	// parse the tokens, and make the AST nodes.
@@ -208,6 +216,7 @@ func main() {
 	flag.BoolVar(&optc, "c", false, "compile and assemble only, or not")
 	var optS bool
 	flag.BoolVar(&optS, "S", false, "compile only or not")
+	flag.BoolVar(&optE, "E", false, "stop after the preprocessing stage")
 	flag.Parse()
 
 	if help {
@@ -228,17 +237,40 @@ func main() {
 
 	// compile
 	for _, inpath := range inputPaths {
-
 		var err error
+
 		if optS && outpath != "-" {
 			outpath = replaceExt(inpath, "s")
 		} else if !opto {
 			outpath = replaceExt(inpath, "o")
 		}
 
+		// Just preprocess
+		if optE {
+			var out *os.File
+			var err error
+			if !opto {
+				out = os.Stdout
+			} else {
+				switch outpath {
+				case "-":
+					out = os.Stdout
+				default:
+					out, err = os.Create(outpath)
+					if err != nil {
+						log.Fatal(err)
+					}
+				}
+			}
+
+			if err := compile(prtok, inpath, out); err != nil {
+				log.Fatal(err)
+			}
+			continue
+		}
+
 		// Just compile
 		if optS {
-
 			var out *os.File
 			var err error
 			switch outpath {
