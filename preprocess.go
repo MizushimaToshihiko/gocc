@@ -71,10 +71,16 @@ func appendTok(tok1, tok2 *Token) *Token {
 }
 
 // Skip until next `#endif`
+// Nested `#if` and `#endif` are skipped.
 func skipCondIncl(tok *Token) *Token {
 	for tok.Kind != TK_EOF {
+		if isHash(tok) && equal(tok.Next, "if") {
+			tok = skipCondIncl(tok.Next.Next)
+			tok = tok.Next
+			continue
+		}
 		if isHash(tok) && equal(tok.Next, "endif") {
-			return tok
+			break
 		}
 		tok = tok.Next
 	}
