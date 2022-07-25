@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"testing"
 )
 
@@ -23,11 +24,11 @@ func TestGetTypeName(t *testing.T) {
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			userInput = append([]rune(c.in), 0)
+			testfile := makeTestFile(t, c.in)
 			curIdx = 0
 			var err error
 			var tok *Token
-			tok, err = tokenize("main_test")
+			tok, err = tokenizeFile(testfile.Name())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -65,21 +66,39 @@ func TestIsTypename(t *testing.T) {
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-
-			userInput = append([]rune(c.in), 0)
+			testfile := makeTestFile(t, c.in)
 			curIdx = 0
 			var err error
 			var tok *Token
-			tok, err = tokenize("main_test")
+			tok, err = tokenizeFile(testfile.Name())
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			printTokens(tok)
+			printTokens2(os.Stderr, tok)
 			act := isTypename(tok)
 			if act != c.want {
 				t.Fatalf("%s: %t expected, but got %t", c.in, c.want, act)
 			}
 		})
 	}
+}
+
+func makeTestFile(t *testing.T, input string) *os.File {
+	testfile, err := createTmpFile()
+	if err != nil {
+		t.Fatalf("makeTestFile: creating testfile failed: %s", err)
+	}
+	defer func() {
+		if err := testfile.Close(); err != nil {
+			t.Fatalf("makeTestFile: closing testfile failed: %s", err)
+		}
+	}()
+
+	b := []byte(input)
+	b = append(b, 0)
+	if _, err := testfile.Write(b); err != nil {
+		t.Fatalf("makeTestFile: writing to testfile failed: %s", err)
+	}
+	return testfile
 }
