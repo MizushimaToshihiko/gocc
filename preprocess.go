@@ -5,6 +5,12 @@ import (
 	"path/filepath"
 )
 
+type Macro struct {
+	Next *Macro
+	Name string
+	Body *Token
+}
+
 type Ctx int
 
 const (
@@ -20,6 +26,7 @@ type CondIncl struct {
 	Included bool
 }
 
+var macros *Macro
 var condIncl *CondIncl
 
 func isHash(tok *Token) bool {
@@ -56,14 +63,14 @@ func newEof(tok *Token) *Token {
 
 // Append tok2 to the end of tok1.
 func appendTok(tok1, tok2 *Token) *Token {
-	if tok1 == nil || tok1.Kind == TK_EOF {
+	if tok1.Kind == TK_EOF {
 		return tok2
 	}
 
 	head := &Token{}
 	cur := head
 
-	for ; tok1 != nil && tok1.Kind != TK_EOF; tok1 = tok1.Next {
+	for ; tok1.Kind != TK_EOF; tok1 = tok1.Next {
 		cur.Next = copyTok(tok1)
 		cur = cur.Next
 	}
@@ -111,7 +118,8 @@ func copyLine(rest **Token, tok *Token) *Token {
 	head := &Token{}
 	cur := head
 
-	for ; !tok.AtBol; tok = tok.Next {
+	for ; !equal(tok, ";") && !tok.AtBol; tok = tok.Next {
+		// `!equal(tok, ";")` -> Stop before ";" appears.
 		cur.Next = copyTok(tok)
 		cur = cur.Next
 	}
@@ -131,8 +139,8 @@ func evalConstExpr(rest **Token, tok *Token) int64 {
 
 	var rest2 *Token
 	val := constExpr(&rest2, expr)
-	consume(&rest2, rest2, ";")
-	if rest2.Kind != TK_EOF {
+	consume(&rest2, rest2, ";") // If rest2 is ";" token before this, rest2 should be `nil`.
+	if rest2 != nil && rest2.Kind != TK_EOF {
 		panic("\n" + errorTok(rest2, "extra token"))
 	}
 	return val
@@ -149,6 +157,40 @@ func pushCondIncl(tok *Token, included bool) *CondIncl {
 	return ci
 }
 
+func findMacro(tok *Token) *Macro {
+	if tok.Kind != TK_IDENT {
+		return nil
+	}
+
+	for m := macros; m != nil; m = m.Next {
+		if m.Name == tok.Str {
+			return m
+		}
+	}
+	return nil
+}
+
+func addMacro(name string, body *Token) *Macro {
+	m := &Macro{
+		Next: macros,
+		Name: name,
+		Body: body,
+	}
+	macros = m
+	return m
+}
+
+// If tok is a macro, expand it and return true.
+// Otherwise, do nothing and return false.
+func expandMacro(rest **Token, tok *Token) bool {
+	m := findMacro(tok)
+	if m == nil {
+		return false
+	}
+	*rest = appendTok(m.Body, tok.Next)
+	return true
+}
+
 // Visit all tokens int `tok` while evaluating preprocessing
 // macros and directives.
 func preprocess2(tok *Token) *Token {
@@ -156,6 +198,11 @@ func preprocess2(tok *Token) *Token {
 	cur := head
 
 	for tok.Kind != TK_EOF {
+		// If it is a macro, expand it.
+		if expandMacro(&tok, tok) {
+			continue
+		}
+
 		// Pass through if it is not a "#".
 		if !isHash(tok) {
 			cur.Next = tok
@@ -187,6 +234,16 @@ func preprocess2(tok *Token) *Token {
 			}
 			tok = skipLine(tok.Next)
 			tok = appendTok(tok2, tok)
+			continue
+		}
+
+		if equal(tok, "define") {
+			tok = tok.Next
+			if tok.Kind != TK_IDENT {
+				panic("\n" + errorTok(tok, "macro name must be an identifier"))
+			}
+			name := tok.Str
+			addMacro(name, copyLine(&tok, tok.Next))
 			continue
 		}
 

@@ -52,17 +52,17 @@ func compile(prtok bool, arg string, w io.Writer) error {
 		return err
 	}
 
+	// If 'prtok' option is given, just print tokens for debugging.
+	if prtok {
+		printTokens2(w, tok)
+		return nil
+	}
+
 	tok = preprocess(tok)
 
 	// If -E is given, print out preprocessed C code as a result.
 	if optE {
 		printTokens(w, tok)
-		return nil
-	}
-
-	// If 'prtok' option is given, just print tokens for debugging.
-	if prtok {
-		printTokens2(w, tok)
 		return nil
 	}
 
@@ -246,7 +246,7 @@ func main() {
 		}
 
 		// Just preprocess
-		if optE {
+		if optE || prtok {
 			var out *os.File
 			var err error
 			if !opto {

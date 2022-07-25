@@ -160,7 +160,7 @@ func skip(tok *Token, s string) *Token {
 		panic("\n" + errorTok(tok, "'%s' expected", string(s)))
 	}
 
-	for tok.Next.Kind == TK_COMM {
+	for tok.Next != nil && tok.Next.Kind == TK_COMM {
 		tok.Next = tok.Next.Next
 	}
 
@@ -172,7 +172,7 @@ func skip(tok *Token, s string) *Token {
 func consume(rest **Token, tok *Token, s string) bool {
 	// defer printCurTok()
 	if equal(tok, s) {
-		for tok.Next.Kind == TK_COMM {
+		for tok.Next != nil && tok.Next.Kind == TK_COMM {
 			tok.Next = tok.Next.Next
 		}
 		*rest = tok.Next
