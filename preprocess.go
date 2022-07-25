@@ -12,15 +12,6 @@ type CondIncl struct {
 
 var condIncl *CondIncl
 
-// delete extra semicolons
-func delExtraSemicolon(tok *Token) {
-	for t := tok; t.Kind != TK_EOF && t != nil; t = t.Next {
-		if t.Str == ";" && t.Next.Str == ";" {
-			t.Next = t.Next.Next
-		}
-	}
-}
-
 func isHash(tok *Token) bool {
 	return tok.AtBol && equal(tok, "#")
 }
@@ -205,6 +196,5 @@ func preprocess(tok *Token) *Token {
 		panic("\n" + errorTok(condIncl.Tok, "unterminated conditional derective"))
 	}
 	convKw(tok)
-	delExtraSemicolon(tok)
 	return tok
 }
