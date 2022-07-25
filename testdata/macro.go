@@ -143,5 +143,18 @@ func main() {
 #endif
 	assert(5, m, "m")
 
+	var M2 int = 6
+#define M2 M2 + 3
+	assert(9, M2, "M2")
+
+#define M3 M2 + 3
+	assert(12, M3, "M3")
+
+	var M4 int = 3
+#define M4 M5 * 5
+#define M5 M4 + 2
+	assert(13, M4, "M4")
+
+
 	println("OK\n")
 }

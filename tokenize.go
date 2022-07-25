@@ -49,9 +49,10 @@ type Token struct {
 	Contents []int64 // string literal contents including terminating '\0'
 	ContLen  int     // string literal length
 
-	File   *File // Source location
-	LineNo int   // Line number
-	AtBol  bool  // True if this token is at begging of line
+	File    *File    // Source location
+	LineNo  int      // Line number
+	AtBol   bool     // True if this token is at begging of line
+	Hideset *Hideset // For macro expansion
 }
 
 // Input file
