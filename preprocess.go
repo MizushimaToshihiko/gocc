@@ -5,9 +5,18 @@ import (
 	"path/filepath"
 )
 
+type Ctx int
+
+const (
+	IN_THEN Ctx = iota
+	IN_ELSE
+)
+
 type CondIncl struct {
-	Next *CondIncl
-	Tok  *Token
+	Next     *CondIncl
+	Ctx      Ctx
+	Tok      *Token
+	Included bool
 }
 
 var condIncl *CondIncl
@@ -61,16 +70,31 @@ func appendTok(tok1, tok2 *Token) *Token {
 	return head.Next
 }
 
+func skipCondIncl2(tok *Token) *Token {
+	for tok.Kind != TK_EOF {
+		if isHash(tok) && equal(tok.Next, "if") {
+			tok = skipCondIncl2(tok.Next.Next)
+			continue
+		}
+		if isHash(tok) && equal(tok.Next, "endif") {
+			return tok.Next.Next
+		}
+		tok = tok.Next
+	}
+	return tok
+}
+
 // Skip until next `#endif`
 // Nested `#if` and `#endif` are skipped.
 func skipCondIncl(tok *Token) *Token {
 	for tok.Kind != TK_EOF {
 		if isHash(tok) && equal(tok.Next, "if") {
-			tok = skipCondIncl(tok.Next.Next)
-			tok = tok.Next
+			tok = skipCondIncl2(tok.Next.Next)
 			continue
 		}
-		if isHash(tok) && equal(tok.Next, "endif") {
+
+		if (isHash(tok) && equal(tok.Next, "endif")) ||
+			equal(tok.Next, "endif") {
 			break
 		}
 		tok = tok.Next
@@ -112,8 +136,13 @@ func evalConstExpr(rest **Token, tok *Token) int64 {
 	return val
 }
 
-func pushCondIncl(tok *Token) *CondIncl {
-	ci := &CondIncl{Next: condIncl, Tok: tok}
+func pushCondIncl(tok *Token, included bool) *CondIncl {
+	ci := &CondIncl{
+		Next:     condIncl,
+		Ctx:      IN_THEN,
+		Tok:      tok,
+		Included: included,
+	}
 	condIncl = ci
 	return ci
 }
@@ -161,8 +190,21 @@ func preprocess2(tok *Token) *Token {
 
 		if equal(tok, "if") {
 			val := evalConstExpr(&tok, tok)
-			pushCondIncl(start)
+			pushCondIncl(start, val == 1)
 			if val == 0 {
+				tok = skipCondIncl(tok)
+			}
+			continue
+		}
+
+		if equal(tok, "else") {
+			if condIncl == nil || condIncl.Ctx == IN_ELSE {
+				panic("\n" + errorTok(start, "stray #else"))
+			}
+			condIncl.Ctx = IN_ELSE
+			tok = skipLine(tok.Next)
+
+			if condIncl.Included {
 				tok = skipCondIncl(tok)
 			}
 			continue
