@@ -49,10 +49,11 @@ type Token struct {
 	Contents []int64 // string literal contents including terminating '\0'
 	ContLen  int     // string literal length
 
-	File    *File    // Source location
-	LineNo  int      // Line number
-	AtBol   bool     // True if this token is at begging of line
-	Hideset *Hideset // For macro expansion
+	File     *File    // Source location
+	LineNo   int      // Line number
+	AtBol    bool     // True if this token is at begging of line
+	HasSpace bool     // True if this token follows a space character
+	Hideset  *Hideset // For macro expansion
 }
 
 // Input file
@@ -63,6 +64,9 @@ var inputFiles []*File
 
 // True if the current position is at the beginning of line.
 var atBol bool
+
+// True if the current position follows a space character
+var hasSpace bool
 
 // current index in 'userInput'
 var curIdx int
@@ -190,28 +194,33 @@ func atEof(tok *Token) bool {
 // make new token and append to the end of cur.
 func newToken(kind TokenKind, cur *Token, str string, len int) *Token {
 	tok := &Token{
-		Kind:  kind,
-		Str:   str,
-		Len:   len,
-		Loc:   curIdx,
-		File:  curFile,
-		AtBol: atBol,
+		Kind:     kind,
+		Str:      str,
+		Len:      len,
+		Loc:      curIdx,
+		File:     curFile,
+		AtBol:    atBol,
+		HasSpace: hasSpace,
 	}
 	atBol = false
+	hasSpace = false
 	cur.Next = tok
 	return tok
 }
 
-// make new token and append to the end of cur.
+// make new token and append to the end of cur, with the location.
 func newToken2(kind TokenKind, cur *Token, str string, len int, loc int) *Token {
 	tok := &Token{
-		Kind:  kind,
-		Str:   str,
-		Len:   len,
-		Loc:   loc,
-		File:  curFile,
-		AtBol: atBol,
+		Kind:     kind,
+		Str:      str,
+		Len:      len,
+		Loc:      loc,
+		File:     curFile,
+		AtBol:    atBol,
+		HasSpace: hasSpace,
 	}
+	atBol = false
+	hasSpace = false
 	cur.Next = tok
 	return tok
 }
@@ -891,12 +900,14 @@ func tokenize(file *File) (*Token, error) {
 	cur := &head
 
 	atBol = true
+	hasSpace = false
 
 	for curIdx < len(curFile.Contents) && curFile.Contents[curIdx] != 0 {
 
 		// skip space(s)
 		if isSpace(curFile.Contents[curIdx]) {
 			curIdx++
+			hasSpace = true
 			continue
 		}
 
@@ -905,6 +916,7 @@ func tokenize(file *File) (*Token, error) {
 			cur = newToken(TK_NL, cur, "", 0)
 			curIdx++
 			atBol = true
+			hasSpace = false
 			continue
 		}
 
@@ -915,6 +927,7 @@ func tokenize(file *File) (*Token, error) {
 				// skip to the end of line.
 			}
 			cur = newToken(TK_COMM, cur, "<line comment>", 0)
+			hasSpace = true
 			continue
 		}
 
@@ -932,6 +945,7 @@ func tokenize(file *File) (*Token, error) {
 			cur = newToken(TK_COMM, cur, "<block comment>", 0)
 			curIdx += idx + 2
 			atBol = isatBol
+			hasSpace = true
 			continue
 		}
 

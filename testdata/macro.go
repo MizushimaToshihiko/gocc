@@ -9,6 +9,8 @@ func println(format ...string)
 
 /* */ #
 
+func ret3() int { return 3 }
+
 func main() {
 	assert(5, include1, "include1")
 	assert(7, include2, "include2")
@@ -192,6 +194,14 @@ func main() {
 #endif
 #else
 #endif
+
+#define M7() 1
+	var M7 int = 5
+	assert(1, M7(), "M7()")
+	assert(5, M7, "M7")
+
+#define M7 ()
+	assert(3, ret3 M7, "ret3 M7")
 
 	println("OK\n")
 }

@@ -27,10 +27,13 @@ func printTokens(w io.Writer, tok *Token) {
 		if line > 1 && tok.AtBol {
 			fmt.Fprintln(w)
 		}
+		if tok.HasSpace && !tok.AtBol {
+			fmt.Fprintf(w, " ")
+		}
 		if tok.Kind == TK_STR {
-			fmt.Fprintf(w, " %q", tok.Str)
+			fmt.Fprintf(w, "%q", tok.Str)
 		} else {
-			fmt.Fprintf(w, " %s", tok.Str)
+			fmt.Fprintf(w, "%s", tok.Str)
 		}
 		line++
 	}
