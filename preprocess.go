@@ -28,10 +28,22 @@ import (
 	"path/filepath"
 )
 
+type MacroParam struct {
+	Next *MacroParam
+	Name string
+}
+
+type MacroArg struct {
+	Next *MacroArg
+	Name string
+	Tok  *Token
+}
+
 type Macro struct {
 	Next      *Macro
 	Name      string
 	IsObjlike bool // Object-like or function-like
+	Params    *MacroParam
 	Body      *Token
 	Deleted   bool
 }
@@ -258,6 +270,28 @@ func addMacro(name string, isObjlike bool, body *Token) *Macro {
 	return m
 }
 
+func readMacroParams(rest **Token, tok *Token) *MacroParam {
+	head := &MacroParam{}
+	cur := head
+
+	for !equal(tok, ")") {
+		if cur != head {
+			tok = skip(tok, ",")
+		}
+
+		if tok.Kind != TK_IDENT {
+			panic("\n" + errorTok(tok, "expected an identifier"))
+		}
+		name := tok.Str
+		m := &MacroParam{Name: name}
+		cur.Next = m
+		cur = cur.Next
+		tok = tok.Next
+	}
+	*rest = tok.Next
+	return head.Next
+}
+
 func readMacroDef(rest **Token, tok *Token) {
 	if tok.Kind != TK_IDENT {
 		panic("\n" + errorTok(tok, "macro name must be an identifier"))
@@ -267,12 +301,96 @@ func readMacroDef(rest **Token, tok *Token) {
 
 	if !tok.HasSpace && equal(tok, "(") {
 		// Function-like macro
-		tok = skip(tok.Next, ")")
-		addMacro(name, false, copyLine(rest, tok))
+		params := readMacroParams(&tok, tok.Next)
+		m := addMacro(name, false, copyLine(rest, tok))
+		m.Params = params
 	} else {
 		// Object-like macro
 		addMacro(name, true, copyLine(rest, tok))
 	}
+}
+
+func readMacroArg1(rest **Token, tok *Token) *MacroArg {
+	head := &Token{}
+	cur := head
+
+	for !equal(tok, ",") && !equal(tok, ")") {
+		if tok.Kind == TK_EOF {
+			panic("\n" + errorTok(tok, "premature end of input"))
+		}
+		cur.Next = copyTok(tok)
+		cur = cur.Next
+		tok = tok.Next
+	}
+
+	cur.Next = newEof(tok)
+
+	arg := &MacroArg{Tok: head.Next}
+	*rest = tok
+	return arg
+}
+
+func readMacroArgs(rest **Token, tok *Token, params *MacroParam) *MacroArg {
+	start := tok
+	tok = tok.Next.Next
+
+	head := &MacroArg{}
+	cur := head
+
+	pp := params
+	for ; pp != nil; pp = pp.Next {
+		if cur != head {
+			tok = skip(tok, ",")
+		}
+		cur.Next = readMacroArg1(&tok, tok)
+		cur = cur.Next
+		cur.Name = pp.Name
+	}
+
+	if pp != nil {
+		panic("\n" + errorTok(start, "too many arguments"))
+	}
+	*rest = skip(tok, ")")
+	return head.Next
+}
+
+func findArg(args *MacroArg, tok *Token) *MacroArg {
+	for ap := args; ap != nil; ap = ap.Next {
+		if ap.Name == tok.Str {
+			return ap
+		}
+	}
+	return nil
+}
+
+func subst(tok *Token, args *MacroArg) *Token {
+	head := &Token{}
+	cur := head
+
+	for tok.Kind != TK_EOF {
+		arg := findArg(args, tok)
+
+		// Handle a macro token. Macro arguments are completely macro-expanded
+		// before they are substituted into a macro body.
+		if arg != nil {
+			t := preprocess2(arg.Tok)
+			for ; t.Kind != TK_EOF; t = t.Next {
+				cur.Next = copyTok(t)
+				cur = cur.Next
+			}
+			tok = tok.Next
+			continue
+		}
+
+		// Handle a non-macro token.
+		cur.Next = copyTok(tok)
+		cur = cur.Next
+		tok = tok.Next
+		continue
+	}
+
+	cur.Next = tok
+	return head.Next
 }
 
 // If tok is a macro, expand it and return true.
@@ -302,8 +420,8 @@ func expandMacro(rest **Token, tok *Token) bool {
 	}
 
 	// Function-like macro application
-	tok = skip(tok.Next.Next, ")")
-	*rest = appendTok(m.Body, tok)
+	args := readMacroArgs(&tok, tok, m.Params)
+	*rest = appendTok(subst(m.Body, args), tok)
 	return true
 }
 
