@@ -147,7 +147,9 @@ func appendTok(tok1, tok2 *Token) *Token {
 
 func skipCondIncl2(tok *Token) *Token {
 	for tok.Kind != TK_EOF {
-		if isHash(tok) && equal(tok.Next, "if") {
+		if isHash(tok) &&
+			(equal(tok.Next, "if") || equal(tok.Next, "ifdef") ||
+				equal(tok.Next, "ifndef")) {
 			tok = skipCondIncl2(tok.Next.Next)
 			continue
 		}
@@ -163,7 +165,9 @@ func skipCondIncl2(tok *Token) *Token {
 // Nested `#if` and `#endif` are skipped.
 func skipCondIncl(tok *Token) *Token {
 	for tok.Kind != TK_EOF {
-		if isHash(tok) && equal(tok.Next, "if") {
+		if isHash(tok) &&
+			(equal(tok.Next, "if") || equal(tok.Next, "ifdef") ||
+				equal(tok.Next, "ifndef")) {
 			tok = skipCondIncl2(tok.Next.Next)
 			continue
 		}
@@ -343,6 +347,26 @@ func preprocess2(tok *Token) *Token {
 			val := evalConstExpr(&tok, tok)
 			pushCondIncl(start, val != 0)
 			if val == 0 {
+				tok = skipCondIncl(tok)
+			}
+			continue
+		}
+
+		if equal(tok, "ifdef") {
+			defined := findMacro(tok.Next)
+			pushCondIncl(tok, defined != nil)
+			tok = skipLine(tok.Next.Next)
+			if defined == nil {
+				tok = skipCondIncl(tok)
+			}
+			continue
+		}
+
+		if equal(tok, "ifndef") {
+			defined := findMacro(tok.Next)
+			pushCondIncl(tok, defined == nil)
+			tok = skipLine(tok.Next.Next)
+			if defined != nil {
 				tok = skipCondIncl(tok)
 			}
 			continue

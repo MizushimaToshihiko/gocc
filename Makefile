@@ -13,7 +13,7 @@ SRCS=$(wildcard *.go)
 TEST_SRCS=$(wildcard testdata/*.go)
 TESTS=$(TEST_SRCS:.go=.exe)
 
-all: clean build test
+all: build test
 
 build: $(SRCS)
 	$(GOBUILD) -o $(BINARY_NAME) -v $^
