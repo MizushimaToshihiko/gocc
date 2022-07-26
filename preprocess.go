@@ -17,8 +17,9 @@
 // "hideset". Hideset is initially empty, and every time we expanded a
 // macro, the macro name is added to the resulting tokens' hidesets.
 //
-// The above macro expansion algorithm is explained in this document,
-// which is used as a basis for the standard's wording:
+// The above macro expansion algorithm is explained in this document
+// written by Dave Prossor, which is used as a basis for the
+// standard's wording:
 // https://github.com/rui314/chibicc/wiki/cpp.algo.pdf
 //
 package main
@@ -126,6 +127,19 @@ func hidesetContains(hs *Hideset, s string) bool {
 		}
 	}
 	return false
+}
+
+func hidesetIntersection(hs1, hs2 *Hideset) *Hideset {
+	head := &Hideset{}
+	cur := head
+
+	for ; hs1 != nil; hs1 = hs1.Next {
+		if hidesetContains(hs2, hs1.Name) {
+			cur.Next = newHideset(hs1.Name)
+			cur = cur.Next
+		}
+	}
+	return head.Next
 }
 
 func addHideset(tok *Token, hs *Hideset) *Token {
@@ -358,7 +372,8 @@ func readMacroArgs(rest **Token, tok *Token, params *MacroParam) *MacroArg {
 	if pp != nil {
 		panic("\n" + errorTok(start, "too many arguments"))
 	}
-	*rest = skip(tok, ")")
+	skip(tok, ")")
+	*rest = tok
 	return head.Next
 }
 
@@ -428,8 +443,21 @@ func expandMacro(rest **Token, tok *Token) bool {
 	}
 
 	// Function-like macro application
+	macroTok := tok
 	args := readMacroArgs(&tok, tok, m.Params)
-	*rest = appendTok(subst(m.Body, args), tok)
+	rparen := tok
+
+	// Tokens that consist a func-like maro invocation may have different
+	// hidesets, and if that's the case, it's not clear what the hideset
+	// for the new tokens should be. We take the intersection of the
+	// macro token and the closing parenthesis and use it as a new hideset
+	// as explained in the Dave Prossor's algorithm.
+	hs := hidesetIntersection(macroTok.Hideset, rparen.Hideset)
+	hs = hidesetUnion(hs, newHideset(m.Name))
+
+	body := subst(m.Body, args)
+	body = addHideset(body, hs)
+	*rest = appendTok(body, tok.Next)
 	return true
 }
 
