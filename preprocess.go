@@ -313,11 +313,19 @@ func readMacroDef(rest **Token, tok *Token) {
 func readMacroArg1(rest **Token, tok *Token) *MacroArg {
 	head := &Token{}
 	cur := head
+	level := 0
 
-	for !equal(tok, ",") && !equal(tok, ")") {
+	for level > 0 || (!equal(tok, ",") && !equal(tok, ")")) {
 		if tok.Kind == TK_EOF {
 			panic("\n" + errorTok(tok, "premature end of input"))
 		}
+
+		if equal(tok, "(") {
+			level++
+		} else if equal(tok, ")") {
+			level--
+		}
+
 		cur.Next = copyTok(tok)
 		cur = cur.Next
 		tok = tok.Next
