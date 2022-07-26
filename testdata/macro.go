@@ -212,5 +212,8 @@ func main() {
 #define M8(x,y) (x)*(y)
 	assert(63, M8(3+4,4+5), "M8(3+4,4+5)")
 
+#define M8(x,y) x y
+	assert(9, M8(,4+5), "M8(,4+5)")
+
 	println("OK\n")
 }
