@@ -209,6 +209,70 @@ func skipCondIncl(tok *Token) *Token {
 	return tok
 }
 
+// quoteStr adds double-quotes to the front and back of a given string and
+// adds 0 at the end, and returns it as a rune array.
+func quoteStr(str []rune) []rune {
+	var ret = make([]rune, 0)
+	ret = append(ret, '"')
+	for _, r := range str {
+		if r == '\\' || r == '"' {
+			ret = append(ret, '\\')
+		}
+		if r == rune(0) {
+			break
+		}
+		ret = append(ret, r)
+	}
+	ret = append(ret, '"')
+	ret = append(ret, rune(0))
+
+	return ret
+}
+
+func newStrTok(str []rune, tmpl *Token) *Token {
+	buf := quoteStr(str)
+	t, err := tokenize(newFile(tmpl.File.Name, tmpl.File.FileNo, buf))
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
+// Concatenates all tokens in `tok` and returns a new string.
+func joinTok(tok *Token) []rune {
+	// Compute the length of the resulting token.
+	len := 1
+	for t := tok; t != nil && t.Kind != TK_EOF; t = t.Next {
+		if t != tok && t.HasSpace {
+			len++
+		}
+		len += t.Len
+	}
+
+	var buf []rune
+
+	// Copy token texts.
+	for t := tok; t != nil && t.Kind != TK_EOF; t = t.Next {
+		if t != tok && t.HasSpace {
+			buf = append(buf, ' ')
+		}
+		str := t.Str
+		buf = append(buf, []rune(str)...)
+	}
+	buf = append(buf, rune(0))
+	return buf
+}
+
+// Concatenates all tokens in `arg` and returns a new string token.
+// This function is used for the stringizing operator (#).
+func stringize(hash, arg *Token) *Token {
+	// Create a new string token. We need to set some value to its
+	// source location for error reporting function, so we use a macro
+	// name token as a template.
+	s := joinTok(arg)
+	return newStrTok(s, hash)
+}
+
 // Copy all tokens until the next newline, terminate them with
 // an EOF token and then return them. This function is used to
 // create a new list of tokens for `#if` arguments.
@@ -391,10 +455,21 @@ func subst(tok *Token, args *MacroArg) *Token {
 	cur := head
 
 	for tok.Kind != TK_EOF {
-		arg := findArg(args, tok)
+		// "#" followed by a parameter is replaced with stringized actuals.
+		if equal(tok, "#") {
+			arg := findArg(args, tok.Next)
+			if arg == nil {
+				panic("\n" + errorTok(tok.Next, "'#' is not followed by a macro parameter"))
+			}
+			cur.Next = stringize(tok, arg.Tok)
+			cur = cur.Next
+			tok = tok.Next.Next
+			continue
+		}
 
 		// Handle a macro token. Macro arguments are completely macro-expanded
 		// before they are substituted into a macro body.
+		arg := findArg(args, tok)
 		if arg != nil {
 			t := preprocess2(arg.Tok)
 			for ; t.Kind != TK_EOF; t = t.Next {

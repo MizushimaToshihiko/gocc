@@ -1006,7 +1006,7 @@ func tokenize(file *File) (*Token, error) {
 			continue
 		}
 		// single-letter punctuator
-		if contains("+-()*/<>=;{},&[].!|^:?%#", curFile.Contents[curIdx]) {
+		if contains("+-()*/<>=;{},&[].!|^:?%#`", curFile.Contents[curIdx]) {
 			cur = newToken(TK_RESERVED, cur, string(curFile.Contents[curIdx]), 1)
 			curIdx++
 			continue
