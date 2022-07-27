@@ -3,6 +3,8 @@ package test_alignof
 func assert(want int, act int, code string)
 func println(format ...string)
 
+#include "test.h"
+
 var g3 byte
 var g4 int16
 var g5 int
@@ -18,17 +20,17 @@ var g9 = [2]struct {
 }{{1, 2}}
 
 func main() {
-	assert(1, Alignof(g3), "Alignof(g3)")
-	assert(2, Alignof(g4), "Alignof(g4)")
-	assert(4, Alignof(g5), "Alignof(g5)")
-	assert(8, Alignof(g6), "Alignof(g6)")
-	assert(8, Alignof(g7), "Alignof(g7)")
-	assert(1, Alignof(g8), "Alignof(g8)")
-	assert(8, Alignof(g9), "Alignof(g9)")
+	ASSERT(1, Alignof(g3))
+	ASSERT(2, Alignof(g4))
+	ASSERT(4, Alignof(g5))
+	ASSERT(8, Alignof(g6))
+	ASSERT(8, Alignof(g7))
+	ASSERT(1, Alignof(g8))
+	ASSERT(8, Alignof(g9))
 
 	var x int8
-	assert(1, Alignof(x)<<31>>31, "Alignof(x)<<31>>31")
-	assert(1, Alignof(x)<<63>>63, "Alignof(x)<<63>>63")
+	ASSERT(1, Alignof(x)<<31>>31)
+	ASSERT(1, Alignof(x)<<63>>63)
 
 	println("OK")
 }

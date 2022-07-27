@@ -3955,6 +3955,11 @@ func parse(tok *Token) *Obj {
 			continue
 		}
 
+		// Extra ;
+		if consume(&tok, tok, ";") {
+			continue
+		}
+
 		fmt.Printf("parse: tok: %#v\n\n", tok)
 		panic("\n" + errorTok(tok, "unexpected '%s'", tok.Str))
 	}

@@ -530,9 +530,7 @@ func readIntLiteral(cur *Token) (*Token, error) {
 	if startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0x") ||
 		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0X") {
 		base = 16
-		fmt.Println("curIdx: 1:", curIdx)
 		curIdx += 2
-		fmt.Println("curIdx: 2:", curIdx)
 		sVal, err = readHexDigit()
 		if err != nil {
 			return nil, err

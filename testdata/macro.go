@@ -3,6 +3,7 @@ package test_macro
 func assert(want int, act int, code string)
 func println(format ...string)
 
+#include "test.h"
 #include "include1.h"
 
 #
@@ -13,12 +14,12 @@ func ret3() int { return 3 }
 func dbl(x int) int { return x*x }
 
 func main() {
-	assert(5, include1, "include1")
-	assert(7, include2, "include2")
+	ASSERT(5, include1)
+	ASSERT(7, include2)
 
 #if 0
 #include "/no/such/file"
-	assert(0, 1, "1")
+	ASSERT(0, 1)
 #if nested
 #endif
 #endif
@@ -28,7 +29,7 @@ func main() {
 #if 1
 	m = 5
 #endif
-	assert(5, m, "m")
+	ASSERT(5, m)
 
 #if 1
 # if 0
@@ -38,7 +39,7 @@ func main() {
 # endif
 	m = 3
 #endif
-	assert(3, m, "m")
+	ASSERT(3, m)
 
 #if 1-1
 # if 1
@@ -55,21 +56,21 @@ func main() {
 	m = 3
 # endif
 #endif
-	assert(3, m, "m")
+	ASSERT(3, m)
 
 #if 1
 	m = 2
 #else
 	m = 3
 #endif
-	assert(2, m, "m")
+	ASSERT(2, m)
 
 #if 1
 	m = 2
 #else
 	m = 3
 #endif
-	assert(2, m, "m")
+	ASSERT(2, m)
 
 #if 0
 	m = 1
@@ -80,7 +81,7 @@ func main() {
 #elif 1*5
 	m = 4
 #endif
-	assert(3, m, "m")
+	ASSERT(3, m)
 
 #if 1+5
 	m = 1
@@ -89,7 +90,7 @@ func main() {
 #elif 3
 	m = 2
 #endif
-	assert(1, m, "m")
+	ASSERT(1, m)
 
 #if 0
 	m = 1
@@ -102,20 +103,20 @@ func main() {
 #else
 	m = 5
 #endif
-	assert(2, m, "m")
+	ASSERT(2, m)
 
 	var M1 int = 5
 
 #define M1 3
-	assert(3, M1, "M1")
+	ASSERT(3, M1)
 #define M1 4
-	assert(4, M1, "M1")
+	ASSERT(4, M1)
 
 #define M1 3+4+
-	assert(12, M1 5, "M1 5")
+	ASSERT(12, M1 5)
 
 #define M1 3+4
-	assert(23, M1*5, "M1*5")
+	ASSERT(23, M1*5)
 
 #define ASSERT_ assert(
 #define if 5
@@ -136,7 +137,7 @@ func main() {
 #else
 	m = 6
 #endif
-	assert(5, m, "m")
+	ASSERT(5, m)
 
 #define M 5
 #if M-5
@@ -144,26 +145,26 @@ func main() {
 #elif M
 	m = 5
 #endif
-	assert(5, m, "m")
+	ASSERT(5, m)
 
 	var M2 int = 6
 #define M2 M2 + 3
-	assert(9, M2, "M2")
+	ASSERT(9, M2)
 
 #define M3 M2 + 3
-	assert(12, M3, "M3")
+	ASSERT(12, M3)
 
 	var M4 int = 3
 #define M4 M5 * 5
 #define M5 M4 + 2
-	assert(13, M4, "M4")
+	ASSERT(13, M4)
 
 #ifdef M6
 	m = 5
 #else
 	m = 3
 #endif
-	assert(3, m, "m")
+	ASSERT(3, m)
 
 #define M6
 #ifdef M6
@@ -171,14 +172,14 @@ func main() {
 #else
 	m = 3
 #endif
-	assert(5, m, "m")
+	ASSERT(5, m)
 
 #ifndef M7
 	m = 3
 #else
 	m = 5
 #endif
-	assert(3, m, "m")
+	ASSERT(3, m)
 
 #define M7
 #ifndef M7
@@ -186,7 +187,7 @@ func main() {
 #else
 	m = 5
 #endif
-	assert(5, m, "m")
+	ASSERT(5, m)
 
 #if 0
 #ifdef NO_SUCH_MACRO
@@ -198,64 +199,64 @@ func main() {
 
 #define M7() 1
 	var M7 int = 5
-	assert(1, M7(), "M7()")
-	assert(5, M7, "M7")
+	ASSERT(1, M7())
+	ASSERT(5, M7)
 
 #define M7 ()
-	assert(3, ret3 M7, "ret3 M7")
+	ASSERT(3, ret3 M7)
 
 #define M8(x,y) x+y
-	assert(7, M8(3,4), "M8(3,4)")
+	ASSERT(7, M8(3,4))
 
 #define M8(x,y) x*y
-	assert(24, M8(3+4,4+5), "M8(3+4,4+5)")
+	ASSERT(24, M8(3+4,4+5))
 
 #define M8(x,y) (x)*(y)
-	assert(63, M8(3+4,4+5), "M8(3+4,4+5)")
+	ASSERT(63, M8(3+4,4+5))
 
 #define M8(x,y) x y
-	assert(9, M8(,4+5), "M8(,4+5)")
+	ASSERT(9, M8(,4+5))
 
 #define M8(x,y) x*y
-	assert(20, M8((2+3),4), "M8((2+3),4)")
+	ASSERT(20, M8((2+3),4))
 
 #define M8(x,y) x*y
-	assert(12, M8((2,3),4), "M8((2,3),4)")
+	ASSERT(12, M8((2,3),4))
 
 #define dbl(x) M10(x) * x
 #define M10(x) dbl(x) + 3
-	assert(10, dbl(2), "dbl(2)")
+	ASSERT(10, dbl(2))
 
 #define M11(x) #x
-	assert('a', M11( a!b `c)[0], "M11( a!b `c)[0]")
-	assert('!', M11( a!b `c)[1], "M11( a!b `c)[1]")
-	assert('b', M11( a!b `c)[2], "M11( a!b `c)[2]")
-	assert(' ', M11( a!b `c)[3], "M11( a!b `c)[3]")
-	assert('`', M11( a!b `c)[4], "M11( a!b `c)[4]")
-	assert('c', M11( a!b `c)[5], "M11( a!b `c)[5]")
-	assert(0, M11( a!b `c)[6], "M11( a!b `c)[6]")
+	ASSERT('a', M11( a!b `c)[0])
+	ASSERT('!', M11( a!b `c)[1])
+	ASSERT('b', M11( a!b `c)[2])
+	ASSERT(' ', M11( a!b `c)[3])
+	ASSERT('`', M11( a!b `c)[4])
+	ASSERT('c', M11( a!b `c)[5])
+	ASSERT(0, M11( a!b `c)[6])
 
 #define paste(x,y) x##y
-	assert(15, paste(1,5), "paste(1,5)")
-	assert(255, paste(0,xff), "paste(0,xff)")
+	ASSERT(15, paste(1,5))
+	ASSERT(255, paste(0,xff))
 	foobar := 3 
-	assert(3, paste(foo,bar), "foobar:=3;paste(foo,bar)")
-	assert(5, paste(5,), "paste(5,)")
-	assert(5, paste(,5), "paste(,5)")
+	ASSERT(3, paste(foo,bar))
+	ASSERT(5, paste(5,))
+	ASSERT(5, paste(,5))
 
 #define i 5
 	i3 := 100
-	assert(101, paste(1+i,3), "i3:=100;paste(1+i,3)")
+	ASSERT(101, paste(1+i,3))
 #undef i
 
 #define paste2(x) x##5
-	assert(26, paste2(1+2), "paste2(1+2)")
+	ASSERT(26, paste2(1+2))
 
 #define paste3(x) 2##x
-	assert(23, paste3(1+2), "paste(1+2)")
+	ASSERT(23, paste3(1+2))
 
 #define paste4(x,y,z) x##y##z
-	assert(123, paste4(1,2,3), "paste4(1,2,3)")
+	ASSERT(123, paste4(1,2,3))
 
 	println("OK\n")
 }

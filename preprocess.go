@@ -466,10 +466,6 @@ func findArg(args *MacroArg, tok *Token) *MacroArg {
 func paste(lhs, rhs *Token) *Token {
 	// Paste the two tokens.
 	buf := append([]rune(lhs.Str), []rune(rhs.Str)...)
-	// buf = append(buf, rune(0))
-	fmt.Println("paste: lhs.Str:", lhs.Str)
-	fmt.Println("paste: rhs.Str:", rhs.Str)
-	fmt.Println("paste: buf:", string(buf))
 
 	// Tokenize the resulting string.
 	tok, err := tokenize(newFile(lhs.File.Name, lhs.File.FileNo, buf))

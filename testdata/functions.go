@@ -3,6 +3,8 @@ package test_function
 func assert(want int, act int, code string)
 func println(frmt ...string)
 
+#include "test.h"
+
 func ret3() int {
 	return 3
 	return 5
@@ -244,179 +246,179 @@ func multi_return() (int, int, int) {
 }
 
 func main() {
-	assert(3, ret3(), "ret3()")
-	assert(8, add2(3, 5), "add2(3, 5)")
-	assert(2, sub2(5, 3), "sub2(5, 3)")
-	assert(21, add6(1, 2, 3, 4, 5, 6), "add6(1,2,3,4,5,6)")
-	assert(66, add6(1, 2, add6(3, 4, 5, 6, 7, 8), 9, 10, 11), "add6(1,2,add6(3,4,5,6,7,8),9,10,11)")
-	assert(136, add6(1, 2, add6(3, add6(4, 5, 6, 7, 8, 9), 10, 11, 12, 13), 14, 15, 16), "add6(1,2,add6(3,add6(4,5,6,7,8,9),10,11,12,13),14,15,16)")
+	ASSERT(3, ret3())
+	ASSERT(8, add2(3, 5))
+	ASSERT(2, sub2(5, 3))
+	ASSERT(21, add6(1, 2, 3, 4, 5, 6))
+	ASSERT(66, add6(1, 2, add6(3, 4, 5, 6, 7, 8), 9, 10, 11))
+	ASSERT(136, add6(1, 2, add6(3, add6(4, 5, 6, 7, 8, 9), 10, 11, 12, 13), 14, 15, 16))
 
-	assert(7, add2(3, 4), "add2(3,4)")
-	assert(1, sub2(4, 3), "sub2(4,3)")
-	assert(55, fib(9), "fib(9)")
+	ASSERT(7, add2(3, 4))
+	ASSERT(1, sub2(4, 3))
+	ASSERT(55, fib(9))
 
-	assert(1, subChar(7, 3, 3), "subChar(7, 3, 3)")
+	ASSERT(1, subChar(7, 3, 3))
 
-	assert(1, subLong(7, 3, 3), "subLong(7, 3, 3)")
-	assert(1, subShort(7, 3, 3), "subShort(7, 3, 3)")
+	ASSERT(1, subLong(7, 3, 3))
+	ASSERT(1, subShort(7, 3, 3))
 
 	g1 = 3
 
-	assert(3, *g1Ptr(), "*g1Ptr()")
-	assert(5, intToChar(261), "intToChar(261)")
-	assert(5, intToChar(261), "intToChar(261)")
-	assert(-5, divLong(-10, 2), "divLong(-10, 2)")
+	ASSERT(3, *g1Ptr())
+	ASSERT(5, intToChar(261))
+	ASSERT(5, intToChar(261))
+	ASSERT(-5, divLong(-10, 2))
 
-	assert(1, boolFnAdd(3), "boolFnAdd(3)")
-	assert(0, boolFnSub(3), "boolFnSub(3)")
-	assert(1, boolFnAdd(-3), "boolFnAdd(-3)")
-	assert(0, boolFnSub(-3), "boolFnSub(-3)")
-	assert(1, boolFnAdd(0), "boolFnAdd(0)")
-	assert(1, boolFnSub(0), "boolFnSub(0)")
+	ASSERT(1, boolFnAdd(3))
+	ASSERT(0, boolFnSub(3))
+	ASSERT(1, boolFnAdd(-3))
+	ASSERT(0, boolFnSub(-3))
+	ASSERT(1, boolFnAdd(0))
+	ASSERT(1, boolFnSub(0))
 	var x [2]int
 	x[0] = 3
-	assert(3, paramDecay(x), "var x [2]int ; x[0]=3; paramDecay(x)")
+	ASSERT(3, paramDecay(x))
 
 	retNone()
 
-	assert(1, trueFn(), "trueFn()")
-	assert(0, falseFn(), "falseFn()")
-	assert(3, charFn(), "charFn()")
-	assert(5, shortFn(), "shortFn()")
+	ASSERT(1, trueFn())
+	ASSERT(0, falseFn())
+	ASSERT(3, charFn())
+	ASSERT(5, shortFn())
 
 	// sliceの追加後
-	// assert(6, addAll(3, 1, 2, 3), "addAll(3,1,2,3)")
-	// assert(5, addAll(4, 1, 2, 3, -1), "addAll(4,1,2,3,-1)")
+	// ASSERT(6, addAll(3, 1, 2, 3))
+	// ASSERT(5, addAll(4, 1, 2, 3, -1))
 	// printAll("1", "2", "3", "4")
 	// printAll("1", "2", "3", "4", "5", "6")
 
-	assert(6, int(add_float(2.3, 3.8)), "int(add_float(2.3, 3.8))")
-	assert(6, int(add_double(2.3, 3.8)), "int(add_double(2.3, 3.8))")
+	ASSERT(6, int(add_float(2.3, 3.8)))
+	ASSERT(6, int(add_double(2.3, 3.8)))
 
-	assert(7, int(add_float3(2.5, 2.5, 2.5)), "int(add_float3(2.5, 2.5, 2.5))")
-	assert(7, int(add_double3(2.5, 2.5, 2.5)), "int(add_double3(2.5, 2.5, 2.5))")
+	ASSERT(7, int(add_float3(2.5, 2.5, 2.5)))
+	ASSERT(7, int(add_double3(2.5, 2.5, 2.5)))
 
 	var buf string
 	sprintf(buf, "%.1f", float32(3.5))
-	assert(0, strcmp(buf, "3.5"), "var buf string;sprintf(buf,\"%.1f\",float32(3.5));strcmp(buf,\"3.5\")")
+	ASSERT(0, strcmp(buf, "3.5"))
 
-	assert(&ret3, ret3, "ret3")
+	ASSERT(&ret3, ret3)
 	var fn func() int = ret3
-	assert(3, fn(), "fn()")
+	ASSERT(3, fn())
 	var fn01 = ret3
-	assert(3, fn01(), "fn01()")
+	ASSERT(3, fn01())
 	fn02 := ret3
-	assert(3, fn02(), "fn02()")
+	ASSERT(3, fn02())
 	fn03 := add2
-	assert(3, fn03(1, 2), "fn03(1,2)")
-	assert(3, fnptr(add2, 1, 2), "fnptr(add2, 1,2)")
+	ASSERT(3, fn03(1, 2))
+	ASSERT(3, fnptr(add2, 1, 2))
 
-	assert(55, add10_int(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_int(1,2,3,4,5,6,7,8,9,10)")
-	assert(55, add10_float(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_float(1,2,3,4,5,6,7,8,9,10)")
-	assert(55, add10_double(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_double(1,2,3,4,5,6,7,8,9,10)")
+	ASSERT(55, add10_int(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+	ASSERT(55, add10_float(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+	ASSERT(55, add10_double(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
 
 	var buf2 string
 	sprintf(buf2, "%d %.1f %.1f %.1f %d %d %.1f %d %d %d %d %.1f %d %d %.1f %.1f %.1f %.1f %d", 1, 1.0, 1.0, 1.0, 1, 1, 1.0, 1, 1, 1, 1, 1.0, 1, 1, 1.0, 1.0, 1.0, 1.0, 1)
-	assert(0, strcmp(buf2, "1 1.0 1.0 1.0 1 1 1.0 1 1 1 1 1.0 1 1 1.0 1.0 1.0 1.0 1"), "strcmp(buf2, \"1 1.0 1.0 1.0 1 1 1.0 1 1 1 1 1.0 1 1 1.0 1.0 1.0 1.0 1\")")
+	ASSERT(0, strcmp(buf2, "1 1.0 1.0 1.0 1 1 1.0 1 1 1 1 1.0 1 1 1.0 1.0 1.0 1.0 1"))
 
-	assert(4, many_args1(1, 2, 3, 4, 5, 6, 40, 10), "many_args1(1,2,3,4,5,6,40,10)")
-	assert(4, many_args2(1, 2, 3, 4, 5, 6, 7, 8, 40, 10), "many_args2(1,2,3,4,5,6,7,8,40,10)")
-	assert(8, many_args3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 80, 10), "many_args3(1,2,3,4,5,6,7,8,9,10,11,12,13,14,80,10)")
+	ASSERT(4, many_args1(1, 2, 3, 4, 5, 6, 40, 10))
+	ASSERT(4, many_args2(1, 2, 3, 4, 5, 6, 7, 8, 40, 10))
+	ASSERT(8, many_args3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 80, 10))
 
 	x4 := Ty4{10, 20, 30, 40}
-	assert(10, x4.a, "x1.a")
-	assert(10, struct_test4(x4, 0), "x4:=Ty4{10,20,30,40};struct_test4(x4,0)")
-	assert(20, struct_test4(x4, 1), "x4:=Ty4{10,20,30,40};struct_test4(x4,1)")
-	assert(30, struct_test4(x4, 2), "x4:=Ty4{10,20,30,40};struct_test4(x4,2)")
-	assert(40, struct_test4(x4, 3), "x4:=Ty4{10,20,30,40};struct_test4(x4,3)")
+	ASSERT(10, x4.a)
+	ASSERT(10, struct_test4(x4, 0))
+	ASSERT(20, struct_test4(x4, 1))
+	ASSERT(30, struct_test4(x4, 2))
+	ASSERT(40, struct_test4(x4, 3))
 
 	x5 := Ty5{10, 20, 30}
-	assert(10, struct_test5(x5, 0), "x5:=Ty5{10,20,30};struct_test5(x5,0)")
-	assert(20, struct_test5(x5, 1), "x5:=Ty5{10,20,30};struct_test5(x5,1)")
-	assert(30, struct_test5(x5, 2), "x5:=Ty5{10,20,30};struct_test5(x5,2)")
+	ASSERT(10, struct_test5(x5, 0))
+	ASSERT(20, struct_test5(x5, 1))
+	ASSERT(30, struct_test5(x5, 2))
 
 	x6 := Ty6{10, 20, 30}
-	assert(10, struct_test6(x6, 0), "x6:=Ty6{10,20,30};struct_test6(x6,0)")
-	assert(20, struct_test6(x6, 1), "x6:=Ty6{10,20,30};struct_test6(x6,1)")
-	assert(30, struct_test6(x6, 2), "x6:=Ty6{10,20,30};struct_test6(x6,2)")
+	ASSERT(10, struct_test6(x6, 0))
+	ASSERT(20, struct_test6(x6, 1))
+	ASSERT(30, struct_test6(x6, 2))
 
 	x7 := Ty7{10, 20, 30}
-	assert(10, struct_test7(x7, 0), "x7:=Ty7{10,20,30};struct_test7(x7,0)")
-	assert(20, struct_test7(x7, 1), "x7:=Ty7{10,20,30};struct_test7(x7,1)")
-	assert(30, struct_test7(x7, 2), "x7:=Ty7{10,20,30};struct_test7(x7,2)")
+	ASSERT(10, struct_test7(x7, 0))
+	ASSERT(20, struct_test7(x7, 1))
+	ASSERT(30, struct_test7(x7, 2))
 
 	x8 := Ty4{10, 20, 30, 40}
-	assert(10, structTest14(x8, 0), "x8:=Ty4{10,20,30,40};structTest14(x8,0)")
-	assert(20, structTest14(x8, 1), "x8:=Ty4{10,20,30,40};structTest14(x8,1)")
-	assert(30, structTest14(x8, 2), "x8:=Ty4{10,20,30,40};structTest14(x8,2)")
-	assert(40, structTest14(x8, 3), "x8:=Ty4{10,20,30,40};structTest14(x8,3)")
+	ASSERT(10, structTest14(x8, 0))
+	ASSERT(20, structTest14(x8, 1))
+	ASSERT(30, structTest14(x8, 2))
+	ASSERT(40, structTest14(x8, 3))
 
 	x9 := Ty5{10, 20, 30}
-	assert(10, structTest15(x9, 0), "x9:=Ty5{10,20,30};structTest15(x9,0)")
-	assert(20, structTest15(x9, 1), "x9:=Ty5{10,20,30};structTest15(x9,1)")
-	assert(30, structTest15(x9, 2), "x9:=Ty5{10,20,30};structTest15(x9,2)")
+	ASSERT(10, structTest15(x9, 0))
+	ASSERT(20, structTest15(x9, 1))
+	ASSERT(30, structTest15(x9, 2))
 
-	assert(10, struct_test24().a, "struct_test24().a")
-	assert(20, struct_test24().b, "struct_test24().b")
-	assert(30, struct_test24().c, "struct_test24().c")
-	assert(40, struct_test24().d, "struct_test24().d")
+	ASSERT(10, struct_test24().a)
+	ASSERT(20, struct_test24().b)
+	ASSERT(30, struct_test24().c)
+	ASSERT(40, struct_test24().d)
 
-	assert(10, struct_test25().a, "struct_test25().a")
-	assert(20, struct_test25().b, "struct_test25().b")
-	assert(30, struct_test25().c, "struct_test25().c")
+	ASSERT(10, struct_test25().a)
+	ASSERT(20, struct_test25().b)
+	ASSERT(30, struct_test25().c)
 
-	assert(10, struct_test26().a[0], "struct_test26().a[0]")
-	assert(20, struct_test26().a[1], "struct_test26().a[1]")
-	assert(30, struct_test26().a[2], "struct_test26().a[2]")
+	ASSERT(10, struct_test26().a[0])
+	ASSERT(20, struct_test26().a[1])
+	ASSERT(30, struct_test26().a[2])
 
-	assert(10, struct_test27().a[0], "struct_test27().a[0]")
-	assert(60, struct_test27().a[5], "struct_test27().a[5]")
-	assert(100, struct_test27().a[9], "struct_test27().a[9]")
+	ASSERT(10, struct_test27().a[0])
+	ASSERT(60, struct_test27().a[5])
+	ASSERT(100, struct_test27().a[9])
 
-	assert(1, struct_test28().a[0], "struct_test28().a[0]")
-	assert(5, struct_test28().a[4], "struct_test28().a[4]")
-	assert(10, struct_test28().a[9], "struct_test28().a[9]")
-	assert(15, struct_test28().a[14], "struct_test28().a[14]")
-	assert(20, struct_test28().a[19], "struct_test28().a[19]")
+	ASSERT(1, struct_test28().a[0])
+	ASSERT(5, struct_test28().a[4])
+	ASSERT(10, struct_test28().a[9])
+	ASSERT(15, struct_test28().a[14])
+	ASSERT(20, struct_test28().a[19])
 
-	assert(10, struct_test34().a, "struct_test34().a")
-	assert(20, struct_test34().b, "struct_test34().b")
-	assert(30, struct_test34().c, "struct_test34().c")
-	assert(40, struct_test34().d, "struct_test34().d")
+	ASSERT(10, struct_test34().a)
+	ASSERT(20, struct_test34().b)
+	ASSERT(30, struct_test34().c)
+	ASSERT(40, struct_test34().d)
 
-	assert(10, struct_test35().a, "struct_test35().a")
-	assert(20, struct_test35().b, "struct_test35().b")
-	assert(30, struct_test35().c, "struct_test35().c")
+	ASSERT(10, struct_test35().a)
+	ASSERT(20, struct_test35().b)
+	ASSERT(30, struct_test35().c)
 
-	assert(10, struct_test36().a[0], "struct_test36().a[0]")
-	assert(20, struct_test36().a[1], "struct_test36().a[1]")
-	assert(30, struct_test36().a[2], "struct_test36().a[2]")
+	ASSERT(10, struct_test36().a[0])
+	ASSERT(20, struct_test36().a[1])
+	ASSERT(30, struct_test36().a[2])
 
-	assert(10, struct_test37().a[0], "struct_test37().a[0]")
-	assert(60, struct_test37().a[5], "struct_test36().a[5]")
-	assert(100, struct_test37().a[9], "struct_test36().a[9]")
+	ASSERT(10, struct_test37().a[0])
+	ASSERT(60, struct_test37().a[5])
+	ASSERT(100, struct_test37().a[9])
 
-	assert(1, struct_test38().a[0], "struct_test38().a[0]")
-	assert(5, struct_test38().a[4], "struct_test38().a[4]")
-	assert(10, struct_test38().a[9], "struct_test38().a[9]")
-	assert(15, struct_test38().a[14], "struct_test38().a[14]")
-	assert(20, struct_test38().a[19], "struct_test38().a[19]")
+	ASSERT(1, struct_test38().a[0])
+	ASSERT(5, struct_test38().a[4])
+	ASSERT(10, struct_test38().a[9])
+	ASSERT(15, struct_test38().a[14])
+	ASSERT(20, struct_test38().a[19])
 
-	assert(55, add10_identList_int(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_identList_int(1,2,3,4,5,6,7,8,9,10)")
-	assert(55, add10_identList_float(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_identList_float(1,2,3,4,5,6,7,8,9,10)")
-	assert(55, add10_identList_double(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), "add10_identList_double(1,2,3,4,5,6,7,8,9,10)")
+	ASSERT(55, add10_identList_int(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+	ASSERT(55, add10_identList_float(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+	ASSERT(55, add10_identList_double(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
 
-	assert(4, many_args_list1(1, 2, 3, 4, 5, 6, 40, 10), "many_args1(1,2,3,4,5,6,40,10)")
-	assert(4, many_args_list2(1, 2, 3, 4, 5, 6, 7, 8, 40, 10), "many_args2(1,2,3,4,5,6,7,8,40,10)")
-	assert(8, many_args_list3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 80, 10), "many_args3(1,2,3,4,5,6,7,8,9,10,11,12,13,14,80,10)")
+	ASSERT(4, many_args_list1(1, 2, 3, 4, 5, 6, 40, 10))
+	ASSERT(4, many_args_list2(1, 2, 3, 4, 5, 6, 7, 8, 40, 10))
+	ASSERT(8, many_args_list3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 80, 10))
 
 	var x10, x11, x12 = multi_return()
-	assert(3, x10, "x10")
-	assert(5, x11, "x11")
-	assert(6, x12, "x12")
+	ASSERT(3, x10)
+	ASSERT(5, x11)
+	ASSERT(6, x12)
 
-	assert(0, strcmp(struct_test39().a, "aaa"), "strcmp(struct_test39().a, \"aaa\")")
-	assert(0, strcmp(struct_test39().b, "bbb"), "strcmp(struct_test39().b, \"bbb\")")
+	ASSERT(0, strcmp(struct_test39().a, "aaa"))
+	ASSERT(0, strcmp(struct_test39().b, "bbb"))
 
 	println("OK")
 }
