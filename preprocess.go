@@ -268,9 +268,17 @@ func joinTok(tok *Token) []rune {
 		if t != tok && t.HasSpace {
 			buf = append(buf, ' ')
 		}
+
 		str := t.Str
-		buf = append(buf, []rune(str)...)
+		if t.Kind == TK_STR { // add double-quote
+			buf = append(buf, '"')
+			buf = append(buf, []rune(str)...)
+			buf = append(buf, '"')
+		} else {
+			buf = append(buf, []rune(str)...)
+		}
 	}
+
 	buf = append(buf, rune(0))
 	return buf
 }

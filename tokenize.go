@@ -725,12 +725,14 @@ func getEscapeChar(newPos *int, idx int) (rune, error) {
 func stringLiteralEnd(idx int) (int, error) {
 	var start int = idx
 	for ; curFile.Contents[idx] != '"'; idx++ {
-		if curFile.Contents[idx] == '\n' || curFile.Contents[idx] == 0 {
+
+		if curFile.Contents[idx] == 0 { // curFile.Contents[idx] == '\n' ||
 			return -1, fmt.Errorf(
 				"tokenize(): stringLiteralEnd: err:\n%s",
 				errorAt(start, "unclosed string literal"),
 			)
 		}
+
 		if curFile.Contents[idx] == '\\' {
 			idx++
 		}

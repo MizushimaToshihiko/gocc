@@ -228,13 +228,15 @@ func main() {
 	ASSERT(10, dbl(2))
 
 #define M11(x) #x
-	ASSERT('a', M11( a!b `c)[0])
-	ASSERT('!', M11( a!b `c)[1])
-	ASSERT('b', M11( a!b `c)[2])
-	ASSERT(' ', M11( a!b `c)[3])
-	ASSERT('`', M11( a!b `c)[4])
-	ASSERT('c', M11( a!b `c)[5])
-	ASSERT(0, M11( a!b `c)[6])
+	ASSERT('a', M11( a!b `""c)[0])
+	ASSERT('!', M11( a!b `""c)[1])
+	ASSERT('b', M11( a!b `""c)[2])
+	ASSERT(' ', M11( a!b `""c)[3])
+	ASSERT('`', M11( a!b `""c)[4])
+	ASSERT('"', M11( a!b `""c)[5])
+	ASSERT('"', M11( a!b `""c)[6])
+	ASSERT('c', M11( a!b `""c)[7])
+	ASSERT(0, M11( a!b `""c)[8])
 
 #define paste(x,y) x##y
 	ASSERT(15, paste(1,5))
