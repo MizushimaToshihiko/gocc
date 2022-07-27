@@ -279,7 +279,7 @@ func startsWithPunctuator(p string) string {
 	ops := []string{
 		"<<=", ">>=", "==", "!=", "<=", ">=", "->", "++", "--",
 		"<<", ">>", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=",
-		":=", "&&", "||", "...",
+		":=", "&&", "||", "...", "##",
 	}
 
 	for _, op := range ops {
@@ -530,7 +530,9 @@ func readIntLiteral(cur *Token) (*Token, error) {
 	if startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0x") ||
 		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0X") {
 		base = 16
+		fmt.Println("curIdx: 1:", curIdx)
 		curIdx += 2
+		fmt.Println("curIdx: 2:", curIdx)
 		sVal, err = readHexDigit()
 		if err != nil {
 			return nil, err
@@ -553,7 +555,7 @@ func readIntLiteral(cur *Token) (*Token, error) {
 	for ; curIdx < len(curFile.Contents) &&
 		(isDigit(curFile.Contents[curIdx]) || curFile.Contents[curIdx] == '_'); curIdx++ {
 
-		if curFile.Contents[curIdx-1] == '_' && curFile.Contents[curIdx] == '_' {
+		if curIdx > 0 && curFile.Contents[curIdx-1] == '_' && curFile.Contents[curIdx] == '_' {
 			return nil, errMustSeparateSuccessiveDigits(startIdx)
 		}
 
@@ -562,7 +564,7 @@ func readIntLiteral(cur *Token) (*Token, error) {
 		}
 	}
 
-	if curFile.Contents[curIdx-1] == '_' {
+	if curIdx > 0 && curFile.Contents[curIdx-1] == '_' {
 		return nil, errMustSeparateSuccessiveDigits(startIdx)
 	}
 
@@ -588,6 +590,10 @@ func readNumber(cur *Token) (*Token, error) {
 		return nil, err
 	}
 
+	if curIdx >= len(curFile.Contents) {
+		return tok, nil
+	}
+
 	if !contains(".eEfF", curFile.Contents[curIdx]) {
 		return tok, nil
 	}
@@ -598,6 +604,10 @@ func readNumber(cur *Token) (*Token, error) {
 		contains("eEfFpP_", curFile.Contents[curIdx]) ||
 		(contains("EePp", curFile.Contents[curIdx-1]) &&
 			contains("+-", curFile.Contents[curIdx])) {
+
+		if curIdx >= len(curFile.Contents) {
+			break
+		}
 
 		if (curFile.Contents[curIdx-1] == '_' && !isDigit(curFile.Contents[curIdx])) ||
 			(curFile.Contents[curIdx] == '_' && !isDigit(curFile.Contents[curIdx-1])) {
@@ -621,8 +631,8 @@ func readNumber(cur *Token) (*Token, error) {
 func readHexDigit() (string, error) {
 	var sVal string
 	var errIdx = curIdx
-	for ; isxdigit(curFile.Contents[curIdx]) ||
-		curFile.Contents[curIdx] == '_'; curIdx++ {
+	for ; curIdx < len(curFile.Contents) && (isxdigit(curFile.Contents[curIdx]) ||
+		curFile.Contents[curIdx] == '_'); curIdx++ {
 
 		if curFile.Contents[curIdx-1] == '_' && curFile.Contents[curIdx] == '_' {
 			return "", errMustSeparateSuccessiveDigits(errIdx)
@@ -902,7 +912,10 @@ func tokenize(file *File) (*Token, error) {
 	atBol = true
 	hasSpace = false
 
-	for curIdx < len(curFile.Contents) && curFile.Contents[curIdx] != 0 {
+	for curIdx < len(curFile.Contents) {
+		if curFile.Contents[curIdx] == 0 {
+			break
+		}
 
 		// skip space(s)
 		if isSpace(curFile.Contents[curIdx]) {

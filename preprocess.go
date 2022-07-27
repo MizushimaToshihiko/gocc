@@ -72,6 +72,16 @@ type Hideset struct {
 var macros *Macro
 var condIncl *CondIncl
 
+func delSemicolonTok(tok *Token) *Token {
+	start := tok
+	for t := tok; t.Next != nil; t = t.Next {
+		if equal(t.Next, ";") {
+			t.Next = t.Next.Next
+		}
+	}
+	return start
+}
+
 func isHash(tok *Token) bool {
 	return tok.AtBol && equal(tok, "#")
 }
@@ -164,6 +174,8 @@ func appendTok(tok1, tok2 *Token) *Token {
 	head := &Token{}
 	cur := head
 
+	// printTokens2(os.Stderr, tok1)
+	// printTokens2(os.Stderr, tok2)
 	for ; tok1.Kind != TK_EOF; tok1 = tok1.Next {
 		cur.Next = copyTok(tok1)
 		cur = cur.Next
@@ -450,6 +462,27 @@ func findArg(args *MacroArg, tok *Token) *MacroArg {
 	return nil
 }
 
+// Concatenate two tokens to create a new token.
+func paste(lhs, rhs *Token) *Token {
+	// Paste the two tokens.
+	buf := append([]rune(lhs.Str), []rune(rhs.Str)...)
+	// buf = append(buf, rune(0))
+	fmt.Println("paste: lhs.Str:", lhs.Str)
+	fmt.Println("paste: rhs.Str:", rhs.Str)
+	fmt.Println("paste: buf:", string(buf))
+
+	// Tokenize the resulting string.
+	tok, err := tokenize(newFile(lhs.File.Name, lhs.File.FileNo, buf))
+	if err != nil {
+		panic(err)
+	}
+	delSemicolonTok(tok)
+	if tok.Next.Kind != TK_EOF {
+		panic("\n" + errorTok(lhs, "pasting forms '%s', an invalid token", string(buf)))
+	}
+	return tok
+}
+
 func subst(tok *Token, args *MacroArg) *Token {
 	head := &Token{}
 	cur := head
@@ -467,9 +500,63 @@ func subst(tok *Token, args *MacroArg) *Token {
 			continue
 		}
 
+		if equal(tok, "##") {
+			if cur == head {
+				panic("\n" + errorTok(tok, "'##' cannot appear at start of macro expansion"))
+			}
+
+			if tok.Next.Kind == TK_EOF {
+				panic("\n" + errorTok(tok, "'##' cannot appear at end of macro expansion"))
+			}
+
+			arg := findArg(args, tok.Next)
+			if arg != nil {
+				if arg.Tok.Kind != TK_EOF {
+					*cur = *paste(cur, arg.Tok)
+					for t := arg.Tok.Next; t.Kind != TK_EOF; t = t.Next {
+						cur.Next = copyTok(t)
+						cur = cur.Next
+					}
+				}
+				tok = tok.Next.Next
+				continue
+			}
+
+			*cur = *paste(cur, tok.Next)
+			tok = tok.Next.Next
+			continue
+		}
+
+		arg := findArg(args, tok)
+
+		if arg != nil && equal(tok.Next, "##") {
+			rhs := tok.Next.Next
+
+			if arg.Tok.Kind == TK_EOF {
+				arg2 := findArg(args, rhs)
+				if arg2 != nil {
+					for t := arg2.Tok; t.Kind != TK_EOF; t = t.Next {
+						cur.Next = copyTok(t)
+						cur = cur.Next
+					}
+				} else {
+					cur.Next = copyTok(rhs)
+					cur = cur.Next
+				}
+				tok = rhs.Next
+				continue
+			}
+
+			for t := arg.Tok; t.Kind != TK_EOF; t = t.Next {
+				cur.Next = copyTok(t)
+				cur = cur.Next
+			}
+			tok = tok.Next
+			continue
+		}
+
 		// Handle a macro token. Macro arguments are completely macro-expanded
 		// before they are substituted into a macro body.
-		arg := findArg(args, tok)
 		if arg != nil {
 			t := preprocess2(arg.Tok)
 			for ; t.Kind != TK_EOF; t = t.Next {
