@@ -624,6 +624,8 @@ func subst(tok *Token, args *MacroArg) *Token {
 		// before they are substituted into a macro body.
 		if arg != nil {
 			t := preprocess2(arg.Tok)
+			t.AtBol = tok.AtBol
+			t.HasSpace = tok.HasSpace
 			for ; t.Kind != TK_EOF; t = t.Next {
 				cur.Next = copyTok(t)
 				cur = cur.Next
@@ -660,6 +662,8 @@ func expandMacro(rest **Token, tok *Token) bool {
 		hs := hidesetUnion(tok.Hideset, newHideset(m.Name))
 		body := addHideset(m.Body, hs)
 		*rest = appendTok(body, tok.Next)
+		(*rest).AtBol = tok.AtBol
+		(*rest).HasSpace = tok.HasSpace
 		return true
 	}
 

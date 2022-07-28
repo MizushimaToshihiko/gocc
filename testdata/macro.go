@@ -2,6 +2,7 @@ package test_macro
 
 func assert(want int, act int, code string)
 func println(format ...string)
+func strcmp(s1 string, s2 string) int
 
 #include "test.h"
 #include "include1.h"
@@ -296,6 +297,19 @@ func main() {
 	m = 5
 #endif
 	ASSERT(5, m)
+
+#define STR(x) #x
+#define M12(x) STR(x)
+#define M13(x) M12(foo.x)
+	ASSERT(0, strcmp(M13(bar), "foo.bar"))
+
+#define M12 foo
+#define M13(x) STR(x)
+#define M14(x) M13(x.M12)
+	ASSERT(0, strcmp(M14(bar), "bar.foo"))
+
+#define M14(x) M13(x. M12)
+	ASSERT(0, strcmp(M14(bar), "bar. foo"))
 
 	println("OK\n")
 }
