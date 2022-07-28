@@ -369,6 +369,18 @@ func evalConstExpr(rest **Token, tok *Token) int64 {
 		panic("\n" + errorTok(start, "no expression"))
 	}
 
+	// [https://www.sigbus.info/n1570#6.10.1p4] THe standerd requires
+	// we replace remaining non-macro identifiers with "0" before
+	// evaluateing a constant expression. For example, `#if foo` is
+	// equivalent tok `#if 0` if foo is not defined.
+	for t := expr; t.Kind != TK_EOF; t = t.Next {
+		if t.Kind == TK_IDENT {
+			next := t.Next
+			*t = *newNumTok(0, t)
+			t.Next = next
+		}
+	}
+
 	var rest2 *Token
 	val := constExpr(&rest2, expr)
 	consume(&rest2, rest2, ";") // If rest2 is ";" token before this, rest2 should be `nil`.
