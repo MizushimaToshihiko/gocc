@@ -8,7 +8,8 @@ func println(format ...string)
 func main() {
 
 #define M1(x,y) x##y
-	ASSERT(0, M1("""", "\\\\"))
+	// ASSERT(0, M1("""", "\\\\"))
+	println("\\\\")
 
 	println("OK")
 }

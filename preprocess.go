@@ -310,10 +310,59 @@ func copyLine(rest **Token, tok *Token) *Token {
 	return head.Next
 }
 
+func newNumTok(val int, tmpl *Token) *Token {
+	buf := fmt.Sprintf("%d", val)
+	tok, err := tokenize(newFile(tmpl.File.Name, tmpl.File.FileNo, []rune(buf)))
+	if err != nil {
+		panic(err)
+	}
+	return tok
+}
+
+func readConstExpr(rest **Token, tok *Token) *Token {
+	tok = copyLine(rest, tok)
+
+	head := &Token{}
+	cur := head
+
+	for tok.Kind != TK_EOF {
+		// "defined(foo)" or "defined foo" becomes "1" if macro "foo"
+		// is defined. Otherwise "0".
+		if equal(tok, "defined") {
+			start := tok
+			hasParen := consume(&tok, tok.Next, "(")
+
+			if tok.Kind != TK_IDENT {
+				panic("\n" + errorTok(start, "macro name must be an identifier"))
+			}
+			m := findMacro(tok)
+			tok = tok.Next
+
+			if hasParen {
+				tok = skip(tok, ")")
+			}
+
+			val := 0
+			if m != nil {
+				val = 1
+			}
+			cur.Next = newNumTok(val, start)
+			cur = cur.Next
+			continue
+		}
+		cur.Next = tok
+		cur = cur.Next
+		tok = tok.Next
+	}
+
+	cur.Next = tok
+	return head.Next
+}
+
 // Read and evaluate a contsant expression.
 func evalConstExpr(rest **Token, tok *Token) int64 {
 	start := tok
-	expr := copyLine(rest, tok.Next)
+	expr := readConstExpr(rest, tok.Next)
 	expr = preprocess2(expr)
 
 	if expr.Kind == TK_EOF {

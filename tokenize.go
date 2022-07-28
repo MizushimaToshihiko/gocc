@@ -545,7 +545,7 @@ func readIntLiteral(cur *Token) (*Token, error) {
 		base = 8
 		curIdx += 2
 	} else if startsWith(string(curFile.Contents[curIdx:curIdx+1]), "0") &&
-		isDigit(curFile.Contents[curIdx+1]) {
+		(curIdx+1 < len(curFile.Contents) && isDigit(curFile.Contents[curIdx+1])) {
 		base = 8
 		curIdx += 1
 	}
