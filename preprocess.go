@@ -174,8 +174,6 @@ func appendTok(tok1, tok2 *Token) *Token {
 	head := &Token{}
 	cur := head
 
-	// printTokens2(os.Stderr, tok1)
-	// printTokens2(os.Stderr, tok2)
 	for ; tok1.Kind != TK_EOF; tok1 = tok1.Next {
 		cur.Next = copyTok(tok1)
 		cur = cur.Next
@@ -251,10 +249,10 @@ func newStrTok(str []rune, tmpl *Token) *Token {
 }
 
 // Concatenates all tokens in `tok` and returns a new string.
-func joinTok(tok *Token) []rune {
+func joinTok(tok, end *Token) []rune {
 	// Compute the length of the resulting token.
 	len := 1
-	for t := tok; t != nil && t.Kind != TK_EOF; t = t.Next {
+	for t := tok; t != end && t.Kind != TK_EOF; t = t.Next {
 		if t != tok && t.HasSpace {
 			len++
 		}
@@ -264,7 +262,7 @@ func joinTok(tok *Token) []rune {
 	var buf []rune
 
 	// Copy token texts.
-	for t := tok; t != nil && t.Kind != TK_EOF; t = t.Next {
+	for t := tok; t != end && t.Kind != TK_EOF; t = t.Next {
 		if t != tok && t.HasSpace {
 			buf = append(buf, ' ')
 		}
@@ -289,7 +287,7 @@ func stringize(hash, arg *Token) *Token {
 	// Create a new string token. We need to set some value to its
 	// source location for error reporting function, so we use a macro
 	// name token as a template.
-	s := joinTok(arg)
+	s := joinTok(arg, nil)
 	return newStrTok(s, hash)
 }
 
@@ -305,7 +303,11 @@ func copyLine(rest **Token, tok *Token) *Token {
 		cur.Next = copyTok(tok)
 		cur = cur.Next
 	}
+
 	cur.Next = newEof(tok)
+	if equal(tok, ";") {
+		cur.Next.Str = ""
+	}
 	*rest = tok
 	return head.Next
 }
@@ -692,6 +694,58 @@ func expandMacro(rest **Token, tok *Token) bool {
 	return true
 }
 
+// Read an #include argument.
+func readIncludeFilename(rest **Token, tok *Token, isDquote *bool) []rune {
+	// Pattern 1: #include "foo.h"
+	if tok.Kind == TK_STR {
+		// A double-quoted filename for #include is a special kind of
+		// token, and we don't want to interpret any escape sequences in it.
+		// For expample, "\f" in "C:\foo" is not a formfeed character but
+		// just two non-control characters, backslash and f.
+		// So we don't want to use token.Str.
+		// => The above cannot be applied to this compiler.
+		*isDquote = true
+		*rest = skipLine(tok.Next)
+		return tok.File.Contents[tok.Loc+1 : tok.Loc+tok.Len-1]
+	}
+
+	// Pattern 2: #include <foo.h>
+	if equal(tok, "<") {
+		// Reconstruct a filename from a sequence of tokens between
+		// "<" and ">".
+		start := tok
+
+		// Find closing ">".
+		for ; !equal(tok, ">"); tok = tok.Next {
+			if tok.AtBol || tok.Kind == TK_EOF {
+				panic("\n" + errorTok(tok, "expected '>'"))
+			}
+		}
+
+		*isDquote = false
+		*rest = skipLine(tok.Next)
+		return joinTok(start.Next, tok)
+	}
+
+	// Pattern 3: #include FOO
+	// In this case FOO must be macro-expanded to either
+	// a single string token or a sequence of "<" ... ">".
+	if tok.Kind == TK_IDENT {
+		tok2 := preprocess2(copyLine(rest, tok))
+		return readIncludeFilename(&tok2, tok2, isDquote)
+	}
+
+	panic("\n" + errorTok(tok, "expected a filename"))
+}
+
+func includeFile(tok *Token, path string, filenameTok *Token) *Token {
+	tok2, err := tokenizeFile(path)
+	if err != nil || tok2 == nil {
+		panic("\n" + errorTok(filenameTok, "%s: cannot open file: %s", path, err))
+	}
+	return appendTok(tok2, tok)
+}
+
 // Visit all tokens int `tok` while evaluating preprocessing
 // macros and directives.
 func preprocess2(tok *Token) *Token {
@@ -716,25 +770,23 @@ func preprocess2(tok *Token) *Token {
 		tok = tok.Next
 
 		if equal(tok, "include") {
-			tok = tok.Next
-
-			if tok.Kind != TK_STR {
-				panic("\n" + errorTok(tok, "expected a filename"))
+			var isDquote bool
+			filename := readIncludeFilename(&tok, tok.Next, &isDquote)
+			if filename[len(filename)-1] == 0 {
+				filename = filename[:len(filename)-1]
 			}
 
 			var path string
-			if tok.Str[0] == '/' {
-				path = tok.Str
-			} else {
-				path = fmt.Sprintf("%s/%s", filepath.Dir(tok.File.Name), tok.Str)
+			if filename[0] != '/' {
+				path = fmt.Sprintf("%s/%s", filepath.Dir(tok.File.Name), string(filename))
+				if exists(path) {
+					tok = includeFile(tok, path, start.Next.Next)
+				}
+				continue
 			}
 
-			tok2, err := tokenizeFile(path)
-			if err != nil || tok2 == nil {
-				panic("\n" + errorTok(tok, err.Error()))
-			}
-			tok = skipLine(tok.Next)
-			tok = appendTok(tok2, tok)
+			// TODO: Search a file from the include paths.
+			tok = includeFile(tok, string(filename), start.Next.Next)
 			continue
 		}
 

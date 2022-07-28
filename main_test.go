@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -80,6 +81,33 @@ func TestIsTypename(t *testing.T) {
 			if act != c.want {
 				t.Fatalf("%s: %t expected, but got %t", c.in, c.want, act)
 			}
+		})
+	}
+}
+
+func TestBackslashTok(t *testing.T) {
+	cases := map[string]struct {
+		in   string
+		want bool
+	}{
+		"case 1": {"#include \"C:\foo\"", true},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			testfile := makeTestFile(t, c.in)
+			curIdx = 0
+			var err error
+			var tok *Token
+			tok, err = tokenizeFile(testfile.Name())
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			tok = preprocess(tok)
+
+			printTokens(os.Stderr, tok)
+			fmt.Println(tok.Contents)
 		})
 	}
 }

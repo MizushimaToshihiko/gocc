@@ -1048,7 +1048,7 @@ func readFile(path string) ([]rune, error) {
 	default:
 		f, err := os.Open(path)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("readFile: os.Open: %v", err)
 		}
 		defer func() {
 			if err := f.Close(); err != nil {
