@@ -15,6 +15,21 @@ import (
 // Temporary files for compiling and assembling
 var tmpfiles []string
 
+// For -I option
+// From: https://konboi.hatenablog.com/entry/2016/03/08/102051
+type IncludePaths []string
+
+func (ip *IncludePaths) String() string {
+	return fmt.Sprintf("%s", *ip)
+}
+
+func (ip *IncludePaths) Set(value string) error {
+	*ip = append(*ip, value)
+	return nil
+}
+
+var includePaths IncludePaths
+
 // flags
 var inputPaths []string
 var isdeb bool // Is debug mode or not.
@@ -217,6 +232,7 @@ func main() {
 	var optS bool
 	flag.BoolVar(&optS, "S", false, "compile only or not")
 	flag.BoolVar(&optE, "E", false, "stop after the preprocessing stage")
+	flag.Var(&includePaths, "I", "add include paths")
 	flag.Parse()
 
 	if help {

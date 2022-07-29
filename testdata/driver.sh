@@ -85,4 +85,11 @@ echo "#include \"$tmp/out1\"" | $gocc -E -o $tmp/out2 -
 cat $tmp/out2 | grep -q foo
 check '-E and -o'
 
+# -I
+mkdir $tmp/dir
+echo foo > $tmp/dir/i-option-test
+echo "#include \"i-option-test\"" | $gocc -I $tmp/dir -E - | grep -q foo
+echo $tmp
+check -I
+
 echo OK
