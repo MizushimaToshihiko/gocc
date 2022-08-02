@@ -327,5 +327,7 @@ func main() {
 
 #undef foo
 
+// #error error directive test
+
 	println("OK\n")
 }

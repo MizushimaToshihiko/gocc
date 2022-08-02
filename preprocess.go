@@ -894,6 +894,17 @@ func preprocess2(tok *Token) *Token {
 			continue
 		}
 
+		if equal(tok, "error") {
+			if tok.Next.AtBol {
+				panic("\n" + errorTok(tok, "error"))
+			}
+
+			start := tok
+			errTok := copyLine(&tok, tok)
+			errmsg := joinTok(errTok, nil)
+			panic("\n" + errorTok(start, string(errmsg)))
+		}
+
 		// `#`-only line is legal. It's called a null directive
 		if tok.AtBol {
 			continue
