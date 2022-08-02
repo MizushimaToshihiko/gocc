@@ -50,6 +50,22 @@ func replaceExt(tmpl, ext string) string {
 	return fmt.Sprintf("%s.%s", baseName(tmpl), ext)
 }
 
+func addDefaultIncludePaths() error {
+	// We expect that gocc-specific include files are installed
+	// to ./include relative to executable gocc.
+	exepath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("addDefaultIncludePaths: %v", err)
+	}
+	includePaths = append(includePaths, fmt.Sprintf("%s/include", exepath))
+
+	// Add standard include paths.
+	includePaths = append(includePaths, "/usr/local/include")
+	includePaths = append(includePaths, "/usr/include/x86_64-linux-gnu")
+	includePaths = append(includePaths, "/usr/include")
+	return nil
+}
+
 func compile(prtok bool, arg string, w io.Writer) error {
 	// tokenize and parse
 	curIdx = 0 // for test
@@ -73,6 +89,7 @@ func compile(prtok bool, arg string, w io.Writer) error {
 		return nil
 	}
 
+	addDefaultIncludePaths()
 	tok = preprocess(tok)
 
 	// If -E is given, print out preprocessed C code as a result.
