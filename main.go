@@ -90,7 +90,9 @@ func compile(prtok bool, arg string, w io.Writer) error {
 		return nil
 	}
 
-	addDefaultIncludePaths()
+	if err := addDefaultIncludePaths(); err != nil {
+		return err
+	}
 	tok = preprocess(tok)
 
 	// If -E is given, print out preprocessed C code as a result.
