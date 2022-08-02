@@ -53,10 +53,11 @@ func replaceExt(tmpl, ext string) string {
 func addDefaultIncludePaths() error {
 	// We expect that gocc-specific include files are installed
 	// to ./include relative to executable gocc.
-	exepath, err := os.Executable()
+	exe, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("addDefaultIncludePaths: %v", err)
 	}
+	exepath := filepath.Dir(exe)
 	includePaths = append(includePaths, fmt.Sprintf("%s/include", exepath))
 
 	// Add standard include paths.
