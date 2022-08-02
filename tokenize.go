@@ -54,6 +54,7 @@ type Token struct {
 	AtBol    bool     // True if this token is at begging of line
 	HasSpace bool     // True if this token follows a space character
 	Hideset  *Hideset // For macro expansion
+	Origin   *Token   // If this is expanded from a macro, the original token
 }
 
 // Input file

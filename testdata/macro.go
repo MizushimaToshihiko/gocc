@@ -7,6 +7,11 @@ func strcmp(s1 string, s2 string) int
 #include "test.h"
 #include "include1.h"
 
+var main_filename1 = __FILE__
+var main_line1 = __LINE__
+#define LINE() __LINE__
+var main_line2 = LINE()
+
 #
 
 /* */ #
@@ -330,6 +335,12 @@ func main() {
 // #error error directive test
 
 	ASSERT(1, __STDC__)
+
+	ASSERT(0, strcmp(main_filename1, "testdata/macro.go"))
+	ASSERT(11, main_line1)
+	ASSERT(12, main_line2)
+	ASSERT(0, strcmp(include1_filename, "testdata/include1.h"))
+	ASSERT(4, include1_line)
 
 	println("OK\n")
 }

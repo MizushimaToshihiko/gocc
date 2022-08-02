@@ -40,6 +40,8 @@ type MacroArg struct {
 	Tok  *Token
 }
 
+type MacroHandlerFn func(*Token) *Token
+
 type Macro struct {
 	Next      *Macro
 	Name      string
@@ -47,6 +49,7 @@ type Macro struct {
 	Params    *MacroParam
 	Body      *Token
 	Deleted   bool
+	Handler   MacroHandlerFn
 }
 
 type Ctx int
@@ -659,10 +662,19 @@ func expandMacro(rest **Token, tok *Token) bool {
 		return false
 	}
 
+	if m.Handler != nil {
+		*rest = m.Handler(tok)
+		(*rest).Next = tok.Next
+		return true
+	}
+
 	// Object-like macro application
 	if m.IsObjlike {
 		hs := hidesetUnion(tok.Hideset, newHideset(m.Name))
 		body := addHideset(m.Body, hs)
+		for t := body; t.Kind != TK_EOF; t = t.Next {
+			t.Origin = tok
+		}
 		*rest = appendTok(body, tok.Next)
 		(*rest).AtBol = tok.AtBol
 		(*rest).HasSpace = tok.HasSpace
@@ -927,6 +939,26 @@ func defineMacro(name, buf string) {
 	addMacro(name, true, tok)
 }
 
+func addBuildIn(name string, fn MacroHandlerFn) *Macro {
+	m := addMacro(name, true, nil)
+	m.Handler = fn
+	return m
+}
+
+func fileMacro(tmpl *Token) *Token {
+	for tmpl.Origin != nil {
+		tmpl = tmpl.Origin
+	}
+	return newStrTok([]rune(tmpl.File.Name), tmpl)
+}
+
+func lineMacro(tmpl *Token) *Token {
+	for tmpl.Origin != nil {
+		tmpl = tmpl.Origin
+	}
+	return newNumTok(tmpl.LineNo, tmpl)
+}
+
 func initMacros() {
 	// Define predefined macros
 	defineMacro("_LP64", "1")
@@ -968,6 +1000,9 @@ func initMacros() {
 	defineMacro("__x86_64__", "1")
 	defineMacro("linux", "1")
 	defineMacro("unix", "1")
+
+	addBuildIn("__FILE__", fileMacro)
+	addBuildIn("__LINE__", lineMacro)
 }
 
 // Entry point function of the preprocessor.
