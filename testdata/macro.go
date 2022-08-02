@@ -329,5 +329,7 @@ func main() {
 
 // #error error directive test
 
+	ASSERT(1, __STDC__)
+
 	println("OK\n")
 }
