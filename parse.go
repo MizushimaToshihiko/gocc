@@ -3837,6 +3837,17 @@ func function(tok *Token) *Token {
 	}
 
 	tok = skip(tok, "{")
+
+	// [https://www.sigbus.info/n1570#6.4.2.2p1] "__func__" is
+	// automatically defined as a local variadic containing the
+	// current function name
+	fnname := make([]int64, 0)
+	for _, r := range fn.Name {
+		fnname = append(fnname, int64(r))
+	}
+	fnname = append(fnname, 0)
+	pushScope("__func__").Obj =
+		newStringLiteral(fnname, arrayOf(ty_char, len(fn.Name)+1))
 	fn.Body = compoundStmt(&tok, tok)
 	fn.Locals = locals
 	leaveScope()
