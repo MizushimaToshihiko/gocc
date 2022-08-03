@@ -18,6 +18,8 @@ var main_line2 = LINE()
 
 func ret3() int { return 3 }
 func dbl(x int) int { return x*x }
+func add2(x, y int) { return x+y }
+func add6(a,b,c,d,e,f int) { return a+b+c+d+e+f }
 
 func main() {
 	ASSERT(5, include1)
@@ -341,6 +343,25 @@ func main() {
 	ASSERT(12, main_line2)
 	ASSERT(0, strcmp(include1_filename, "testdata/include1.h"))
 	ASSERT(4, include1_line)
+
+#define M14(...) 3
+	ASSERT(3, M14())
+
+#define M14(...) __VA_ARGS__
+	ASSERT(2, M14() 2)
+	ASSERT(5, M14(5))
+
+#define M14(...) add2(__VA_ARGS__)
+	ASSERT(8, M14(2, 6))
+
+#define M14(...) add6(1,2,__VA_ARGS__,6)
+	ASSERT(21, M14(3,4,5))
+
+#define M14(x, ...) add6(1,2,x,__VA_ARGS__,6)
+	ASSERT(21, M14(3,4,5))
+
+#define M14(x, ...) x
+	ASSERT(5, M14(5))
 
 	println("OK\n")
 }

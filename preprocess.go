@@ -43,13 +43,14 @@ type MacroArg struct {
 type MacroHandlerFn func(*Token) *Token
 
 type Macro struct {
-	Next      *Macro
-	Name      string
-	IsObjlike bool // Object-like or function-like
-	Params    *MacroParam
-	Body      *Token
-	Deleted   bool
-	Handler   MacroHandlerFn
+	Next       *Macro
+	Name       string
+	IsObjlike  bool // Object-like or function-like
+	Params     *MacroParam
+	IsVariadic bool
+	Body       *Token
+	Deleted    bool
+	Handler    MacroHandlerFn
 }
 
 type Ctx int
@@ -434,13 +435,19 @@ func addMacro(name string, isObjlike bool, body *Token) *Macro {
 	return m
 }
 
-func readMacroParams(rest **Token, tok *Token) *MacroParam {
+func readMacroParams(rest **Token, tok *Token, isVariadic *bool) *MacroParam {
 	head := &MacroParam{}
 	cur := head
 
 	for !equal(tok, ")") {
 		if cur != head {
 			tok = skip(tok, ",")
+		}
+
+		if equal(tok, "...") {
+			*isVariadic = true
+			*rest = skip(tok.Next, ")")
+			return head.Next
 		}
 
 		if tok.Kind != TK_IDENT {
@@ -465,21 +472,31 @@ func readMacroDef(rest **Token, tok *Token) {
 
 	if !tok.HasSpace && equal(tok, "(") {
 		// Function-like macro
-		params := readMacroParams(&tok, tok.Next)
+		isVariadic := false
+		params := readMacroParams(&tok, tok.Next, &isVariadic)
+
 		m := addMacro(name, false, copyLine(rest, tok))
 		m.Params = params
+		m.IsVariadic = isVariadic
 	} else {
 		// Object-like macro
 		addMacro(name, true, copyLine(rest, tok))
 	}
 }
 
-func readMacroArg1(rest **Token, tok *Token) *MacroArg {
+func readMacroArg1(rest **Token, tok *Token, readRest bool) *MacroArg {
 	head := &Token{}
 	cur := head
 	level := 0
 
-	for level > 0 || (!equal(tok, ",") && !equal(tok, ")")) {
+	for {
+		if level == 0 && equal(tok, ")") {
+			break
+		}
+		if level == 0 && !readRest && equal(tok, ",") {
+			break
+		}
+
 		if tok.Kind == TK_EOF {
 			panic("\n" + errorTok(tok, "premature end of input"))
 		}
@@ -502,7 +519,8 @@ func readMacroArg1(rest **Token, tok *Token) *MacroArg {
 	return arg
 }
 
-func readMacroArgs(rest **Token, tok *Token, params *MacroParam) *MacroArg {
+func readMacroArgs(rest **Token, tok *Token,
+	params *MacroParam, isVariadic bool) *MacroArg {
 	start := tok
 	tok = tok.Next.Next
 
@@ -514,14 +532,28 @@ func readMacroArgs(rest **Token, tok *Token, params *MacroParam) *MacroArg {
 		if cur != head {
 			tok = skip(tok, ",")
 		}
-		cur.Next = readMacroArg1(&tok, tok)
+		cur.Next = readMacroArg1(&tok, tok, false)
 		cur = cur.Next
 		cur.Name = pp.Name
 	}
 
-	if pp != nil {
+	if isVariadic {
+		var arg *MacroArg
+		if equal(tok, ")") {
+			arg = &MacroArg{Tok: newEof(tok)}
+		} else {
+			if pp != params {
+				tok = skip(tok, ",")
+			}
+			arg = readMacroArg1(&tok, tok, true)
+		}
+		arg.Name = "__VA_ARGS__"
+		cur.Next = arg
+		cur = cur.Next
+	} else if pp != nil {
 		panic("\n" + errorTok(start, "too many arguments"))
 	}
+
 	skip(tok, ")")
 	*rest = tok
 	return head.Next
@@ -689,7 +721,7 @@ func expandMacro(rest **Token, tok *Token) bool {
 
 	// Function-like macro application
 	macroTok := tok
-	args := readMacroArgs(&tok, tok, m.Params)
+	args := readMacroArgs(&tok, tok, m.Params, m.IsVariadic)
 	rparen := tok
 
 	// Tokens that consist a func-like maro invocation may have different
