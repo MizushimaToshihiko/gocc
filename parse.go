@@ -3848,6 +3848,11 @@ func function(tok *Token) *Token {
 	fnname = append(fnname, 0)
 	pushScope("__func__").Obj =
 		newStringLiteral(fnname, arrayOf(ty_char, len(fn.Name)+1))
+
+	// [GNU] __FUNCTION__ is yet another name of __func__
+	pushScope("__FUNCTION__").Obj =
+		newStringLiteral(fnname, arrayOf(ty_char, len(fn.Name)+1))
+
 	fn.Body = compoundStmt(&tok, tok)
 	fn.Locals = locals
 	leaveScope()

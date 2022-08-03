@@ -246,6 +246,7 @@ func multi_return() (int, int, int) {
 }
 
 func funcFn() { return __func__ }
+func functionFn() { return __FUNCTION__ }
 
 func main() {
 	ASSERT(3, ret3())
@@ -425,6 +426,8 @@ func main() {
 	ASSERT(5, Sizeof(__func__))
 	ASSERT(0, strcmp("main", __func__))
 	ASSERT(0, strcmp("funcFn", funcFn()))
+	ASSERT(0, strcmp("main", __FUNCTION__))
+	ASSERT(0, strcmp("functionFn", functionFn()))
 
 	println("OK")
 }
