@@ -746,6 +746,7 @@ func searchIncludePaths(filename string) string {
 	// Search a file from the include paths.
 	for i := 0; i < len(includePaths); i++ {
 		path := fmt.Sprintf("%s/%s", includePaths[i], filename)
+		fmt.Println(path)
 		if exists(path) {
 			return path
 		}

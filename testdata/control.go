@@ -4,6 +4,7 @@ func assert(want int, act int, code string)
 func println(format ...string)
 
 #include "test.h"
+#include <stdbool.h>
 
 func switchFn(i int) int {
 	switch i {
@@ -20,7 +21,7 @@ func switchFn(i int) int {
 
 func main() {
 		var x1 int
-		if 0 {
+		if false {
 			x1 = 2
 		} else {
 			x1 = 3
@@ -32,7 +33,7 @@ func main() {
 			x1 = 3
 		}
 		ASSERT(3, x1)
-		if 1 {
+		if true {
 			x1 = 2
 		} else {
 			x1 = 3

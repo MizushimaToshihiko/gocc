@@ -1,4 +1,5 @@
 bin/*
+!bin/include
 testdata/*
 !testdata/*.go
 !testdata/common
