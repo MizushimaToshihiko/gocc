@@ -97,7 +97,9 @@ func skipLine(tok *Token) *Token {
 	if tok.AtBol {
 		return tok
 	}
-	warnTok(tok, "extra token")
+	if !equal(tok, ";") {
+		warnTok(tok, "extra token")
+	}
 	for tok.AtBol {
 		tok = tok.Next
 	}
@@ -386,6 +388,9 @@ func evalConstExpr(rest **Token, tok *Token) int64 {
 			t.Next = next
 		}
 	}
+
+	// Convert pp-numbers to regular numbers
+	convPPTok(expr)
 
 	var rest2 *Token
 	val := constExpr(&rest2, expr)
@@ -1045,6 +1050,6 @@ func preprocess(tok *Token) *Token {
 	if condIncl != nil {
 		panic("\n" + errorTok(condIncl.Tok, "unterminated conditional derective"))
 	}
-	convKw(tok)
+	convPPTok(tok)
 	return tok
 }

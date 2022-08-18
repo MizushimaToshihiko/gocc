@@ -29,7 +29,7 @@ test: $(TESTS)
 
 clean: 
 	$(GOCLEAN)
-	rm -f bin/* testdata/*.s testdata/*.exe testdata/*.o profile
+	rm -f $(BINARY_NAME) testdata/*.s testdata/*.exe testdata/*.o profile
 
 fmt:
 	$(GOFMT) ./...

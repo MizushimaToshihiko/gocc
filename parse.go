@@ -1343,23 +1343,23 @@ func writeBuf(buf unsafe.Pointer, val int64, sz int) {
 // => 00111111 11000000 00000000 00000000 2進数にする
 // => 00000000 00000000 11000000 00111111 リトルエンディアン
 // => 0, 0, 192, 63 それぞれintにする
-func divFloat32(target int32) []int64 {
+func divFloat32(target int32, errIdx int) []int64 {
 	t := fmt.Sprintf("%032b", target)
 	ret := make([]int64, 0, 1024)
 	for i := len(t) - 8; i >= 0; i -= 8 {
 		s := t[i : i+8]
-		num := parseInt(s, 2)
+		num := parseInt(s, 2, errIdx)
 		ret = append(ret, num)
 	}
 	return ret
 }
 
-func divFloat64(target int64) []int64 {
+func divFloat64(target int64, errIdx int) []int64 {
 	t := fmt.Sprintf("%064b", target)
 	ret := make([]int64, 0, 1024)
 	for i := len(t) - 8; i >= 0; i -= 8 {
 		s := t[i : i+8]
-		num := parseInt(s, 2)
+		num := parseInt(s, 2, errIdx)
 		ret = append(ret, num)
 	}
 	return ret
@@ -1396,7 +1396,7 @@ func writeGvarData(
 		fval := float32(evalDouble(init.Expr))
 		// float32(evalDouble(init.Expr))の内部表現(2進数で取得)をintとして読んだものを取得し
 		// 分割してスライスにしてdivedに保存
-		dived := divFloat32(*(*int32)(unsafe.Pointer(&fval)))
+		dived := divFloat32(*(*int32)(unsafe.Pointer(&fval)), init.Expr.Tok.Loc)
 		for i, j := offset, 0; i < offset+ty.Sz && j < 4; i++ {
 			(*buf)[i] = dived[j]
 			j++
@@ -1406,7 +1406,7 @@ func writeGvarData(
 
 	if ty.Kind == TY_DOUBLE {
 		fval := evalDouble(init.Expr)
-		dived := divFloat64(*(*int64)(unsafe.Pointer(&fval)))
+		dived := divFloat64(*(*int64)(unsafe.Pointer(&fval)), init.Expr.Tok.Loc)
 		for i, j := offset, 0; i < offset+ty.Sz && j < 8; i++ {
 			(*buf)[i] = dived[j]
 			j++
@@ -3715,6 +3715,7 @@ func primary(rest **Token, tok *Token) *Node {
 		return node
 	}
 
+	fmt.Printf("primary: tok: %#v\n\n", tok)
 	panic("\n" + errorTok(tok, "expected expression: %s", tok.Str))
 }
 

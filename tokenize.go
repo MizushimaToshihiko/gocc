@@ -27,7 +27,9 @@ const (
 
 	TK_BLANKIDENT // 6: '_' identifier
 
-	TK_EOF // 7: the end of tokens
+	TK_PP_NUM // 7: Preprocessing numbers
+
+	TK_EOF // 8: the end of tokens
 )
 
 type File struct {
@@ -342,7 +344,7 @@ func strIndex(str string, substr string) int {
 	return -1
 }
 
-func parseInt(str string, base int) int64 {
+func parseInt(str string, base, errIdx int) int64 {
 	var ret int64
 	digits := 0
 	for i := len(str) - 1; i >= 0; i-- {
@@ -356,7 +358,7 @@ func parseInt(str string, base int) int64 {
 		} else if str[i] == '_' {
 			continue
 		} else {
-			panic(errorAt(curIdx+i, "couldn't parse"))
+			panic(errorAt(errIdx+i, "couldn't parse"))
 		}
 
 		for j := 0; j < digits; j++ {
@@ -369,7 +371,7 @@ func parseInt(str string, base int) int64 {
 	return ret
 }
 
-func parseFloat(str string) float64 {
+func parseFloat(str string, errIdx int) float64 {
 
 	base := 10
 	if startsWith(str, "0x") ||
@@ -380,7 +382,7 @@ func parseFloat(str string) float64 {
 
 	// Check literal
 	if base == 10 && (contains(str, 'p') || contains(str, 'P')) {
-		panic(errorAt(curIdx, "invalid number literal"))
+		panic(errorAt(errIdx, "invalid number literal"))
 	}
 
 	// Read bofore the floating-point.
@@ -388,7 +390,7 @@ func parseFloat(str string) float64 {
 	pos := strIndex(str, ".")
 	end := len(str)
 	if pos > 0 {
-		integer = float64(parseInt(str[:pos], base))
+		integer = float64(parseInt(str[:pos], base, errIdx))
 	} else if pos == -1 {
 		pos = 0
 		if base == 10 {
@@ -397,14 +399,14 @@ func parseFloat(str string) float64 {
 			} else if contains(str, 'E') {
 				end = strIndex(str, "E")
 			}
-			integer = float64(parseInt(str[:end], base))
+			integer = float64(parseInt(str[:end], base, errIdx))
 		} else if base == 16 {
 			if contains(str, 'p') {
 				end = strIndex(str, "p")
 			} else if contains(str, 'P') {
 				end = strIndex(str, "P")
 			}
-			integer = float64(parseInt(str[:end], base))
+			integer = float64(parseInt(str[:end], base, errIdx))
 		}
 	}
 
@@ -415,7 +417,7 @@ func parseFloat(str string) float64 {
 	for ; i < len(str); i++ {
 		if str[i] == '_' {
 			if i+1 < len(str) && contains(".eEpP", rune(str[i+1])) {
-				panic(errMustSeparateSuccessiveDigits(curIdx + i))
+				panic(errMustSeparateSuccessiveDigits(errIdx + i))
 			}
 			continue
 		}
@@ -452,9 +454,9 @@ func parseFloat(str string) float64 {
 		if str[i+1] == '_' {
 			panic(errMustSeparateSuccessiveDigits(curIdx + i))
 		}
-		pow := parseInt(string(str[i+2:]), base)
+		pow := parseInt(string(str[i+2:]), base, errIdx)
 		if isDigit(rune(str[i+1])) {
-			pow = parseInt(string(str[i+1:]), base)
+			pow = parseInt(string(str[i+1:]), base, errIdx)
 		}
 		i++
 		if str[i] == '+' || isDigit(rune(str[i])) {
@@ -472,9 +474,9 @@ func parseFloat(str string) float64 {
 		if str[i+1] == '_' {
 			panic(errMustSeparateSuccessiveDigits(curIdx + i))
 		}
-		pow := parseInt(string(str[i+2:]), base)
+		pow := parseInt(string(str[i+2:]), base, errIdx)
 		if isDigit(rune(str[i+1])) {
-			pow = parseInt(string(str[i+1:]), base)
+			pow = parseInt(string(str[i+1:]), base, errIdx)
 		}
 		i++
 		if str[i] == '+' || isDigit(rune(str[i])) {
@@ -516,128 +518,182 @@ func errMustSeparateSuccessiveDigits(idx int) error {
 	return fmt.Errorf(errorAt(idx, "'_' must separate successive digits"))
 }
 
-func readIntLiteral(cur *Token) (*Token, error) {
+func convPPInt(tok *Token) bool {
 	var base int = 10
 
 	var sVal string
 	var err error
-	var startIdx = curIdx
+	var startIdx = tok.Loc
 
-	if startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0x") ||
-		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0X") {
+	r := []rune(tok.Str)
+	idx := 0
+
+	if idx+2 <= len(r) &&
+		(startsWith(string(r[idx:idx+2]), "0x") ||
+			startsWith(string(r[idx:idx+2]), "0X")) {
 		base = 16
-		curIdx += 2
-		sVal, err = readHexDigit()
+		idx += 2
+		sVal, err = readHexDigit(tok, &idx)
 		if err != nil {
-			return nil, err
+			panic(errorTok(tok, "invalid integer literal: %v", err))
 		}
-	} else if startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0b") ||
-		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0B") {
+	} else if idx+2 <= len(r) &&
+		(startsWith(string(r[idx:idx+2]), "0b") ||
+			startsWith(string(r[idx:idx+2]), "0B")) {
 		base = 2
-		curIdx += 2
-	} else if startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0o") ||
-		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0O") ||
-		startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0_") {
+		idx += 2
+	} else if idx+2 <= len(r) &&
+		(startsWith(string(r[idx:idx+2]), "0o") ||
+			startsWith(string(r[idx:idx+2]), "0O") ||
+			startsWith(string(r[idx:idx+2]), "0_")) {
 		base = 8
-		curIdx += 2
-	} else if startsWith(string(curFile.Contents[curIdx:curIdx+1]), "0") &&
-		(curIdx+1 < len(curFile.Contents) && isDigit(curFile.Contents[curIdx+1])) {
+		idx += 2
+	} else if idx+1 < len(r) &&
+		startsWith(string(r[idx:idx+1]), "0") &&
+		isDigit(r[idx+1]) {
 		base = 8
-		curIdx += 1
+		idx += 1
 	}
 
-	for ; curIdx < len(curFile.Contents) &&
-		(isDigit(curFile.Contents[curIdx]) || curFile.Contents[curIdx] == '_'); curIdx++ {
+	for ; idx < len(r) &&
+		(isDigit(r[idx]) || r[idx] == '_'); idx++ {
 
-		if curIdx > 0 && curFile.Contents[curIdx-1] == '_' && curFile.Contents[curIdx] == '_' {
-			return nil, errMustSeparateSuccessiveDigits(startIdx)
+		if idx > 0 && r[idx-1] == '_' && r[idx] == '_' {
+			panic(errorTok(tok, "invalid integer literal: %v", errMustSeparateSuccessiveDigits(startIdx)))
 		}
 
-		if isDigit(curFile.Contents[curIdx]) {
-			sVal += string(curFile.Contents[curIdx])
+		if isDigit(r[idx]) {
+			sVal += string(r[idx])
 		}
 	}
 
-	if curIdx > 0 && curFile.Contents[curIdx-1] == '_' {
-		return nil, errMustSeparateSuccessiveDigits(startIdx)
+	if idx < len(r) && idx > 0 && r[idx-1] == '_' {
+		panic(errorTok(tok, "invalid integer literal: %v", errMustSeparateSuccessiveDigits(startIdx)))
 	}
 
-	cur = newToken(TK_NUM, cur, string(curFile.Contents[startIdx:curIdx]), curIdx-startIdx+1)
+	if idx != tok.Len-1 {
+		// fmt.Println("ここ")
+		return false
+	}
+
+	// cur = newToken(TK_NUM, cur, string(curFile.Contents[startIdx:curIdx]), curIdx-startIdx+1)
+	tok.Kind = TK_NUM
 	var v int64
 	if sVal != "" {
-		v = parseInt(sVal, base)
+		v = parseInt(sVal, base, tok.Loc)
 	}
 
-	cur.Val = v
+	tok.Val = v
 
-	cur.Ty = ty_long
+	tok.Ty = ty_long
 	if v <= 2147483647 {
-		cur.Ty = ty_int
+		tok.Ty = ty_int
 	}
 
-	return cur, nil
+	return true
 }
 
-func readNumber(cur *Token) (*Token, error) {
-	tok, err := readIntLiteral(cur)
-	if err != nil {
-		return nil, err
+// The definition of the numeric literal at the preprocessing stage
+// is more relaxed than the definition of that at the later stages.
+// In order to handle that, a numeric literal is tokenized as a
+// "pp-number" token first and then converted to a regular number
+// token after preprocessing.
+//
+// This function converts a pp-number token to a regular number token.
+func convPPNum(tok *Token) {
+	curFile = tok.File
+	// Try to parse as an integer constant.
+	if convPPInt(tok) {
+		return
 	}
 
-	if curIdx >= len(curFile.Contents) {
-		return tok, nil
+	idx := 0
+	r := []rune(tok.Str)
+
+	if idx+2 <= len(r) &&
+		(startsWith(string(r[idx:idx+2]), "0x") ||
+			startsWith(string(r[idx:idx+2]), "0X")) {
+		idx += 2
+	} else if idx+2 <= len(r) &&
+		(startsWith(string(r[idx:idx+2]), "0b") ||
+			startsWith(string(r[idx:idx+2]), "0B")) {
+		idx += 2
+	} else if idx+2 <= len(r) &&
+		(startsWith(string(r[idx:idx+2]), "0o") ||
+			startsWith(string(r[idx:idx+2]), "0O") ||
+			startsWith(string(r[idx:idx+2]), "0_")) {
+		idx += 2
+	} else if idx+1 < len(r) &&
+		startsWith(string(r[idx:idx+1]), "0") &&
+		isDigit(r[idx+1]) {
+		idx++
+	} else if isDigit(r[idx]) || contains("eEfFpP.", r[idx]) {
+		idx++
+	} else {
+		panic(errorTok(tok, "invalid numeric constant"))
 	}
 
-	if !contains(".eEfF", curFile.Contents[curIdx]) {
-		return tok, nil
-	}
+	for isDigit(r[idx]) ||
+		contains("eEfFpP_.", r[idx]) ||
+		(contains("EePp", r[idx-1]) &&
+			contains("+-", r[idx])) {
 
-	var sVal string = string(curFile.Contents[curIdx])
-	curIdx++
-	for isDigit(curFile.Contents[curIdx]) ||
-		contains("eEfFpP_", curFile.Contents[curIdx]) ||
-		(contains("EePp", curFile.Contents[curIdx-1]) &&
-			contains("+-", curFile.Contents[curIdx])) {
+		if idx+1 < len(r) &&
+			((r[idx] == '_' && !isDigit(r[idx+1])) ||
+				(r[idx+1] == '_' && !isDigit(r[idx]))) {
+			panic(errorTok(tok, "invalid numeric constant: %v", errMustSeparateSuccessiveDigits(tok.Loc)))
+		}
 
-		if curIdx >= len(curFile.Contents) {
+		// sVal += string(r[idx])
+		idx++
+		if idx >= len(r) {
 			break
 		}
-
-		if (curFile.Contents[curIdx-1] == '_' && !isDigit(curFile.Contents[curIdx])) ||
-			(curFile.Contents[curIdx] == '_' && !isDigit(curFile.Contents[curIdx-1])) {
-			return nil, errMustSeparateSuccessiveDigits(curIdx)
-		}
-
-		sVal += string(curFile.Contents[curIdx])
-		curIdx++
 	}
 
-	fval := parseFloat(tok.Str + sVal)
+	if idx != tok.Len-1 {
+		fmt.Println("idx:", idx)
+		fmt.Printf("tok: %#v\n\n", tok)
+		panic(errorTok(tok, "invalid numeric constant"))
+	}
+
+	fval := parseFloat(tok.Str, tok.Loc)
 
 	ty := ty_double
 
+	tok.Kind = TK_NUM
 	tok.FVal = fval
-	tok.Str += sVal
 	tok.Ty = ty
-	return tok, nil
 }
 
-func readHexDigit() (string, error) {
-	var sVal string
-	var errIdx = curIdx
-	for ; curIdx < len(curFile.Contents) && (isxdigit(curFile.Contents[curIdx]) ||
-		curFile.Contents[curIdx] == '_'); curIdx++ {
+func convPPTok(tok *Token) {
+	for t := tok; t.Kind != TK_EOF; t = t.Next {
+		if isKw(t) {
+			t.Kind = TK_RESERVED
+		} else if t.Kind == TK_PP_NUM {
+			convPPNum(t)
+		}
+	}
+}
 
-		if curFile.Contents[curIdx-1] == '_' && curFile.Contents[curIdx] == '_' {
+func readHexDigit(tok *Token, idx *int) (string, error) {
+	var sVal string
+	var errIdx = tok.Loc
+
+	r := []rune(tok.Str)
+	for ; *idx < len(r) && (isxdigit(r[*idx]) ||
+		r[*idx] == '_'); *idx++ {
+
+		if *idx > 0 && r[*idx-1] == '_' && r[*idx] == '_' {
 			return "", errMustSeparateSuccessiveDigits(errIdx)
 		}
 
-		if isxdigit(curFile.Contents[curIdx]) {
-			sVal += string(curFile.Contents[curIdx])
+		if isxdigit(r[*idx]) {
+			sVal += string(r[*idx])
 		}
 	}
 
-	if curFile.Contents[curIdx-1] == '_' {
+	if *idx > 0 && r[*idx-1] == '_' {
 		return "", errMustSeparateSuccessiveDigits(errIdx)
 	}
 
@@ -823,6 +879,7 @@ func isTermOfProd(cur *Token) bool {
 			cur.Next.Kind == TK_NL ||
 			cur.Next.Kind == TK_EOF) {
 		return cur.Kind == TK_IDENT ||
+			cur.Kind == TK_PP_NUM ||
 			cur.Kind == TK_NUM ||
 			cur.Kind == TK_STR ||
 			(cur.Kind == TK_RESERVED &&
@@ -999,11 +1056,40 @@ func tokenize(file *File) (*Token, error) {
 		// number
 		if isDigit(curFile.Contents[curIdx]) ||
 			(curFile.Contents[curIdx] == '.' && isDigit(curFile.Contents[curIdx+1])) {
-			var err error
-			cur, err = readNumber(cur)
-			if err != nil {
-				return nil, err
+			startIdx := curIdx
+			if curIdx+1 < len(curFile.Contents) &&
+				(startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0X") ||
+					startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0x")) {
+				for {
+					if curIdx+1 < len(curFile.Contents) &&
+						contains("pP", curFile.Contents[curIdx]) &&
+						contains("+-", curFile.Contents[curIdx+1]) {
+						curIdx += 2
+					} else if curIdx < len(curFile.Contents) &&
+						(isIdent2(curFile.Contents[curIdx]) ||
+							curFile.Contents[curIdx] == '.') {
+						curIdx++
+					} else {
+						break
+					}
+				}
+			} else {
+				for {
+					if curIdx+1 < len(curFile.Contents) &&
+						contains("eEpP", curFile.Contents[curIdx]) &&
+						contains("+-", curFile.Contents[curIdx+1]) {
+						curIdx += 2
+					} else if curIdx < len(curFile.Contents) &&
+						(isIdent2(curFile.Contents[curIdx]) ||
+							curFile.Contents[curIdx] == '.') {
+						curIdx++
+					} else {
+						break
+					}
+				}
 			}
+			cur = newToken2(TK_PP_NUM, cur, string(curFile.Contents[startIdx:curIdx]),
+				curIdx-startIdx+1, startIdx)
 			continue
 		}
 

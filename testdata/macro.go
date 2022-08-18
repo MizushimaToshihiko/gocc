@@ -363,5 +363,10 @@ func main() {
 #define M14(x, ...) x
 	ASSERT(5, M14(5))
 
+#define CONCAT(x,y) x##y
+	var f0zz int = 5
+	ASSERT(5, CONCAT(f,0zz))
+	ASSERT(5, CONCAT(4,.57)+0.5)
+
 	println("OK\n")
 }

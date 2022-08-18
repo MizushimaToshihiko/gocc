@@ -326,6 +326,7 @@ func main() {
 		}
 
 		if optc {
+			// Create a temporary file for saving gnu-assembly codes.
 			temp, err := createTmpFile()
 			if err != nil {
 				log.Fatal(err)
