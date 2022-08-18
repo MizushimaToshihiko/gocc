@@ -1165,6 +1165,34 @@ func newFile(name string, fileNo int, contents []rune) *File {
 	return &File{Name: name, FileNo: fileNo, Contents: contents}
 }
 
+func readUniversalChar(p []rune, len int) rune {
+	c := 0
+
+	for i := 0; i < len; i++ {
+		if !isxdigit(p[i]) {
+			return 0
+		}
+		c = (c << 4) | fromHex(int(p[i]))
+	}
+	return rune(c)
+}
+
+// func convUniversalChars(p *[]rune) []rune {
+// 	ret := make([]rune, 0, len(*p))
+
+// 	i := 0
+// 	for i < len(*p) {
+// 		if i+2 <= len(*p) && startsWith(string((*p)[i:i+2]), "\\u") {
+// 			c := readUniversalChar((*p)[i+2:i+6], 4)
+// 			if c != 0 {
+// 				i += 6
+// 				q := encodeUft8(p, c)
+// 			}
+// 		}
+// 	}
+
+// }
+
 // For tokenizeFile function
 var fileno int
 
