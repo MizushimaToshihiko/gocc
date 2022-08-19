@@ -706,12 +706,6 @@ func isxdigit(p rune) bool {
 		('a' <= p && p <= 'f')
 }
 
-func isxdigitb(p byte) bool {
-	return ('0' <= p && p <= '9') ||
-		('A' <= p && p <= 'F') ||
-		('a' <= p && p <= 'f')
-}
-
 func fromHex(c int) int {
 	if '0' <= c && c <= '9' {
 		return c - '0'
@@ -1171,7 +1165,7 @@ func newFile(name string, fileNo int, contents []rune) *File {
 	return &File{Name: name, FileNo: fileNo, Contents: contents}
 }
 
-func readUniversalChar(p []rune, len int) rune {
+func readUniversalChar16(p []rune, len int) rune {
 	c := 0
 
 	for i := 0; i < len; i++ {
@@ -1183,12 +1177,25 @@ func readUniversalChar(p []rune, len int) rune {
 	return rune(c)
 }
 
-// Replace \u or \U escape sequances with corresponding UTF-8 bytes.
+func readUniversalChar(p []rune, len int) rune {
+	c := 0
+
+	for i := 0; i < len; i++ {
+		if !isDigit(p[i]) {
+			return 0
+		}
+		c = (c << 3) | (int(p[i]) - '0')
+	}
+	return rune(c)
+}
+
+// Replace \, \x, \u or \U escape sequances with corresponding UTF-8 bytes.
 func convUniversalChars(p *[]rune) {
 	i := 0
 	for i < len(*p) {
 		if i+2 <= len(*p) && startsWith(string((*p)[i:i+2]), "\\u") {
-			c := readUniversalChar((*p)[i+2:], 4)
+			// '\u' and 4 hexadecimal digits
+			c := readUniversalChar16((*p)[i+2:], 4)
 			if c != 0 {
 				(*p)[i] = c
 				*p = append((*p)[:i+1], (*p)[i+6:]...)
@@ -1197,10 +1204,32 @@ func convUniversalChars(p *[]rune) {
 				i++
 			}
 		} else if i+2 <= len(*p) && startsWith(string((*p)[i:i+2]), "\\U") {
-			c := readUniversalChar((*p)[i+2:], 8)
+			// '\U' and 8 hexadecimal digits
+			c := readUniversalChar16((*p)[i+2:], 8)
 			if c != 0 {
 				(*p)[i] = c
 				*p = append((*p)[:i+1], (*p)[i+10:]...)
+				i++
+			} else {
+				i++
+			}
+		} else if i+2 <= len(*p) && startsWith(string((*p)[i:i+2]), "\\x") {
+			// '\x' and 2 hexadecimal digits
+			c := readUniversalChar16((*p)[i+2:], 2)
+			if c != 0 {
+				(*p)[i] = c
+				*p = append((*p)[:i+1], (*p)[i+4:]...)
+				i++
+			} else {
+				i++
+			}
+		} else if i+2 <= len(*p) && (*p)[i] == '\\' && isDigit((*p)[i+1]) {
+			// '\' and 3 octal digits
+			c := readUniversalChar((*p)[i+1:], 3)
+			fmt.Println("c", c)
+			if c != 0 {
+				(*p)[i] = c
+				*p = append((*p)[:i+1], (*p)[i+4:]...)
 				i++
 			} else {
 				i++

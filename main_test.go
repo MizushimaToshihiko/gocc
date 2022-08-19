@@ -115,7 +115,7 @@ func TestReadUniversalChar(t *testing.T) {
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			chara := readUniversalChar(c.in[2:], 4)
+			chara := readUniversalChar16(c.in[2:], 4)
 			idx := encodeUft8(&c.in, chara, 0)
 			c.in = append(c.in[:idx], c.in[6:]...)
 			if !reflect.DeepEqual(c.in, c.want) {
@@ -143,6 +143,7 @@ func TestConvUniversalChars(t *testing.T) {
 		"case1": {in: `\u03B1\u03B2\u03B3`, want: []rune("αβγ")},
 		"case2": {in: `\u3042`, want: []rune("あ")},
 		"case3": {in: `\U000065E5\U0000672C\U00008A9E`, want: []rune("日本語")},
+		"case4": {in: `\377`, want: []rune("ÿ")},
 	}
 
 	for name, c := range cases {
