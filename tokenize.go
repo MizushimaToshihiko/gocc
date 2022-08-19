@@ -706,6 +706,12 @@ func isxdigit(p rune) bool {
 		('a' <= p && p <= 'f')
 }
 
+func isxdigitb(p byte) bool {
+	return ('0' <= p && p <= '9') ||
+		('A' <= p && p <= 'F') ||
+		('a' <= p && p <= 'f')
+}
+
 func fromHex(c int) int {
 	if '0' <= c && c <= '9' {
 		return c - '0'
@@ -1177,21 +1183,33 @@ func readUniversalChar(p []rune, len int) rune {
 	return rune(c)
 }
 
-// func convUniversalChars(p *[]rune) []rune {
-// 	ret := make([]rune, 0, len(*p))
-
-// 	i := 0
-// 	for i < len(*p) {
-// 		if i+2 <= len(*p) && startsWith(string((*p)[i:i+2]), "\\u") {
-// 			c := readUniversalChar((*p)[i+2:i+6], 4)
-// 			if c != 0 {
-// 				i += 6
-// 				q := encodeUft8(p, c)
-// 			}
-// 		}
-// 	}
-
-// }
+// Replace \u or \U escape sequances with corresponding UTF-8 bytes.
+func convUniversalChars(p *[]rune) {
+	i := 0
+	for i < len(*p) {
+		if i+2 <= len(*p) && startsWith(string((*p)[i:i+2]), "\\u") {
+			c := readUniversalChar((*p)[i+2:], 4)
+			if c != 0 {
+				(*p)[i] = c
+				*p = append((*p)[:i+1], (*p)[i+6:]...)
+				i++
+			} else {
+				i++
+			}
+		} else if i+2 <= len(*p) && startsWith(string((*p)[i:i+2]), "\\U") {
+			c := readUniversalChar((*p)[i+2:], 8)
+			if c != 0 {
+				(*p)[i] = c
+				*p = append((*p)[:i+1], (*p)[i+10:]...)
+				i++
+			} else {
+				i++
+			}
+		} else {
+			i++
+		}
+	}
+}
 
 // For tokenizeFile function
 var fileno int
@@ -1202,6 +1220,8 @@ func tokenizeFile(path string) (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	convUniversalChars(&p)
 
 	file := newFile(path, fileno+1, p)
 

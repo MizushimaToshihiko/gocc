@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -33,6 +33,7 @@ func TestGetTypeName(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			tok = preprocess(tok)
 			ty := readTypePreffix(&tok, tok, nil)
 
 			// fmt.Printf("tok: %#v\n\n", tok)
@@ -76,38 +77,10 @@ func TestIsTypename(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			printTokens2(os.Stderr, tok)
 			act := isTypename(tok)
 			if act != c.want {
 				t.Fatalf("%s: %t expected, but got %t", c.in, c.want, act)
 			}
-		})
-	}
-}
-
-func TestBackslashTok(t *testing.T) {
-	cases := map[string]struct {
-		in   string
-		want bool
-	}{
-		"case 1": {"#include \"C:\foo\"", true},
-	}
-
-	for name, c := range cases {
-		t.Run(name, func(t *testing.T) {
-			testfile := makeTestFile(t, c.in)
-			curIdx = 0
-			var err error
-			var tok *Token
-			tok, err = tokenizeFile(testfile.Name())
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			tok = preprocess(tok)
-
-			printTokens(os.Stderr, tok)
-			fmt.Println(tok.Contents)
 		})
 	}
 }
@@ -129,4 +102,56 @@ func makeTestFile(t *testing.T, input string) *os.File {
 		t.Fatalf("makeTestFile: writing to testfile failed: %s", err)
 	}
 	return testfile
+}
+
+func TestReadUniversalChar(t *testing.T) {
+
+	cases := map[string]struct {
+		in   []rune
+		want []rune
+	}{
+		"case1": {in: []rune(`\u3042`), want: convSliceByteToRune([]byte("あ"))},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			chara := readUniversalChar(c.in[2:], 4)
+			idx := encodeUft8(&c.in, chara, 0)
+			c.in = append(c.in[:idx], c.in[6:]...)
+			if !reflect.DeepEqual(c.in, c.want) {
+				t.Fatalf("expected %v, got %v", c.want, c.in)
+			}
+		})
+	}
+}
+
+func convSliceByteToRune(bs []byte) []rune {
+	ret := make([]rune, len(bs))
+
+	for i, b := range bs {
+		ret[i] = rune(int8(b))
+	}
+	return ret
+}
+
+func TestConvUniversalChars(t *testing.T) {
+
+	cases := map[string]struct {
+		in   string
+		want []rune
+	}{
+		"case1": {in: `\u03B1\u03B2\u03B3`, want: []rune("αβγ")},
+		"case2": {in: `\u3042`, want: []rune("あ")},
+		"case3": {in: `\U000065E5\U0000672C\U00008A9E`, want: []rune("日本語")},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			s := []rune(c.in)
+			convUniversalChars(&s)
+			if !reflect.DeepEqual(s, c.want) {
+				t.Fatalf("expected %v, got %v", c.want, s)
+			}
+		})
+	}
 }
