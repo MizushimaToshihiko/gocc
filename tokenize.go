@@ -1165,7 +1165,7 @@ func newFile(name string, fileNo int, contents []byte) *File {
 	return &File{Name: name, FileNo: fileNo, Contents: contents}
 }
 
-func readUniversalChar16(p []byte, len int) byte {
+func readUniversalChar16(p []byte, len int) int {
 	c := 0
 
 	for i := 0; i < len; i++ {
@@ -1174,10 +1174,10 @@ func readUniversalChar16(p []byte, len int) byte {
 		}
 		c = (c << 4) | fromHex(int(p[i]))
 	}
-	return byte(c)
+	return c
 }
 
-func readUniversalChar8(p []byte, len int) byte {
+func readUniversalChar8(p []byte, len int) int {
 	c := 0
 
 	for i := 0; i < len; i++ {
@@ -1186,7 +1186,7 @@ func readUniversalChar8(p []byte, len int) byte {
 		}
 		c = (c << 3) | (int(p[i]) - '0')
 	}
-	return byte(c)
+	return c
 }
 
 // Replace \, \x, \u or \U escape sequances with corresponding UTF-8 bytes.
@@ -1197,9 +1197,9 @@ func convUniversalChars(p *[]byte) {
 			// '\u' and 4 hexadecimal digits
 			c := readUniversalChar16((*p)[i+2:], 4)
 			if c != 0 {
-				(*p)[i] = c
-				*p = append((*p)[:i+1], (*p)[i+6:]...)
-				i++
+				q := encodeUft8(p, c, i)
+				*p = append((*p)[:i+q], (*p)[i+6:]...)
+				i += q
 			} else {
 				i++
 			}
@@ -1207,9 +1207,9 @@ func convUniversalChars(p *[]byte) {
 			// '\U' and 8 hexadecimal digits
 			c := readUniversalChar16((*p)[i+2:], 8)
 			if c != 0 {
-				(*p)[i] = c
-				*p = append((*p)[:i+1], (*p)[i+10:]...)
-				i++
+				q := encodeUft8(p, c, i)
+				*p = append((*p)[:i+q], (*p)[i+10:]...)
+				i += q
 			} else {
 				i++
 			}
@@ -1217,20 +1217,19 @@ func convUniversalChars(p *[]byte) {
 			// '\x' and 2 hexadecimal digits
 			c := readUniversalChar16((*p)[i+2:], 2)
 			if c != 0 {
-				(*p)[i] = c
-				*p = append((*p)[:i+1], (*p)[i+4:]...)
-				i++
+				q := encodeUft8(p, c, i)
+				*p = append((*p)[:i+q], (*p)[i+4:]...)
+				i += q
 			} else {
 				i++
 			}
 		} else if i+2 <= len(*p) && (*p)[i] == '\\' && isDigit((*p)[i+1]) {
 			// '\' and 3 octal digits
 			c := readUniversalChar8((*p)[i+1:], 3)
-			fmt.Println("c", c)
 			if c != 0 {
-				(*p)[i] = c
-				*p = append((*p)[:i+1], (*p)[i+4:]...)
-				i++
+				q := encodeUft8(p, c, i)
+				*p = append((*p)[:i+q], (*p)[i+4:]...)
+				i += q
 			} else {
 				i++
 			}

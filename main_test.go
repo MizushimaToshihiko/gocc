@@ -110,7 +110,7 @@ func TestReadUniversalChar(t *testing.T) {
 		in   []byte
 		want []byte
 	}{
-		"case1": {in: []byte(`\u3042`), want: convSliceByteToRune([]byte("あ"))},
+		"case1": {in: []byte(`\u3042`), want: []byte("あ")},
 	}
 
 	for name, c := range cases {
@@ -125,15 +125,6 @@ func TestReadUniversalChar(t *testing.T) {
 	}
 }
 
-func convSliceByteToRune(bs []byte) []byte {
-	ret := make([]byte, len(bs))
-
-	for i, b := range bs {
-		ret[i] = byte(int8(b))
-	}
-	return ret
-}
-
 func TestConvUniversalChars(t *testing.T) {
 
 	cases := map[string]struct {
@@ -144,6 +135,7 @@ func TestConvUniversalChars(t *testing.T) {
 		"case2": {in: `\u3042`, want: []byte("あ")},
 		"case3": {in: `\U000065E5\U0000672C\U00008A9E`, want: []byte("日本語")},
 		"case4": {in: `\377`, want: []byte("ÿ")},
+		"case5": {in: `\343\201\202`, want: []byte("あ")},
 	}
 
 	for name, c := range cases {
@@ -151,7 +143,7 @@ func TestConvUniversalChars(t *testing.T) {
 			s := []byte(c.in)
 			convUniversalChars(&s)
 			if !reflect.DeepEqual(s, c.want) {
-				t.Fatalf("expected %v, got %v", c.want, s)
+				t.Fatalf("expected %v: %s, got %v: %s", c.want, string(c.want), s, string(s))
 			}
 		})
 	}
