@@ -107,16 +107,16 @@ func makeTestFile(t *testing.T, input string) *os.File {
 func TestReadUniversalChar(t *testing.T) {
 
 	cases := map[string]struct {
-		in   []rune
-		want []rune
+		in   []byte
+		want []byte
 	}{
-		"case1": {in: []rune(`\u3042`), want: convSliceByteToRune([]byte("あ"))},
+		"case1": {in: []byte(`\u3042`), want: convSliceByteToRune([]byte("あ"))},
 	}
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			chara := readUniversalChar16(c.in[2:], 4)
-			idx := encodeUft8(&c.in, chara, 0)
+			idx := encodeUft8(&c.in, int(chara), 0)
 			c.in = append(c.in[:idx], c.in[6:]...)
 			if !reflect.DeepEqual(c.in, c.want) {
 				t.Fatalf("expected %v, got %v", c.want, c.in)
@@ -125,11 +125,11 @@ func TestReadUniversalChar(t *testing.T) {
 	}
 }
 
-func convSliceByteToRune(bs []byte) []rune {
-	ret := make([]rune, len(bs))
+func convSliceByteToRune(bs []byte) []byte {
+	ret := make([]byte, len(bs))
 
 	for i, b := range bs {
-		ret[i] = rune(int8(b))
+		ret[i] = byte(int8(b))
 	}
 	return ret
 }
@@ -138,17 +138,17 @@ func TestConvUniversalChars(t *testing.T) {
 
 	cases := map[string]struct {
 		in   string
-		want []rune
+		want []byte
 	}{
-		"case1": {in: `\u03B1\u03B2\u03B3`, want: []rune("αβγ")},
-		"case2": {in: `\u3042`, want: []rune("あ")},
-		"case3": {in: `\U000065E5\U0000672C\U00008A9E`, want: []rune("日本語")},
-		"case4": {in: `\377`, want: []rune("ÿ")},
+		"case1": {in: `\u03B1\u03B2\u03B3`, want: []byte("αβγ")},
+		"case2": {in: `\u3042`, want: []byte("あ")},
+		"case3": {in: `\U000065E5\U0000672C\U00008A9E`, want: []byte("日本語")},
+		"case4": {in: `\377`, want: []byte("ÿ")},
 	}
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			s := []rune(c.in)
+			s := []byte(c.in)
 			convUniversalChars(&s)
 			if !reflect.DeepEqual(s, c.want) {
 				t.Fatalf("expected %v, got %v", c.want, s)

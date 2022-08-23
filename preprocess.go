@@ -226,26 +226,26 @@ func skipCondIncl(tok *Token) *Token {
 }
 
 // quoteStr adds double-quotes to the front and back of a given string and
-// adds 0 at the end, and returns it as a rune array.
-func quoteStr(str []rune) []rune {
-	var ret = make([]rune, 0)
+// adds 0 at the end, and returns it as a byte array.
+func quoteStr(str []byte) []byte {
+	var ret = make([]byte, 0)
 	ret = append(ret, '"')
 	for _, r := range str {
 		if r == '\\' || r == '"' {
 			ret = append(ret, '\\')
 		}
-		if r == rune(0) {
+		if r == byte(0) {
 			break
 		}
 		ret = append(ret, r)
 	}
 	ret = append(ret, '"')
-	ret = append(ret, rune(0))
+	ret = append(ret, byte(0))
 
 	return ret
 }
 
-func newStrTok(str []rune, tmpl *Token) *Token {
+func newStrTok(str []byte, tmpl *Token) *Token {
 	buf := quoteStr(str)
 	t, err := tokenize(newFile(tmpl.File.Name, tmpl.File.FileNo, buf))
 	if err != nil {
@@ -255,7 +255,7 @@ func newStrTok(str []rune, tmpl *Token) *Token {
 }
 
 // Concatenates all tokens in `tok` and returns a new string.
-func joinTok(tok, end *Token) []rune {
+func joinTok(tok, end *Token) []byte {
 	// Compute the length of the resulting token.
 	len := 1
 	for t := tok; t != end && t.Kind != TK_EOF; t = t.Next {
@@ -265,7 +265,7 @@ func joinTok(tok, end *Token) []rune {
 		len += t.Len
 	}
 
-	var buf []rune
+	var buf []byte
 
 	// Copy token texts.
 	for t := tok; t != end && t.Kind != TK_EOF; t = t.Next {
@@ -276,14 +276,14 @@ func joinTok(tok, end *Token) []rune {
 		str := t.Str
 		if t.Kind == TK_STR { // add double-quote
 			buf = append(buf, '"')
-			buf = append(buf, []rune(str)...)
+			buf = append(buf, []byte(str)...)
 			buf = append(buf, '"')
 		} else {
-			buf = append(buf, []rune(str)...)
+			buf = append(buf, []byte(str)...)
 		}
 	}
 
-	buf = append(buf, rune(0))
+	buf = append(buf, byte(0))
 	return buf
 }
 
@@ -320,7 +320,7 @@ func copyLine(rest **Token, tok *Token) *Token {
 
 func newNumTok(val int, tmpl *Token) *Token {
 	buf := fmt.Sprintf("%d", val)
-	tok, err := tokenize(newFile(tmpl.File.Name, tmpl.File.FileNo, []rune(buf)))
+	tok, err := tokenize(newFile(tmpl.File.Name, tmpl.File.FileNo, []byte(buf)))
 	if err != nil {
 		panic(err)
 	}
@@ -576,7 +576,7 @@ func findArg(args *MacroArg, tok *Token) *MacroArg {
 // Concatenate two tokens to create a new token.
 func paste(lhs, rhs *Token) *Token {
 	// Paste the two tokens.
-	buf := append([]rune(lhs.Str), []rune(rhs.Str)...)
+	buf := append([]byte(lhs.Str), []byte(rhs.Str)...)
 
 	// Tokenize the resulting string.
 	tok, err := tokenize(newFile(lhs.File.Name, lhs.File.FileNo, buf))
@@ -760,7 +760,7 @@ func searchIncludePaths(filename string) string {
 }
 
 // Read an #include argument.
-func readIncludeFilename(rest **Token, tok *Token, isDquote *bool) []rune {
+func readIncludeFilename(rest **Token, tok *Token, isDquote *bool) []byte {
 	// Pattern 1: #include "foo.h"
 	if tok.Kind == TK_STR {
 		// A double-quoted filename for #include is a special kind of
@@ -969,7 +969,7 @@ func preprocess2(tok *Token) *Token {
 }
 
 func defineMacro(name, buf string) {
-	tok, err := tokenize(newFile("<built-in>", 1, []rune(buf)))
+	tok, err := tokenize(newFile("<built-in>", 1, []byte(buf)))
 	if err != nil {
 		panic(err)
 	}
@@ -987,7 +987,7 @@ func fileMacro(tmpl *Token) *Token {
 	for tmpl.Origin != nil {
 		tmpl = tmpl.Origin
 	}
-	return newStrTok([]rune(tmpl.File.Name), tmpl)
+	return newStrTok([]byte(tmpl.File.Name), tmpl)
 }
 
 func lineMacro(tmpl *Token) *Token {

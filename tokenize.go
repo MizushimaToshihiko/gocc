@@ -35,7 +35,7 @@ const (
 type File struct {
 	Name     string
 	FileNo   int
-	Contents []rune
+	Contents []byte
 }
 
 type Token struct {
@@ -79,16 +79,16 @@ var curIdx int
 // foo.go:
 // 10:x = y + 1;
 //        ^ <error message here>
-func verrorAt(filename string, input []rune,
+func verrorAt(filename string, input []byte,
 	lineNum, errIdx int, formt string, a ...interface{}) string {
 	// get the start and end of the line 'errIdx' exists
 	line := errIdx
-	for 0 < line && input[line-1] != rune('\n') {
+	for 0 < line && input[line-1] != byte('\n') {
 		line--
 	}
 
 	end := errIdx
-	for end < len(input) && input[end] != rune('\n') {
+	for end < len(input) && input[end] != byte('\n') {
 		end++
 	}
 
@@ -112,7 +112,7 @@ func errorAt(errIdx int, formt string, a ...interface{}) string {
 	// Find out what line the found line is in the whole.
 	lineNum := 1
 	for i := 0; i < len(curFile.Contents); i++ {
-		if curFile.Contents[i] == rune('\n') {
+		if curFile.Contents[i] == byte('\n') {
 			lineNum++
 		}
 	}
@@ -142,7 +142,7 @@ func warnTok(tok *Token, formt string, ap ...interface{}) {
 	}
 }
 
-// strNdUp function returns the []rune terminates with '\0'
+// strNdUp function returns the []byte terminates with '\0'
 func strNdUp(b []int64, len int) []int64 {
 	res := make([]int64, len)
 	copy(res, b)
@@ -315,8 +315,8 @@ func isKw(tok *Token) bool {
 	return false
 }
 
-func contains(str string, r rune) bool {
-	s := []rune(str)
+func contains(str string, r byte) bool {
+	s := []byte(str)
 	for i := 0; i < len(s); i++ {
 		if s[i] == r {
 			return true
@@ -416,7 +416,7 @@ func parseFloat(str string, errIdx int) float64 {
 	i := pos + 1
 	for ; i < len(str); i++ {
 		if str[i] == '_' {
-			if i+1 < len(str) && contains(".eEpP", rune(str[i+1])) {
+			if i+1 < len(str) && contains(".eEpP", byte(str[i+1])) {
 				panic(errMustSeparateSuccessiveDigits(errIdx + i))
 			}
 			continue
@@ -455,11 +455,11 @@ func parseFloat(str string, errIdx int) float64 {
 			panic(errMustSeparateSuccessiveDigits(curIdx + i))
 		}
 		pow := parseInt(string(str[i+2:]), base, errIdx)
-		if isDigit(rune(str[i+1])) {
+		if isDigit(byte(str[i+1])) {
 			pow = parseInt(string(str[i+1:]), base, errIdx)
 		}
 		i++
-		if str[i] == '+' || isDigit(rune(str[i])) {
+		if str[i] == '+' || isDigit(byte(str[i])) {
 			var j int64
 			for j = 0; j < pow; j++ {
 				ret *= float64(base)
@@ -475,11 +475,11 @@ func parseFloat(str string, errIdx int) float64 {
 			panic(errMustSeparateSuccessiveDigits(curIdx + i))
 		}
 		pow := parseInt(string(str[i+2:]), base, errIdx)
-		if isDigit(rune(str[i+1])) {
+		if isDigit(byte(str[i+1])) {
 			pow = parseInt(string(str[i+1:]), base, errIdx)
 		}
 		i++
-		if str[i] == '+' || isDigit(rune(str[i])) {
+		if str[i] == '+' || isDigit(byte(str[i])) {
 			var j int64
 			for j = 0; j < pow; j++ {
 				ret *= float64(2)
@@ -495,21 +495,21 @@ func parseFloat(str string, errIdx int) float64 {
 	return ret
 }
 
-func isSpace(op rune) bool {
+func isSpace(op byte) bool {
 	return contains("\t\v\f\r ", op)
 }
 
-func isDigit(op rune) bool {
+func isDigit(op byte) bool {
 	return '0' <= op && op <= '9'
 }
 
-func isIdent1(c rune) bool {
+func isIdent1(c byte) bool {
 	return ('a' <= c && c <= 'z') ||
 		('A' <= c && c <= 'Z') ||
 		(c == '_')
 }
 
-func isIdent2(c rune) bool {
+func isIdent2(c byte) bool {
 	return isIdent1(c) || isDigit(c)
 }
 
@@ -525,7 +525,7 @@ func convPPInt(tok *Token) bool {
 	var err error
 	var startIdx = tok.Loc
 
-	r := []rune(tok.Str)
+	r := []byte(tok.Str)
 	idx := 0
 
 	if idx+2 <= len(r) &&
@@ -608,7 +608,7 @@ func convPPNum(tok *Token) {
 	}
 
 	idx := 0
-	r := []rune(tok.Str)
+	r := []byte(tok.Str)
 
 	if idx+2 <= len(r) &&
 		(startsWith(string(r[idx:idx+2]), "0x") ||
@@ -680,7 +680,7 @@ func readHexDigit(tok *Token, idx *int) (string, error) {
 	var sVal string
 	var errIdx = tok.Loc
 
-	r := []rune(tok.Str)
+	r := []byte(tok.Str)
 	for ; *idx < len(r) && (isxdigit(r[*idx]) ||
 		r[*idx] == '_'); *idx++ {
 
@@ -700,7 +700,7 @@ func readHexDigit(tok *Token, idx *int) (string, error) {
 	return sVal, nil
 }
 
-func isxdigit(p rune) bool {
+func isxdigit(p byte) bool {
 	return ('0' <= p && p <= '9') ||
 		('A' <= p && p <= 'F') ||
 		('a' <= p && p <= 'f')
@@ -716,7 +716,7 @@ func fromHex(c int) int {
 	return c - 'A' + 10
 }
 
-func getEscapeChar(newPos *int, idx int) (rune, error) {
+func getEscapeChar(newPos *int, idx int) (byte, error) {
 	if '0' <= curFile.Contents[idx] && curFile.Contents[idx] <= '7' {
 		// Read octal number.
 		c := curFile.Contents[idx] - '0'
@@ -737,13 +737,13 @@ func getEscapeChar(newPos *int, idx int) (rune, error) {
 		// Read hexadecimal number.
 		idx++
 		if !isxdigit(curFile.Contents[idx]) {
-			return -1, fmt.Errorf(
+			return 0, fmt.Errorf(
 				"tokenize(): err:\n%s",
 				errorAt(idx, "invalid hex escape sequence"))
 		}
-		var c rune
+		var c byte
 		for ; isxdigit(curFile.Contents[idx]); idx++ {
-			c = (c << 4) + rune(fromHex(int(curFile.Contents[idx])))
+			c = (c << 4) + byte(fromHex(int(curFile.Contents[idx])))
 		}
 		*newPos = idx
 		return c, nil
@@ -795,7 +795,7 @@ func stringLiteralEnd(idx int) (int, error) {
 func mustToString(s []int64) string {
 	var ret string
 	for i := 0; i < len(s); i++ {
-		ret += string(rune(s[i]))
+		ret += string(byte(s[i]))
 	}
 	return ret
 }
@@ -812,7 +812,7 @@ func readStringLiteral(start int, cur *Token) (*Token, error) {
 	buf := make([]int64, 0, 1024)
 	for idx = start + 1; idx < end; idx++ {
 
-		var c rune
+		var c byte
 		if curFile.Contents[idx] == '\\' {
 			c, err = getEscapeChar(&idx, idx+1)
 			if err != nil {
@@ -845,7 +845,7 @@ func readCharLiteral(cur *Token) (*Token, error) {
 		)
 	}
 
-	var c rune
+	var c byte
 	var err error
 	if curFile.Contents[idx] == '\\' {
 		c, err = getEscapeChar(&idx, idx+1)
@@ -1025,7 +1025,7 @@ func tokenize(file *File) (*Token, error) {
 		// identifier
 		// if 'userInput[cutIdx]' is alphabets, it makes a token of TK_IDENT type.
 		if isIdent1(curFile.Contents[curIdx]) {
-			ident := make([]rune, 0, 20)
+			ident := make([]byte, 0, 20)
 			for ; curIdx < len(curFile.Contents) && isIdent2(curFile.Contents[curIdx]); curIdx++ {
 				ident = append(ident, curFile.Contents[curIdx])
 			}
@@ -1122,7 +1122,7 @@ func tokenize(file *File) (*Token, error) {
 	return head.Next, nil
 }
 
-func readFile(path string) ([]rune, error) {
+func readFile(path string) ([]byte, error) {
 	var r io.Reader
 	switch path {
 	case "-":
@@ -1142,10 +1142,10 @@ func readFile(path string) ([]rune, error) {
 
 	br := bufio.NewReader(r)
 
-	ret := make([]rune, 0, 1064)
+	ret := make([]byte, 0, 1064)
 	for {
-		ru, sz, err := br.ReadRune()
-		if sz == 0 || err == io.EOF {
+		ru, err := br.ReadByte()
+		if err == io.EOF {
 			break
 		}
 		if err != nil {
@@ -1161,11 +1161,11 @@ func getInputFiles() []*File {
 	return inputFiles
 }
 
-func newFile(name string, fileNo int, contents []rune) *File {
+func newFile(name string, fileNo int, contents []byte) *File {
 	return &File{Name: name, FileNo: fileNo, Contents: contents}
 }
 
-func readUniversalChar16(p []rune, len int) rune {
+func readUniversalChar16(p []byte, len int) byte {
 	c := 0
 
 	for i := 0; i < len; i++ {
@@ -1174,10 +1174,10 @@ func readUniversalChar16(p []rune, len int) rune {
 		}
 		c = (c << 4) | fromHex(int(p[i]))
 	}
-	return rune(c)
+	return byte(c)
 }
 
-func readUniversalChar(p []rune, len int) rune {
+func readUniversalChar8(p []byte, len int) byte {
 	c := 0
 
 	for i := 0; i < len; i++ {
@@ -1186,11 +1186,11 @@ func readUniversalChar(p []rune, len int) rune {
 		}
 		c = (c << 3) | (int(p[i]) - '0')
 	}
-	return rune(c)
+	return byte(c)
 }
 
 // Replace \, \x, \u or \U escape sequances with corresponding UTF-8 bytes.
-func convUniversalChars(p *[]rune) {
+func convUniversalChars(p *[]byte) {
 	i := 0
 	for i < len(*p) {
 		if i+2 <= len(*p) && startsWith(string((*p)[i:i+2]), "\\u") {
@@ -1225,7 +1225,7 @@ func convUniversalChars(p *[]rune) {
 			}
 		} else if i+2 <= len(*p) && (*p)[i] == '\\' && isDigit((*p)[i+1]) {
 			// '\' and 3 octal digits
-			c := readUniversalChar((*p)[i+1:], 3)
+			c := readUniversalChar8((*p)[i+1:], 3)
 			fmt.Println("c", c)
 			if c != 0 {
 				(*p)[i] = c
