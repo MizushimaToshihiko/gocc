@@ -12,8 +12,8 @@ func main() {
 	ASSERT(0, strcmp("日本語", "\U000065E5\U0000672C\U00008A9E"))
 	ASSERT(0, strcmp("🌮", "\U0001F32E"))
 
-	ASSERT(0, strcmp("ÿ", "\xff"))
-	ASSERT(0, strcmp("ÿ", "\377"))
+	ASSERT(0, strcmp("ÿ", "\xc3\xbf"))
+	ASSERT(0, strcmp("ÿ", "\303\277"))
 	ASSERT(0, strcmp("あ", "\343\201\202"))
 
   // ASSERT(946, 'β')

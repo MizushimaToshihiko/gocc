@@ -1217,19 +1217,22 @@ func convUniversalChars(p *[]byte) {
 			// '\x' and 2 hexadecimal digits
 			c := readUniversalChar16((*p)[i+2:], 2)
 			if c != 0 {
-				q := encodeUft8(p, c, i)
-				*p = append((*p)[:i+q], (*p)[i+4:]...)
-				i += q
+				(*p)[i] = byte(c)
+				*p = append((*p)[:i+1], (*p)[i+4:]...)
+				i++
 			} else {
 				i++
 			}
 		} else if i+2 <= len(*p) && (*p)[i] == '\\' && isDigit((*p)[i+1]) {
 			// '\' and 3 octal digits
 			c := readUniversalChar8((*p)[i+1:], 3)
+			if c > 255 {
+				panic(errorAt(i, "octal escape value %d > 255", c))
+			}
 			if c != 0 {
-				q := encodeUft8(p, c, i)
-				*p = append((*p)[:i+q], (*p)[i+4:]...)
-				i += q
+				(*p)[i] = byte(c)
+				*p = append((*p)[:i+1], (*p)[i+4:]...)
+				i++
 			} else {
 				i++
 			}
