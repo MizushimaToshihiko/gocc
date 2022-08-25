@@ -19,4 +19,5 @@ func main() {
   // ASSERT(946, 'β')
   // ASSERT(12354, 'あ')
   // ASSERT(127843, '🍣')
+	println("OK")
 }

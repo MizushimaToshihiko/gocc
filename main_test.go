@@ -135,7 +135,7 @@ func TestConvUniversalChars(t *testing.T) {
 		"case2": {in: `\u3042`, want: []byte("あ")},
 		"case3": {in: `\U000065E5\U0000672C\U00008A9E`, want: []byte("日本語")},
 		"case4": {in: `\xff`, want: []byte{255}},
-		"case5": {in: `\377`, want: []byte{255}},
+		"case5": {in: `\378`, want: []byte{255}},
 		"case6": {in: "\343\201\202", want: []byte("あ")},
 		"case7": {in: "\343\201\204", want: []byte("い")},
 		"case8": {in: "\xc3\xbf", want: []byte("ÿ")},

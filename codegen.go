@@ -1715,6 +1715,9 @@ func (c *codeWriter) emitData(prog *Obj) {
 					pos += 8
 					continue
 				} else {
+					if v.Ty.Init != nil {
+						fmt.Printf("v.Ty.Init.Tok: %#v\n\n", v.Ty.Init.Tok)
+					}
 					c.println("	.byte %d", v.InitData[pos])
 					pos++
 				}

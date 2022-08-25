@@ -26,6 +26,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 )
 
@@ -254,49 +255,6 @@ func newStrTok(str []byte, tmpl *Token) *Token {
 	return t
 }
 
-// Concatenates all tokens in `tok` and returns a new string.
-func joinTok(tok, end *Token) []byte {
-	// Compute the length of the resulting token.
-	len := 1
-	for t := tok; t != end && t.Kind != TK_EOF; t = t.Next {
-		if t != tok && t.HasSpace {
-			len++
-		}
-		len += t.Len
-	}
-
-	var buf []byte
-
-	// Copy token texts.
-	for t := tok; t != end && t.Kind != TK_EOF; t = t.Next {
-		if t != tok && t.HasSpace {
-			buf = append(buf, ' ')
-		}
-
-		str := t.Str
-		if t.Kind == TK_STR { // add double-quote
-			buf = append(buf, '"')
-			buf = append(buf, []byte(str)...)
-			buf = append(buf, '"')
-		} else {
-			buf = append(buf, []byte(str)...)
-		}
-	}
-
-	buf = append(buf, byte(0))
-	return buf
-}
-
-// Concatenates all tokens in `arg` and returns a new string token.
-// This function is used for the stringizing operator (#).
-func stringize(hash, arg *Token) *Token {
-	// Create a new string token. We need to set some value to its
-	// source location for error reporting function, so we use a macro
-	// name token as a template.
-	s := joinTok(arg, nil)
-	return newStrTok(s, hash)
-}
-
 // Copy all tokens until the next newline, terminate them with
 // an EOF token and then return them. This function is used to
 // create a new list of tokens for `#if` arguments.
@@ -465,6 +423,7 @@ func readMacroParams(rest **Token, tok *Token, isVariadic *bool) *MacroParam {
 		tok = tok.Next
 	}
 	*rest = tok.Next
+	// fmt.Printf("readMacroParams: *rest: %#v\n\n", *rest)
 	return head.Next
 }
 
@@ -481,6 +440,8 @@ func readMacroDef(rest **Token, tok *Token) {
 		params := readMacroParams(&tok, tok.Next, &isVariadic)
 
 		m := addMacro(name, false, copyLine(rest, tok))
+		// fmt.Printf("readMacroDef: *rest: %#v\n\n", *rest)
+		// fmt.Printf("readMacroDef: *rest.File: %#v\n\n", (*rest).File)
 		m.Params = params
 		m.IsVariadic = isVariadic
 	} else {
@@ -573,10 +534,54 @@ func findArg(args *MacroArg, tok *Token) *MacroArg {
 	return nil
 }
 
+// Concatenates all tokens in `tok` and returns a new string.
+func joinTok(tok, end *Token) []byte {
+	// Compute the length of the resulting token.
+	len := 1
+	for t := tok; t != end && t.Kind != TK_EOF; t = t.Next {
+		if t != tok && t.HasSpace {
+			len++
+		}
+		len += t.Len
+	}
+
+	var buf []byte
+
+	// Copy token texts.
+	for t := tok; t != end && t.Kind != TK_EOF; t = t.Next {
+		if t != tok && t.HasSpace {
+			buf = append(buf, ' ')
+		}
+
+		str := t.Str
+		if t.Kind == TK_STR { // add double-quote
+			buf = append(buf, '"')
+			buf = append(buf, []byte(str)...)
+			buf = append(buf, '"')
+		} else {
+			buf = append(buf, []byte(str)...)
+		}
+	}
+
+	buf = append(buf, byte(0))
+	return buf
+}
+
+// Concatenates all tokens in `arg` and returns a new string token.
+// This function is used for the stringizing operator (#).
+func stringize(hash, arg *Token) *Token {
+	// Create a new string token. We need to set some value to its
+	// source location for error reporting function, so we use a macro
+	// name token as a template.
+	s := joinTok(arg, nil)
+	return newStrTok(s, hash)
+}
+
 // Concatenate two tokens to create a new token.
 func paste(lhs, rhs *Token) *Token {
 	// Paste the two tokens.
 	buf := append([]byte(lhs.Str), []byte(rhs.Str)...)
+	fmt.Printf("paste: buf: %s\n\n", string(buf))
 
 	// Tokenize the resulting string.
 	tok, err := tokenize(newFile(lhs.File.Name, lhs.File.FileNo, buf))
@@ -603,6 +608,7 @@ func subst(tok *Token, args *MacroArg) *Token {
 			}
 			cur.Next = stringize(tok, arg.Tok)
 			cur = cur.Next
+			printTokens2(os.Stderr, cur)
 			tok = tok.Next.Next
 			continue
 		}
@@ -739,7 +745,15 @@ func expandMacro(rest **Token, tok *Token) bool {
 
 	body := subst(m.Body, args)
 	body = addHideset(body, hs)
+	for t := body; t.Kind != TK_EOF; t = t.Next {
+		t.Origin = macroTok
+	}
+	fmt.Println("expandMacro: body:")
+	printTokens2(os.Stdout, body)
 	*rest = appendTok(body, tok.Next)
+	fmt.Printf("expandMacro: *rest: %#v\n\n", *rest)
+	(*rest).AtBol = macroTok.AtBol
+	(*rest).HasSpace = macroTok.HasSpace
 	return true
 }
 
@@ -751,7 +765,7 @@ func searchIncludePaths(filename string) string {
 	// Search a file from the include paths.
 	for i := 0; i < len(includePaths); i++ {
 		path := fmt.Sprintf("%s/%s", includePaths[i], filename)
-		fmt.Println(path)
+		// fmt.Println(path)
 		if exists(path) {
 			return path
 		}
@@ -818,6 +832,12 @@ func preprocess2(tok *Token) *Token {
 	cur := head
 
 	for tok.Kind != TK_EOF {
+
+		fmt.Printf("preprocess2: for-loop: tok: %#v\n\n", tok)
+		fmt.Printf("preprocess2: for-loop: tok.Origin: %#v\n\n", tok.Origin)
+		// fmt.Printf("preprocess2: for-loop: tok.File.Name: %#v\n\n", tok.File.Name)
+		// fmt.Printf("preprocess2: for-loop: tok.Next: %#v\n\n", tok.Next)
+
 		// If it is a macro, expand it.
 		if expandMacro(&tok, tok) {
 			continue
@@ -961,6 +981,7 @@ func preprocess2(tok *Token) *Token {
 			continue
 		}
 
+		printTokens2(os.Stdout, head.Next)
 		panic("\n" + errorTok(tok, "invalid preprocessor directive"))
 	}
 

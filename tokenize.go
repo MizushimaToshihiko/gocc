@@ -956,7 +956,6 @@ func convKw(tok *Token) {
 
 // tokenize inputted string 'userInput', and return new tokens.
 func tokenize(file *File) (*Token, error) {
-	curFile = file
 
 	var head Token
 	head.Next = nil
@@ -1177,12 +1176,14 @@ func readUniversalChar16(p []byte, len int) int {
 	return c
 }
 
-func readUniversalChar8(p []byte, len int) int {
+func readUniversalChar8(p []byte, len, idx int) int {
 	c := 0
 
 	for i := 0; i < len; i++ {
 		if !isDigit(p[i]) {
 			return 0
+		} else if int(p[i])-'7' > 0 {
+			panic(errorAt(idx+i, "invalid character '%c' in octal escape", p[i]))
 		}
 		c = (c << 3) | (int(p[i]) - '0')
 	}
@@ -1225,7 +1226,7 @@ func convUniversalChars(p *[]byte) {
 			}
 		} else if i+2 <= len(*p) && (*p)[i] == '\\' && isDigit((*p)[i+1]) {
 			// '\' and 3 octal digits
-			c := readUniversalChar8((*p)[i+1:], 3)
+			c := readUniversalChar8((*p)[i+1:], 3, i)
 			if c > 255 {
 				panic(errorAt(i, "octal escape value %d > 255", c))
 			}
@@ -1252,9 +1253,10 @@ func tokenizeFile(path string) (*Token, error) {
 		return nil, err
 	}
 
-	convUniversalChars(&p)
-
 	file := newFile(path, fileno+1, p)
+	curFile = file
+	convUniversalChars(&file.Contents)
+	fmt.Printf("file.Contents:\n%s\n\n", string(file.Contents))
 
 	// Save the filename for assembler .file directive.
 	inputFiles = append(inputFiles, file)
