@@ -26,7 +26,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 )
 
@@ -248,7 +247,9 @@ func quoteStr(str []byte) []byte {
 
 func newStrTok(str []byte, tmpl *Token) *Token {
 	buf := quoteStr(str)
-	t, err := tokenize(newFile(tmpl.File.Name, tmpl.File.FileNo, buf))
+	f := newFile(tmpl.File.Name, tmpl.File.FileNo, buf)
+	curFile = f
+	t, err := tokenize(f)
 	if err != nil {
 		panic(err)
 	}
@@ -278,7 +279,9 @@ func copyLine(rest **Token, tok *Token) *Token {
 
 func newNumTok(val int, tmpl *Token) *Token {
 	buf := fmt.Sprintf("%d", val)
-	tok, err := tokenize(newFile(tmpl.File.Name, tmpl.File.FileNo, []byte(buf)))
+	f := newFile(tmpl.File.Name, tmpl.File.FileNo, []byte(buf))
+	curFile = f
+	tok, err := tokenize(f)
 	if err != nil {
 		panic(err)
 	}
@@ -423,7 +426,6 @@ func readMacroParams(rest **Token, tok *Token, isVariadic *bool) *MacroParam {
 		tok = tok.Next
 	}
 	*rest = tok.Next
-	// fmt.Printf("readMacroParams: *rest: %#v\n\n", *rest)
 	return head.Next
 }
 
@@ -440,8 +442,6 @@ func readMacroDef(rest **Token, tok *Token) {
 		params := readMacroParams(&tok, tok.Next, &isVariadic)
 
 		m := addMacro(name, false, copyLine(rest, tok))
-		// fmt.Printf("readMacroDef: *rest: %#v\n\n", *rest)
-		// fmt.Printf("readMacroDef: *rest.File: %#v\n\n", (*rest).File)
 		m.Params = params
 		m.IsVariadic = isVariadic
 	} else {
@@ -581,10 +581,11 @@ func stringize(hash, arg *Token) *Token {
 func paste(lhs, rhs *Token) *Token {
 	// Paste the two tokens.
 	buf := append([]byte(lhs.Str), []byte(rhs.Str)...)
-	fmt.Printf("paste: buf: %s\n\n", string(buf))
 
 	// Tokenize the resulting string.
-	tok, err := tokenize(newFile(lhs.File.Name, lhs.File.FileNo, buf))
+	f := newFile(lhs.File.Name, lhs.File.FileNo, buf)
+	curFile = f
+	tok, err := tokenize(f)
 	if err != nil {
 		panic(err)
 	}
@@ -608,7 +609,6 @@ func subst(tok *Token, args *MacroArg) *Token {
 			}
 			cur.Next = stringize(tok, arg.Tok)
 			cur = cur.Next
-			printTokens2(os.Stderr, cur)
 			tok = tok.Next.Next
 			continue
 		}
@@ -678,6 +678,7 @@ func subst(tok *Token, args *MacroArg) *Token {
 				cur.Next = copyTok(t)
 				cur = cur.Next
 			}
+
 			tok = tok.Next
 			continue
 		}
@@ -748,10 +749,7 @@ func expandMacro(rest **Token, tok *Token) bool {
 	for t := body; t.Kind != TK_EOF; t = t.Next {
 		t.Origin = macroTok
 	}
-	fmt.Println("expandMacro: body:")
-	printTokens2(os.Stdout, body)
 	*rest = appendTok(body, tok.Next)
-	fmt.Printf("expandMacro: *rest: %#v\n\n", *rest)
 	(*rest).AtBol = macroTok.AtBol
 	(*rest).HasSpace = macroTok.HasSpace
 	return true
@@ -765,7 +763,6 @@ func searchIncludePaths(filename string) string {
 	// Search a file from the include paths.
 	for i := 0; i < len(includePaths); i++ {
 		path := fmt.Sprintf("%s/%s", includePaths[i], filename)
-		// fmt.Println(path)
 		if exists(path) {
 			return path
 		}
@@ -832,12 +829,6 @@ func preprocess2(tok *Token) *Token {
 	cur := head
 
 	for tok.Kind != TK_EOF {
-
-		fmt.Printf("preprocess2: for-loop: tok: %#v\n\n", tok)
-		fmt.Printf("preprocess2: for-loop: tok.Origin: %#v\n\n", tok.Origin)
-		// fmt.Printf("preprocess2: for-loop: tok.File.Name: %#v\n\n", tok.File.Name)
-		// fmt.Printf("preprocess2: for-loop: tok.Next: %#v\n\n", tok.Next)
-
 		// If it is a macro, expand it.
 		if expandMacro(&tok, tok) {
 			continue
@@ -981,7 +972,6 @@ func preprocess2(tok *Token) *Token {
 			continue
 		}
 
-		printTokens2(os.Stdout, head.Next)
 		panic("\n" + errorTok(tok, "invalid preprocessor directive"))
 	}
 
@@ -990,7 +980,9 @@ func preprocess2(tok *Token) *Token {
 }
 
 func defineMacro(name, buf string) {
-	tok, err := tokenize(newFile("<built-in>", 1, []byte(buf)))
+	f := newFile("<built-in>", 1, []byte(buf))
+	curFile = f
+	tok, err := tokenize(f)
 	if err != nil {
 		panic(err)
 	}

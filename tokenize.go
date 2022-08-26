@@ -1256,7 +1256,7 @@ func tokenizeFile(path string) (*Token, error) {
 	file := newFile(path, fileno+1, p)
 	curFile = file
 	convUniversalChars(&file.Contents)
-	fmt.Printf("file.Contents:\n%s\n\n", string(file.Contents))
+	// fmt.Printf("file.Contents:\n%s\n\n", string(file.Contents))
 
 	// Save the filename for assembler .file directive.
 	inputFiles = append(inputFiles, file)

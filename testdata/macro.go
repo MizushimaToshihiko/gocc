@@ -340,7 +340,7 @@ func main() {
 
 	ASSERT(0, strcmp(main_filename1, "testdata/macro.go"))
 	ASSERT(11, main_line1)
-	ASSERT(12, main_line2)
+	ASSERT(13, main_line2)
 	ASSERT(0, strcmp(include1_filename, "testdata/include1.h"))
 	ASSERT(4, include1_line)
 
