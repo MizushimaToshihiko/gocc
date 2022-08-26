@@ -247,9 +247,7 @@ func quoteStr(str []byte) []byte {
 
 func newStrTok(str []byte, tmpl *Token) *Token {
 	buf := quoteStr(str)
-	f := newFile(tmpl.File.Name, tmpl.File.FileNo, buf)
-	curFile = f
-	t, err := tokenize(f)
+	t, err := tokenize(newFile(tmpl.File.Name, tmpl.File.FileNo, buf))
 	if err != nil {
 		panic(err)
 	}
@@ -279,9 +277,7 @@ func copyLine(rest **Token, tok *Token) *Token {
 
 func newNumTok(val int, tmpl *Token) *Token {
 	buf := fmt.Sprintf("%d", val)
-	f := newFile(tmpl.File.Name, tmpl.File.FileNo, []byte(buf))
-	curFile = f
-	tok, err := tokenize(f)
+	tok, err := tokenize(newFile(tmpl.File.Name, tmpl.File.FileNo, []byte(buf)))
 	if err != nil {
 		panic(err)
 	}
@@ -583,9 +579,7 @@ func paste(lhs, rhs *Token) *Token {
 	buf := append([]byte(lhs.Str), []byte(rhs.Str)...)
 
 	// Tokenize the resulting string.
-	f := newFile(lhs.File.Name, lhs.File.FileNo, buf)
-	curFile = f
-	tok, err := tokenize(f)
+	tok, err := tokenize(newFile(lhs.File.Name, lhs.File.FileNo, buf))
 	if err != nil {
 		panic(err)
 	}
@@ -980,9 +974,7 @@ func preprocess2(tok *Token) *Token {
 }
 
 func defineMacro(name, buf string) {
-	f := newFile("<built-in>", 1, []byte(buf))
-	curFile = f
-	tok, err := tokenize(f)
+	tok, err := tokenize(newFile("<built-in>", 1, []byte(buf)))
 	if err != nil {
 		panic(err)
 	}

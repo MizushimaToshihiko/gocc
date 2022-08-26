@@ -107,16 +107,16 @@ func verrorAt(filename string, input []byte,
 }
 
 // it's arguments are same as printf
-func errorAt(errIdx int, formt string, a ...interface{}) string {
+func errorAt(file *File, errIdx int, formt string, a ...interface{}) string {
 
 	// Find out what line the found line is in the whole.
 	lineNum := 1
-	for i := 0; i < len(curFile.Contents); i++ {
-		if curFile.Contents[i] == byte('\n') {
+	for i := 0; i < len(file.Contents); i++ {
+		if file.Contents[i] == byte('\n') {
 			lineNum++
 		}
 	}
-	return verrorAt(curFile.Name, curFile.Contents, lineNum, errIdx, formt, a...)
+	return verrorAt(file.Name, file.Contents, lineNum, errIdx, formt, a...)
 }
 
 func errorTok(tok *Token, formt string, ap ...interface{}) string {
@@ -358,7 +358,7 @@ func parseInt(str string, base, errIdx int) int64 {
 		} else if str[i] == '_' {
 			continue
 		} else {
-			panic(errorAt(errIdx+i, "couldn't parse"))
+			panic(errorAt(curFile, errIdx+i, "couldn't parse"))
 		}
 
 		for j := 0; j < digits; j++ {
@@ -382,7 +382,7 @@ func parseFloat(str string, errIdx int) float64 {
 
 	// Check literal
 	if base == 10 && (contains(str, 'p') || contains(str, 'P')) {
-		panic(errorAt(errIdx, "invalid number literal"))
+		panic(errorAt(curFile, errIdx, "invalid number literal"))
 	}
 
 	// Read bofore the floating-point.
@@ -417,7 +417,7 @@ func parseFloat(str string, errIdx int) float64 {
 	for ; i < len(str); i++ {
 		if str[i] == '_' {
 			if i+1 < len(str) && contains(".eEpP", byte(str[i+1])) {
-				panic(errMustSeparateSuccessiveDigits(errIdx + i))
+				panic(errMustSeparateSuccessiveDigits(curFile, errIdx+i))
 			}
 			continue
 		}
@@ -447,12 +447,12 @@ func parseFloat(str string, errIdx int) float64 {
 		if str[len(str)-1] != '_' {
 			return ret
 		}
-		panic(errMustSeparateSuccessiveDigits(curIdx + i))
+		panic(errMustSeparateSuccessiveDigits(curFile, curIdx+i))
 	}
 
 	if str[i] == 'e' || str[i] == 'E' {
 		if str[i+1] == '_' {
-			panic(errMustSeparateSuccessiveDigits(curIdx + i))
+			panic(errMustSeparateSuccessiveDigits(curFile, curIdx+i))
 		}
 		pow := parseInt(string(str[i+2:]), base, errIdx)
 		if isDigit(byte(str[i+1])) {
@@ -472,7 +472,7 @@ func parseFloat(str string, errIdx int) float64 {
 		}
 	} else if (str[i] == 'p' || str[i] == 'P') && base == 16 {
 		if str[i+1] == '_' {
-			panic(errMustSeparateSuccessiveDigits(curIdx + i))
+			panic(errMustSeparateSuccessiveDigits(curFile, curIdx+i))
 		}
 		pow := parseInt(string(str[i+2:]), base, errIdx)
 		if isDigit(byte(str[i+1])) {
@@ -514,8 +514,8 @@ func isIdent2(c byte) bool {
 }
 
 // for integer literal error
-func errMustSeparateSuccessiveDigits(idx int) error {
-	return fmt.Errorf(errorAt(idx, "'_' must separate successive digits"))
+func errMustSeparateSuccessiveDigits(file *File, idx int) error {
+	return fmt.Errorf(errorAt(curFile, idx, "'_' must separate successive digits"))
 }
 
 func convPPInt(tok *Token) bool {
@@ -559,7 +559,7 @@ func convPPInt(tok *Token) bool {
 		(isDigit(r[idx]) || r[idx] == '_'); idx++ {
 
 		if idx > 0 && r[idx-1] == '_' && r[idx] == '_' {
-			panic(errorTok(tok, "invalid integer literal: %v", errMustSeparateSuccessiveDigits(startIdx)))
+			panic(errorTok(tok, "invalid integer literal: %v", errMustSeparateSuccessiveDigits(curFile, startIdx)))
 		}
 
 		if isDigit(r[idx]) {
@@ -568,11 +568,10 @@ func convPPInt(tok *Token) bool {
 	}
 
 	if idx < len(r) && idx > 0 && r[idx-1] == '_' {
-		panic(errorTok(tok, "invalid integer literal: %v", errMustSeparateSuccessiveDigits(startIdx)))
+		panic(errorTok(tok, "invalid integer literal: %v", errMustSeparateSuccessiveDigits(curFile, startIdx)))
 	}
 
 	if idx != tok.Len-1 {
-		// fmt.Println("ここ")
 		return false
 	}
 
@@ -641,7 +640,7 @@ func convPPNum(tok *Token) {
 		if idx+1 < len(r) &&
 			((r[idx] == '_' && !isDigit(r[idx+1])) ||
 				(r[idx+1] == '_' && !isDigit(r[idx]))) {
-			panic(errorTok(tok, "invalid numeric constant: %v", errMustSeparateSuccessiveDigits(tok.Loc)))
+			panic(errorTok(tok, "invalid numeric constant: %v", errMustSeparateSuccessiveDigits(tok.File, tok.Loc)))
 		}
 
 		// sVal += string(r[idx])
@@ -685,7 +684,7 @@ func readHexDigit(tok *Token, idx *int) (string, error) {
 		r[*idx] == '_'); *idx++ {
 
 		if *idx > 0 && r[*idx-1] == '_' && r[*idx] == '_' {
-			return "", errMustSeparateSuccessiveDigits(errIdx)
+			return "", errMustSeparateSuccessiveDigits(curFile, errIdx)
 		}
 
 		if isxdigit(r[*idx]) {
@@ -694,7 +693,7 @@ func readHexDigit(tok *Token, idx *int) (string, error) {
 	}
 
 	if *idx > 0 && r[*idx-1] == '_' {
-		return "", errMustSeparateSuccessiveDigits(errIdx)
+		return "", errMustSeparateSuccessiveDigits(curFile, errIdx)
 	}
 
 	return sVal, nil
@@ -739,7 +738,7 @@ func getEscapeChar(newPos *int, idx int) (byte, error) {
 		if !isxdigit(curFile.Contents[idx]) {
 			return 0, fmt.Errorf(
 				"tokenize(): err:\n%s",
-				errorAt(idx, "invalid hex escape sequence"))
+				errorAt(curFile, idx, "invalid hex escape sequence"))
 		}
 		var c byte
 		for ; isxdigit(curFile.Contents[idx]); idx++ {
@@ -781,7 +780,7 @@ func stringLiteralEnd(idx int) (int, error) {
 		if curFile.Contents[idx] == 0 { // curFile.Contents[idx] == '\n' ||
 			return -1, fmt.Errorf(
 				"tokenize(): stringLiteralEnd: err:\n%s",
-				errorAt(start, "unclosed string literal"),
+				errorAt(curFile, start, "unclosed string literal"),
 			)
 		}
 
@@ -841,7 +840,7 @@ func readCharLiteral(cur *Token) (*Token, error) {
 	if idx < len(curFile.Contents) && curFile.Contents[idx] == 0 {
 		return nil, fmt.Errorf(
 			"tokenize(): err:\n%s",
-			errorAt(idx, "EOF: unclosed char literal"),
+			errorAt(curFile, idx, "EOF: unclosed char literal"),
 		)
 	}
 
@@ -861,7 +860,7 @@ func readCharLiteral(cur *Token) (*Token, error) {
 	if curFile.Contents[idx] != '\'' {
 		return nil, fmt.Errorf(
 			"tokenize(): err:\n%s",
-			errorAt(idx, "char literal too long"),
+			errorAt(curFile, idx, "char literal too long"),
 		)
 	}
 	idx++
@@ -956,6 +955,7 @@ func convKw(tok *Token) {
 
 // tokenize inputted string 'userInput', and return new tokens.
 func tokenize(file *File) (*Token, error) {
+	curFile = file
 
 	var head Token
 	head.Next = nil
@@ -964,20 +964,20 @@ func tokenize(file *File) (*Token, error) {
 	atBol = true
 	hasSpace = false
 
-	for curIdx < len(file.Contents) {
-		if file.Contents[curIdx] == 0 {
+	for curIdx < len(curFile.Contents) {
+		if curFile.Contents[curIdx] == 0 {
 			break
 		}
 
 		// skip space(s)
-		if isSpace(file.Contents[curIdx]) {
+		if isSpace(curFile.Contents[curIdx]) {
 			curIdx++
 			hasSpace = true
 			continue
 		}
 
 		// new line
-		if file.Contents[curIdx] == '\n' {
+		if curFile.Contents[curIdx] == '\n' {
 			cur = newToken(TK_NL, cur, "", 0)
 			curIdx++
 			atBol = true
@@ -986,9 +986,9 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// skip line comment
-		if startsWith(string(file.Contents[curIdx:]), "//") {
+		if startsWith(string(curFile.Contents[curIdx:]), "//") {
 			curIdx += 2
-			for ; curIdx < len(file.Contents) && file.Contents[curIdx] != '\n'; curIdx++ {
+			for ; curIdx < len(curFile.Contents) && curFile.Contents[curIdx] != '\n'; curIdx++ {
 				// skip to the end of line.
 			}
 			cur = newToken(TK_COMM, cur, "<line comment>", 0)
@@ -997,14 +997,14 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// skip block comment
-		if startsWith(string(file.Contents[curIdx:]), "/*") {
+		if startsWith(string(curFile.Contents[curIdx:]), "/*") {
 			// skip to the first of '*/' in userInput[curIdx:].
 			isatBol := atBol // The block comment is at the beginning of line, or not
-			idx := strIndex(string(file.Contents[curIdx:]), "*/")
+			idx := strIndex(string(curFile.Contents[curIdx:]), "*/")
 			if idx == -1 {
 				return nil, fmt.Errorf(
 					"tokenize(): err:\n%s",
-					errorAt(curIdx, "unclosed block comment"),
+					errorAt(curFile, curIdx, "unclosed block comment"),
 				)
 			}
 			cur = newToken(TK_COMM, cur, "<block comment>", 0)
@@ -1015,25 +1015,25 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// blank identifier
-		if contains("_", file.Contents[curIdx]) && !isIdent2(file.Contents[curIdx+1]) {
-			cur = newToken(TK_BLANKIDENT, cur, string(file.Contents[curIdx]), 1)
+		if contains("_", curFile.Contents[curIdx]) && !isIdent2(curFile.Contents[curIdx+1]) {
+			cur = newToken(TK_BLANKIDENT, cur, string(curFile.Contents[curIdx]), 1)
 			curIdx++
 			continue
 		}
 
 		// identifier
 		// if 'userInput[cutIdx]' is alphabets, it makes a token of TK_IDENT type.
-		if isIdent1(file.Contents[curIdx]) {
+		if isIdent1(curFile.Contents[curIdx]) {
 			ident := make([]byte, 0, 20)
-			for ; curIdx < len(file.Contents) && isIdent2(file.Contents[curIdx]); curIdx++ {
-				ident = append(ident, file.Contents[curIdx])
+			for ; curIdx < len(curFile.Contents) && isIdent2(curFile.Contents[curIdx]); curIdx++ {
+				ident = append(ident, curFile.Contents[curIdx])
 			}
 			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
 			continue
 		}
 
 		// string literal
-		if file.Contents[curIdx] == '"' {
+		if curFile.Contents[curIdx] == '"' {
 			var err error
 			cur, err = readStringLiteral(curIdx, cur)
 			if err != nil {
@@ -1043,7 +1043,7 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// character literal
-		if file.Contents[curIdx] == '\'' {
+		if curFile.Contents[curIdx] == '\'' {
 			var err error
 			cur, err = readCharLiteral(cur)
 			if err != nil {
@@ -1053,20 +1053,20 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// number
-		if isDigit(file.Contents[curIdx]) ||
-			(file.Contents[curIdx] == '.' && isDigit(file.Contents[curIdx+1])) {
+		if isDigit(curFile.Contents[curIdx]) ||
+			(curFile.Contents[curIdx] == '.' && isDigit(curFile.Contents[curIdx+1])) {
 			startIdx := curIdx
-			if curIdx+1 < len(file.Contents) &&
-				(startsWith(string(file.Contents[curIdx:curIdx+2]), "0X") ||
-					startsWith(string(file.Contents[curIdx:curIdx+2]), "0x")) {
+			if curIdx+1 < len(curFile.Contents) &&
+				(startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0X") ||
+					startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0x")) {
 				for {
-					if curIdx+1 < len(file.Contents) &&
-						contains("pP", file.Contents[curIdx]) &&
-						contains("+-", file.Contents[curIdx+1]) {
+					if curIdx+1 < len(curFile.Contents) &&
+						contains("pP", curFile.Contents[curIdx]) &&
+						contains("+-", curFile.Contents[curIdx+1]) {
 						curIdx += 2
-					} else if curIdx < len(file.Contents) &&
-						(isIdent2(file.Contents[curIdx]) ||
-							file.Contents[curIdx] == '.') {
+					} else if curIdx < len(curFile.Contents) &&
+						(isIdent2(curFile.Contents[curIdx]) ||
+							curFile.Contents[curIdx] == '.') {
 						curIdx++
 					} else {
 						break
@@ -1074,41 +1074,41 @@ func tokenize(file *File) (*Token, error) {
 				}
 			} else {
 				for {
-					if curIdx+1 < len(file.Contents) &&
-						contains("eEpP", file.Contents[curIdx]) &&
-						contains("+-", file.Contents[curIdx+1]) {
+					if curIdx+1 < len(curFile.Contents) &&
+						contains("eEpP", curFile.Contents[curIdx]) &&
+						contains("+-", curFile.Contents[curIdx+1]) {
 						curIdx += 2
-					} else if curIdx < len(file.Contents) &&
-						(isIdent2(file.Contents[curIdx]) ||
-							file.Contents[curIdx] == '.') {
+					} else if curIdx < len(curFile.Contents) &&
+						(isIdent2(curFile.Contents[curIdx]) ||
+							curFile.Contents[curIdx] == '.') {
 						curIdx++
 					} else {
 						break
 					}
 				}
 			}
-			cur = newToken2(TK_PP_NUM, cur, string(file.Contents[startIdx:curIdx]),
+			cur = newToken2(TK_PP_NUM, cur, string(curFile.Contents[startIdx:curIdx]),
 				curIdx-startIdx+1, startIdx)
 			continue
 		}
 
 		// keyword or multi-letter punctuator
-		kw := startsWithPunctuator(string(file.Contents[curIdx:]))
+		kw := startsWithPunctuator(string(curFile.Contents[curIdx:]))
 		if kw != "" {
 			cur = newToken(TK_RESERVED, cur, kw, len(kw))
 			curIdx += len(kw)
 			continue
 		}
 		// single-letter punctuator
-		if contains("+-()*/<>=;{},&[].!|^:?%#`", file.Contents[curIdx]) {
-			cur = newToken(TK_RESERVED, cur, string(file.Contents[curIdx]), 1)
+		if contains("+-()*/<>=;{},&[].!|^:?%#`", curFile.Contents[curIdx]) {
+			cur = newToken(TK_RESERVED, cur, string(curFile.Contents[curIdx]), 1)
 			curIdx++
 			continue
 		}
 
 		return nil, fmt.Errorf(
-			"tokenize(): err:\ncurIdx: %s\n%s", string(file.Contents[curIdx]),
-			errorAt(curIdx, "invalid token"),
+			"tokenize(): err:\ncurIdx: %s\n%s", string(curFile.Contents[curIdx]),
+			errorAt(curFile, curIdx, "invalid token"),
 		)
 	}
 
@@ -1176,14 +1176,14 @@ func readUniversalChar16(p []byte, len int) int {
 	return c
 }
 
-func readUniversalChar8(p []byte, len, idx int) int {
+func readUniversalChar8(file *File, p []byte, len, idx int) int {
 	c := 0
 
 	for i := 0; i < len; i++ {
 		if !isDigit(p[i]) {
 			return 0
 		} else if int(p[i])-'7' > 0 {
-			panic(errorAt(idx+i, "invalid character '%c' in octal escape", p[i]))
+			panic(errorAt(file, idx+i, "invalid character '%c' in octal escape", p[i]))
 		}
 		c = (c << 3) | (int(p[i]) - '0')
 	}
@@ -1191,7 +1191,7 @@ func readUniversalChar8(p []byte, len, idx int) int {
 }
 
 // Replace \, \x, \u or \U escape sequances with corresponding UTF-8 bytes.
-func convUniversalChars(p *[]byte) {
+func convUniversalChars(file *File, p *[]byte) {
 	i := 0
 	for i < len(*p) {
 		if i+2 <= len(*p) && startsWith(string((*p)[i:i+2]), "\\u") {
@@ -1226,9 +1226,9 @@ func convUniversalChars(p *[]byte) {
 			}
 		} else if i+2 <= len(*p) && (*p)[i] == '\\' && isDigit((*p)[i+1]) {
 			// '\' and 3 octal digits
-			c := readUniversalChar8((*p)[i+1:], 3, i)
+			c := readUniversalChar8(file, (*p)[i+1:], 3, i)
 			if c > 255 {
-				panic(errorAt(i, "octal escape value %d > 255", c))
+				panic(errorAt(file, i, "octal escape value %d > 255", c))
 			}
 			if c != 0 {
 				(*p)[i] = byte(c)
@@ -1254,8 +1254,7 @@ func tokenizeFile(path string) (*Token, error) {
 	}
 
 	file := newFile(path, fileno+1, p)
-	curFile = file
-	convUniversalChars(&file.Contents)
+	convUniversalChars(file, &file.Contents)
 	// fmt.Printf("file.Contents:\n%s\n\n", string(file.Contents))
 
 	// Save the filename for assembler .file directive.
