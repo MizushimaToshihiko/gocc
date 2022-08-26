@@ -964,20 +964,20 @@ func tokenize(file *File) (*Token, error) {
 	atBol = true
 	hasSpace = false
 
-	for curIdx < len(curFile.Contents) {
-		if curFile.Contents[curIdx] == 0 {
+	for curIdx < len(file.Contents) {
+		if file.Contents[curIdx] == 0 {
 			break
 		}
 
 		// skip space(s)
-		if isSpace(curFile.Contents[curIdx]) {
+		if isSpace(file.Contents[curIdx]) {
 			curIdx++
 			hasSpace = true
 			continue
 		}
 
 		// new line
-		if curFile.Contents[curIdx] == '\n' {
+		if file.Contents[curIdx] == '\n' {
 			cur = newToken(TK_NL, cur, "", 0)
 			curIdx++
 			atBol = true
@@ -986,9 +986,9 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// skip line comment
-		if startsWith(string(curFile.Contents[curIdx:]), "//") {
+		if startsWith(string(file.Contents[curIdx:]), "//") {
 			curIdx += 2
-			for ; curIdx < len(curFile.Contents) && curFile.Contents[curIdx] != '\n'; curIdx++ {
+			for ; curIdx < len(file.Contents) && file.Contents[curIdx] != '\n'; curIdx++ {
 				// skip to the end of line.
 			}
 			cur = newToken(TK_COMM, cur, "<line comment>", 0)
@@ -997,10 +997,10 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// skip block comment
-		if startsWith(string(curFile.Contents[curIdx:]), "/*") {
+		if startsWith(string(file.Contents[curIdx:]), "/*") {
 			// skip to the first of '*/' in userInput[curIdx:].
 			isatBol := atBol // The block comment is at the beginning of line, or not
-			idx := strIndex(string(curFile.Contents[curIdx:]), "*/")
+			idx := strIndex(string(file.Contents[curIdx:]), "*/")
 			if idx == -1 {
 				return nil, fmt.Errorf(
 					"tokenize(): err:\n%s",
@@ -1015,25 +1015,25 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// blank identifier
-		if contains("_", curFile.Contents[curIdx]) && !isIdent2(curFile.Contents[curIdx+1]) {
-			cur = newToken(TK_BLANKIDENT, cur, string(curFile.Contents[curIdx]), 1)
+		if contains("_", file.Contents[curIdx]) && !isIdent2(file.Contents[curIdx+1]) {
+			cur = newToken(TK_BLANKIDENT, cur, string(file.Contents[curIdx]), 1)
 			curIdx++
 			continue
 		}
 
 		// identifier
 		// if 'userInput[cutIdx]' is alphabets, it makes a token of TK_IDENT type.
-		if isIdent1(curFile.Contents[curIdx]) {
+		if isIdent1(file.Contents[curIdx]) {
 			ident := make([]byte, 0, 20)
-			for ; curIdx < len(curFile.Contents) && isIdent2(curFile.Contents[curIdx]); curIdx++ {
-				ident = append(ident, curFile.Contents[curIdx])
+			for ; curIdx < len(file.Contents) && isIdent2(file.Contents[curIdx]); curIdx++ {
+				ident = append(ident, file.Contents[curIdx])
 			}
 			cur = newToken(TK_IDENT, cur, string(ident), len(string(ident)))
 			continue
 		}
 
 		// string literal
-		if curFile.Contents[curIdx] == '"' {
+		if file.Contents[curIdx] == '"' {
 			var err error
 			cur, err = readStringLiteral(curIdx, cur)
 			if err != nil {
@@ -1043,7 +1043,7 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// character literal
-		if curFile.Contents[curIdx] == '\'' {
+		if file.Contents[curIdx] == '\'' {
 			var err error
 			cur, err = readCharLiteral(cur)
 			if err != nil {
@@ -1053,20 +1053,20 @@ func tokenize(file *File) (*Token, error) {
 		}
 
 		// number
-		if isDigit(curFile.Contents[curIdx]) ||
-			(curFile.Contents[curIdx] == '.' && isDigit(curFile.Contents[curIdx+1])) {
+		if isDigit(file.Contents[curIdx]) ||
+			(file.Contents[curIdx] == '.' && isDigit(file.Contents[curIdx+1])) {
 			startIdx := curIdx
-			if curIdx+1 < len(curFile.Contents) &&
-				(startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0X") ||
-					startsWith(string(curFile.Contents[curIdx:curIdx+2]), "0x")) {
+			if curIdx+1 < len(file.Contents) &&
+				(startsWith(string(file.Contents[curIdx:curIdx+2]), "0X") ||
+					startsWith(string(file.Contents[curIdx:curIdx+2]), "0x")) {
 				for {
-					if curIdx+1 < len(curFile.Contents) &&
-						contains("pP", curFile.Contents[curIdx]) &&
-						contains("+-", curFile.Contents[curIdx+1]) {
+					if curIdx+1 < len(file.Contents) &&
+						contains("pP", file.Contents[curIdx]) &&
+						contains("+-", file.Contents[curIdx+1]) {
 						curIdx += 2
-					} else if curIdx < len(curFile.Contents) &&
-						(isIdent2(curFile.Contents[curIdx]) ||
-							curFile.Contents[curIdx] == '.') {
+					} else if curIdx < len(file.Contents) &&
+						(isIdent2(file.Contents[curIdx]) ||
+							file.Contents[curIdx] == '.') {
 						curIdx++
 					} else {
 						break
@@ -1074,40 +1074,40 @@ func tokenize(file *File) (*Token, error) {
 				}
 			} else {
 				for {
-					if curIdx+1 < len(curFile.Contents) &&
-						contains("eEpP", curFile.Contents[curIdx]) &&
-						contains("+-", curFile.Contents[curIdx+1]) {
+					if curIdx+1 < len(file.Contents) &&
+						contains("eEpP", file.Contents[curIdx]) &&
+						contains("+-", file.Contents[curIdx+1]) {
 						curIdx += 2
-					} else if curIdx < len(curFile.Contents) &&
-						(isIdent2(curFile.Contents[curIdx]) ||
-							curFile.Contents[curIdx] == '.') {
+					} else if curIdx < len(file.Contents) &&
+						(isIdent2(file.Contents[curIdx]) ||
+							file.Contents[curIdx] == '.') {
 						curIdx++
 					} else {
 						break
 					}
 				}
 			}
-			cur = newToken2(TK_PP_NUM, cur, string(curFile.Contents[startIdx:curIdx]),
+			cur = newToken2(TK_PP_NUM, cur, string(file.Contents[startIdx:curIdx]),
 				curIdx-startIdx+1, startIdx)
 			continue
 		}
 
 		// keyword or multi-letter punctuator
-		kw := startsWithPunctuator(string(curFile.Contents[curIdx:]))
+		kw := startsWithPunctuator(string(file.Contents[curIdx:]))
 		if kw != "" {
 			cur = newToken(TK_RESERVED, cur, kw, len(kw))
 			curIdx += len(kw)
 			continue
 		}
 		// single-letter punctuator
-		if contains("+-()*/<>=;{},&[].!|^:?%#`", curFile.Contents[curIdx]) {
-			cur = newToken(TK_RESERVED, cur, string(curFile.Contents[curIdx]), 1)
+		if contains("+-()*/<>=;{},&[].!|^:?%#`", file.Contents[curIdx]) {
+			cur = newToken(TK_RESERVED, cur, string(file.Contents[curIdx]), 1)
 			curIdx++
 			continue
 		}
 
 		return nil, fmt.Errorf(
-			"tokenize(): err:\ncurIdx: %s\n%s", string(curFile.Contents[curIdx]),
+			"tokenize(): err:\ncurIdx: %s\n%s", string(file.Contents[curIdx]),
 			errorAt(curIdx, "invalid token"),
 		)
 	}
