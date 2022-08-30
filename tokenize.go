@@ -346,27 +346,22 @@ func strIndex(str string, substr string) int {
 
 func parseInt(str string, base, errIdx int) int64 {
 	var ret int64
-	digits := 0
-	for i := len(str) - 1; i >= 0; i-- {
+	for _, c := range str {
 		var num int64
-		if '0' <= str[i] && str[i] <= '9' {
-			num = int64(str[i] - '0')
-		} else if 'a' <= str[i] && str[i] <= 'f' {
-			num = int64(str[i]-'a'+1) + 9
-		} else if 'A' <= str[i] && str[i] <= 'F' {
-			num = int64(str[i]-'A'+1) + 9
-		} else if str[i] == '_' {
+		if '0' <= c && c <= '9' {
+			num = int64(c - '0')
+		} else if 'a' <= c && c <= 'f' {
+			num = int64(c-'a'+1) + 9
+		} else if 'A' <= c && c <= 'F' {
+			num = int64(c-'A'+1) + 9
+		} else if c == '_' {
 			continue
 		} else {
 			panic(errorAt(curFile, errIdx+i, "couldn't parse"))
 		}
 
-		for j := 0; j < digits; j++ {
-			num *= int64(base)
-		}
-		digits++
+		ret *= int64(base)
 		ret += num
-
 	}
 	return ret
 }
@@ -715,16 +710,16 @@ func fromHex(c int) int {
 	return c - 'A' + 10
 }
 
-func getEscapeChar(newPos *int, idx int) (byte, error) {
+func getEscapeChar(newPos *int, idx int) (int64, error) {
 	if '0' <= curFile.Contents[idx] && curFile.Contents[idx] <= '7' {
 		// Read octal number.
-		c := curFile.Contents[idx] - '0'
+		c := int64(curFile.Contents[idx]) - int64('0')
 		idx++
 		if '0' <= curFile.Contents[idx] && curFile.Contents[idx] <= '7' {
-			c = (c << 3) + (curFile.Contents[idx] - '0')
+			c = (c << 3) + (int64(curFile.Contents[idx]) - int64('0'))
 			idx++
 			if '0' <= curFile.Contents[idx] && curFile.Contents[idx] <= '7' {
-				c = (c << 3) + (curFile.Contents[idx] - '0')
+				c = (c << 3) + (int64(curFile.Contents[idx]) - int64('0'))
 				idx++
 			}
 		}
@@ -740,9 +735,9 @@ func getEscapeChar(newPos *int, idx int) (byte, error) {
 				"tokenize(): err:\n%s",
 				errorAt(curFile, idx, "invalid hex escape sequence"))
 		}
-		var c byte
+		var c int64
 		for ; isxdigit(curFile.Contents[idx]); idx++ {
-			c = (c << 4) + byte(fromHex(int(curFile.Contents[idx])))
+			c = (c << 4) + int64(fromHex(int(curFile.Contents[idx])))
 		}
 		*newPos = idx
 		return c, nil
@@ -768,7 +763,7 @@ func getEscapeChar(newPos *int, idx int) (byte, error) {
 	case 'e':
 		return 27, nil
 	default:
-		return curFile.Contents[idx], nil
+		return int64(curFile.Contents[idx]), nil
 	}
 }
 
@@ -811,7 +806,7 @@ func readStringLiteral(start int, cur *Token) (*Token, error) {
 	buf := make([]int64, 0, 1024)
 	for idx = start + 1; idx < end; idx++ {
 
-		var c byte
+		var c int64
 		if curFile.Contents[idx] == '\\' {
 			c, err = getEscapeChar(&idx, idx+1)
 			if err != nil {
@@ -844,7 +839,7 @@ func readCharLiteral(cur *Token) (*Token, error) {
 		)
 	}
 
-	var c byte
+	var c int64
 	var err error
 	if curFile.Contents[idx] == '\\' {
 		c, err = getEscapeChar(&idx, idx+1)
@@ -853,7 +848,7 @@ func readCharLiteral(cur *Token) (*Token, error) {
 		}
 		idx++
 	} else {
-		c = curFile.Contents[idx]
+		c = int64(curFile.Contents[idx])
 		idx++
 	}
 
@@ -866,7 +861,7 @@ func readCharLiteral(cur *Token) (*Token, error) {
 	idx++
 
 	tok := newToken(TK_NUM, cur, string(curFile.Contents[start:idx]), idx-start)
-	tok.Val = int64(c)
+	tok.Val = c
 	tok.Ty = ty_int
 	curIdx += tok.Len
 	return tok, nil

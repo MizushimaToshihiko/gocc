@@ -27,3 +27,28 @@ func encodeUft8(buf *[]byte, c int, idx int) int {
 	(*buf)[idx+3] = byte(0b10000000 | (c & 0b00111111))
 	return 4
 }
+
+// Read a UTF-8-encoded Unicode code point from a source file.
+// We assume that source files are always in UTF-8.
+//
+// UTF-8 is as variable-width encoding in which one code point is
+// encoed in one to four bytes. One byte UTF-8 code points are
+// identical to ASCII. Non-ASCII characters are encoded using more
+// than on bytes.
+// =>
+// Actually, it is decoded when converted to []byte, so do nothing.
+// It's just looking for the following single quotes.
+// func decodeUtf8(idx *int, p *[]byte) int64 {
+// 	// if (*p)[*idx] < 128 {
+// 	// 	*idx += 1
+// 	// 	return int64((*p)[*idx])
+// 	// }
+
+// 	var i int
+// 	for i = *idx; i < 4 && (*p)[i] != '\''; i++ {
+// 	}
+// 	*idx += *idx + i-1
+
+// 	return i
+
+// }
