@@ -2,7 +2,7 @@
 
 # [Choice] Ubuntu version: hirsute, bionic, focal
 ARG VARIANT="focal"
-FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
+FROM --platform=linux/x86_64 mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
 WORKDIR /root/
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
@@ -18,15 +18,15 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
         strace \
         gdb
 
-FROM mcr.microsoft.com/vscode/devcontainers/go:1.18
+FROM --platform=linux/x86_64 mcr.microsoft.com/vscode/devcontainers/go:1.18
 
 WORKDIR /go/src/github.com/MizushimaToshihiko/gocc
 
 COPY --from=0 /root/ ./
 
 # Golang 環境構築(任意)
-RUN go get golang.org/x/tools/gopls \
-  golang.org/x/tools/cmd/godoc
+# RUN go install golang.org/x/tools/gopls@latest \
+#  golang.org/x/tools/cmd/godoc@latest
 
 RUN go install github.com/tenntenn/goplayground/cmd/gp@latest
-RUN go get -u github.com/kisielk/errcheck
+# RUN go install -u github.com/kisielk/errcheck@latest
