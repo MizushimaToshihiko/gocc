@@ -417,3 +417,4 @@ https://cloudsmith.co.jp/blog/backend/go/2021/06/1816290.html
  - 2022/05/27 多値返却関数について参考になりそうなcompiler explorerのリンク  
  https://godbolt.org/z/aT4dWqsM1  
  https://godbolt.org/z/eGPxnn78x
+ https://godbolt.org/z/nPMPeYsb3
