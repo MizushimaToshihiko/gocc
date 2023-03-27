@@ -3870,7 +3870,8 @@ func function(tok *Token) *Token {
 // var x string = "abc"
 // var x [2]int = [2]int{1,2}
 // var x T(typedef) = T{1,2}
-func globalVar(tok *Token) *Token {
+// regGlobalVar : register global variables.
+func regGlobalVar(tok *Token) *Token {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -3896,6 +3897,36 @@ func globalVar(tok *Token) *Token {
 	ty := copyType(identList[len(identList)-1].Ty)
 	for j := len(identList) - 2; j >= 0; j-- {
 		identList[j].Ty = ty
+	}
+
+	for !equal(tok, ";") {
+		tok = tok.Next
+	}
+
+	return tok
+}
+
+func globalVar(tok *Token) *Token {
+	printCurTok(tok)
+	printCalledFunc()
+
+	var i int
+
+	identList := make([]*Obj, 0)
+
+	for !equal(tok, "=") && !equal(tok, ":=") && !equal(tok, ";") {
+		if i > 0 {
+			tok = skip(tok, ",")
+		}
+		i++
+
+		ty := declarator(&tok, tok)
+		if ty.Name == nil {
+			panic("\n" + errorTok(ty.NamePos, "variable name omitted"))
+		}
+
+		v := findVar(ty.Name).Obj
+		identList = append(identList, v)
 	}
 
 	if equal(tok, "=") {
@@ -3929,6 +3960,41 @@ func parse(tok *Token) *Obj {
 	if consume(&tok, tok, "package") {
 		tok = tok.Next.Next
 	}
+
+	startTok := tok
+
+	for !atEof(tok) {
+
+		if equal(tok, "var") && equal(tok.Next, "(") {
+			tok = tok.Next.Next
+
+			for !equal(tok, ")") {
+				if tok.Kind == TK_COMM {
+					// skip line comment
+					tok = tok.Next
+					continue
+				}
+
+				if tok.Kind != TK_IDENT && tok.Kind == TK_BLANKIDENT {
+					panic("\n" + errorTok(tok, "unexpected expression"))
+				}
+				tok = regGlobalVar(tok)
+			}
+			tok = skip(tok, ")")
+			tok = skip(tok, ";")
+			continue
+		}
+
+		if consume(&tok, tok, "var") {
+			tok = regGlobalVar(tok)
+			continue
+		}
+
+		tok = tok.Next
+
+	}
+
+	tok = startTok
 
 	for !atEof(tok) {
 
