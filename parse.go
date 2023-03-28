@@ -3820,7 +3820,6 @@ func function(tok *Token) *Token {
 	locals = nil
 	enterScope()
 	createParamLvars(ty.Params)
-	fn.Params = locals
 
 	// A buffer for a struct return value is passed
 	// as the hidden first parameter.
@@ -3829,6 +3828,8 @@ func function(tok *Token) *Token {
 			newLvar("", pointerTo(rty))
 		}
 	}
+	fn.Params = locals
+
 	tok = skip(tok, "{")
 
 	// [https://www.sigbus.info/n1570#6.4.2.2p1] "__func__" is
