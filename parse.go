@@ -235,9 +235,13 @@ func findVar(tok *Token) *VarScope {
 	printCurTok(tok)
 	printCalledFunc()
 
+	// fmt.Println("tok.Str:", tok.Str)
 	for sc := scope; sc != nil; sc = sc.Next {
 		for sc2 := sc.Vars; sc2 != nil; sc2 = sc2.Next {
 			if equal(tok, sc2.Name) {
+				// if sc2.Name == "g40" || sc2.Name == "g032" {
+				// 	fmt.Printf("sc2: %#v\n\n", sc2)
+				// }
 				return sc2
 			}
 		}
@@ -437,6 +441,7 @@ func newVar(name string, ty *Type) *Obj {
 	v := &Obj{Name: name, Ty: ty, Align: ty.Align}
 	if name != "_" {
 		pushScope(name).Obj = v
+		// fmt.Printf("v: %#v\n\n", v)
 	}
 	return v
 }
@@ -3078,7 +3083,9 @@ func funcDecl(rest **Token, tok *Token, name *Token) *Type {
 	ty := pointerTo(funcType(retty, head.Next))
 
 	if name != nil {
-		pushScope(getIdent(name)).TyDef = ty
+		if findVar(name) == nil {
+			pushScope(getIdent(name)).TyDef = ty
+		}
 	} else {
 		pushScope(newUniqueName()).TyDef = ty
 	}
@@ -3154,7 +3161,9 @@ func structDecl(rest **Token, tok *Token, name *Token) *Type {
 	// Construct a struct object.
 	ty := structType()
 	if name != nil {
-		pushScope(getIdent(name)).TyDef = ty
+		if findVar(name) == nil {
+			pushScope(getIdent(name)).TyDef = ty
+		}
 	} else {
 		pushScope(newUniqueName()).TyDef = ty
 	}
@@ -3900,19 +3909,29 @@ func globalVar(tok *Token) *Token {
 			panic("\n" + errorTok(ty.NamePos, "variable name omitted"))
 		}
 
-		v := findVar(ty.Name).Obj
-		// fmt.Printf("v: %#v\n", v)
-		// fmt.Printf("ty.Name: %#v\n", ty.Name)
-		identList = append(identList, v)
+		if ty.Name.Kind != TK_BLANKIDENT {
+			v := findVar(ty.Name).Obj
+			identList = append(identList, v)
+		} else {
+			identList = append(identList, nil)
+		}
 	}
 
-	if equal(tok, "=") {
-		j := 0
-		for !equal(tok, ";") {
-			v := identList[j]
-			// fmt.Printf("v: %#v\n", v)
-			gvarInitializer(&tok, tok.Next, v)
-			j++
+	if consume(&tok, tok, "=") {
+		for i, v := range identList {
+			if equal(tok, ";") {
+				break
+			}
+			if i > 0 {
+				tok = skip(tok, ",")
+			}
+			if v != nil {
+				gvarInitializer(&tok, tok, v)
+			} else {
+				for !equal(tok, ",") && !equal(tok, ";") {
+					tok = tok.Next
+				}
+			}
 		}
 
 	} else {
@@ -3948,6 +3967,9 @@ func regGlobalVar(tok *Token) *Token {
 		}
 
 		v := newGvar(getIdent(ty.Name), ty)
+		// if ty.Name.Str == "g40" {
+		// 	fmt.Printf("v: %#v\n\n", v)
+		// }
 		identList = append(identList, v)
 	}
 
@@ -3956,6 +3978,9 @@ func regGlobalVar(tok *Token) *Token {
 	for j := len(identList) - 2; j >= 0; j-- {
 		identList[j].Ty = ty
 	}
+	// if identList[0].Ty.Name.Str == "g40" {
+	// 	fmt.Printf("identList[0]: %#v\n\n", identList[0])
+	// }
 
 	for !consume(&tok, tok, ";") {
 		tok = tok.Next
@@ -3996,9 +4021,11 @@ func skipTypedef(tok *Token) *Token {
 	printCurTok(tok)
 	printCalledFunc()
 
+	tok = tok.Next
 	readTypePreffix(&tok, tok, nil)
-	// fmt.Printf("tok: %s\n\n", tok.Str)
-	tok = skipParenth(tok.Next)
+	if !equal(tok, ";") {
+		tok = skipParenth(tok.Next)
+	}
 	tok = skip(tok, ";")
 	return tok
 }
@@ -4088,13 +4115,19 @@ func parse(tok *Token) *Obj {
 
 	}
 
-	start := globals
-	for globals != nil {
-		fmt.Printf("globals.Name : %#v\n", globals.Name)
-		globals = globals.Next
-	}
+	// start := globals
+	// for globals != nil {
+	// 	fmt.Printf("globals.Name : %#v\n", globals.Name)
+	// 	globals = globals.Next
+	// }
+	// globals = start
 
-	globals = start
+	// for sc := scope; sc != nil; sc = sc.Next {
+	// 	for sc2 := sc.Vars; sc2 != nil; sc2 = sc2.Next {
+	// 		fmt.Printf("sc2.Name: %#v\n\n", sc2.Name)
+	// 	}
+	// }
+
 	tok = startTok
 
 	for !atEof(tok) {
