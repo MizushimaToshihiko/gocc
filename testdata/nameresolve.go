@@ -1,4 +1,4 @@
-package test_
+package test_nameresolve
 
 func assert(want int, act int, code string)
 func println(format string)
@@ -8,8 +8,13 @@ func strcmp(s1, s2 string)
 
 func main() {
 	ASSERT(10, x)
+	ASSERT(3, add2(1, 2))
 
 	println("OK")
 }
 
 var x int = 10
+
+func add2(x int, y int) int {
+	return x + y
+}

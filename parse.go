@@ -235,13 +235,9 @@ func findVar(tok *Token) *VarScope {
 	printCurTok(tok)
 	printCalledFunc()
 
-	// fmt.Println("tok.Str:", tok.Str)
 	for sc := scope; sc != nil; sc = sc.Next {
 		for sc2 := sc.Vars; sc2 != nil; sc2 = sc2.Next {
 			if equal(tok, sc2.Name) {
-				// if sc2.Name == "g40" || sc2.Name == "g032" {
-				// 	fmt.Printf("sc2: %#v\n\n", sc2)
-				// }
 				return sc2
 			}
 		}
@@ -441,7 +437,6 @@ func newVar(name string, ty *Type) *Obj {
 	v := &Obj{Name: name, Ty: ty, Align: ty.Align}
 	if name != "_" {
 		pushScope(name).Obj = v
-		// fmt.Printf("v: %#v\n\n", v)
 	}
 	return v
 }
@@ -1442,10 +1437,6 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	printCurTok(tok)
 	printCalledFunc()
 
-	// fmt.Printf("rest: %#v\n", rest)
-	// fmt.Printf("tok: %#v\n", tok)
-	// fmt.Printf("v.Ty: %#v\n", v.Ty)
-	// fmt.Printf("v: %#v\n", v)
 	init := initializer(rest, tok, v.Ty, &v.Ty, v)
 	head := &Relocation{}
 	var buf []int64 = make([]int64, v.Ty.Sz)
@@ -1803,7 +1794,6 @@ func stmt(rest **Token, tok *Token) *Node {
 			}
 
 			exp := assign(&tok, tok)
-			// fmt.Printf("stmt: tok: %#v\n\n", tok)
 			addType(exp)
 			if ty.Kind != TY_STRUCT {
 				exp = newCast(exp, ty)
@@ -2252,7 +2242,6 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 
 		} else {
 			cur.Next = stmt(&tok, tok)
-			// fmt.Printf("compoundStmt: tok: %#v\n\n", tok)
 			if isAppend {
 				cur = cur.Next
 				addType(cur)
@@ -2271,7 +2260,6 @@ func compoundStmt(rest **Token, tok *Token) *Node {
 
 	node.Body = head.Next
 	*rest = tok.Next
-	// fmt.Printf("compoundStmt: tok: %#v\n\n", tok)
 	return node
 }
 
@@ -3421,8 +3409,6 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 
 	*rest = skip(tok, ")")
 
-	// fmt.Printf("funcall: ty: %#v\n\n", ty)
-
 	node := newUnary(ND_FUNCALL, fn, tok)
 	node.FuncTy = ty
 	node.Ty = ty.RetTy
@@ -3433,7 +3419,6 @@ func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	vhead := &Obj{}
 	vcur := vhead
 	for r := ty.RetTy; r != nil; r = r.Next {
-		// fmt.Printf("funcall: r: %#v\n\n", r)
 		if r.Kind == TY_STRUCT {
 			vcur.RetNext = newLvar(newFavName("retbuf"), r)
 			vcur = vcur.RetNext
@@ -3803,42 +3788,33 @@ func function(tok *Token) *Token {
 	printCurTok(tok)
 	printCalledFunc()
 
-	ty := declarator(&tok, tok)
-	if ty.Name == nil {
-		panic("\n" + errorTok(ty.NamePos, "function name omitted"))
+	ty2 := declarator(&tok, tok)
+	if ty2.Name == nil {
+		panic("\n" + errorTok(ty2.NamePos, "function name omitted"))
 	}
 
-	var retTy *Type
 	if consume(&tok, tok, "(") {
-		head := &Type{}
-		cur := head
 		first := true
 		for !consume(&tok, tok, ")") {
 			if !first {
 				tok = skip(tok, ",")
 			}
 			first = false
-			ret := readTypePreffix(&tok, tok, nil)
-			cur.Next = copyType(ret)
-			cur = cur.Next
+			readTypePreffix(&tok, tok, nil)
 		}
-		retTy = head.Next
 	} else {
-		retTy = readTypePreffix(&tok, tok, nil)
+		readTypePreffix(&tok, tok, nil)
 	}
 
-	isvariadic := ty.IsVariadic
-	name := ty.Name
-	ty = funcType(retTy, ty.Params)
-	ty.IsVariadic = isvariadic
-
-	fn := newGvar(getIdent(name), ty)
-	fn.IsFunc = true
-	fn.IsDef = !consume(&tok, tok, ";")
-
+	fn := findVar(ty2.Name).Obj
+	if fn == nil {
+		panic("\n" + errorTok(tok, "unexpected error: cannot find %s", ty2.Name.Str))
+	}
 	if !fn.IsDef {
 		return tok
 	}
+
+	ty := fn.Ty
 
 	curFn = fn
 	locals = nil
@@ -3853,9 +3829,6 @@ func function(tok *Token) *Token {
 		}
 	}
 	fn.Params = locals
-	if ty.IsVariadic {
-		fn.VaArea = newLvar("__va_area__", arrayOf(ty_char, 136))
-	}
 
 	tok = skip(tok, "{")
 
@@ -3967,9 +3940,6 @@ func regGlobalVar(tok *Token) *Token {
 		}
 
 		v := newGvar(getIdent(ty.Name), ty)
-		// if ty.Name.Str == "g40" {
-		// 	fmt.Printf("v: %#v\n\n", v)
-		// }
 		identList = append(identList, v)
 	}
 
@@ -3978,9 +3948,6 @@ func regGlobalVar(tok *Token) *Token {
 	for j := len(identList) - 2; j >= 0; j-- {
 		identList[j].Ty = ty
 	}
-	// if identList[0].Ty.Name.Str == "g40" {
-	// 	fmt.Printf("identList[0]: %#v\n\n", identList[0])
-	// }
 
 	for !consume(&tok, tok, ";") {
 		tok = tok.Next
@@ -3989,7 +3956,10 @@ func regGlobalVar(tok *Token) *Token {
 	return tok
 }
 
-func skipFunc(tok *Token) *Token {
+// regFunc registers functions
+// Registers the specified function name, arguments,
+// and return value information into the global namespace.
+func regFunc(tok *Token) *Token {
 	printCurTok(tok)
 	printCalledFunc()
 
@@ -3998,20 +3968,42 @@ func skipFunc(tok *Token) *Token {
 		panic("\n" + errorTok(ty.NamePos, "function name omitted"))
 	}
 
+	var retTy *Type
 	if consume(&tok, tok, "(") {
+		head := &Type{}
+		cur := head
 		first := true
 		for !consume(&tok, tok, ")") {
 			if !first {
 				tok = skip(tok, ",")
 			}
 			first = false
-			readTypePreffix(&tok, tok, nil)
+			ret := readTypePreffix(&tok, tok, nil)
+			cur.Next = copyType(ret)
+			cur = cur.Next
 		}
+		retTy = head.Next
 	} else {
-		readTypePreffix(&tok, tok, nil)
+		retTy = readTypePreffix(&tok, tok, nil)
 	}
 
-	// fmt.Printf("tok: %s\n\n", tok.Str)
+	isvariadic := ty.IsVariadic
+	name := ty.Name
+	ty = funcType(retTy, ty.Params)
+	ty.IsVariadic = isvariadic
+
+	fn := newGvar(getIdent(name), ty)
+	fn.IsFunc = true
+	fn.IsDef = !consume(&tok, tok, ";")
+
+	if !fn.IsDef {
+		return tok
+	}
+
+	if ty.IsVariadic {
+		fn.VaArea = newLvar("__va_area__", arrayOf(ty_char, 136))
+	}
+
 	tok = skipParenth(tok)
 	tok = skip(tok, ";")
 	return tok
@@ -4102,7 +4094,7 @@ func parse(tok *Token) *Obj {
 		}
 
 		if consume(&tok, tok, "func") {
-			tok = skipFunc(tok)
+			tok = regFunc(tok)
 			continue
 		}
 
@@ -4114,19 +4106,6 @@ func parse(tok *Token) *Obj {
 		tok = tok.Next
 
 	}
-
-	// start := globals
-	// for globals != nil {
-	// 	fmt.Printf("globals.Name : %#v\n", globals.Name)
-	// 	globals = globals.Next
-	// }
-	// globals = start
-
-	// for sc := scope; sc != nil; sc = sc.Next {
-	// 	for sc2 := sc.Vars; sc2 != nil; sc2 = sc2.Next {
-	// 		fmt.Printf("sc2.Name: %#v\n\n", sc2.Name)
-	// 	}
-	// }
 
 	tok = startTok
 
