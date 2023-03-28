@@ -1,6 +1,4 @@
-//
 // code generator
-//
 package main
 
 import (
@@ -498,20 +496,20 @@ func (c *codeWriter) pushArgs2(args *Node, firstPass bool) {
 // function is to load them to registers or push them to the stack as
 // specified by the x86-64 psABI. Here is what the spec says:
 //
-//  - Up to 6 arguments of integral type are passed using RDI, RSI,
-//    RDX, RCX, R8 and R9.
+//   - Up to 6 arguments of integral type are passed using RDI, RSI,
+//     RDX, RCX, R8 and R9.
 //
-//  - UP tp 8 arguments of floating-point type are passed using XMM0 to
-//    XMM7.
+//   - UP tp 8 arguments of floating-point type are passed using XMM0 to
+//     XMM7.
 //
-//  - If all registers of an appropriate type are already used, push an
-//    argument to the stack in the right-to-left order.
+//   - If all registers of an appropriate type are already used, push an
+//     argument to the stack in the right-to-left order.
 //
-//  - Each argument passed on the stack takes 8 bytes, and the end of
-//    the argument area must be aligned to a 16 bytes boundary.
+//   - Each argument passed on the stack takes 8 bytes, and the end of
+//     the argument area must be aligned to a 16 bytes boundary.
 //
-//  - If a function is variadic, set the number of floating-point type
-//    arguments to RAX.
+//   - If a function is variadic, set the number of floating-point type
+//     arguments to RAX.
 func (c *codeWriter) pushArgs(node *Node) int {
 	if c.err != nil {
 		return -1
@@ -771,6 +769,9 @@ func (c *codeWriter) copyStructReg(ty *Type) {
 
 func (c *codeWriter) copyStructMem(ty *Type) {
 	v := curFnInGen.Params
+
+	fmt.Printf("copyStructMem: v: %#v\n\n", v)
+	fmt.Printf("copyStructMem: curFnInGen.Name: %#v\n\n", curFnInGen.Name)
 
 	c.println("	mov %d(%%rbp), %%rdi", v.Offset)
 
