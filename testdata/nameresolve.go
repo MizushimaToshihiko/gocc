@@ -1,9 +1,5 @@
 package test_nameresolve
 
-func assert(want int, act int, code string)
-func println(format string)
-func strcmp(s1, s2 string)
-
 #include "test.h"
 
 func main() {
@@ -18,3 +14,8 @@ var x int = 10
 func add2(x int, y int) int {
 	return x + y
 }
+
+
+func assert(want int, act int, code string)
+func println(format string)
+func strcmp(s1, s2 string)
