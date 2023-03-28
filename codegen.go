@@ -770,9 +770,6 @@ func (c *codeWriter) copyStructReg(ty *Type) {
 func (c *codeWriter) copyStructMem(ty *Type) {
 	v := curFnInGen.Params
 
-	fmt.Printf("copyStructMem: v: %#v\n\n", v)
-	fmt.Printf("copyStructMem: curFnInGen.Name: %#v\n\n", curFnInGen.Name)
-
 	c.println("	mov %d(%%rbp), %%rdi", v.Offset)
 
 	for i := 0; i < ty.Sz; i++ {
