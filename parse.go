@@ -1,4 +1,3 @@
-//
 // parser
 //
 // This file contains a recursive descent parser for Go(or Go-like language).
@@ -18,7 +17,6 @@
 // Most parsing functions don't change the global state of the parser.
 // So it is very easy to lookahead arbitrary number of tokens in this
 // parser.
-//
 package main
 
 import (
@@ -237,9 +235,13 @@ func findVar(tok *Token) *VarScope {
 	printCurTok(tok)
 	printCalledFunc()
 
+	// fmt.Println("tok.Str:", tok.Str)
 	for sc := scope; sc != nil; sc = sc.Next {
 		for sc2 := sc.Vars; sc2 != nil; sc2 = sc2.Next {
 			if equal(tok, sc2.Name) {
+				// if sc2.Name == "g40" || sc2.Name == "g032" {
+				// 	fmt.Printf("sc2: %#v\n\n", sc2)
+				// }
 				return sc2
 			}
 		}
@@ -439,6 +441,7 @@ func newVar(name string, ty *Type) *Obj {
 	v := &Obj{Name: name, Ty: ty, Align: ty.Align}
 	if name != "_" {
 		pushScope(name).Obj = v
+		// fmt.Printf("v: %#v\n\n", v)
 	}
 	return v
 }
@@ -553,8 +556,8 @@ func pushTagScope(tok *Token, ty *Type) {
 //
 // declspec = "*"* builtin-type | struct-decl | typedef-name |
 // builtin-type = void | "bool" | "byte"| "int16" | "int" | "int64" |
-//                "string"
 //
+//	"string"
 func declSpec(rest **Token, tok *Token, name *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
@@ -673,7 +676,8 @@ func readTypePreffix(rest **Token, tok *Token, name *Token) *Type {
 }
 
 // declarator = ident (type-preffix)? declspec
-//            | ident type-suffix
+//
+//	| ident type-suffix
 func declarator(rest **Token, tok *Token) *Type {
 	printCurTok(tok)
 	printCalledFunc()
@@ -701,12 +705,13 @@ func declarator(rest **Token, tok *Token) *Type {
 // func-params = (param ("," param)* ("," "...")? ")"
 // param = declarator
 // e.g.
-//  x int
-//  x *int
-//  x **int
-//  x [3]int
-//  x [3]*int
-//  x [2]**int
+//
+//	x int
+//	x *int
+//	x **int
+//	x [3]int
+//	x [3]*int
+//	x [2]**int
 func funcParams(rest **Token, tok *Token, ty *Type) *Type {
 	printCurTok(tok)
 	printCalledFunc()
@@ -852,8 +857,8 @@ func stringInitializer(rest **Token, tok *Token, init *Initializer) {
 //
 // Use `fieldname :` to move the cursor for a struct initializer. E.g.
 //
-//   type T struct { a int; b int; c int; };
-//   var x T = T{c: 5};
+//	type T struct { a int; b int; c int; };
+//	var x T = T{c: 5};
 //
 // The above initializer sets x.c to 5.
 func structDesignator(rest **Token, tok *Token, ty *Type) *Member {
@@ -1004,8 +1009,9 @@ func countArrInitElem(tok *Token, ty *Type) int {
 }
 
 // initializer = string-initializer | array-initializer
-//             | struct-initializer
-//             | assign
+//
+//	| struct-initializer
+//	| assign
 func initializer2(rest **Token, tok *Token, init *Initializer) {
 	printCurTok(tok)
 	printCalledFunc()
@@ -1276,7 +1282,8 @@ func createLvarInit(init *Initializer, ty *Type, desg *InitDesg, tok *Token) *No
 }
 
 // lvar-initializer = assign
-//                  | "{" lvar-initializer ("," lvar-initializer)* "}"
+//
+//	| "{" lvar-initializer ("," lvar-initializer)* "}"
 //
 // An initializer for a local variable is expanded to multiple
 // assignments. For example, this function creates the following
@@ -1290,10 +1297,12 @@ func createLvarInit(init *Initializer, ty *Type, desg *InitDesg, tok *Token) *No
 // x[1][2]=6
 //
 // Struct members are initialized in declaration order. For example,
-// 'type x struct {
-// 	a int
-// 	b int
-// }
+//
+//	'type x struct {
+//		a int
+//		b int
+//	}
+//
 // var x T = T{1, 2}'
 // sets x.a to 1 and x.b to 2.
 //
@@ -1365,8 +1374,6 @@ func divFloat64(target int64, errIdx int) []int64 {
 	return ret
 }
 
-//
-//
 func writeGvarData(
 	cur *Relocation, init *Initializer, ty *Type, buf *[]int64,
 	offset int) *Relocation {
@@ -1435,6 +1442,10 @@ func gvarInitializer(rest **Token, tok *Token, v *Obj) {
 	printCurTok(tok)
 	printCalledFunc()
 
+	// fmt.Printf("rest: %#v\n", rest)
+	// fmt.Printf("tok: %#v\n", tok)
+	// fmt.Printf("v.Ty: %#v\n", v.Ty)
+	// fmt.Printf("v: %#v\n", v)
 	init := initializer(rest, tok, v.Ty, &v.Ty, v)
 	head := &Relocation{}
 	var buf []int64 = make([]int64, v.Ty.Sz)
@@ -1742,19 +1753,21 @@ func hasSimpleStmt(tok *Token) bool {
 }
 
 // stmt = "return" expr? ";"
-//      | "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
-//      | "switch" "{" expr "}" stmt
-//      | "case" const-expr ":" stmt
-//      | "default" ":" stmt
-//      | for-stmt
-//      | for-clause
-//      | "{" stmt* "}"
-//      | "break" ";"
-//      | "continue" ";"
-//      | "goto" ident ";"
-//      | ident ":" stmt
-//      | assign-list
-//      | expr ";"
+//
+//	| "if" expr "{" stmt "};" ("else" "{" stmt "};" )?
+//	| "switch" "{" expr "}" stmt
+//	| "case" const-expr ":" stmt
+//	| "default" ":" stmt
+//	| for-stmt
+//	| for-clause
+//	| "{" stmt* "}"
+//	| "break" ";"
+//	| "continue" ";"
+//	| "goto" ident ";"
+//	| ident ":" stmt
+//	| assign-list
+//	| expr ";"
+//
 // for-stmt = "for" [ condition ] block .
 // for-clause = "for" (expr? ";" | declaration) condition ";" expr? block
 // condition = expr .
@@ -2958,7 +2971,8 @@ func mul(rest **Token, tok *Token) *Node {
 }
 
 // cast = type-name "(" cast ")"
-//      | unary
+//
+//	| unary
 func cast(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -2982,7 +2996,8 @@ func cast(rest **Token, tok *Token) *Node {
 }
 
 // unary   = ("+" | "-" | "*" | "&" | "!")? cast
-//         | postfix
+//
+//	| postfix
 func unary(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -3068,7 +3083,9 @@ func funcDecl(rest **Token, tok *Token, name *Token) *Type {
 	ty := pointerTo(funcType(retty, head.Next))
 
 	if name != nil {
-		pushScope(getIdent(name)).TyDef = ty
+		if findVar(name) == nil {
+			pushScope(getIdent(name)).TyDef = ty
+		}
 	} else {
 		pushScope(newUniqueName()).TyDef = ty
 	}
@@ -3144,7 +3161,9 @@ func structDecl(rest **Token, tok *Token, name *Token) *Type {
 	// Construct a struct object.
 	ty := structType()
 	if name != nil {
-		pushScope(getIdent(name)).TyDef = ty
+		if findVar(name) == nil {
+			pushScope(getIdent(name)).TyDef = ty
+		}
 	} else {
 		pushScope(newUniqueName()).TyDef = ty
 	}
@@ -3254,14 +3273,16 @@ func sliceExpr(rest **Token, tok *Token, cur *Node, idx *Node, start *Token) *No
 }
 
 // postfix = "(" type-name ")" "{" initializer-list "}"
-//         | primary postfix-tail*
+//
+//	| primary postfix-tail*
 //
 // postfix-tail = "[" expr "]"
-//              | "(" func-args ")"
-//              | slice-expr
-//              | "." ident
-//              | "++"
-//              | "--"
+//
+//	| "(" func-args ")"
+//	| slice-expr
+//	| "." ident
+//	| "++"
+//	| "--"
 func postfix(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -3345,8 +3366,6 @@ func postfix(rest **Token, tok *Token) *Node {
 }
 
 // funcall = "(" (assign ("," assign)*)? ")"
-//
-//
 func funcall(rest **Token, tok *Token, fn *Node) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -3439,16 +3458,17 @@ func countAppElem(tok *Token) int {
 }
 
 // primary = "(" expr ")"
-//         | "Sizeof" "(" type-name ")"
-//         | "Sizeof" unary
-//         | "len" unary
-//         | "cap" unary
-//         | "make" "(" type-name "," const-expr "," const-expr ")"
-//         | "append" "(" postfix "," assign ( "," assign)* ")"
-//         | "copy" "(" assign "," assign ")"
-//         | ident
-//         | str
-//         | num
+//
+//	| "Sizeof" "(" type-name ")"
+//	| "Sizeof" unary
+//	| "len" unary
+//	| "cap" unary
+//	| "make" "(" type-name "," const-expr "," const-expr ")"
+//	| "append" "(" postfix "," assign ( "," assign)* ")"
+//	| "copy" "(" assign "," assign ")"
+//	| ident
+//	| str
+//	| num
 func primary(rest **Token, tok *Token) *Node {
 	printCurTok(tok)
 	printCalledFunc()
@@ -3889,21 +3909,29 @@ func globalVar(tok *Token) *Token {
 			panic("\n" + errorTok(ty.NamePos, "variable name omitted"))
 		}
 
-		v := newGvar(getIdent(ty.Name), ty)
-		identList = append(identList, v)
+		if ty.Name.Kind != TK_BLANKIDENT {
+			v := findVar(ty.Name).Obj
+			identList = append(identList, v)
+		} else {
+			identList = append(identList, nil)
+		}
 	}
 
-	ty := copyType(identList[len(identList)-1].Ty)
-	for j := len(identList) - 2; j >= 0; j-- {
-		identList[j].Ty = ty
-	}
-
-	if equal(tok, "=") {
-		j := 0
-		for !equal(tok, ";") {
-			v := identList[j]
-			gvarInitializer(&tok, tok.Next, v)
-			j++
+	if consume(&tok, tok, "=") {
+		for i, v := range identList {
+			if equal(tok, ";") {
+				break
+			}
+			if i > 0 {
+				tok = skip(tok, ",")
+			}
+			if v != nil {
+				gvarInitializer(&tok, tok, v)
+			} else {
+				for !equal(tok, ",") && !equal(tok, ";") {
+					tok = tok.Next
+				}
+			}
 		}
 
 	} else {
@@ -3918,6 +3946,120 @@ func globalVar(tok *Token) *Token {
 	return tok
 }
 
+// regGlobalVar : register global variables.
+func regGlobalVar(tok *Token) *Token {
+	printCurTok(tok)
+	printCalledFunc()
+
+	var i int
+
+	identList := make([]*Obj, 0)
+
+	for !equal(tok, "=") && !equal(tok, ":=") && !equal(tok, ";") {
+		if i > 0 {
+			tok = skip(tok, ",")
+		}
+		i++
+
+		ty := declarator(&tok, tok)
+		if ty.Name == nil {
+			panic("\n" + errorTok(ty.NamePos, "variable name omitted"))
+		}
+
+		v := newGvar(getIdent(ty.Name), ty)
+		// if ty.Name.Str == "g40" {
+		// 	fmt.Printf("v: %#v\n\n", v)
+		// }
+		identList = append(identList, v)
+	}
+
+	// ex) ident, ident, ident typename
+	ty := copyType(identList[len(identList)-1].Ty)
+	for j := len(identList) - 2; j >= 0; j-- {
+		identList[j].Ty = ty
+	}
+	// if identList[0].Ty.Name.Str == "g40" {
+	// 	fmt.Printf("identList[0]: %#v\n\n", identList[0])
+	// }
+
+	for !consume(&tok, tok, ";") {
+		tok = tok.Next
+	}
+
+	return tok
+}
+
+func skipFunc(tok *Token) *Token {
+	printCurTok(tok)
+	printCalledFunc()
+
+	ty := declarator(&tok, tok)
+	if ty.Name == nil {
+		panic("\n" + errorTok(ty.NamePos, "function name omitted"))
+	}
+
+	if consume(&tok, tok, "(") {
+		first := true
+		for !consume(&tok, tok, ")") {
+			if !first {
+				tok = skip(tok, ",")
+			}
+			first = false
+			readTypePreffix(&tok, tok, nil)
+		}
+	} else {
+		readTypePreffix(&tok, tok, nil)
+	}
+
+	// fmt.Printf("tok: %s\n\n", tok.Str)
+	tok = skipParenth(tok)
+	tok = skip(tok, ";")
+	return tok
+}
+
+func skipTypedef(tok *Token) *Token {
+	printCurTok(tok)
+	printCalledFunc()
+
+	tok = tok.Next
+	readTypePreffix(&tok, tok, nil)
+	if !equal(tok, ";") {
+		tok = skipParenth(tok.Next)
+	}
+	tok = skip(tok, ";")
+	return tok
+}
+
+func skipParenth(tok *Token) *Token {
+	score1 := 0 // "()"
+	score2 := 0 // "{}"
+	if consume(&tok, tok, "{") {
+		score2++
+		for score1 != 0 || score2 != 0 {
+			if consume(&tok, tok, "{") {
+				score2++
+				continue
+			}
+			if consume(&tok, tok, "(") {
+				score1++
+				continue
+			}
+			if consume(&tok, tok, "}") {
+				score2--
+				continue
+			}
+			if consume(&tok, tok, ")") {
+				score1--
+				continue
+			}
+
+			tok = tok.Next
+		}
+	}
+
+	return tok
+}
+
 // program = (global-var | function)*
 func parse(tok *Token) *Obj {
 	printCurTok(tok)
@@ -3929,6 +4071,64 @@ func parse(tok *Token) *Obj {
 	if consume(&tok, tok, "package") {
 		tok = tok.Next.Next
 	}
+
+	startTok := tok
+
+	for !atEof(tok) {
+
+		if equal(tok, "var") && equal(tok.Next, "(") {
+			tok = tok.Next.Next
+
+			for !equal(tok, ")") {
+				if tok.Kind == TK_COMM {
+					// skip line comment
+					tok = tok.Next
+					continue
+				}
+
+				if tok.Kind != TK_IDENT && tok.Kind == TK_BLANKIDENT {
+					panic("\n" + errorTok(tok, "unexpected expression"))
+				}
+				tok = regGlobalVar(tok)
+			}
+			tok = skip(tok, ")")
+			tok = skip(tok, ";")
+			continue
+		}
+
+		if consume(&tok, tok, "var") {
+			tok = regGlobalVar(tok)
+			continue
+		}
+
+		if consume(&tok, tok, "func") {
+			tok = skipFunc(tok)
+			continue
+		}
+
+		if consume(&tok, tok, "type") {
+			tok = parseTypedef(tok)
+			continue
+		}
+
+		tok = tok.Next
+
+	}
+
+	// start := globals
+	// for globals != nil {
+	// 	fmt.Printf("globals.Name : %#v\n", globals.Name)
+	// 	globals = globals.Next
+	// }
+	// globals = start
+
+	// for sc := scope; sc != nil; sc = sc.Next {
+	// 	for sc2 := sc.Vars; sc2 != nil; sc2 = sc2.Next {
+	// 		fmt.Printf("sc2.Name: %#v\n\n", sc2.Name)
+	// 	}
+	// }
+
+	tok = startTok
 
 	for !atEof(tok) {
 
@@ -3968,7 +4168,7 @@ func parse(tok *Token) *Obj {
 		}
 
 		if consume(&tok, tok, "type") {
-			tok = parseTypedef(tok)
+			tok = skipTypedef(tok)
 			continue
 		}
 
