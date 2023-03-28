@@ -40,8 +40,8 @@
       - println
       - panic
       - recover
-   - parseの順番を変える  
-     現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化)を先に
+   - ~~parseの順番を変える~~  
+     ~~現状では関数の後に宣言されたグルーバル変数を参照するとparserでエラーになるので、var(含初期化), type(含初期化)を先に~~
    - RangeClause  
      "for i, x := range X"みたいなもの
    - const宣言
