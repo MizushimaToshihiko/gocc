@@ -3919,7 +3919,7 @@ func globalVar(tok *Token) *Token {
 	return tok
 }
 
-// regGlobalVar : register global variables.
+// regGlobalVar registers global variables.
 func regGlobalVar(tok *Token) *Token {
 	printCurTok(tok)
 	printCalledFunc()
@@ -3943,7 +3943,8 @@ func regGlobalVar(tok *Token) *Token {
 		identList = append(identList, v)
 	}
 
-	// ex) ident, ident, ident typename
+	// ident, ident, ident typename
+	// ex) a, b, c int
 	ty := copyType(identList[len(identList)-1].Ty)
 	for j := len(identList) - 2; j >= 0; j-- {
 		identList[j].Ty = ty
@@ -4009,6 +4010,7 @@ func regFunc(tok *Token) *Token {
 	return tok
 }
 
+// skipTypedef skips over type declarations.
 func skipTypedef(tok *Token) *Token {
 	printCurTok(tok)
 	printCalledFunc()
@@ -4022,6 +4024,7 @@ func skipTypedef(tok *Token) *Token {
 	return tok
 }
 
+// skipParenth skips over parentheses and curly braces.
 func skipParenth(tok *Token) *Token {
 	score1 := 0 // "()"
 	score2 := 0 // "{}"
