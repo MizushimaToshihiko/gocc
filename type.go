@@ -401,7 +401,7 @@ func (e *errWriter) visit(node *Node) {
 			return
 		}
 
-		node.Ty = node.Lhs.Ty.Base
+		node.Ty = copyType(node.Lhs.Ty.Base)
 		return
 	case ND_STMT_EXPR:
 		if node.Body != nil {
